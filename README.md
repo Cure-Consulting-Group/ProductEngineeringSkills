@@ -48,7 +48,43 @@ ProductEngineeringSkills/
 
 ## Installation
 
-### As a Claude Code Plugin (Recommended)
+### Via GitHub Package (Recommended)
+
+Install the plugin as an npm package from GitHub Packages. This is the easiest way to keep all your projects up to date.
+
+**1. Authenticate with GitHub Packages** (one-time setup):
+
+```bash
+# Create a Personal Access Token (PAT) with read:packages scope at
+# https://github.com/settings/tokens, then:
+npm login --scope=@cure-consulting-group --registry=https://npm.pkg.github.com
+```
+
+Or add to your project's `.npmrc`:
+```
+@cure-consulting-group:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+**2. Install in your project:**
+
+```bash
+npm install @cure-consulting-group/product-engineering-skills
+```
+
+The postinstall script automatically:
+- Symlinks the package to `~/.claude/plugins/ProductEngineeringSkills`
+- Registers the plugin in `~/.claude/settings.json`
+
+All 29 skills, hooks, agents, rules, and output styles are immediately available.
+
+**3. Update to the latest version:**
+
+```bash
+npm update @cure-consulting-group/product-engineering-skills
+```
+
+### As a Claude Code Plugin (Manual)
 
 ```bash
 # Load the plugin during a session

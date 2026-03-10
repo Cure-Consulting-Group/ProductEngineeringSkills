@@ -1,0 +1,31 @@
+name: Publish to GitHub Packages
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: "@cure-consulting-group"
+
+      - name: Sync version from plugin.json to package.json
+        run: |
+          PLUGIN_VERSION=$(jq -r '.version' .claude-plugin/plugin.json)
+          jq --arg v "$PLUGIN_VERSION" '.version = $v' package.json > package.tmp.json
+          mv package.tmp.json package.json
+
+      - name: Publish package
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

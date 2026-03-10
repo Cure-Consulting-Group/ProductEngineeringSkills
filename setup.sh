@@ -6,6 +6,8 @@
 # ProductEngineeringSkills plugin with Claude Code.
 #
 # Usage:
+#   npm install @cure-consulting-group/product-engineering-skills   # GitHub Package (recommended)
+#   — or —
 #   curl -sSL https://raw.githubusercontent.com/Cure-Consulting-Group/ProductEngineeringSkills/main/setup.sh | bash
 #   — or —
 #   ./setup.sh                     # Run from the target project directory
@@ -315,7 +317,7 @@ main() {
   echo ""
   echo "╔══════════════════════════════════════════════════════════╗"
   echo "║  Cure Consulting Group — ProductEngineeringSkills Setup ║"
-  echo "║  Plugin v2.1.0 — 29 Skills, Hooks, Agents, Rules       ║"
+  echo "║  Plugin v2.2.0 — 29 Skills, Hooks, Agents, Rules       ║"
   echo "╚══════════════════════════════════════════════════════════╝"
   echo ""
 
