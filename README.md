@@ -41,6 +41,7 @@ ProductEngineeringSkills/
 ├── claude-commands/           # Legacy format (backwards compat, 29 files)
 ├── gemini skills/             # Google Gemini skills (.skill ZIP)
 ├── CLAUDE.md                  # Project instructions
+├── setup.sh                  # Setup script for Antigravity & other projects
 ├── EVALUATION.md              # Full evaluation document
 └── README.md
 ```
@@ -67,6 +68,31 @@ Once loaded, all skills are available as namespaced commands:
 ```
 
 Hooks, agents, rules, output styles, and MCP servers are all included automatically.
+
+### Setup Script (Antigravity & Other Projects)
+
+The fastest way to onboard any project:
+
+```bash
+# From the target project directory
+/path/to/ProductEngineeringSkills/setup.sh
+
+# Or specify the project path
+/path/to/ProductEngineeringSkills/setup.sh /path/to/antigravity-app
+
+# Install globally for ALL projects
+/path/to/ProductEngineeringSkills/setup.sh --global
+
+# Legacy mode (just copy skills, no hooks/agents)
+/path/to/ProductEngineeringSkills/setup.sh --legacy
+```
+
+The setup script will:
+1. Clone/update the plugin to `~/.claude/plugins/`
+2. Detect your project type (Android/iOS/Web/Firebase)
+3. Install only the relevant path-specific rules
+4. Create a project CLAUDE.md with skill references
+5. Add `.claude/settings.local.json` to `.gitignore`
 
 ### Via Marketplace
 
