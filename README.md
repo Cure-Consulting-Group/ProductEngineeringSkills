@@ -10,24 +10,35 @@ The complete skill library that Cure Consulting Group uses to build apps, platfo
 ProductEngineeringSkills/
 ├── .claude-plugin/           # Plugin manifest
 │   └── plugin.json
-├── skills/                   # 24 skills (new SKILL.md format with frontmatter)
+├── skills/                   # 29 skills (new SKILL.md format with frontmatter)
 │   ├── sdlc/
 │   ├── android-feature-scaffold/
-│   ├── ios-architect/
-│   ├── ... (24 total)
+│   ├── incident-response/     # NEW
+│   ├── accessibility-audit/   # NEW
+│   ├── performance-review/    # NEW
+│   ├── database-architect/    # NEW
+│   ├── infrastructure-scaffold/ # NEW
+│   ├── ... (29 total)
 │   └── legal-doc-scaffold/
 ├── agents/                   # Custom subagent definitions
 │   ├── code-reviewer.md      # Security + quality review agent
 │   └── project-bootstrapper.md  # New project setup agent
-├── hooks/                    # Automated enforcement
-│   └── hooks.json
+├── hooks/                    # Multi-layer automated enforcement
+│   └── hooks.json            # Command + Prompt + Agent hooks
 ├── rules/                    # Path-specific coding standards
 │   ├── android.md             # Loads for *.kt files
 │   ├── ios.md                 # Loads for *.swift files
 │   ├── web.md                 # Loads for *.ts/*.tsx files
 │   └── firebase.md            # Loads for functions/**
+├── output-styles/            # Custom output formatting
+│   ├── prd/                   # Product docs (PRDs, GTM, research)
+│   ├── code-generation/       # Code scaffolds and implementations
+│   ├── financial-analysis/    # Cost models, SaaS metrics
+│   └── audit-report/          # Audits, reviews, compliance
+├── .mcp.json                 # MCP server configs (GitHub, Sentry, Firestore, Postgres)
+├── marketplace.json          # Plugin marketplace manifest
 ├── settings.json             # Default permission rules
-├── claude-commands/           # Legacy format (backwards compat)
+├── claude-commands/           # Legacy format (backwards compat, 29 files)
 ├── gemini skills/             # Google Gemini skills (.skill ZIP)
 ├── CLAUDE.md                  # Project instructions
 ├── EVALUATION.md              # Full evaluation document
@@ -51,9 +62,21 @@ Once loaded, all skills are available as namespaced commands:
 /cure-product-engineering:sdlc
 /cure-product-engineering:feature-audit
 /cure-product-engineering:android-feature-scaffold
+/cure-product-engineering:incident-response
+/cure-product-engineering:accessibility-audit
 ```
 
-Hooks, agents, rules, and settings are all included automatically.
+Hooks, agents, rules, output styles, and MCP servers are all included automatically.
+
+### Via Marketplace
+
+```bash
+# Add the Cure Consulting marketplace
+claude marketplace add https://github.com/Cure-Consulting-Group/ProductEngineeringSkills/marketplace.json
+
+# Install the plugin
+claude plugin install cure-product-engineering
+```
 
 ### Legacy Method (Copy Commands)
 
@@ -76,9 +99,9 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 - `SKILL.md` — The main skill definition
 - `references/` — Supporting documents and templates
 
-## Skill Inventory (24 Skills)
+## Skill Inventory (29 Skills)
 
-### Product & Strategy
+### Product & Strategy (7)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **product-manager** | OKRs, roadmaps, RICE prioritization, feature briefs | Yes |
@@ -89,7 +112,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **customer-onboarding** | Activation flows, empty states, email sequences, retention | Yes |
 | **seo-content-engine** | Technical SEO, structured data, content strategy | Yes |
 
-### Engineering & Architecture
+### Engineering & Architecture (10)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **sdlc** | PRDs, ADRs, RFCs, Epics, Stories, Task specs — full SDLC | Yes |
@@ -100,38 +123,79 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **api-architect** | REST/GraphQL design, versioning, auth, rate limiting | Yes |
 | **stripe-integration** | Stripe payments + subscriptions via Firebase Functions | Yes |
 | **ai-feature-builder** | LLM integration, RAG pipelines, prompt engineering | Yes |
+| **database-architect** | Schema design, migrations, indexing for Firestore/PostgreSQL/SQLite | Yes |
+| **infrastructure-scaffold** | Cloud infra configs for Firebase, GCP, Vercel, Docker | Yes |
 
-### Quality & Security
+### Quality & Security (5)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
-| **feature-audit** | 5-phase post-completion audit with scored gap report | Yes (read-only, forked context) |
+| **feature-audit** | 5-phase post-completion audit with scored gap report | Yes (read-only, forked) |
 | **testing-strategy** | Testing pyramid, platform standards, coverage rules | Yes |
-| **security-review** | OWASP checklist, auth/data/API/mobile/web security | Yes (read-only, forked context) |
+| **security-review** | OWASP checklist, auth/data/API/mobile/web security | Yes (read-only, forked) |
+| **accessibility-audit** | WCAG 2.2 compliance, screen readers, inclusive design | Yes (read-only, forked) |
+| **performance-review** | Performance budgets, load testing, optimization strategies | Yes |
 
-### Operations & Delivery
+### Operations & Delivery (4)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **project-manager** | Sprint planning, RACI, risk registers, retrospectives | Yes |
 | **ci-cd-pipeline** | GitHub Actions, build/test/deploy, environments, secrets | Yes |
 | **analytics-implementation** | Event taxonomy, tracking plans, funnels, dashboards | Yes |
+| **incident-response** | Runbooks, severity classification, post-mortems, escalation | Yes |
 
-### Business & Finance
+### Business & Finance (3)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **engineering-cost-model** | Project estimates, infrastructure costs, build vs buy | Yes (read-only) |
 | **saas-financial-model** | Unit economics, MRR/ARR, pricing tiers, break-even | Yes (read-only) |
 | **legal-doc-scaffold** | ToS, Privacy Policy, SOW, NDA scaffolds | No (manual only) |
 
-## Hooks (Automated Enforcement)
+## Hooks (Multi-Layer Automated Enforcement)
 
-The plugin includes hooks that run automatically:
+The plugin includes three types of hooks:
 
+### Command Hooks (Deterministic)
 | Hook | Event | What It Does |
 |------|-------|--------------|
 | **Welcome** | SessionStart | Confirms plugin loaded, lists available skills |
+| **Git status** | SessionStart | Reports current branch, uncommitted changes, last commit |
 | **Platform reminder** | PostToolUse (Edit/Write) | After editing source files, reminds to run audit/testing |
-| **Protected files** | PreToolUse (Edit/Write) | Blocks edits to .env and lock files |
-| **Dangerous commands** | PreToolUse (Bash) | Blocks force push to main, destructive rm, DROP TABLE |
+| **Protected files** | PreToolUse (Edit/Write) | Blocks edits to .env, lock files, and credential files |
+| **Dangerous commands** | PreToolUse (Bash) | Blocks force push to main, destructive rm, DROP TABLE, prod deploys |
+| **Context re-injection** | PreCompact | Re-injects Cure standards and skill list after context compaction |
+
+### Prompt Hooks (LLM-Validated)
+| Hook | Event | What It Does |
+|------|-------|--------------|
+| **Code quality gate** | PreToolUse (Edit/Write) | Haiku validates: no hardcoded secrets, no debug logs, no disabled tests, no `any` types |
+| **Deployment safety** | PreToolUse (Bash) | Haiku validates: blocks production deployments outside CI/CD |
+
+### Agent Hooks (Multi-Turn Verification)
+| Hook | Event | What It Does |
+|------|-------|--------------|
+| **Completion validator** | Stop | Agent checks if tests were written for new code and security reviews were run for sensitive changes |
+
+## MCP Server Integrations
+
+Pre-configured MCP servers in `.mcp.json`:
+
+| Server | Type | What It Does |
+|--------|------|--------------|
+| **GitHub** | HTTP | PR management, issue tracking, code search |
+| **Sentry** | HTTP | Error monitoring, issue tracking, release health |
+| **Firestore** | stdio | Direct database queries, schema inspection |
+| **PostgreSQL** | stdio | Database queries, schema inspection, migrations |
+
+## Output Styles
+
+Custom output formatting for different artifact types:
+
+| Style | Used By | Key Rules |
+|-------|---------|-----------|
+| **prd** | Product skills (PRDs, GTM, research) | Numbered sections, decision matrices, executive summaries |
+| **code-generation** | Engineering skills (scaffolds) | File tree first, dependency order, complete runnable code |
+| **financial-analysis** | Business skills (costs, models) | ASCII tables, explicit assumptions, sensitivity analysis |
+| **audit-report** | Quality skills (audits, reviews) | Severity scoring, checklists, remediation with effort estimates |
 
 ## Custom Agents
 
