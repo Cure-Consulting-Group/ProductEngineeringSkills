@@ -1,0 +1,27 @@
+{
+  "owner": {
+    "name": "Cure Consulting Group",
+    "url": "https://github.com/Cure-Consulting-Group"
+  },
+  "plugins": [
+    {
+      "name": "cure-product-engineering",
+      "description": "Complete product engineering skill library — 29 skills for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, and cloud infrastructure. Includes hooks for enforcement, custom agents for review, and path-specific coding rules.",
+      "source": {
+        "type": "github",
+        "repo": "Cure-Consulting-Group/ProductEngineeringSkills"
+      },
+      "tags": [
+        "product-engineering",
+        "android",
+        "ios",
+        "nextjs",
+        "firebase",
+        "clean-architecture",
+        "sdlc",
+        "security",
+        "devops"
+      ]
+    }
+  ]
+}
