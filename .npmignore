@@ -1,0 +1,11 @@
+# Development files
+.git/
+.github/
+gemini skills/
+EVALUATION.md
+CLAUDE.md
+
+# IDE / OS
+.DS_Store
+*.swp
+*.swo
