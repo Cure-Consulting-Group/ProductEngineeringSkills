@@ -8,6 +8,11 @@ argument-hint: "[feature-or-screen-name]"
 
 Expert design across Apple HIG, Material Design 3, and Web. Platform-native first. Accessibility is a requirement, not a feature.
 
+**For deep platform-specific expertise, use the dedicated design expert skills:**
+- `ios-design-expert` — Apple HIG, SF Symbols, Dynamic Type, SwiftUI components, haptics
+- `android-design-expert` — Material Design 3, dynamic color, tonal palettes, adaptive layouts, Compose
+- `web-design-expert` — Responsive design, CSS architecture, design tokens, container queries, Tailwind
+
 ## Design System Hierarchy
 
 ```
