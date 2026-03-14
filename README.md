@@ -10,7 +10,7 @@ The complete skill library that Cure Consulting Group uses to build apps, platfo
 ProductEngineeringSkills/
 ├── .claude-plugin/           # Plugin manifest
 │   └── plugin.json
-├── skills/                   # 29 skills (new SKILL.md format with frontmatter)
+├── skills/                   # 33 skills (new SKILL.md format with frontmatter)
 │   ├── sdlc/
 │   ├── android-feature-scaffold/
 │   ├── incident-response/     # NEW
@@ -18,7 +18,8 @@ ProductEngineeringSkills/
 │   ├── performance-review/    # NEW
 │   ├── database-architect/    # NEW
 │   ├── infrastructure-scaffold/ # NEW
-│   ├── ... (29 total)
+│   ├── project-bootstrap/     # NEW
+│   ├── ... (33 total)
 │   └── legal-doc-scaffold/
 ├── agents/                   # Custom subagent definitions
 │   ├── code-reviewer.md      # Security + quality review agent
@@ -76,7 +77,7 @@ The postinstall script automatically:
 - Symlinks the package to `~/.claude/plugins/ProductEngineeringSkills`
 - Registers the plugin in `~/.claude/settings.json`
 
-All 29 skills, hooks, agents, rules, and output styles are immediately available.
+All 33 skills, hooks, agents, rules, and output styles are immediately available.
 
 **3. Update to the latest version:**
 
@@ -161,7 +162,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 - `SKILL.md` — The main skill definition
 - `references/` — Supporting documents and templates
 
-## Skill Inventory (29 Skills)
+## Skill Inventory (33 Skills)
 
 ### Product & Strategy (7)
 | Skill | What It Does | Auto-Invoked? |
@@ -197,9 +198,10 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **accessibility-audit** | WCAG 2.2 compliance, screen readers, inclusive design | Yes (read-only, forked) |
 | **performance-review** | Performance budgets, load testing, optimization strategies | Yes |
 
-### Operations & Delivery (4)
+### Operations & Delivery (5)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
+| **project-bootstrap** | Bootstrap repo with CLAUDE.md + STATE.md via codebase inspection and developer interview | Yes |
 | **project-manager** | Sprint planning, RACI, risk registers, retrospectives | Yes |
 | **ci-cd-pipeline** | GitHub Actions, build/test/deploy, environments, secrets | Yes |
 | **analytics-implementation** | Event taxonomy, tracking plans, funnels, dashboards | Yes |

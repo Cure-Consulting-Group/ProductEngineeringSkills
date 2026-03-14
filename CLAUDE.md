@@ -4,13 +4,13 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 29 production-grade skills, 2 custom agents, multi-layer hooks (command + prompt + agent), MCP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 33 production-grade skills, 2 custom agents, multi-layer hooks (command + prompt + agent), MCP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
 ```
 .claude-plugin/plugin.json    — Plugin manifest (name, version, metadata)
-skills/*/SKILL.md             — 29 skills with frontmatter (new format)
+skills/*/SKILL.md             — 33 skills with frontmatter (new format)
 agents/*.md                   — Custom subagent definitions
 hooks/hooks.json              — Multi-layer hooks (command, prompt, agent)
 rules/*.md                    — Path-specific coding standards
