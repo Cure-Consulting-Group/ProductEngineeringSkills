@@ -10,7 +10,7 @@ The complete skill library that Cure Consulting Group uses to build apps, platfo
 ProductEngineeringSkills/
 ├── .claude-plugin/           # Plugin manifest
 │   └── plugin.json
-├── skills/                   # 33 skills (new SKILL.md format with frontmatter)
+├── skills/                   # 36 skills (new SKILL.md format with frontmatter)
 │   ├── sdlc/
 │   ├── android-feature-scaffold/
 │   ├── incident-response/     # NEW
@@ -19,7 +19,10 @@ ProductEngineeringSkills/
 │   ├── database-architect/    # NEW
 │   ├── infrastructure-scaffold/ # NEW
 │   ├── project-bootstrap/     # NEW
-│   ├── ... (33 total)
+│   ├── e2e-testing/           # NEW
+│   ├── test-accounts/         # NEW
+│   ├── uat/                   # NEW
+│   ├── ... (36 total)
 │   └── legal-doc-scaffold/
 ├── agents/                   # Custom subagent definitions
 │   ├── code-reviewer.md      # Security + quality review agent
@@ -77,7 +80,7 @@ The postinstall script automatically:
 - Symlinks the package to `~/.claude/plugins/ProductEngineeringSkills`
 - Registers the plugin in `~/.claude/settings.json`
 
-All 33 skills, hooks, agents, rules, and output styles are immediately available.
+All 36 skills, hooks, agents, rules, and output styles are immediately available.
 
 **3. Enable auto-updates with Dependabot** (recommended):
 
@@ -185,7 +188,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 - `SKILL.md` — The main skill definition
 - `references/` — Supporting documents and templates
 
-## Skill Inventory (33 Skills)
+## Skill Inventory (36 Skills)
 
 ### Product & Strategy (7)
 | Skill | What It Does | Auto-Invoked? |
@@ -212,11 +215,14 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **database-architect** | Schema design, migrations, indexing for Firestore/PostgreSQL/SQLite | Yes |
 | **infrastructure-scaffold** | Cloud infra configs for Firebase, GCP, Vercel, Docker | Yes |
 
-### Quality & Security (5)
+### Quality & Security (8)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **feature-audit** | 5-phase post-completion audit with scored gap report | Yes (read-only, forked) |
 | **testing-strategy** | Testing pyramid, platform standards, coverage rules | Yes |
+| **e2e-testing** | E2E test suites with page objects, visual regression, CI integration | Yes |
+| **test-accounts** | Test user personas, seed data scripts, environment credentials | Yes |
+| **uat** | UAT plans, acceptance criteria checklists, go/no-go release gates | Yes |
 | **security-review** | OWASP checklist, auth/data/API/mobile/web security | Yes (read-only, forked) |
 | **accessibility-audit** | WCAG 2.2 compliance, screen readers, inclusive design | Yes (read-only, forked) |
 | **performance-review** | Performance budgets, load testing, optimization strategies | Yes |
