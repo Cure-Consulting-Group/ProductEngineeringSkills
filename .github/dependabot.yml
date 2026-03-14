@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    reviewers:
+      - "Cure-Consulting-Group"
+    labels:
+      - "dependencies"
+      - "auto-update"
+    commit-message:
+      prefix: "chore"
+      include: "scope"

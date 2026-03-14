@@ -265,6 +265,53 @@ CLAUDEMD
 
   ok "Rules installed to $project_dir/.claude/rules/"
 
+  # Install Dependabot config for auto-updating the plugin package
+  local dependabot_dir="$project_dir/.github"
+  local dependabot_file="$dependabot_dir/dependabot.yml"
+  mkdir -p "$dependabot_dir"
+
+  if [ -f "$dependabot_file" ]; then
+    if grep -q "cure-consulting-group" "$dependabot_file" 2>/dev/null; then
+      ok "Dependabot already configured for plugin updates."
+    else
+      info "Appending npm ecosystem to existing dependabot.yml..."
+      cat >> "$dependabot_file" << 'DEPBOT'
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "@cure-consulting-group/product-engineering-skills"
+    labels:
+      - "dependencies"
+      - "skills-update"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+DEPBOT
+      ok "Updated $dependabot_file"
+    fi
+  else
+    cat > "$dependabot_file" << 'DEPBOT'
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "@cure-consulting-group/product-engineering-skills"
+    labels:
+      - "dependencies"
+      - "skills-update"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+DEPBOT
+    ok "Created $dependabot_file for auto-updating skills plugin"
+  fi
+
   # Create .gitignore entry for local settings
   local gitignore="$project_dir/.gitignore"
   if [ -f "$gitignore" ]; then

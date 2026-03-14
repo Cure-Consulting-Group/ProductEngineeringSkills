@@ -79,7 +79,30 @@ The postinstall script automatically:
 
 All 33 skills, hooks, agents, rules, and output styles are immediately available.
 
-**3. Update to the latest version:**
+**3. Enable auto-updates with Dependabot** (recommended):
+
+Add `.github/dependabot.yml` to your project (or run `setup.sh` which does this automatically):
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "@cure-consulting-group/product-engineering-skills"
+    labels:
+      - "dependencies"
+      - "skills-update"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+```
+
+Dependabot will open a PR in your project whenever a new version is published. Merge it and every agent on that project gets the updated skills.
+
+**4. Manual update:**
 
 ```bash
 npm update @cure-consulting-group/product-engineering-skills
