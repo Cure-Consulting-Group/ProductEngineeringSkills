@@ -10,7 +10,7 @@ The complete skill library that Cure Consulting Group uses to build apps, platfo
 ProductEngineeringSkills/
 ├── .claude-plugin/           # Plugin manifest
 │   └── plugin.json
-├── skills/                   # 36 skills (new SKILL.md format with frontmatter)
+├── skills/                   # 58 skills (new SKILL.md format with frontmatter)
 │   ├── sdlc/
 │   ├── android-feature-scaffold/
 │   ├── incident-response/     # NEW
@@ -18,11 +18,33 @@ ProductEngineeringSkills/
 │   ├── performance-review/    # NEW
 │   ├── database-architect/    # NEW
 │   ├── infrastructure-scaffold/ # NEW
-│   ├── project-bootstrap/     # NEW
-│   ├── e2e-testing/           # NEW
-│   ├── test-accounts/         # NEW
-│   ├── uat/                   # NEW
-│   ├── ... (36 total)
+│   ├── project-bootstrap/
+│   ├── e2e-testing/
+│   ├── test-accounts/
+│   ├── uat/
+│   ├── compliance-architect/
+│   ├── data-migration/
+│   ├── feature-flags/
+│   ├── release-management/
+│   ├── observability/
+│   ├── client-handoff/
+│   ├── llmops/
+│   ├── disaster-recovery/
+│   ├── dora-metrics/
+│   ├── design-system/
+│   ├── client-communication/
+│   ├── i18n/
+│   ├── notification-architect/
+│   ├── offline-first/
+│   ├── chaos-engineering/
+│   ├── edge-computing/
+│   ├── finops/
+│   ├── micro-frontends/
+│   ├── growth-engineering/
+│   ├── green-software/
+│   ├── proposal-generator/
+│   ├── api-gateway/
+│   ├── ... (58 total)
 │   └── legal-doc-scaffold/
 ├── agents/                   # Custom subagent definitions
 │   ├── code-reviewer.md      # Security + quality review agent
@@ -80,7 +102,7 @@ The postinstall script automatically:
 - Symlinks the package to `~/.claude/plugins/ProductEngineeringSkills`
 - Registers the plugin in `~/.claude/settings.json`
 
-All 36 skills, hooks, agents, rules, and output styles are immediately available.
+All 58 skills, hooks, agents, rules, and output styles are immediately available.
 
 **3. Enable auto-updates with Dependabot** (recommended):
 
@@ -188,7 +210,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 - `SKILL.md` — The main skill definition
 - `references/` — Supporting documents and templates
 
-## Skill Inventory (36 Skills)
+## Skill Inventory (58 Skills)
 
 ### Product & Strategy (7)
 | Skill | What It Does | Auto-Invoked? |
@@ -201,7 +223,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **customer-onboarding** | Activation flows, empty states, email sequences, retention | Yes |
 | **seo-content-engine** | Technical SEO, structured data, content strategy | Yes |
 
-### Engineering & Architecture (10)
+### Engineering & Architecture (18)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **sdlc** | PRDs, ADRs, RFCs, Epics, Stories, Task specs — full SDLC | Yes |
@@ -210,12 +232,20 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **nextjs-feature-scaffold** | App Router, Server/Client components, Tailwind patterns | Yes |
 | **firebase-architect** | Firestore schema, security rules, Cloud Functions | Yes |
 | **api-architect** | REST/GraphQL design, versioning, auth, rate limiting | Yes |
+| **api-gateway** | API gateway and BFF layers, rate limiting, GraphQL federation | Yes |
 | **stripe-integration** | Stripe payments + subscriptions via Firebase Functions | Yes |
 | **ai-feature-builder** | LLM integration, RAG pipelines, prompt engineering | Yes |
+| **llmops** | LLM operationalization — prompt versioning, eval pipelines, cost optimization, guardrails | Yes |
 | **database-architect** | Schema design, migrations, indexing for Firestore/PostgreSQL/SQLite | Yes |
+| **data-migration** | ETL pipelines, zero-downtime cutover, validation, rollback strategies | Yes |
 | **infrastructure-scaffold** | Cloud infra configs for Firebase, GCP, Vercel, Docker | Yes |
+| **edge-computing** | Edge functions, CDN strategies, cache invalidation, edge middleware | Yes |
+| **micro-frontends** | Module federation, monorepo management, independent deployments | Yes |
+| **offline-first** | Offline-first architecture, sync strategies, conflict resolution, optimistic UI | Yes |
+| **i18n** | Internationalization — string extraction, RTL, locale-aware formatting, translation workflows | Yes |
+| **notification-architect** | Push (FCM/APNs), in-app messaging, email, preference management | Yes |
 
-### Quality & Security (8)
+### Quality & Security (11)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **feature-audit** | 5-phase post-completion audit with scored gap report | Yes (read-only, forked) |
@@ -224,24 +254,42 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **test-accounts** | Test user personas, seed data scripts, environment credentials | Yes |
 | **uat** | UAT plans, acceptance criteria checklists, go/no-go release gates | Yes |
 | **security-review** | OWASP checklist, auth/data/API/mobile/web security | Yes (read-only, forked) |
+| **compliance-architect** | HIPAA, COPPA, GDPR, PCI compliance frameworks, consent flows, audit trails | Yes |
 | **accessibility-audit** | WCAG 2.2 compliance, screen readers, inclusive design | Yes (read-only, forked) |
 | **performance-review** | Performance budgets, load testing, optimization strategies | Yes |
+| **chaos-engineering** | Resilience testing, failure injection, graceful degradation, game days | Yes |
+| **green-software** | Sustainable software practices, carbon-aware computing, energy efficiency | Yes |
 
-### Operations & Delivery (5)
+### Operations & Delivery (12)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **project-bootstrap** | Bootstrap repo with CLAUDE.md + STATE.md via codebase inspection and developer interview | Yes |
 | **project-manager** | Sprint planning, RACI, risk registers, retrospectives | Yes |
 | **ci-cd-pipeline** | GitHub Actions, build/test/deploy, environments, secrets | Yes |
+| **release-management** | App store submissions, staged rollouts, versioning, ASO, changelogs | Yes |
+| **feature-flags** | Progressive rollouts, A/B testing, kill switches, experimentation frameworks | Yes |
+| **observability** | Structured logging, distributed tracing, alerting, SLO/SLI, dashboards | Yes |
+| **dora-metrics** | DORA and SPACE metrics — deployment frequency, lead time, MTTR, developer experience | Yes |
 | **analytics-implementation** | Event taxonomy, tracking plans, funnels, dashboards | Yes |
 | **incident-response** | Runbooks, severity classification, post-mortems, escalation | Yes |
+| **disaster-recovery** | DR and business continuity — RTO/RPO, backup strategies, failover, DR testing | Yes |
+| **growth-engineering** | Activation funnels, referral programs, lifecycle automation, PLG patterns | Yes |
+| **design-system** | Design tokens, component libraries, Storybook/Catalog, cross-platform consistency | Yes |
 
-### Business & Finance (3)
+### Business & Finance (4)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **engineering-cost-model** | Project estimates, infrastructure costs, build vs buy | Yes (read-only) |
 | **saas-financial-model** | Unit economics, MRR/ARR, pricing tiers, break-even | Yes (read-only) |
+| **finops** | Cloud cost optimization, budget alerts, resource right-sizing, FinOps practices | Yes |
 | **legal-doc-scaffold** | ToS, Privacy Policy, SOW, NDA scaffolds | No (manual only) |
+
+### Consulting Operations (3) — NEW
+| Skill | What It Does | Auto-Invoked? |
+|-------|-------------|---------------|
+| **client-handoff** | Handoff packages, runbooks, credential transfers, maintenance SLAs, knowledge transfer | Yes |
+| **client-communication** | Sprint demo scripts, stakeholder updates, risk escalation, executive summaries | Yes |
+| **proposal-generator** | Consulting proposals, SOWs, milestone pricing, engagement structure | No (manual only) |
 
 ## Hooks (Multi-Layer Automated Enforcement)
 
