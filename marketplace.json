@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "cure-product-engineering",
-      "description": "Complete product engineering skill library — 29 skills for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, and cloud infrastructure. Includes hooks for enforcement, custom agents for review, and path-specific coding rules.",
+      "description": "Complete product engineering skill library — 58 skills for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, and cloud infrastructure. Includes hooks for enforcement, custom agents for review, and path-specific coding rules.",
       "source": {
         "type": "github",
         "repo": "Cure-Consulting-Group/ProductEngineeringSkills"
@@ -20,7 +20,12 @@
         "clean-architecture",
         "sdlc",
         "security",
-        "devops"
+        "devops",
+        "compliance",
+        "observability",
+        "consulting",
+        "finops",
+        "llmops"
       ]
     }
   ]

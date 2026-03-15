@@ -1,7 +1,7 @@
 {
   "name": "@cure-consulting-group/product-engineering-skills",
-  "version": "2.2.4",
-  "description": "Cure Consulting Group's complete product engineering skill library — 29 production-grade skills for Claude Code. Includes hooks, agents, MCP configs, output styles, and path-specific rules.",
+  "version": "3.0.0",
+  "description": "Cure Consulting Group's complete product engineering skill library — 58 production-grade skills for Claude Code. Includes hooks, agents, MCP configs, output styles, and path-specific rules.",
   "keywords": [
     "claude-code-plugin",
     "product-engineering",
@@ -42,7 +42,8 @@
     "marketplace.json",
     "settings.json",
     "setup.sh",
-    "install-plugin.js"
+    "install-plugin.js",
+    "verify-install.sh"
   ],
   "scripts": {
     "postinstall": "node install-plugin.js"

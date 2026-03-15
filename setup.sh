@@ -154,7 +154,7 @@ with open('$user_settings', 'w') as f:
   echo "  Plugin location: $plugin_path"
   echo "  User settings:   $user_settings"
   echo ""
-  echo "  All Claude Code sessions will now have access to 29 skills."
+  echo "  All Claude Code sessions will now have access to 58 skills."
   echo "  To update later: cd $plugin_path && git pull"
   echo ""
   echo "  Or load manually per-session:"
@@ -195,7 +195,7 @@ claude --plugin-dir ~/.claude/plugins/ProductEngineeringSkills
 ```
 
 Available skills: /cure-product-engineering:sdlc, /cure-product-engineering:feature-audit,
-/cure-product-engineering:security-review, and 26 more. Run any skill with /cure-product-engineering:<name>.
+/cure-product-engineering:security-review, and 55 more. Run any skill with /cure-product-engineering:<name>.
 CLAUDEMD
       ok "Updated $claude_md"
     fi
@@ -213,15 +213,17 @@ Load the plugin when starting Claude Code:
 claude --plugin-dir ~/.claude/plugins/ProductEngineeringSkills
 ```
 
-## Available Skills (29)
+## Available Skills (58)
 
 Run any skill with `/cure-product-engineering:<skill-name>`:
 
-**Engineering:** sdlc, android-feature-scaffold, ios-architect, nextjs-feature-scaffold, firebase-architect, api-architect, stripe-integration, ai-feature-builder, database-architect, infrastructure-scaffold
-**Quality:** feature-audit, testing-strategy, security-review, accessibility-audit, performance-review
+**Engineering:** sdlc, android-feature-scaffold, ios-architect, nextjs-feature-scaffold, firebase-architect, api-architect, api-gateway, stripe-integration, ai-feature-builder, llmops, database-architect, data-migration, infrastructure-scaffold, edge-computing, micro-frontends, offline-first, i18n, notification-architect
+**Quality:** feature-audit, testing-strategy, e2e-testing, test-accounts, uat, security-review, compliance-architect, accessibility-audit, performance-review, chaos-engineering, green-software
 **Product:** product-manager, product-design, market-research, go-to-market, product-marketing, customer-onboarding, seo-content-engine
-**Operations:** project-manager, ci-cd-pipeline, analytics-implementation, incident-response
-**Business:** engineering-cost-model, saas-financial-model, legal-doc-scaffold
+**Operations:** project-bootstrap, project-manager, ci-cd-pipeline, release-management, feature-flags, observability, dora-metrics, analytics-implementation, incident-response, disaster-recovery, growth-engineering, design-system
+**Business:** engineering-cost-model, saas-financial-model, finops, legal-doc-scaffold
+**Consulting:** client-handoff, client-communication, proposal-generator
+**Design:** android-design-expert, ios-design-expert, web-design-expert
 
 ## Tech Stack
 
@@ -349,7 +351,7 @@ setup_legacy() {
   # Copy command files
   mkdir -p "$project_dir/.claude/commands"
   cp "$plugin_path/claude-commands/"*.md "$project_dir/.claude/commands/"
-  ok "Copied 29 skills to $project_dir/.claude/commands/"
+  ok "Copied 58 skills to $project_dir/.claude/commands/"
 
   echo ""
   warn "Legacy mode: hooks, agents, output styles, and MCP configs are NOT included."
@@ -364,7 +366,7 @@ main() {
   echo ""
   echo "╔══════════════════════════════════════════════════════════╗"
   echo "║  Cure Consulting Group — ProductEngineeringSkills Setup ║"
-  echo "║  Plugin v2.2.0 — 29 Skills, Hooks, Agents, Rules       ║"
+  echo "║  Plugin v3.0.0 — 58 Skills, Hooks, Agents, Rules       ║"
   echo "╚══════════════════════════════════════════════════════════╝"
   echo ""
 
