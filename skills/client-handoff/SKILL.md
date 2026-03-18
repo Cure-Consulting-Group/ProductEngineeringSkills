@@ -2,6 +2,7 @@
 name: client-handoff
 description: "Generate client handoff packages — architecture docs, runbooks, credential transfers, maintenance SLAs, and knowledge transfer plans for consulting engagements"
 argument-hint: "[project-name]"
+context: fork
 ---
 
 # Client Handoff

@@ -2,6 +2,7 @@
 name: disaster-recovery
 description: "Design disaster recovery and business continuity plans — RTO/RPO targets, backup strategies, failover architecture, and DR testing runbooks"
 argument-hint: "[project-or-service]"
+context: fork
 ---
 
 # Disaster Recovery

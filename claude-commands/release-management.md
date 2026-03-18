@@ -10,6 +10,15 @@ Manages the full release lifecycle for Android, iOS, and web applications. Cover
 - Release branches are cut, never released directly from main
 - App store metadata (screenshots, descriptions) is version-controlled
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Release Type
 
 | Type | Trigger | Version Bump | Rollout Strategy | Review Required |
@@ -675,3 +684,15 @@ CROSS-REFERENCES:
   - /incident-response — for release rollback and hotfix procedures
   - /analytics-implementation — for tracking release impact on metrics
 ```
+
+## Code Generation (Required)
+
+Generate actual release automation files using Write:
+
+1. **Fastlane** (if mobile): `fastlane/Fastfile` with lanes for beta and production
+2. **Changelog**: `CHANGELOG.md` with Keep a Changelog format, populated from git log
+3. **Version bump script**: `scripts/bump-version.sh` for semantic versioning
+4. **Release workflow**: `.github/workflows/release.yml` with approval gates
+5. **Rollback script**: `scripts/rollback.sh` that reverts to previous tagged version
+
+Before generating, use Glob to find existing release configs and Grep git tags (`git tag --list`) to understand versioning history.

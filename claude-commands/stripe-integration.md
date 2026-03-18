@@ -2,6 +2,15 @@
 
 Full Stripe integration: Android SDK → Firebase Functions → Stripe API → Firestore sync. Secret keys never touch the Android client. All payment operations are server-side.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Integration Architecture
 
 ```
@@ -117,6 +126,26 @@ Decline:          4000 0000 0000 0002
 Requires auth:    4000 0025 0000 3155
 Insufficient:     4000 0000 0000 9995
 ```
+
+## Code Generation (Required)
+
+You MUST generate actual Stripe integration code using Write:
+
+1. **Webhook handler**: `functions/src/stripe/webhook.ts` — handles all critical Stripe events:
+   - `checkout.session.completed` → provision access
+   - `invoice.paid` → extend subscription
+   - `invoice.payment_failed` → notify user, grace period
+   - `customer.subscription.deleted` → revoke access
+   - `charge.refunded` → handle refund logic
+2. **Checkout session creator**: `functions/src/stripe/create-checkout.ts` — creates Stripe Checkout sessions
+3. **Customer portal**: `functions/src/stripe/customer-portal.ts` — creates billing portal sessions
+4. **Subscription types**: `src/types/subscription.ts` — TypeScript types for plans, subscription states
+5. **Firestore schema**: `functions/src/stripe/sync-to-firestore.ts` — syncs Stripe data to Firestore
+6. **Security rules**: Append subscription-aware rules to `firestore.rules`
+7. **Android client**: `data/repository/SubscriptionRepository.kt` — checks subscription status
+8. **iOS client**: `Data/Repositories/SubscriptionRepository.swift` — checks subscription status
+
+Before generating, Grep for existing Stripe references (`stripe|Stripe|subscription|checkout`) to understand current integration state.
 
 ## Tech Stack
 

@@ -2,6 +2,7 @@
 name: dora-metrics
 description: "Implement DORA and SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, and developer experience dashboards"
 argument-hint: "[team-or-project]"
+context: fork
 ---
 
 # DORA Metrics

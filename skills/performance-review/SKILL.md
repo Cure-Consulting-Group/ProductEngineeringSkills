@@ -2,6 +2,7 @@
 name: performance-review
 description: "Define performance budgets, load testing plans, optimization strategies, and monitoring dashboards across mobile, web, and backend"
 argument-hint: "[app-or-feature]"
+context: fork
 ---
 
 # Performance Review

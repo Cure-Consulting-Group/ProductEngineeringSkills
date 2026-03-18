@@ -2,6 +2,7 @@
 name: observability
 description: "Set up observability stacks — structured logging, distributed tracing, alerting, SLO/SLI definition, and dashboards with Crashlytics, Sentry, or Datadog"
 argument-hint: "[project-or-service]"
+context: fork
 ---
 
 # Observability

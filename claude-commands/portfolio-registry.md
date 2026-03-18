@@ -4,6 +4,14 @@ The highest-leverage artifact in the skill library. A portfolio registry gives e
 
 This skill generates and maintains `PORTFOLIO.md` -- the single source of truth for Cure Consulting Group's venture studio. It lives at `~/.claude/PORTFOLIO.md` (global) or at the project root (per-project subset). Every AI session should read this file before starting work.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Read existing `PORTFOLIO.md` if present to understand current state before updates
+
 ## Why This Matters
 
 ```
@@ -52,6 +60,20 @@ PORTFOLIO.md is read by:
 If the user says "set up portfolio" or "register everything" -- do a full portfolio registry.
 If the user names a specific product -- do single product registration or update.
 If ambiguous, ask: "Full portfolio setup, or registering/updating a single product?"
+
+## Auto-Detection Mode
+
+When invoked, actively scan for products:
+1. Use Glob to find all repos in common project directories
+2. For each found repo, Read package.json/build.gradle/Podfile to detect stack
+3. Run `git remote -v` to get repo URLs
+4. Run `git log --oneline -1` to get last activity date
+5. Pre-populate PORTFOLIO.md entries with discovered data, mark unknowns as [TBD]
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Portfolio registry**: `~/.claude/PORTFOLIO.md` (global) or `PORTFOLIO.md` (project root) — full portfolio document
 
 ## Step 2: Gather Context
 

@@ -4,6 +4,15 @@ Deep expertise in Material Design 3 (M3) for Android. Designs that fully leverag
 
 **Related skills**: `product-design` (cross-platform fundamentals), `android-feature-scaffold` (code scaffolding), `accessibility-audit` (WCAG compliance)
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Request
 
 | Request | Action |
@@ -39,3 +48,36 @@ Cover all applicable areas: tonal palette generation (5 key colors, 13 tones), c
 For screen specs: purpose, canonical layout pattern, layout anatomy with dp values, all states, window size class adaptations, color role assignments, typography roles, dark theme, TalkBack reading order, motion specs, Compose hierarchy.
 
 For component specs: anatomy with M3 token names, all states with color roles per state, typography roles, shape (corner radius), elevation, spacing in dp, Material Symbol config, motion spec (easing + duration), ripple spec, accessibility (role, contentDescription, stateDescription), Compose skeleton.
+
+## Code Generation (Required)
+
+When designing for Android, generate actual Compose code using Write:
+
+1. **Theme**: `ui/theme/Theme.kt` — MaterialTheme with custom ColorScheme, Typography, Shapes
+2. **Colors**: `ui/theme/Color.kt` — brand colors mapped to M3 color roles
+3. **Typography**: `ui/theme/Type.kt` — font families and text styles
+4. **Component**: `ui/components/{Component}.kt` — custom components with M3 tokens
+5. **Preview**: `ui/preview/{Screen}Preview.kt` — @Preview functions for all states
+
+Before generating, Glob for existing theme files (`**/theme/**`, `**/ui/**`) and Read them to extend.
+
+## Step 5: Anti-Patterns (Never Do These)
+
+```
+✗ iOS-style tab bar at the bottom with text-only labels (use M3 NavigationBar with icons)
+✗ iOS-style back swipe gesture (Android uses system back — predictive back on API 34+)
+✗ Custom ripple or removing ripple from clickable surfaces
+✗ Using primary color for large background areas (use surface roles)
+✗ Hardcoded colors instead of M3 color roles
+✗ dp units for text (always sp)
+✗ Circular corners instead of M3 shape tokens (rounded rectangles, not circles for cards)
+✗ Hamburger menu as primary navigation on phone (use bottom nav bar)
+✗ iOS-style action sheets (use M3 BottomSheet or AlertDialog)
+✗ iOS-style segmented controls (use M3 Tabs or SegmentedButton)
+✗ Alert dialogs without explicit action buttons ("OK" and "Cancel" with clear labels)
+✗ Ignoring window size classes (one-size layout for all screen sizes)
+✗ Bottom navigation with more than 5 destinations
+✗ FAB overlapping bottom navigation (position with proper offset)
+✗ Skipping loading/error/empty states
+✗ Shadow elevation in dark theme (use tonal elevation instead)
+```

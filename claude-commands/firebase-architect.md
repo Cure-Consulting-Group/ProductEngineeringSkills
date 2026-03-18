@@ -2,6 +2,15 @@
 
 Generates production-grade Firebase architecture. Every output is security-first, offline-aware, and Clean Architecture compliant (Firebase never leaks into domain layer).
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Core Principle: Firebase in Clean Architecture
 
 ```
@@ -70,6 +79,23 @@ For schema designs, always output:
 4. **Security rules** (scoped to this feature)
 5. **Android Data Layer scaffold** (DTO + Repository impl stub)
 6. **Cloud Functions** (if writes need server-side logic)
+
+## Code Generation (Required)
+
+You MUST generate actual Firebase files using Write:
+
+1. **Security Rules**: `firestore.rules` — deny-by-default with per-collection rules, field validation, auth checks
+2. **Indexes**: `firestore.indexes.json` — composite indexes for all planned queries
+3. **Data Models** (TypeScript): `functions/src/models/{collection}.ts` — typed interfaces matching schema
+4. **Data Models** (Kotlin): `data/model/{Collection}.kt` — Firestore-compatible data classes
+5. **Data Models** (Swift): `Models/{Collection}.swift` — Codable structs
+6. **Cloud Function triggers**: `functions/src/triggers/{collection}.ts` — onCreate/onUpdate/onDelete handlers
+7. **Storage Rules**: `storage.rules` — file type and size validation
+8. **Firebase config**: `firebase.json` — hosting, functions, firestore, storage config
+
+Before generating, Read existing `firestore.rules` and `firebase.json` if they exist. Extend rather than replace.
+
+Use Grep to find all Firestore references in client code: `collection(|doc(|getFirestore` to ensure all collections have rules.
 
 ## Tech Stack Defaults
 

@@ -1,5 +1,14 @@
 # Project Manager
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Senior TPM / Scrum Master operating model. Ceremonies that serve the team. Integrates with sdlc backlog (Epics, Stories, Tasks).
 
 ## Core Ceremonies & Cadence
@@ -106,3 +115,45 @@ Overcommitted sprint: >100% velocity committed = delivery risk, flag immediately
 - [ ] Story pointed by the team
 - [ ] No open blocking questions
 - [ ] Test spec outlined (TEST-UNIT-NNN)
+
+## Sprint Planning Framework
+
+### Capacity Calculation
+```
+Team capacity = (Number of devs × Available days × Focus factor)
+Focus factor: 0.7 for teams with on-call, 0.8 for dedicated teams
+Story points per sprint = Historical velocity (3-sprint average)
+```
+
+### Sprint Ceremony Schedule
+| Ceremony | Duration | Frequency | Output |
+|----------|----------|-----------|--------|
+| Sprint Planning | 2h | Biweekly | Sprint backlog |
+| Daily Standup | 15m | Daily | Blockers identified |
+| Sprint Review | 1h | Biweekly | Demo + stakeholder feedback |
+| Retrospective | 1h | Biweekly | Action items |
+| Backlog Refinement | 1h | Weekly | Estimated stories |
+
+## Risk Register Template
+
+| Risk ID | Description | Probability | Impact | Score | Mitigation | Owner | Status |
+|---------|-------------|-------------|--------|-------|------------|-------|--------|
+| R001 | [risk] | H/M/L | H/M/L | [P×I] | [strategy] | [name] | Open |
+
+## Velocity Tracking
+
+Use git history to estimate velocity:
+- Run: `git log --oneline --since="14 days ago" | wc -l` for commit frequency
+- Run: `git log --oneline --since="14 days ago" --format="%s" | grep -c "feat:"` for feature commits
+- Compare across sprints to identify trends
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Sprint plan**: `docs/sprints/sprint-{N}.md` with goals, capacity, committed stories
+2. **Risk register**: `docs/risk-register.md` with scored risks and mitigations
+3. **RACI matrix**: `docs/raci.md` for current initiative
+4. **Retrospective template**: `docs/retro-template.md`
+5. **Burndown chart**: ASCII/Mermaid burndown showing ideal vs actual
+
+Use Grep on git log to analyze velocity trends: `git log --format="%ai" --since="90 days ago"` grouped by week.

@@ -1,5 +1,14 @@
 # Disaster Recovery
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Design and implement disaster recovery plans, business continuity procedures, and failover architecture. Covers RTO/RPO definition, backup strategies for Firebase/GCP infrastructure, multi-region failover, DR testing runbooks, and business continuity planning. Every production system needs a DR plan before launch -- not after the first outage.
 
 ## Step 1: Classify the DR Need
@@ -533,3 +542,15 @@ CROSS-REFERENCES:
   - /security-review — for security aspects of DR planning
   - /ci-cd-pipeline — for deployment rollback procedures
 ```
+
+## Code Generation (Required)
+
+Generate DR automation using Write:
+
+1. **Backup scripts**: `scripts/backup-firestore.sh`, `scripts/backup-postgres.sh`
+2. **Restore scripts**: `scripts/restore-firestore.sh`, `scripts/restore-postgres.sh`
+3. **DR test workflow**: `.github/workflows/dr-test.yml` — scheduled DR drill
+4. **Failover script**: `scripts/failover.sh` with DNS/traffic switching
+5. **DR checklist**: `docs/dr-checklist.md` with quarterly test schedule
+
+Before generating, use Glob to find existing backup/restore scripts and infrastructure configs.

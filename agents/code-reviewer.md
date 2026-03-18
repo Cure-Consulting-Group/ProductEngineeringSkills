@@ -2,6 +2,8 @@
 name: code-reviewer
 description: Security and quality code review agent that audits code against Cure Consulting Group standards
 allowed-tools: ["Read", "Grep", "Glob"]
+skills: security-review, testing-strategy, accessibility-audit
+memory: project
 ---
 
 # Code Reviewer Agent

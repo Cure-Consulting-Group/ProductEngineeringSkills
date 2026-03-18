@@ -2,6 +2,15 @@
 
 Plans and executes production-grade data migrations across databases, cloud platforms, and legacy systems. Covers ETL pipeline design, zero-downtime cutover patterns, validation frameworks, rollback strategies, and Firestore-specific migration tooling. Every migration is reversible, validated, and monitored.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 **Hard rules:**
 - Every migration has a rollback plan — tested before the forward migration runs
 - Data validation runs before, during, and after migration — not just after
@@ -570,3 +579,15 @@ CROSS-REFERENCES:
   - /infrastructure-scaffold — for cloud infrastructure provisioning
   - /incident-response — for migration failure runbook
 ```
+
+## Code Generation (Required)
+
+Generate migration infrastructure using Write:
+
+1. **Migration script template**: `migrations/{timestamp}_{name}.ts` with up/down functions
+2. **Validation script**: `scripts/validate-migration.ts` — pre/post migration data integrity checks
+3. **Rollback script**: `scripts/rollback-migration.ts` — reverses last applied migration
+4. **Firestore backup**: `scripts/backup-before-migration.sh` — snapshot before migration
+5. **CI workflow**: `.github/workflows/migration-test.yml` — runs migration against test DB
+
+Before generating, Glob for existing migrations (`**/migrations/**`) and Read them to match format.

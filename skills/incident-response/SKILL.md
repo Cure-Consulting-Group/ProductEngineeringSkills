@@ -2,6 +2,7 @@
 name: incident-response
 description: "Create incident runbooks, severity classification, on-call procedures, post-mortems, and escalation paths"
 argument-hint: "[incident-or-system]"
+context: fork
 ---
 
 # Incident Response

@@ -2,6 +2,36 @@
 
 Multi-phase audit that runs after every feature completion across Android, iOS, Firebase, and Web. Produces a scored gap report with actionable fixes and missing test scaffolds.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+## Automated Scanning (Before Manual Review)
+
+Before applying the audit framework, scan the codebase:
+
+1. **File Discovery**: Use Glob to find all feature-related files:
+   - `**/{feature}/**/*.kt` `**/{feature}/**/*.swift` `**/{feature}/**/*.tsx`
+2. **Error Handling Check**: Use Grep to scan for patterns:
+   - Missing: `catch|throw|Result` in feature code (error handling gaps)
+   - Present: `try { } catch { }` with empty catch blocks (swallowed errors)
+   - Missing: `sealed class.*Error|enum.*Error` (no error type hierarchy)
+3. **Test Coverage Check**: Use Glob to compare:
+   - Source files: `**/{feature}/**/*.kt` count
+   - Test files: `**/{feature}/**/*Test.kt` count
+   - Flag if test count < source count
+4. **Security Scan**: Use Grep to find:
+   - Hardcoded strings matching API key patterns: `sk-|pk_|ghp_|AIza|AKIA`
+   - Raw SQL or unparameterized queries
+   - Missing input validation on public functions
+
+Report findings before proceeding to the framework phases.
+
 ## When to Run
 
 1. **Post-Completion** — After any feature is marked done, merged, or declared "ready to ship"

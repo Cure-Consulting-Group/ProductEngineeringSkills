@@ -2,6 +2,15 @@
 
 Build software that minimizes environmental impact. Sustainability is not a nice-to-have — it reduces costs, satisfies ESG requirements, and future-proofs against carbon regulation.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Sustainability Need
 
 | Need | Output |
@@ -236,6 +245,13 @@ SCI calculated per Green Software Foundation specification v1.0.
 Energy estimated via [cloud provider tool / Scaphandre / Cloud Carbon Footprint].
 Carbon intensity sourced from [Electricity Maps / provider averages].
 ```
+
+## Code Generation (Required)
+
+Generate sustainability tooling using Write:
+1. **SCI calculator**: `scripts/calculate-sci.ts` — Software Carbon Intensity score from cloud billing
+2. **Carbon-aware scheduler**: `src/scheduler/carbon-aware.ts` — delays non-urgent jobs to low-carbon periods
+3. **Sustainability report**: `docs/sustainability-report.md` — SCI score, trends, optimization plan
 
 ## Cross-References
 

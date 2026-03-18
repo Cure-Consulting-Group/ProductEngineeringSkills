@@ -4,6 +4,8 @@ description: Validates test suite health, runs tests, checks coverage thresholds
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15
+skills: testing-strategy, e2e-testing
+memory: project
 ---
 
 # Test Runner Agent

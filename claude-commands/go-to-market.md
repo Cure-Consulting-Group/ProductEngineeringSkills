@@ -1,5 +1,14 @@
 # Go-to-Market Plan Generator
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Structured GTM planning. Covers positioning through post-launch growth. Opinionated — cuts low-leverage activities, focuses on what actually moves the needle at early stage.
 
 ## GTM Framework
@@ -66,3 +75,17 @@ Technical, Marketing, and Operations checklists.
 
 ### 9. 90-Day Post-Launch Plan
 Week-by-week focus areas: Stabilize → Learn → Iterate → Scale
+
+## Artifact Generation (Required)
+
+Generate actual GTM documents using Write:
+
+1. **GTM Plan**: `docs/gtm-plan.md` with:
+   - Positioning statement (template: For [target] who [need], [product] is a [category] that [benefit]. Unlike [competitor], we [differentiator].)
+   - Messaging matrix (persona × pain point × message × proof point)
+   - Channel plan with budget allocation
+   - Launch timeline with milestones
+2. **Launch checklist**: `docs/launch-checklist.md` — GitHub issue-style checkboxes
+3. **Competitive battlecard**: `docs/competitive-battlecard.md` — feature comparison table
+
+Use WebSearch to research competitor positioning, pricing, and recent launches in the space.

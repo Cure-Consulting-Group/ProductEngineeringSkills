@@ -1,5 +1,14 @@
 # DORA Metrics
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Implement DORA four key metrics and SPACE framework for measuring software delivery performance and developer experience. Covers data collection automation, dashboard templates, improvement playbooks, and anti-patterns. Use this to baseline your team, set improvement targets, and report to leadership with real data instead of vibes.
 
 ## Step 1: Classify the Metrics Need
@@ -614,3 +623,21 @@ CROSS-REFERENCES:
   - /project-manager — for sprint planning and improvement initiative tracking
   - /analytics-implementation — for metrics data collection and dashboards
 ```
+
+## Automated Metric Collection
+
+Before analysis, gather actual DORA data from the project:
+
+1. **Deployment Frequency**: Run `git tag --list --sort=-creatordate | head -20` and count tags per week/month
+2. **Lead Time**: Run `git log --oneline --since="30 days ago"` to estimate PR-to-deploy time
+3. **Change Failure Rate**: Grep git log for `revert|hotfix|rollback` commits as % of total
+4. **MTTR**: Grep for incident-related commits and measure time between incident start and resolution
+
+## Code Generation (Required)
+
+Generate metric collection automation using Write:
+
+1. **Metric collector**: `scripts/collect-dora-metrics.sh` — parses git history into DORA metrics
+2. **Dashboard config**: `monitoring/dora-dashboard.json` — Grafana/Datadog dashboard template
+3. **CI integration**: `.github/workflows/dora-report.yml` — weekly DORA metric collection
+4. **Team report**: `docs/dora-report-template.md` — monthly report template

@@ -2,6 +2,15 @@
 
 Generates complete, production-ready Android feature scaffolding using Clean Architecture, MVI, Jetpack Compose, Hilt, and Kotlin Coroutines/Flow.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Architecture Layers Generated
 
 ```
@@ -109,3 +118,22 @@ di: Hilt
 async: Coroutines + StateFlow
 testing: JUnit5 + MockK + Turbine
 ```
+
+## Code Generation (Required)
+
+You MUST generate actual code files, not just describe patterns. Use the Write tool to create:
+
+1. **Domain layer**: `domain/model/{Feature}.kt`, `domain/usecase/{Feature}UseCase.kt`
+2. **Data layer**: `data/dto/{Feature}Dto.kt`, `data/repository/{Feature}RepositoryImpl.kt`, `data/mapper/{Feature}Mapper.kt`
+3. **Presentation layer**: `presentation/{feature}/{Feature}ViewModel.kt`, `presentation/{feature}/{Feature}Screen.kt`, `presentation/{feature}/{Feature}Contract.kt` (MVI state/event/effect)
+4. **DI module**: `di/{Feature}Module.kt` (Hilt)
+5. **Tests**: `test/{feature}/{Feature}ViewModelTest.kt`, `test/{feature}/{Feature}UseCaseTest.kt`
+
+Before generating, use Glob to find existing feature modules and match their package structure and naming conventions.
+
+## Cross-References
+
+- `/database-architect` — for Room schema design and migration strategies when local persistence is needed
+- `/testing-strategy` — for test pyramid standards and coverage rules
+- `/ci-cd-pipeline` — for Android build and distribution workflows
+- `/accessibility-audit` — for Compose accessibility and content description standards

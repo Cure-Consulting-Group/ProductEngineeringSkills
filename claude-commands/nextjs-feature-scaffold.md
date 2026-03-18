@@ -2,6 +2,15 @@
 
 Full-stack Next.js feature scaffolding with App Router, Server/Client components, TypeScript, and Tailwind CSS. Platform-aware patterns for static export (Firebase Hosting) and server-side (Vercel/Node).
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Feature Type
 
 | Feature | Pattern |
@@ -186,3 +195,25 @@ Test file naming: `[component].test.tsx` co-located in `__tests__/`
 7. Loading/Error boundaries
 8. Tests
 9. Summary table of generated files
+
+## Code Generation (Required)
+
+You MUST generate actual TypeScript files using the Write tool:
+
+1. **Types**: `src/app/{feature}/types.ts` — TypeScript interfaces and Zod schemas
+2. **Server Actions**: `src/app/{feature}/actions.ts` — server-side mutations
+3. **Page**: `src/app/{feature}/page.tsx` — Server Component with data fetching
+4. **Components**: `src/app/{feature}/components/{Feature}Form.tsx`, `{Feature}List.tsx` — Client Components with 'use client'
+5. **Loading/Error**: `src/app/{feature}/loading.tsx`, `src/app/{feature}/error.tsx`
+6. **Tests**: `src/app/{feature}/__tests__/{feature}.test.tsx`
+7. **Metadata**: Full `generateMetadata` with OpenGraph in page.tsx
+
+Before generating, use Glob to find existing route patterns (`src/app/*/page.tsx`) and match project conventions. Read `tailwind.config.ts` for existing design tokens.
+
+## Cross-References
+
+- `/database-architect` — for Firestore/PostgreSQL schema design used by server actions and queries
+- `/firebase-architect` — for Firestore security rules and Firebase SDK usage patterns
+- `/api-architect` — for REST/GraphQL API route design when using Route Handlers
+- `/testing-strategy` — for Vitest and Playwright testing standards
+- `/seo-content-engine` — for metadata, structured data, and OpenGraph patterns

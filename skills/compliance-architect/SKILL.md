@@ -2,6 +2,7 @@
 name: compliance-architect
 description: "Architect compliance frameworks for HIPAA, COPPA, GDPR, CCPA, and PCI — consent flows, audit trails, data classification, and privacy-by-design"
 argument-hint: "[regulation-or-project]"
+context: fork
 ---
 
 # Compliance Architect

@@ -4,6 +4,8 @@ description: Audits project dependencies for security vulnerabilities, outdated 
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 10
+skills: security-review
+memory: project
 ---
 
 # Dependency Auditor Agent

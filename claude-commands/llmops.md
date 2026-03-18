@@ -2,6 +2,15 @@
 
 Production operations framework for LLM-powered features. Every AI feature at Cure Consulting Group ships with versioned prompts, automated evaluation, cost guardrails, safety filters, and monitoring. No LLM feature goes to production without these operational controls. Shipping a prompt without eval is shipping code without tests.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the LLMOps Need
 
 | Need | Scope | Starting Point |
@@ -898,5 +907,18 @@ DELIVERABLES GENERATED:
   - [ ] Cost dashboard and spend alerts
   - [ ] AI-specific incident response plan
 ```
+
+## Code Generation (Required)
+
+Generate LLMOps infrastructure using Write:
+
+1. **Eval pipeline**: `.github/workflows/prompt-eval.yml` — CI workflow that runs prompt evaluations on PR
+2. **Golden dataset**: `evals/golden-dataset.jsonl` — starter test cases (10 examples)
+3. **Eval runner**: `evals/run-eval.ts` — script that runs prompts against golden dataset and scores
+4. **Prompt registry**: `src/prompts/registry.ts` — versioned prompt templates with metadata
+5. **Cost tracker**: `src/llm/cost-tracker.ts` — middleware that logs token usage and cost per request
+6. **Guardrails**: `src/llm/guardrails.ts` — input/output validation, PII detection, content filtering
+
+Before generating, Grep for existing LLM usage (`openai|anthropic|gemini|Claude|GPT|completion`) to understand current integration.
 
 Cross-references: Use `/ai-feature-builder` for designing the AI feature itself. Use `/observability` for setting up the monitoring infrastructure that LLMOps metrics feed into. Use `/incident-response` for the broader incident response framework. Use `/engineering-cost-model` for projecting LLM costs as part of total project cost.

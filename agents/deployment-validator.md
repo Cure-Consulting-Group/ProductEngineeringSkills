@@ -4,6 +4,8 @@ description: Pre-deployment checklist validator. Verifies environment variables,
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 12
+skills: ci-cd-pipeline, infrastructure-scaffold, release-management
+memory: project
 ---
 
 # Deployment Validator Agent

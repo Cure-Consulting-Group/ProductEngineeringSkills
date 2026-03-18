@@ -4,6 +4,8 @@ description: Validates API implementations match OpenAPI/GraphQL schemas. Checks
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 10
+skills: api-architect, api-gateway
+memory: project
 ---
 
 # API Validator Agent

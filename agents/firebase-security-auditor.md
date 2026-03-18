@@ -4,6 +4,8 @@ description: Audits Firestore security rules for overly permissive access, missi
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 10
+skills: firebase-architect, security-review, compliance-architect
+memory: project
 ---
 
 # Firebase Security Auditor Agent

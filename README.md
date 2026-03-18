@@ -44,24 +44,44 @@ ProductEngineeringSkills/
 │   ├── green-software/
 │   ├── proposal-generator/
 │   ├── api-gateway/
-│   ├── ... (58 total)
+│   ├── ... (63 total)
 │   └── legal-doc-scaffold/
-├── agents/                   # Custom subagent definitions
+├── agents/                   # 9 custom subagent definitions
 │   ├── code-reviewer.md      # Security + quality review agent
-│   └── project-bootstrapper.md  # New project setup agent
+│   ├── project-bootstrapper.md  # New project setup agent
+│   ├── test-runner.md        # Execute test suites, report coverage
+│   ├── migration-validator.md # Database migration safety checks
+│   ├── deployment-validator.md # Pre-deployment checklist validation
+│   ├── dependency-auditor.md # Vulnerability and outdated package audit
+│   ├── accessibility-checker.md # WCAG 2.2 automated compliance
+│   ├── firebase-security-auditor.md # Firestore rules and Functions audit
+│   └── api-validator.md      # OpenAPI spec and contract validation
 ├── hooks/                    # Multi-layer automated enforcement
-│   └── hooks.json            # Command + Prompt + Agent hooks
-├── rules/                    # Path-specific coding standards
+│   └── hooks.json            # Command + Prompt + Agent hooks (12 event types)
+├── rules/                    # 11 path-specific coding standards
 │   ├── android.md             # Loads for *.kt files
 │   ├── ios.md                 # Loads for *.swift files
 │   ├── web.md                 # Loads for *.ts/*.tsx files
-│   └── firebase.md            # Loads for functions/**
-├── output-styles/            # Custom output formatting
+│   ├── firebase.md            # Loads for functions/**
+│   ├── python.md              # Loads for *.py files
+│   ├── go.md                  # Loads for *.go files
+│   ├── rust.md                # Loads for *.rs files
+│   ├── sql.md                 # Loads for *.sql, migrations/**
+│   ├── docker.md              # Loads for Dockerfile, *.dockerfile
+│   ├── terraform.md           # Loads for *.tf, *.tfvars
+│   └── cicd.md                # Loads for .github/workflows/**
+├── output-styles/            # 9 custom output formatting styles
 │   ├── prd/                   # Product docs (PRDs, GTM, research)
 │   ├── code-generation/       # Code scaffolds and implementations
 │   ├── financial-analysis/    # Cost models, SaaS metrics
-│   └── audit-report/          # Audits, reviews, compliance
-├── .mcp.json                 # MCP server configs (GitHub, Sentry, Firestore, Postgres)
+│   ├── audit-report/          # Audits, reviews, compliance
+│   ├── api-specification/     # OpenAPI specs, endpoint docs
+│   ├── architecture-decision/ # ADRs, RFCs, trade-off matrices
+│   ├── runbook/               # Incident runbooks, DR procedures
+│   ├── test-plan/             # Test plans, coverage reports
+│   └── monitoring-alert/      # Alert definitions, thresholds
+├── .mcp.json                 # MCP server configs (GitHub, Sentry, Firestore, PostgreSQL)
+├── .lsp.json                 # LSP server configs (TypeScript, Python/Pyright)
 ├── marketplace.json          # Plugin marketplace manifest
 ├── settings.json             # Default permission rules
 ├── claude-commands/           # Legacy format (backwards compat, 29 files)
@@ -302,7 +322,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 
 ## Hooks (Multi-Layer Automated Enforcement)
 
-The plugin includes three types of hooks:
+The plugin includes three types of hooks across **12 event types**: `SessionStart`, `PreCompact`, `PostCompact`, `PostToolUse`, `PostToolUseFailure`, `UserPromptSubmit`, `PreToolUse`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCompleted`, `Stop`.
 
 ### Command Hooks (Deterministic)
 | Hook | Event | What It Does |
@@ -310,20 +330,26 @@ The plugin includes three types of hooks:
 | **Welcome** | SessionStart | Confirms plugin loaded, lists available skills |
 | **Git status** | SessionStart | Reports current branch, uncommitted changes, last commit |
 | **Platform reminder** | PostToolUse (Edit/Write) | After editing source files, reminds to run audit/testing |
+| **Tool failure logger** | PostToolUseFailure | Logs tool failures with context for debugging |
+| **Subagent start banner** | SubagentStart | Announces subagent invocation with role and scope |
+| **Task completed summary** | TaskCompleted | Summarizes completed tasks and outputs artifacts list |
 | **Protected files** | PreToolUse (Edit/Write) | Blocks edits to .env, lock files, and credential files |
 | **Dangerous commands** | PreToolUse (Bash) | Blocks force push to main, destructive rm, DROP TABLE, prod deploys |
 | **Context re-injection** | PreCompact | Re-injects Cure standards and skill list after context compaction |
+| **Post-compact restore** | PostCompact | Confirms context restored and re-validates active skill state |
 
 ### Prompt Hooks (LLM-Validated)
 | Hook | Event | What It Does |
 |------|-------|--------------|
 | **Code quality gate** | PreToolUse (Edit/Write) | Haiku validates: no hardcoded secrets, no debug logs, no disabled tests, no `any` types |
 | **Deployment safety** | PreToolUse (Bash) | Haiku validates: blocks production deployments outside CI/CD |
+| **Prompt intent classifier** | UserPromptSubmit | Classifies prompt intent to auto-select the most relevant skill |
 
 ### Agent Hooks (Multi-Turn Verification)
 | Hook | Event | What It Does |
 |------|-------|--------------|
 | **Completion validator** | Stop | Agent checks if tests were written for new code and security reviews were run for sensitive changes |
+| **Notification dispatcher** | Notification | Routes system notifications to the appropriate agent or hook handler |
 
 ## MCP Server Integrations
 
@@ -336,6 +362,15 @@ Pre-configured MCP servers in `.mcp.json`:
 | **Firestore** | stdio | Direct database queries, schema inspection |
 | **PostgreSQL** | stdio | Database queries, schema inspection, migrations |
 
+## LSP Server Integrations
+
+Pre-configured LSP servers in `.lsp.json`:
+
+| Server | Language | What It Provides |
+|--------|----------|-----------------|
+| **TypeScript** | `.ts`, `.tsx`, `.js` | Type checking, auto-imports, refactoring, go-to-definition |
+| **Python (Pyright)** | `*.py` | Static type analysis, import resolution, error diagnostics |
+
 ## Output Styles
 
 Custom output formatting for different artifact types:
@@ -346,6 +381,11 @@ Custom output formatting for different artifact types:
 | **code-generation** | Engineering skills (scaffolds) | File tree first, dependency order, complete runnable code |
 | **financial-analysis** | Business skills (costs, models) | ASCII tables, explicit assumptions, sensitivity analysis |
 | **audit-report** | Quality skills (audits, reviews) | Severity scoring, checklists, remediation with effort estimates |
+| **api-specification** | API design skills | OpenAPI 3.0 blocks, endpoint tables, request/response examples |
+| **architecture-decision** | ADR and RFC skills | Context/decision/consequences format, trade-off matrices |
+| **runbook** | Incident response, disaster recovery | Numbered steps, command blocks, decision trees, escalation paths |
+| **test-plan** | Testing strategy, QA skills | Coverage tables, test case templates, pass/fail criteria |
+| **monitoring-alert** | Observability, incident response | Alert definition tables, threshold rationale, runbook links |
 
 ## Custom Agents
 
@@ -353,6 +393,13 @@ Custom output formatting for different artifact types:
 |-------|---------|-------|
 | **code-reviewer** | Security + quality review against Cure standards | Read-only |
 | **project-bootstrapper** | Set up new projects with correct architecture | Full access |
+| **test-runner** | Execute test suites and report coverage gaps | Read + Bash |
+| **migration-validator** | Validate database migrations for safety and correctness | Read-only |
+| **deployment-validator** | Pre-deployment checklist and config validation | Read-only |
+| **dependency-auditor** | Audit dependencies for vulnerabilities and outdated packages | Read + Bash |
+| **accessibility-checker** | Automated WCAG 2.2 compliance checking | Read-only |
+| **firebase-security-auditor** | Firestore rules and Cloud Functions security audit | Read-only |
+| **api-validator** | OpenAPI spec validation, contract testing, breaking change detection | Read-only |
 
 ## Path-Specific Rules
 
@@ -364,6 +411,13 @@ Rules load automatically when editing matching files:
 | `ios.md` | `*.swift` | MVVM/TCA, SwiftUI, structured concurrency |
 | `web.md` | `*.ts`, `*.tsx`, `*.js` | Next.js App Router, Server Components, Tailwind |
 | `firebase.md` | `functions/**`, `*.rules` | Cloud Functions v2, security rules, typed collections |
+| `python.md` | `*.py` | PEP 8, type hints, FastAPI/Django conventions |
+| `go.md` | `*.go` | Effective Go, error handling, project layout standards |
+| `rust.md` | `*.rs` | Ownership patterns, error handling with `thiserror`/`anyhow`, async with Tokio |
+| `sql.md` | `*.sql`, `migrations/**` | Migration safety, index strategy, query optimization |
+| `docker.md` | `Dockerfile`, `*.dockerfile` | Multi-stage builds, non-root users, layer caching |
+| `terraform.md` | `*.tf`, `*.tfvars` | Module structure, remote state, tagging conventions |
+| `cicd.md` | `.github/workflows/**`, `*.yml` (CI) | GitHub Actions best practices, secrets handling, job matrix |
 
 ## Tech Stack Defaults
 

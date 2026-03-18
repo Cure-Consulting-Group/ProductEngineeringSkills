@@ -2,6 +2,29 @@
 
 Build production AI features: LLM integration, RAG pipelines, voice/vision, and intelligent automation. Ship AI that's reliable, cost-aware, and safe — not a demo.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Grep for existing LLM usage: `openai|anthropic|gemini|Claude|GPT|completion|embedding` to understand current AI integration
+- Use this context to tailor all output to the actual project
+
+## Code Generation (Required)
+
+You MUST generate actual implementation code using Write, not just describe patterns:
+
+1. **LLM client wrapper**: `src/llm/client.ts` — type-safe wrapper with retry, timeout, streaming support
+2. **Prompt templates**: `src/llm/prompts/{feature}.ts` — versioned prompt templates with variable injection
+3. **Guardrails**: `src/llm/guardrails.ts` — input validation, output parsing, PII detection, content filtering
+4. **Cost tracker**: `src/llm/cost-tracker.ts` — token counting and cost logging middleware
+5. **Eval tests**: `tests/llm/{feature}.eval.ts` — golden dataset tests for prompt quality
+6. **RAG pipeline** (if applicable): `src/llm/rag/` — embedder, vector store client, retriever, reranker
+
+Before generating, Grep for existing LLM code and Read it to extend rather than duplicate.
+
 ## Step 1: Classify the AI Feature Type
 
 | Feature | Architecture |

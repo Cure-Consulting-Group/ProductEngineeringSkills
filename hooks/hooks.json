@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v3.2.0). 63 skills, 9 agents, 11 rules, 9 output styles, 4 MCP servers, 2 LSP servers. Use /cure-product-engineering:<skill-name> to invoke. Run /cure-product-engineering:project-bootstrap to set up a new project.'"
+            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v3.3.0). 63 skills, 9 agents, 11 rules, 9 output styles, 4 MCP servers, 2 LSP servers. Use /cure-product-engineering:<skill-name> to invoke. Run /cure-product-engineering:project-bootstrap to set up a new project.'"
           }
         ]
       },

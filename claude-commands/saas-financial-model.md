@@ -1,5 +1,14 @@
 # SaaS Financial Model
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Unit economics, revenue modeling, and financial projections for SaaS and subscription businesses. Make pricing decisions with math, not vibes.
 
 ## Step 1: Classify the Financial Need
@@ -209,6 +218,22 @@ KEY RISKS
 RECOMMENDATIONS
   - [Pricing/growth/cost recommendation]
 ```
+
+## Live Benchmarking
+
+Use WebSearch to fetch current SaaS benchmarks:
+- "SaaS median CAC by segment 2025"
+- "SaaS net revenue retention benchmarks"
+- "SaaS Rule of 40 benchmarks by stage"
+
+Compare project metrics against benchmarks and flag outliers.
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Financial model**: `docs/financial-model.md` with all metrics, assumptions, and scenarios
+2. **Pricing analysis**: `docs/pricing-analysis.md` — tier comparison with value metrics
+3. **Unit economics**: `docs/unit-economics.md` — CAC, LTV, payback period with sensitivity analysis
 
 ## Step 9: SaaS Benchmarks
 

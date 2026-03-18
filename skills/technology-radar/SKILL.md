@@ -2,6 +2,7 @@
 name: technology-radar
 description: "Generate and maintain a ThoughtWorks-style technology radar — track Adopt/Trial/Assess/Hold decisions across the portfolio with rationale and migration plans"
 argument-hint: "[portfolio-or-domain]"
+context: fork
 ---
 
 # Technology Radar

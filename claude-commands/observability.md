@@ -2,6 +2,33 @@
 
 Production observability framework covering the three pillars — logs, metrics, and traces — across all Cure Consulting Group platforms. Every production service ships with structured logging, health metrics, distributed tracing, SLO definitions, and actionable alerts. No service goes to production without observability.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+## Automated Observability Baseline
+
+Scan for existing monitoring infrastructure:
+
+1. **Logging**: Grep for logging libraries:
+   - `winston|pino|bunyan|log4j|timber|os_log|slog`
+   - Grep for: `console.log` count (debug logging in production)
+2. **Monitoring**: Glob for configs:
+   - `**/sentry*`, `**/datadog*`, `**/newrelic*`, `**/prometheus*`, `**/grafana*`
+3. **Tracing**: Grep for:
+   - `opentelemetry|jaeger|zipkin|@sentry/tracing|dd-trace`
+4. **Alerting**: Glob for alert configs:
+   - `**/alerts*`, `**/monitors*`, `**/*alert*`
+5. **Health Checks**: Grep for:
+   - `/health|/healthz|/ready|/live` endpoint definitions
+
+Report observability maturity level before recommending improvements.
+
 ## Step 1: Classify the Observability Need
 
 | Need | Scope | Starting Point |

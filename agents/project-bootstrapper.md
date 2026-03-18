@@ -1,6 +1,8 @@
 ---
 name: project-bootstrapper
 description: Sets up new projects with correct architecture, configuration, and Cure Consulting Group standards
+skills: sdlc, ci-cd-pipeline, testing-strategy
+memory: project
 ---
 
 # Project Bootstrapper Agent

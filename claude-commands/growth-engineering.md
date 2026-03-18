@@ -1,5 +1,14 @@
 # Growth Engineering
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Build systematic, measurable growth into your product. Growth is not marketing — it is engineering loops that compound over time.
 
 ## Step 1: Classify the Growth Need
@@ -281,6 +290,15 @@ Expansion revenue:
   - Feature-based: unlock tiers as needs grow
   - Best: hybrid seat + usage (predictable base + upside)
 ```
+
+## Code Generation (Required)
+
+Generate growth infrastructure using Write:
+
+1. **Cohort analysis query**: `analytics/cohort-retention.sql` — BigQuery/PostgreSQL retention query
+2. **A/B test sample calculator**: `scripts/sample-size-calculator.ts` — statistical significance calculator
+3. **Referral system schema**: `src/referral/schema.ts` — Firestore/PostgreSQL schema for referral tracking
+4. **Growth dashboard**: `monitoring/growth-dashboard.json` — dashboard config with AARRR metrics
 
 ## Cross-References
 

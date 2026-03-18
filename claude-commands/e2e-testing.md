@@ -2,6 +2,15 @@
 
 End-to-end test suites that prove your app works for real users. Page Object Model is mandatory. Every test runs independently. Flaky tests are bugs, not "just E2E things."
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the E2E Need
 
 | Type | When to Use | Scope |
@@ -933,6 +942,18 @@ Track over time (weekly review):
 
 Use Allure trend reports or build a simple dashboard from CI data.
 ```
+
+## Code Generation (Required)
+
+You MUST generate actual test files using the Write tool:
+
+1. **Config**: `playwright.config.ts` or `maestro/` config based on platform
+2. **Page Objects**: `tests/pages/{Feature}Page.ts` with locators and actions
+3. **Test Suites**: `tests/{feature}.spec.ts` with describe/it blocks for happy + error paths
+4. **Fixtures**: `tests/fixtures/{feature}.fixtures.ts` with test data
+5. **CI Integration**: `.github/workflows/e2e.yml` for running E2E tests
+
+Before generating, use Glob to find existing test patterns (`**/*.spec.ts`, `**/*.test.ts`, `**/pages/*.ts`) and match conventions.
 
 ---
 

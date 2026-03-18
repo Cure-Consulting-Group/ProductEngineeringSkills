@@ -2,6 +2,7 @@
 name: chaos-engineering
 description: "Design resilience testing — failure injection, graceful degradation, game days, and fault tolerance verification for distributed systems"
 argument-hint: "[service-or-project]"
+context: fork
 ---
 
 # Chaos Engineering

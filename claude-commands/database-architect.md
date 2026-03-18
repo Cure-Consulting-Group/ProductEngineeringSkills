@@ -2,6 +2,15 @@
 
 Designs production-grade database schemas, migration plans, indexing strategies, and query optimizations across Firestore, PostgreSQL, SQLite/Room, and Redis. Every recommendation considers data volume, access patterns, consistency requirements, and Cure Consulting Group's Firebase-first but multi-database approach.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Core Principle: Right Database for the Right Job
 
 ```
@@ -260,6 +269,19 @@ COMMIT;
 - Improvement: {percentage}
 - Changes applied: {index added, query rewritten, etc.}
 ```
+
+## Code Generation (Required)
+
+Generate actual schema files using Write:
+
+1. **PostgreSQL DDL**: `migrations/{timestamp}_create_{table}.sql` — CREATE TABLE with indexes, constraints
+2. **Firestore indexes**: `firestore.indexes.json` — composite index definitions
+3. **Room entities** (Android): `data/local/entities/{Table}Entity.kt` — Room @Entity classes
+4. **SwiftData models** (iOS): `Models/{Table}.swift` — @Model classes
+5. **Prisma schema** (Web): `prisma/schema.prisma` — if Prisma is detected
+6. **Migration runner**: `scripts/run-migration.sh` — applies migrations safely with rollback
+
+Before generating, Glob for existing schema files and Read them. Grep for current query patterns to suggest missing indexes.
 
 ## Tech Stack Defaults
 

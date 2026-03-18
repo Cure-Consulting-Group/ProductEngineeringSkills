@@ -2,6 +2,15 @@
 
 End-to-end UAT framework covering plan generation, execution, stakeholder sign-off, and go/no-go release gates. UAT is the last quality gate before production — treat it that way. No feature ships without explicit stakeholder sign-off against acceptance criteria.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the UAT Need
 
 Determine the UAT type before building the plan. The type dictates scope, depth, stakeholder involvement, and timeline.
@@ -14,6 +23,21 @@ Determine the UAT type before building the plan. The type dictates scope, depth,
 | **Hotfix Validation** | Production bug fixed, patch deployed to staging | Narrow scope — verify fix, confirm no side effects on adjacent flows | 2-4 hours |
 
 If the UAT type is unclear, ask before proceeding. A hotfix validation and a release candidate UAT require fundamentally different plans.
+
+## Automated Context Gathering
+
+Before creating UAT plan:
+1. Glob for existing test specs, PRD files, acceptance criteria documents
+2. Read any found specs to extract testable requirements
+3. Grep for feature flags that control the features under test
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **UAT plan**: `docs/uat/uat-plan.md` — using test-plan output style
+2. **Test cases**: `docs/uat/test-cases.md` — detailed test cases with steps and expected results
+3. **Sign-off form**: `docs/uat/sign-off.md` — stakeholder approval template
+4. **Bug triage template**: `docs/uat/bug-triage.md` — severity classification guide
 
 ## Step 2: Gather Context
 

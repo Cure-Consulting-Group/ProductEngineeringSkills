@@ -4,6 +4,15 @@ Initialize any repository's agent coordination layer by generating two files: `C
 
 Do not generate either file until the interview is complete.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to pre-fill answers during the developer interview
+
 ## Step 1: Codebase Inspection (Autonomous)
 
 Before asking anything, silently inspect the codebase and store results in working memory. Do not print results — use them to pre-fill answers and skip redundant interview questions.

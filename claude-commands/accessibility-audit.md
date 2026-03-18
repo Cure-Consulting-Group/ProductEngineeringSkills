@@ -2,6 +2,37 @@
 
 Comprehensive WCAG 2.2 accessibility audit across Android, iOS, and Web platforms. Evaluates perceivability, operability, understandability, and robustness. Produces a scored compliance report with severity-ranked findings and actionable remediation guidance.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+## Automated Accessibility Scan (Before Manual Review)
+
+Before applying the WCAG framework, scan the codebase:
+
+1. **Missing Alt Text** (WCAG 1.1.1):
+   - Grep for: `<img` without `alt=` in `*.tsx` `*.jsx` `*.html`
+   - Grep for: `Image(` without `contentDescription` in `*.kt`
+   - Grep for: `Image(` without `.accessibilityLabel` in `*.swift`
+2. **Missing Form Labels** (WCAG 1.3.1):
+   - Grep for: `<input` without associated `<label` or `aria-label`
+   - Grep for: `TextField(` without `label` parameter in Compose
+3. **Color-Only Information** (WCAG 1.4.1):
+   - Grep for: hardcoded color values without semantic meaning (`#[0-9a-fA-F]{6}` in JSX)
+4. **Touch Target Size** (WCAG 2.5.5):
+   - Grep for: `width.*[0-3][0-9]dp|height.*[0-3][0-9]dp` in Compose (targets < 44dp)
+   - Grep for: custom click handlers on small elements
+5. **Focus Management**:
+   - Grep for: `outline:\s*none|outline:\s*0` in CSS (removed focus indicators)
+   - Grep for: `tabIndex="-1"` on interactive elements
+
+Report violations with file:line before proceeding to full WCAG audit.
+
 ## When to Run
 
 1. **Pre-Release** — Before any feature, screen, or flow ships to production

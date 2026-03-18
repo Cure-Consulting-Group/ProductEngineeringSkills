@@ -2,6 +2,7 @@
 name: portfolio-registry
 description: "Generate and maintain a structured product portfolio registry — the single source of truth for all products, stacks, teams, stages, and shared infrastructure across the venture studio"
 argument-hint: "[portfolio-or-product]"
+context: fork
 ---
 
 # Portfolio Registry

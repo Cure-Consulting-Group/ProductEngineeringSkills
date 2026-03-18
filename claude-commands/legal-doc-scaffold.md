@@ -1,8 +1,29 @@
 # Legal Document Scaffold
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+> **IMPORTANT DISCLAIMER — READ BEFORE PROCEEDING:** These are starting-point scaffolds for reference and drafting purposes only. They do NOT constitute legal advice and do NOT create an attorney-client relationship. These documents have NOT been reviewed by a licensed attorney and may not be appropriate for your jurisdiction, industry, or specific situation. ALWAYS have every legal document reviewed and approved by a licensed attorney in your jurisdiction before publishing, signing, or relying on it in any business context. Failure to do so may result in unenforceable agreements, regulatory violations, or legal liability. The use of these scaffolds is entirely at your own risk.
+
 Generates first-draft legal documents for SaaS products, mobile apps, and consulting engagements.
 
-> **IMPORTANT DISCLAIMER:** These are starting-point scaffolds for reference purposes only. They do not constitute legal advice. Always have legal documents reviewed by a licensed attorney in your jurisdiction before publishing or using them in business.
+## Disclaimer Enforcement (Required)
+
+Every generated document MUST begin with this notice block before any content:
+
+```markdown
+> **LEGAL DISCLAIMER:** This document is a scaffold for reference purposes only and does NOT constitute legal advice. It has not been reviewed by a licensed attorney. Have this document reviewed by qualified legal counsel in your jurisdiction before use.
+```
+
+Additionally, every section that touches jurisdiction-specific law, data privacy, intellectual property, or liability MUST include an inline `<!-- ATTORNEY REVIEW: [specific reason] -->` comment.
+
+The disclaimer MUST also be repeated verbatim at the end of every generated document.
 
 ## Document Types
 
@@ -87,4 +108,6 @@ purchases directly.
 - Use `[COMPANY NAME]`, `[PRODUCT NAME]`, `[DATE]`, `[EMAIL]` as fill-in placeholders
 - Highlight sections that need attorney review with `<!-- ATTORNEY REVIEW: [reason] -->`
 - Include a "Document Info" header with version, date, and applicable laws
-- Always end with the disclaimer reminder
+- **Start every document with the full legal disclaimer block** (see Disclaimer Enforcement above)
+- **End every document with the full legal disclaimer block** — repeated, never omitted
+- Inline `<!-- ATTORNEY REVIEW -->` comments are required on: jurisdiction clauses, limitation of liability, data subject rights, IP ownership, indemnification, and governing law sections

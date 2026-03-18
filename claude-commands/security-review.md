@@ -2,6 +2,36 @@
 
 Structured security review for mobile apps, web apps, APIs, and cloud infrastructure. Run before every launch, after major features, and quarterly on production systems.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+## Automated Vulnerability Scan (Before Manual Review)
+
+Before applying the security framework, scan the codebase with Grep:
+
+1. **Secrets Detection**:
+   - Grep for: `sk-[a-zA-Z0-9]`, `pk_[a-zA-Z0-9]`, `ghp_`, `AIza`, `AKIA`, `password\s*=\s*["']`
+   - Grep for: hardcoded URLs with credentials (`://.*:.*@`)
+2. **Input Validation**:
+   - Grep for: `req.body\.` or `request\.` without adjacent validation (`zod|joi|yup|validate`)
+   - Grep for: `innerHTML|dangerouslySetInnerHTML` (XSS vectors)
+   - Grep for: raw SQL concatenation (`\+ .*query|` + `.*sql`)
+3. **Auth Gaps**:
+   - Grep for: API routes without auth middleware (`app.get|app.post` without `auth|protect|verify`)
+   - Grep for: Firestore rules with `allow read: if true` or `allow write: if true`
+4. **Dependency Check**:
+   - Run: `npm audit --json 2>/dev/null | head -50` to check for known vulnerabilities
+5. **Sensitive Files**:
+   - Glob for: `**/.env`, `**/credentials*`, `**/serviceAccount*`, `**/*.pem` that might be committed
+
+Report all findings with file:line references before proceeding to the manual framework.
+
 ## Step 1: Classify the Review Type
 
 | Trigger | Scope |

@@ -1,5 +1,14 @@
 # Analytics Implementation
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Instrument event tracking, funnels, and dashboards across mobile and web. Measure what matters, not everything.
 
 ## Step 1: Classify the Analytics Need
@@ -172,6 +181,23 @@ Implementation:
   - Analytics wrapper checks consent before firing
   - Firebase: Analytics.setAnalyticsCollectionEnabled(userConsented)
 ```
+
+## Automated Event Discovery
+
+Before defining tracking plan, scan existing implementation:
+
+1. **Find existing events**: Grep for tracking calls:
+   - `trackEvent|logEvent|analytics.track|posthog.capture|mixpanel.track`
+2. **Find untracked interactions**: Grep for click handlers, form submissions, and navigations without tracking
+3. **Count total events**: Report how many unique event names exist
+
+## Code Generation (Required)
+
+Generate analytics infrastructure using Write:
+
+1. **Event taxonomy**: `src/analytics/events.ts` — TypeScript enum/const of all event names
+2. **Analytics wrapper**: `src/analytics/tracker.ts` — type-safe wrapper with platform detection
+3. **Tracking plan**: `docs/tracking-plan.md` — complete event documentation
 
 ## Step 8: Dashboard Design
 

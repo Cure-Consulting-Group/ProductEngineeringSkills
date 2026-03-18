@@ -4,6 +4,8 @@ description: Validates database migrations for correctness, rollback safety, nam
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 12
+skills: database-architect, data-migration
+memory: project
 ---
 
 # Migration Validator Agent

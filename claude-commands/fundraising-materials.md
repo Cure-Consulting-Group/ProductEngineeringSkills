@@ -1,5 +1,14 @@
 # Fundraising Materials
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Generate investor-ready materials for venture-backed startups. Pitch decks that close, investor updates that build trust, data rooms that survive diligence, and cap tables that don't surprise you. Built for the Cure Consulting Group portfolio: Vendly, Autograph, The Initiated, Antigravity, TwntyHoops.
 
 ## Step 1: Classify the Fundraising Need
@@ -417,6 +426,17 @@ PIPELINE RULES
   - Create urgency: batch meetings into 2-3 week windows
   - Never give an exploding term sheet — but do set timeline expectations
 ```
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Pitch deck outline**: `docs/pitch-deck-outline.md` — slide-by-slide structure with talking points
+2. **Investor update**: `docs/investor-updates/{YYYY-MM}.md` — monthly email template populated with current metrics
+3. **Data room index**: `docs/data-room-index.md` — checklist of all required documents with status
+4. **Cap table model**: `docs/cap-table-model.md` — pre/post money scenarios and SAFE conversion math
+5. **Fundraising pipeline**: `docs/fundraising-pipeline.md` — CRM template with outreach sequence
+
+Use WebSearch to research comparable rounds: "[sector] startup seed round 2025 [region]" to validate valuation expectations.
 
 ## Step 8: Output Template
 
