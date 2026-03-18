@@ -10,6 +10,14 @@ Product voice and content marketing engine. Generates platform-native content pa
 
 **Every invocation is scoped to a single product.** Multi-language/multi-market products produce market-specific variants in the appropriate language.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Use this context to identify the product, its ICP, and target platforms
+
 ## Operating Principles
 
 1. **Product-first, demographics-driven** — every piece of content is rooted in the specific product's ICP, not generic best practices

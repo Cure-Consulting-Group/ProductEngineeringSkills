@@ -8,6 +8,15 @@ argument-hint: "[project-name]"
 
 Continuous integration and deployment pipelines for mobile (Android/iOS), web (Next.js), and backend (Firebase). GitHub Actions first. Every project ships with automated build, test, and deploy from day one.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Pipeline Type
 
 | Project | Pipeline |
@@ -201,6 +210,25 @@ Vercel:            Dashboard → Deployments → Promote previous
 ```
 
 Never force-push main. Always revert-and-push-forward.
+
+## Code Generation (Required)
+
+You MUST generate actual workflow files using the Write tool:
+
+1. **CI workflow**: `.github/workflows/ci.yml` — lint, type-check, test, build (matrix for affected platforms)
+2. **Deploy workflow**: `.github/workflows/deploy.yml` — staging auto-deploy, production with approval
+3. **Release workflow**: `.github/workflows/release.yml` — version bump, changelog, tag, publish
+
+Before generating, use Glob to find existing workflows (`.github/workflows/*.yml`) and Read them to understand current setup. Adapt, don't duplicate.
+
+Use Grep to find test commands in package.json/build.gradle to set correct test steps.
+
+## Cross-References
+
+- `/infrastructure-scaffold` — for Firebase, GCP, Vercel, and Docker configs the pipeline deploys
+- `/testing-strategy` — for test runner commands and coverage thresholds to enforce in CI
+- `/security-review` — for secret scanning and SAST steps to add to the pipeline
+- `/e2e-testing` — for E2E workflow integration and sharding patterns
 
 ## Step 8: Monitoring Post-Deploy
 

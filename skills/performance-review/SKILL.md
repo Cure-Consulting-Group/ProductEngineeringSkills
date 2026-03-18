@@ -8,6 +8,35 @@ argument-hint: "[app-or-feature]"
 
 Define performance budgets, build load testing plans, identify optimization opportunities, and set up monitoring. Every target uses concrete numbers — no vague "make it faster."
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+## Automated Performance Baseline
+
+Gather performance context before review:
+
+1. **Bundle Analysis**:
+   - Run: `npx next build 2>/dev/null | tail -20` or check for existing build stats
+   - Glob for: `**/webpack-stats.json`, `**/bundle-analyzer*`
+2. **Existing Configs**:
+   - Glob for: `**/lighthouse*`, `**/k6*`, `**/artillery*`, `**/.lighthouserc*`
+   - Read any found configs to understand current budgets
+3. **Image Optimization**:
+   - Glob for: `**/*.png` `**/*.jpg` `**/*.gif` larger than 500KB
+   - Grep for: `<img` without `next/image` or lazy loading in web projects
+4. **Database Queries**:
+   - Grep for: `SELECT *` (unbounded queries)
+   - Grep for: N+1 patterns (queries inside loops)
+5. **Web Search**: Search for current Core Web Vitals benchmarks for the project's industry
+
+Use findings to populate the performance baseline before applying the review framework.
+
 ## Step 1: Classify the Performance Review Type
 
 | Type | When to Use | Primary Output |

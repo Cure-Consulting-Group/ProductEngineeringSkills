@@ -8,6 +8,15 @@ argument-hint: "[project-or-architecture]"
 
 Architecture framework for scaling frontend applications across multiple teams. Use when decomposing a monolithic frontend, setting up a monorepo, designing shared component libraries, or enabling independent team deployments. Opinionated toward Next.js, Turborepo, and Vercel.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Micro-Frontend Need
 
 | Type | When to Use | Output |
@@ -538,6 +547,19 @@ Rules:
   - Redirects between team boundaries use standard HTTP redirects
   - Deep linking must work — every route is bookmarkable
 ```
+
+## Code Generation (Required)
+
+Generate monorepo infrastructure using Write:
+
+1. **Root config**: `turbo.json` or `nx.json` — monorepo task orchestration
+2. **Workspace config**: `pnpm-workspace.yaml` — package discovery
+3. **Shared UI package**: `packages/ui/package.json` — component library setup
+4. **Shared types**: `packages/types/package.json` — shared TypeScript types
+5. **App template**: `apps/template/package.json` — starter app config with module federation
+6. **CI workflow**: `.github/workflows/monorepo-ci.yml` — affected-only builds and tests
+
+Before generating, Glob for existing workspace configs and Read package.json to understand current structure.
 
 ## Step 8: When NOT to Use Micro-Frontends
 

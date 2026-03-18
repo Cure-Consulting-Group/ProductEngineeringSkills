@@ -41,6 +41,15 @@ Feature/[FeatureName]/
     └── [FeatureName]Module.swift
 ```
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify Request
 
 | Request | Action |
@@ -120,6 +129,25 @@ protocol [Feature]Repository {
 10. Subcomponent views
 11. DI wiring
 12. XCTest scaffold
+
+## Code Generation (Required)
+
+You MUST generate actual Swift files using the Write tool:
+
+1. **Domain**: `Domain/Models/{Feature}.swift`, `Domain/UseCases/{Feature}UseCase.swift`, `Domain/Repositories/{Feature}RepositoryProtocol.swift`
+2. **Data**: `Data/DTOs/{Feature}DTO.swift`, `Data/Repositories/{Feature}Repository.swift`, `Data/Mappers/{Feature}Mapper.swift`
+3. **Presentation**: `Presentation/{Feature}/{Feature}ViewModel.swift`, `Presentation/{Feature}/{Feature}View.swift`
+4. **DI**: `DI/{Feature}Assembly.swift`
+5. **Tests**: `Tests/{Feature}/{Feature}ViewModelTests.swift`, `Tests/{Feature}/{Feature}UseCaseTests.swift`
+
+Before generating, use Glob to find existing feature modules (`**/*ViewModel.swift`, `**/*UseCase.swift`) and match conventions.
+
+## Cross-References
+
+- `/database-architect` — for CoreData/SwiftData schema design and migrations
+- `/testing-strategy` — for XCTest standards and coverage expectations
+- `/ci-cd-pipeline` — for iOS Fastlane and TestFlight workflows
+- `/accessibility-audit` — for SwiftUI accessibility modifiers and VoiceOver compliance
 
 ## Tech Stack Defaults
 

@@ -6,6 +6,15 @@ argument-hint: "[product-or-portfolio]"
 
 # Investor Reporting
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Investor communications for a multi-product venture studio. Monthly updates, board decks, portfolio financials, cap table modeling, runway scenarios, and data room preparation. Optimized for Cure Consulting Group's portfolio: Vendly, Autograph, The Initiated, Antigravity, and TwntyHoops.
 
 Investors remember two things: how honest you were when things were hard, and whether you delivered on what you said you would. This skill ensures both.
@@ -724,6 +733,14 @@ DASHBOARD RULES:
   - Never add a KPI without removing one. Dashboard bloat kills focus.
   - Source of truth: one spreadsheet or dashboard tool, not scattered across Notion/Sheets/Slack
 ```
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Monthly update**: `docs/investor-updates/{YYYY-MM}.md` — populated template
+2. **Board deck outline**: `docs/board-deck-outline.md` — slide-by-slide structure
+3. **KPI dashboard config**: `monitoring/investor-kpi.json` — dashboard template
+4. **Metric collection queries**: `analytics/investor-metrics.sql` — queries for each KPI
 
 ## Cross-References
 

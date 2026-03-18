@@ -8,6 +8,15 @@ argument-hint: "[project-or-feature]"
 
 Generate complete test account infrastructure: personas, seed data, Stripe test config, credential management, state reset utilities, and compliance-safe synthetic data. Every environment gets consistent, reproducible test state. NEVER use real user data or PII in test accounts.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Core Principle: Test Data Is Infrastructure
 
 ```
@@ -15,6 +24,18 @@ Test accounts are not an afterthought — they are first-class infrastructure.
 Every developer, every CI run, and every QA session must start from a known, reproducible state.
 Test data scripts live in version control alongside the code they support.
 ```
+
+## Code Generation (Required)
+
+Generate test infrastructure using Write:
+
+1. **Seed script**: `scripts/seed-test-data.ts` — idempotent Firestore/PostgreSQL seeder with all personas
+2. **Environment guard**: `src/utils/env-guard.ts` — prevents seed script from running in production
+3. **Test user factory**: `tests/factories/user-factory.ts` — faker-based user generator
+4. **Credential template**: `.env.test.example` — test environment variables
+5. **Reset script**: `scripts/reset-test-data.ts` — wipes and re-seeds test environment
+
+Before generating, Grep for existing test data patterns (`seed|fixture|factory|faker`) to match conventions.
 
 ## Step 1: Classify the Test Account Need
 

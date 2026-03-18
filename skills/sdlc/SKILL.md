@@ -6,6 +6,15 @@ argument-hint: "[feature-name]"
 
 # SDLC Artifact Generator
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Full-cycle software development lifecycle artifact generation for technical product teams. Generates production-grade, opinionated SDLC artifacts aligned with Clean Architecture, SOLID principles, and modern mobile/backend engineering standards.
 
 ## Core Principle: Artifact Traceability Chain
@@ -112,6 +121,21 @@ Sprint sequencing: Infrastructure → Core Data Layer → Business Logic → UI 
 - For medium requests (1 epic, 5-15 stories): Generate a `.md` file
 - For large requests (full product, multiple epics): Generate a `.md` file with table of contents and cross-linked references
 - Always offer: "Want me to also generate the [ADR / RFC / API spec / test specs] for this?"
+
+## Artifact Generation (Required)
+
+You MUST generate actual documents using Write, not just describe formats:
+
+Based on the classified request type, generate:
+- **PRD**: `docs/prd/{name}.md` with full sections (Problem, Solution, Scope, Metrics, Timeline)
+- **ADR**: `docs/adr/{NNN}-{title}.md` using architecture-decision output style
+- **Epic**: `docs/epics/{name}.md` with user stories and acceptance criteria
+- **Task spec**: `docs/tasks/{ticket-id}.md` with implementation plan and test cases
+- **RFC**: `docs/rfcs/{name}.md` with context, proposal, alternatives, rollout plan
+
+Before generating, Glob for existing docs (`docs/**/*.md`) to understand numbering and format conventions.
+
+Cross-reference `/project-bootstrap` for new projects — use it first to scaffold directory structure.
 
 ## Tech Stack Defaults (override if user specifies otherwise)
 

@@ -8,6 +8,15 @@ argument-hint: "[portfolio-or-domain]"
 
 Generate and maintain a ThoughtWorks-style technology radar for multi-product portfolios. Use when evaluating technology choices, conducting quarterly reviews, planning migrations away from deprecated technologies, or auditing technology debt across products. Designed for Cure Consulting Group's portfolio: Vendly, Autograph, The Initiated, Antigravity, and TwntyHoops.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Radar Task
 
 | Type | When to Use | Output |
@@ -17,6 +26,21 @@ Generate and maintain a ThoughtWorks-style technology radar for multi-product po
 | Quarterly Radar Review | First week of each quarter | Ring movement proposals, new entries, divergence report |
 | Migration Planning | Moving from Hold technology to Adopt replacement | Migration plan with effort estimates, product-by-product timeline |
 | Technology Debt Audit | Sprint planning, budget season, technical health check | Inventory of Hold technologies still in production with priority rankings |
+
+## Automated Technology Discovery
+
+Before building radar, scan all projects:
+1. Glob for dependency files: `**/package.json`, `**/build.gradle*`, `**/Podfile`, `**/Cargo.toml`, `**/requirements.txt`, `**/go.mod`
+2. Read each file and extract all dependencies with versions
+3. Count usage across projects (e.g., "React: 5 projects, Vue: 1 project")
+4. Use WebSearch to check: GitHub stars trends, npm download trends, security advisories
+5. Auto-suggest ring placements based on adoption breadth and industry trends
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Radar document**: `docs/technology-radar.md` — full radar with all four rings
+2. **Migration tracker**: `docs/tech-migrations.md` — planned moves between rings with effort estimates
 
 ## Step 2: Gather Context
 

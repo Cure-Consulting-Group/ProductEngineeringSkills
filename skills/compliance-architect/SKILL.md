@@ -15,6 +15,32 @@ Designs production-grade compliance architectures for regulated applications. Co
 - PHI, PCI data, and children's data require encryption at rest AND in transit with key separation
 - All compliance controls must be testable and auditable — no "trust me" security
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+## Automated Compliance Scan
+
+Scan codebase for compliance signals before framework application:
+
+1. **PII Detection**: Grep for fields likely containing PII:
+   - `email|phone|ssn|social_security|date_of_birth|address|name` in data models
+2. **Consent Tracking**: Grep for consent mechanisms:
+   - `consent|gdpr|opt_in|opt_out|cookie` — flag if absent in user-facing code
+3. **Data Retention**: Grep for deletion/retention logic:
+   - `delete|remove|purge|retain|expire|ttl` in data layer code
+4. **Audit Trail**: Grep for logging of data access:
+   - `audit|log.*access|track.*change` — flag if absent in data layer
+5. **Encryption**: Grep for encryption usage:
+   - `encrypt|decrypt|AES|RSA|bcrypt|argon2|hash` — flag if absent for sensitive data
+
+Report compliance posture before detailed framework analysis.
+
 ## Step 1: Classify the Regulation
 
 | Regulation | Trigger | Key Requirements | Penalty Range |

@@ -7,6 +7,15 @@ allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]
 
 # Engineering Cost Model
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Estimate the true cost of building, running, and maintaining software architectures. Use this before scoping projects, pricing engagements, or choosing between build vs buy.
 
 ## Step 1: Classify the Cost Analysis Type
@@ -214,6 +223,16 @@ Common build vs buy decisions:
   AI features: BUILD (custom integration with LLM APIs)
   Core logic:  ALWAYS BUILD — this is your product
 ```
+
+## Live Pricing Data
+
+Use WebSearch to fetch current pricing for infrastructure components:
+- "Firebase pricing calculator 2025"
+- "Vercel pricing tiers 2025"
+- "OpenAI API pricing per token 2025"
+- "Stripe payment processing fees 2025"
+
+Flag any assumptions that differ from current published pricing.
 
 ## Step 7: Cost Estimate Output
 

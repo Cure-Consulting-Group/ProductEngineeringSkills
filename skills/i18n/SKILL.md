@@ -8,6 +8,15 @@ argument-hint: "[project-or-locale]"
 
 Implements production-grade i18n/l10n across Android, iOS, and web. Every output enforces strict string externalization, platform-native formatting, RTL correctness, and CI-validated translation completeness. No hardcoded user-facing strings — ever.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Core Principle: Localization is Not an Afterthought
 
 ```
@@ -373,6 +382,18 @@ testing:
   pseudolocale: en-XA (expansion) + ar-XB (RTL)
   screenshots: per-locale baseline comparison in CI
 ```
+
+## Code Generation (Required)
+
+Generate i18n infrastructure using Write:
+
+1. **String extractor config**: ESLint rule, detekt rule, or SwiftLint rule to flag hardcoded strings
+2. **Translation files**: `locales/en.json` — base English strings extracted from codebase
+3. **i18n setup**: `src/i18n/config.ts` — i18next or react-intl configuration
+4. **Pseudolocale generator**: `scripts/generate-pseudolocale.ts` — generates en-XA for testing
+5. **Missing translation detector**: `scripts/check-translations.sh` — finds keys in code without translations
+
+Before generating, Grep for existing i18n setup (`i18next|react-intl|NSLocalizedString|getString|stringResource`) and hardcoded user-facing strings.
 
 ## Cross-References
 

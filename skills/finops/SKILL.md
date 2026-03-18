@@ -6,6 +6,15 @@ argument-hint: "[project-or-service]"
 
 # FinOps
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Cloud financial operations framework for Firebase and GCP projects. Use when setting up cost visibility, optimizing spend, establishing budgets, or building a cost-aware engineering culture. Every dollar spent on infrastructure should be traceable to a feature or user segment.
 
 ## Step 1: Classify the FinOps Need
@@ -441,6 +450,21 @@ Make costs visible to every engineer:
    Track optimization wins per engineer
    Celebrate biggest cost reductions in team retros
 ```
+
+## Automated Cost Discovery
+
+Before analysis, gather infrastructure context:
+1. **Cloud costs**: Read existing billing configs, budget alerts
+2. **Resource inventory**: Glob for Terraform state, Docker configs, firebase.json
+3. **WebSearch**: Fetch current pricing for detected services
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Cost optimization report**: `docs/finops-report.md` — findings with projected savings
+2. **Budget alert config**: `monitoring/budget-alerts.tf` — Terraform budget alerts
+3. **Right-sizing script**: `scripts/right-size-resources.sh` — identify over-provisioned resources
+4. **Cost queries**: `analytics/cost-queries.sql` — BigQuery queries for cost analysis
 
 ## Step 9: Output
 

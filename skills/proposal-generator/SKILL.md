@@ -8,6 +8,15 @@ argument-hint: "[project-name]"
 
 Generate professional consulting proposals and Statements of Work. Every proposal should be clear enough that a non-technical decision-maker can say yes, and specific enough that scope creep has no room to hide.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Engagement Type
 
 | Type | Structure | Pricing Model |
@@ -29,6 +38,20 @@ Generate professional consulting proposals and Statements of Work. Every proposa
 6. **Decision process** — who signs? Procurement involved? Legal review?
 7. **Existing systems** — what does the current tech stack look like?
 8. **Competition** — are they evaluating other vendors?
+
+## Scope Validation
+
+Before generating proposal:
+1. Glob for similar past projects in the workspace to benchmark estimates
+2. Reference `/engineering-cost-model` for accurate cost basis
+3. Use WebSearch to validate market rates for the proposed services
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Proposal document**: `docs/proposals/{client}-proposal.md` — complete proposal
+2. **SOW**: `docs/proposals/{client}-sow.md` — statement of work with milestones
+3. **Pricing breakdown**: `docs/proposals/{client}-pricing.md` — cost structure with assumptions
 
 ## Step 3: Proposal Structure
 

@@ -8,6 +8,15 @@ argument-hint: "[product-or-feature-name]"
 
 Senior PM operating model. Every output is decision-ready and outcome-oriented. Pairs with sdlc (PRDs, Epics), market-research, and go-to-market skills.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## PM Operating Principles
 
 1. **Outcomes over outputs** — "increase activation rate" not "add onboarding screen"
@@ -96,3 +105,47 @@ Sign Up → Enter email → Create account story (Release 1)
         → Set up profile → Profile setup story (Release 2)
         → Connect social → Social linking story (Release 3)
 ```
+
+## OKR Framework
+
+When generating OKRs:
+- **Objective**: Qualitative, inspirational, time-bound (quarterly)
+- **Key Results**: 3-5 per objective, measurable, achievable but ambitious
+- Use format:
+  ```
+  **O1: [Objective statement]**
+  - KR1: [Metric] from [baseline] to [target] by [date]
+  - KR2: [Metric] from [baseline] to [target] by [date]
+  - KR3: [Metric] from [baseline] to [target] by [date]
+  ```
+
+## RICE Prioritization
+
+Score every feature request:
+| Factor | Definition | Scale |
+|--------|-----------|-------|
+| Reach | How many users affected per quarter | Actual number |
+| Impact | Effect on individual user | 3=massive, 2=high, 1=medium, 0.5=low, 0.25=minimal |
+| Confidence | How sure are we | 100%=high, 80%=medium, 50%=low |
+| Effort | Person-months to complete | Actual estimate |
+
+**RICE Score = (Reach × Impact × Confidence) / Effort**
+
+Generate a prioritized backlog table sorted by RICE score.
+
+## Artifact Generation (Required)
+
+You MUST generate actual documents using Write:
+
+1. **PRD**: `docs/prd/{feature-name}.md` — full PRD with problem, solution, success metrics, scope
+2. **Feature brief**: `docs/briefs/{feature-name}.md` — 1-page summary for stakeholder alignment
+3. **Roadmap**: `docs/roadmap.md` — Now/Next/Later format with RICE-scored items
+4. **User story map**: ASCII art or Mermaid diagram showing user journey with story cards
+
+Use WebSearch to validate assumptions about market size, user behavior, and competitive landscape.
+
+## Cross-References
+
+- `/market-research` — validate market assumptions before writing strategy docs
+- `/sdlc` — generate PRDs, Epics, and Stories from PM briefs
+- `/analytics-implementation` — define success metrics and tracking plans

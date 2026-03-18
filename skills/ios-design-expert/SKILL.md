@@ -10,6 +10,15 @@ Deep expertise in Apple Human Interface Guidelines for iOS, iPadOS, watchOS, and
 
 **Related skills**: `product-design` (cross-platform fundamentals), `ios-architect` (code scaffolding), `accessibility-audit` (WCAG compliance)
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Request
 
 | Request | Action |
@@ -493,6 +502,18 @@ Background elevation (Dark Mode):
 6. State restoration strategy
 7. iPad adaptation (split view, sidebar)
 ```
+
+## Code Generation (Required)
+
+When designing for iOS, generate actual SwiftUI code using Write:
+
+1. **Theme**: `DesignSystem/Theme.swift` — custom environment values for colors, fonts, spacing
+2. **Colors**: `DesignSystem/Colors.swift` — Color extension with brand palette and semantic colors
+3. **Typography**: `DesignSystem/Typography.swift` — Font extension with custom text styles
+4. **Component**: `Components/{Component}View.swift` — HIG-compliant component with all states
+5. **Preview**: Embedded #Preview blocks in each component file
+
+Before generating, Glob for existing design system files (`**/DesignSystem/**`, `**/Theme/**`) and extend.
 
 ## Step 5: Anti-Patterns (Never Do These)
 

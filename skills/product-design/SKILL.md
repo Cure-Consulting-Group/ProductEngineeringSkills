@@ -27,6 +27,15 @@ Brand Foundation
         └── Web (CSS custom properties + component library)
 ```
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Request
 
 | Request | Platform | Action |
@@ -50,6 +59,22 @@ Brand Foundation
 5. **User context** — consumer / enterprise / specialized (e.g., sports, fintech)?
 6. **Accessibility level** — WCAG AA (standard) or AAA (enhanced)?
 7. **Design handoff target** — Figma specs → SwiftUI / Compose / CSS?
+
+## Platform Detection and Routing
+
+After classifying the request, detect which platforms are in scope:
+- If Android (Kotlin/Compose detected): reference `/android-design-expert` for M3-specific guidance
+- If iOS (Swift/SwiftUI detected): reference `/ios-design-expert` for HIG-specific guidance
+- If Web (TypeScript/React detected): reference `/web-design-expert` for web-specific guidance
+- If cross-platform: generate design tokens that map to all platforms
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Design brief**: `docs/design-brief.md` — problem, user flows, wireframes (ASCII), component list
+2. **Token specification**: `docs/design-tokens.md` — color, type, spacing, elevation values
+3. **Component inventory**: `docs/component-inventory.md` — all components needed with states and variants
+4. **Accessibility checklist**: `docs/accessibility-requirements.md` — WCAG AA requirements for this feature
 
 ## Step 3: Universal Design Principles (Always Apply)
 

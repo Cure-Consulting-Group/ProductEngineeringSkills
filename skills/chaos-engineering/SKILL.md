@@ -6,6 +6,15 @@ argument-hint: "[service-or-project]"
 
 # Chaos Engineering
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Structured resilience testing framework for distributed systems. Use when verifying fault tolerance, planning game days, designing graceful degradation, or building automated chaos into CI/CD. Assumes Firebase + GCP infrastructure with mobile and web clients.
 
 ## Step 1: Classify the Resilience Need
@@ -446,3 +455,15 @@ RELATED SKILLS:
   - /infrastructure-scaffold — infra configs that enable resilience
   - /performance-review — performance under failure conditions
 ```
+
+## Code Generation (Required)
+
+Generate chaos testing infrastructure using Write:
+
+1. **Fault injection middleware**: `src/middleware/chaos.ts` — conditional fault injection (latency, errors, timeouts)
+2. **Game day runbook**: `docs/game-day-runbook.md` — step-by-step chaos test procedure
+3. **Chaos CI workflow**: `.github/workflows/chaos-test.yml` — automated resilience testing
+4. **Circuit breaker**: `src/lib/circuit-breaker.ts` — circuit breaker implementation
+5. **Health check endpoint**: `src/health.ts` — deep health check that validates all dependencies
+
+Before generating, Grep for existing error handling patterns (`try/catch`, `retry`, `timeout`, `circuit`) to understand current resilience.

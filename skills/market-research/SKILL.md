@@ -7,6 +7,15 @@ allowed-tools: ["Read", "Grep", "Glob", "WebSearch", "WebFetch"]
 
 # Market Research
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Structured market analysis optimized for fast, founder-level decisions. Signal-dense, no padding. Every section has a "so what" implication.
 
 ## Research Process
@@ -78,6 +87,25 @@ Assumption, How to Validate, Timeline.
 
 ### 11. Go / No-Go Signal
 Recommendation with rationale, conditions (if conditional), and next steps.
+
+## Structured Research Queries
+
+When using WebSearch, run these specific queries in order:
+
+1. **Market Size**: "[industry] market size 2025 2026 TAM" + "[industry] growth rate CAGR"
+2. **Competitors**: "[competitor name] pricing" + "[competitor name] funding round" + "[competitor name] features"
+3. **Trends**: "[industry] trends 2025 2026" + "[industry] disruption technology"
+4. **ICP Data**: "[target role] salary survey" + "[target company size] spending on [category]"
+5. **Regulatory**: "[industry] regulation [country]" + "[industry] compliance requirements"
+
+Every claim in the output MUST include "(Source: [url/publication], [date])" citation.
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Market brief**: `docs/market-research.md` — TAM/SAM/SOM with sources
+2. **Competitive matrix**: `docs/competitive-analysis.md` — feature/pricing comparison table
+3. **ICP profile**: `docs/icp.md` — detailed ideal customer profile
 
 ## Research Quality Standards
 

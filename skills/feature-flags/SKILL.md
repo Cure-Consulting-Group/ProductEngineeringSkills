@@ -6,6 +6,15 @@ argument-hint: "[feature-name]"
 
 # Feature Flags
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Designs and implements feature flag systems for progressive rollouts, A/B experimentation, operational kill switches, and permission-based access control. Covers Firebase Remote Config, LaunchDarkly, and custom implementations across Android, iOS, and web. Every flag has a lifecycle, an owner, and a cleanup date.
 
 **Hard rules:**
@@ -573,3 +582,20 @@ CROSS-REFERENCES:
   - /ci-cd-pipeline — for flag-aware deployment workflows
   - /testing-strategy — for testing both flag states
 ```
+
+## Automated Flag Discovery
+
+Before defining flag strategy, scan existing codebase:
+
+1. **Find existing flags**: Grep for flag patterns:
+   - `isEnabled|getFlag|useFeatureFlag|remoteConfig|LaunchDarkly|Unleash|getBoolean`
+2. **Find dead flags**: Grep for flags that exist in config but have no code references
+3. **Find hardcoded toggles**: Grep for `if (true)` or `if (false)` or `#if DEBUG` blocks that should be flags
+
+## Code Generation (Required)
+
+Generate flag infrastructure using Write:
+
+1. **Flag registry**: `config/feature-flags.yml` with all flags, owners, and expiry dates
+2. **Dead flag detector**: `scripts/check-dead-flags.sh` that cross-references registry with codebase
+3. **CI check**: `.github/workflows/flag-hygiene.yml` that runs dead flag detection on PR

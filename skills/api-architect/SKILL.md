@@ -8,6 +8,15 @@ argument-hint: "[api-name]"
 
 Design production REST and GraphQL APIs with versioning, authentication, error handling, and documentation. For backends beyond Firebase — Node.js, Python, Go, or any HTTP service.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the API Type
 
 | Need | Pattern |
@@ -174,6 +183,17 @@ paths:
 ```
 
 Auto-generate docs from spec using Swagger UI or Redoc.
+
+## Code Generation (Required)
+
+Generate actual API specification using Write:
+
+1. **OpenAPI spec**: `docs/openapi.yaml` — complete OpenAPI 3.1 specification with schemas, paths, security
+2. **Error response types**: `src/types/errors.ts` — standardized error response types
+3. **API client**: `src/api/client.ts` — type-safe API client generated from spec
+4. **Postman collection**: `docs/api-collection.json` — importable Postman collection
+
+Before generating, Glob for existing API routes (`**/api/**`, `**/routes/**`) and Read them to document current state.
 
 ## Step 8: Error Handling Standards
 

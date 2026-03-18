@@ -6,6 +6,15 @@ argument-hint: "[incident-or-system]"
 
 # Incident Response
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Structured incident response framework for production systems. Use during active incidents, when building on-call procedures, and when conducting post-mortems. Covers Firebase, mobile, web, and API infrastructure.
 
 ## Step 1: Classify the Incident Type
@@ -549,3 +558,15 @@ DELIVERABLES GENERATED:
   - [ ] Metrics recorded
   - [ ] On-call procedures updated if gaps found
 ```
+
+## Code Generation (Required)
+
+Generate incident management artifacts using Write:
+
+1. **Runbook template**: `docs/runbooks/template.md` with the standard Cure format
+2. **Post-mortem template**: `docs/post-mortems/template.md`
+3. **PagerDuty webhook**: `functions/src/incident-webhook.ts` (Cloud Function that creates incident records)
+4. **Slack notification**: Generate Slack Block Kit JSON for incident announcements
+5. **Status page update script**: `scripts/update-status.sh`
+
+Before generating, Glob for existing runbooks and post-mortems to match format.

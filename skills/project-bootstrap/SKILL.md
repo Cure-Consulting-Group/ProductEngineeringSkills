@@ -10,6 +10,15 @@ Initialize any repository's agent coordination layer by generating two files: `C
 
 Do not generate either file until the interview is complete.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to pre-fill answers during the developer interview
+
 ## Step 1: Codebase Inspection (Autonomous)
 
 Before asking anything, silently inspect the codebase and store results in working memory. Do not print results — use them to pre-fill answers and skip redundant interview questions.
@@ -18,6 +27,7 @@ Before asking anything, silently inspect the codebase and store results in worki
 
 | Inspection | What to Detect |
 |---|---|
+| PORTFOLIO.md | Check project root and parent directories for portfolio/team context |
 | Project structure | `ls -la`, root directory layout, monorepo vs single module |
 | Language/framework | `package.json`, `build.gradle.kts`, `Podfile`, `pubspec.yaml`, `Cargo.toml` |
 | CI/CD | `.github/workflows/`, `.circleci/`, `Jenkinsfile` |
@@ -502,6 +512,18 @@ Bootstrap agent signing off.
 - `STATE.md` Task Queue must have at least one row — use interview data
 - Both files must be written to repo root, not a subfolder
 - If `CLAUDE.md` already exists, ask before overwriting: "CLAUDE.md found. Overwrite or merge?"
+
+## Post-Bootstrap Actions
+
+After generating CLAUDE.md and STATE.md:
+
+1. **PORTFOLIO.md integration**: If PORTFOLIO.md exists in a parent directory, offer to add this project as a new entry
+2. **Initial sprint 0 tasks**: Based on detected stack, suggest initial setup tasks:
+   - CI/CD setup → reference `/ci-cd-pipeline`
+   - Security baseline → reference `/security-review`
+   - Testing setup → reference `/testing-strategy`
+   - Observability → reference `/observability`
+3. **Git hooks**: Generate `.husky/pre-commit` with lint and type-check
 
 ## Related Skills
 

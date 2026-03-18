@@ -8,6 +8,15 @@ argument-hint: "[api-or-project]"
 
 Design the layer between your clients and your services. A well-designed gateway simplifies clients, enforces security, and enables independent backend evolution.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Gateway Need
 
 | Need | Output |
@@ -349,6 +358,15 @@ Dashboard (build in Grafana, Datadog, or Cloud Monitoring):
   Row 4: Rate limiting (rejections/min, top rejected consumers)
   Row 5: Upstream health (per-service latency and error rate)
 ```
+
+## Code Generation (Required)
+
+Generate gateway infrastructure using Write:
+
+1. **Gateway middleware**: `src/gateway/middleware/` — CORS, rate-limit, auth, logging middleware files
+2. **Health endpoint**: `src/gateway/health.ts` — deep health check
+3. **Rate limiter**: `src/gateway/rate-limiter.ts` — Redis-backed or in-memory rate limiting
+4. **Request validator**: `src/gateway/validator.ts` — request schema validation middleware
 
 ## Cross-References
 

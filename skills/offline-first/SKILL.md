@@ -8,6 +8,15 @@ argument-hint: "[feature-or-project]"
 
 Architects production-grade offline-first applications across Android, iOS, and web. Every output enforces local-first data persistence, deterministic sync, explicit conflict resolution, and seamless UX regardless of connectivity. If your app breaks without internet, it is not ready for production.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Core Principle: The Network is a Lie
 
 ```
@@ -458,6 +467,19 @@ conflict_resolution:
   fallback: manual resolution UI
   collaborative: evaluate CRDT (Yjs, Automerge) for real-time co-editing
 ```
+
+## Code Generation (Required)
+
+Generate offline-first infrastructure using Write:
+
+1. **Sync queue** (Android): `data/sync/SyncQueue.kt` — Room-backed operation queue with WorkManager
+2. **Sync queue** (iOS): `Data/Sync/SyncQueue.swift` — SwiftData-backed queue with BGTaskScheduler
+3. **Sync queue** (Web): `src/sync/sync-queue.ts` — IndexedDB-backed queue with service worker
+4. **Conflict resolver**: `src/sync/conflict-resolver.ts` — last-write-wins or custom merge strategy
+5. **Network monitor**: `src/sync/network-monitor.ts` — connectivity detection and queue drain trigger
+6. **Optimistic UI helper**: `src/sync/optimistic.ts` — temporary ID management and rollback
+
+Before generating, Grep for existing offline/sync code and detect which data layer is in use (Room, SwiftData, IndexedDB).
 
 ## Cross-References
 

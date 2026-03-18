@@ -8,6 +8,15 @@ argument-hint: "[domain-or-topic]"
 
 Technical SEO, content strategy, and search optimization for web apps, marketing sites, and blogs. Organic traffic is the cheapest acquisition channel — engineer it.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the SEO Need
 
 | Need | Output |
@@ -27,6 +36,23 @@ Technical SEO, content strategy, and search optimization for web apps, marketing
 4. **Current traffic** — starting from zero or improving existing?
 5. **Competitors** — who ranks for our target terms?
 6. **Content capacity** — how many pieces per month?
+
+## Live Keyword Research
+
+Use WebSearch to validate keyword strategy:
+- Search: "[primary keyword] search volume 2025"
+- Search: "[competitor domain] top ranking pages"
+- Search: "[industry] trending topics"
+
+Every content recommendation must include keyword target and search intent classification.
+
+## Code Generation (Required)
+
+Generate SEO infrastructure using Write:
+1. **Structured data**: `src/components/JsonLd.tsx` — reusable JSON-LD component for articles, products, FAQ
+2. **Sitemap config**: `next-sitemap.config.js` — sitemap generation config
+3. **Meta component**: `src/components/SEOHead.tsx` — reusable meta tags with OpenGraph
+4. **Content brief**: `docs/content-briefs/{topic}.md` — SEO-optimized content outline with keyword targets
 
 ## Step 3: Technical SEO Checklist
 

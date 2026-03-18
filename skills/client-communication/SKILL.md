@@ -8,6 +8,15 @@ argument-hint: "[sprint-or-milestone]"
 
 Generate professional client-facing communication artifacts. Covers sprint demo preparation, weekly status reports, risk escalation frameworks, executive summaries, and meeting facilitation templates. Every client interaction should be structured, concise, and action-oriented. Bad news delivered late is worse than bad news delivered early.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Communication Need
 
 | Need | Scope | When to Use |
@@ -541,6 +550,14 @@ Rule: Before scheduling a meeting, ask: "Could this be a Loom video
       or an email with a decision deadline?" If yes, do that instead.
       Respect everyone's time — especially the client's.
 ```
+
+## Artifact Generation (Required)
+
+Generate communication templates using Write:
+1. **Sprint demo script**: `docs/comms/demo-script.md` — talking points, demo flow, Q&A prep
+2. **Status report**: `docs/comms/status-report.md` — executive summary with RAG status
+3. **Risk escalation**: `docs/comms/risk-escalation.md` — structured escalation with impact analysis
+4. **Stakeholder map**: `docs/comms/stakeholder-map.md` — RACI for communications
 
 ## Step 8: Output
 

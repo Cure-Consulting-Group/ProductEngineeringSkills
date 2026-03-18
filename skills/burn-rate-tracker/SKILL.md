@@ -7,6 +7,15 @@ allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]
 
 # Burn Rate Tracker
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 Model burn rates, runway scenarios, and cash flow projections for multi-product venture studios. Built for Cure Consulting Group's portfolio: Vendly (LATAM merchant OS), Autograph (AI medical scribe), The Initiated (women's basketball recruiting), Antigravity (AI agent orchestration), TwntyHoops (basketball media/events). Every dollar should be traceable to a product, and every product should have a path to sustainability.
 
 ## Step 1: Classify the Analysis Type
@@ -357,6 +366,13 @@ PORTFOLIO PRIORITIZATION (for multi-product studios)
   Allocate capital proportionally. The product with the best combination gets the most resources.
   Never split resources equally across products — that guarantees mediocrity everywhere.
 ```
+
+## Artifact Generation (Required)
+
+Generate using Write:
+1. **Burn report**: `docs/burn-rate-report.md` — current month analysis with scenarios
+2. **Cash flow projection**: `docs/cash-flow.md` — 18-month runway projection
+3. **Budget alerts config**: `monitoring/budget-alerts.json` — alert thresholds for cloud spend
 
 ## Step 10: Output
 

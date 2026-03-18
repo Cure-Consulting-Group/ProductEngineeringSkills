@@ -10,6 +10,15 @@ Deep expertise in modern web design: responsive layouts, CSS architecture, desig
 
 **Related skills**: `product-design` (cross-platform fundamentals), `nextjs-feature-scaffold` (code scaffolding), `accessibility-audit` (WCAG compliance)
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Request
 
 | Request | Action |
@@ -654,6 +663,18 @@ Loading patterns:
 11. CSS custom properties file
 12. Tailwind theme extension config
 ```
+
+## Code Generation (Required)
+
+When designing for web, generate actual files using Write:
+
+1. **Tailwind config**: `tailwind.config.ts` — brand colors, fonts, spacing, breakpoints as design tokens
+2. **CSS variables**: `styles/tokens.css` — CSS custom properties for all tokens
+3. **Component**: `components/ui/{Component}.tsx` — accessible component with variants (using cva or class-variance-authority)
+4. **cn utility**: `lib/cn.ts` — className merge utility (clsx + tailwind-merge)
+5. **Responsive test matrix**: `docs/responsive-test-matrix.md` — viewport checklist for QA
+
+Before generating, Read existing `tailwind.config.ts` and Glob for `components/ui/**` to understand current design system.
 
 ## Step 5: Anti-Patterns (Never Do These)
 

@@ -10,6 +10,15 @@ Deep expertise in Material Design 3 (M3) for Android. Designs that fully leverag
 
 **Related skills**: `product-design` (cross-platform fundamentals), `android-feature-scaffold` (code scaffolding), `accessibility-audit` (WCAG compliance)
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Request
 
 | Request | Action |
@@ -547,6 +556,18 @@ M3 Dark Theme rules:
 6. Deep link URI patterns
 7. Back stack behavior
 ```
+
+## Code Generation (Required)
+
+When designing for Android, generate actual Compose code using Write:
+
+1. **Theme**: `ui/theme/Theme.kt` — MaterialTheme with custom ColorScheme, Typography, Shapes
+2. **Colors**: `ui/theme/Color.kt` — brand colors mapped to M3 color roles
+3. **Typography**: `ui/theme/Type.kt` — font families and text styles
+4. **Component**: `ui/components/{Component}.kt` — custom components with M3 tokens
+5. **Preview**: `ui/preview/{Screen}Preview.kt` — @Preview functions for all states
+
+Before generating, Glob for existing theme files (`**/theme/**`, `**/ui/**`) and Read them to extend.
 
 ## Step 5: Anti-Patterns (Never Do These)
 

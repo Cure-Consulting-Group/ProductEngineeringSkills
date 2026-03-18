@@ -8,6 +8,15 @@ argument-hint: "[project-name]"
 
 Cloud infrastructure configuration generator for Firebase, GCP, Vercel, and Docker. Firebase-first, GCP cloud approach aligned with Cure Consulting Group standards. Every project ships with production-ready infrastructure configs, environment separation, and monitoring from day one.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Infrastructure Need
 
 | Need | Scope |
@@ -884,6 +893,26 @@ Estimated Costs (small-medium project):
   Cloud Run               — $0 when idle, ~$30-50/month at moderate traffic
   Secret Manager          — $0.06/10K access operations
 ```
+
+## Code Generation (Required)
+
+You MUST generate actual config files using the Write tool:
+
+Based on detected stack, generate the appropriate configs:
+- **Firebase**: `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`
+- **Docker**: `Dockerfile` (multi-stage), `docker-compose.yml`, `.dockerignore`
+- **Vercel**: `vercel.json`
+- **Terraform**: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`
+- **Environment**: `.env.example` with all required variables documented
+
+Before generating, use Glob to find existing configs and Read them. Enhance rather than replace.
+
+## Cross-References
+
+- `/ci-cd-pipeline` — for GitHub Actions workflows that deploy these infrastructure configs
+- `/firebase-architect` — for Firestore schema and security rules design
+- `/security-review` — for IAM least-privilege, secret management, and network security standards
+- `/database-architect` — for database instance configuration and connection pooling
 
 ## Step 10: Output
 

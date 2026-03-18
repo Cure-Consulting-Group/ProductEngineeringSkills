@@ -8,6 +8,15 @@ argument-hint: "[notification-type-or-project]"
 
 Designs production-grade notification systems across push, in-app, email, and SMS channels. Every output enforces user preference respect, delivery reliability, legal compliance, and measurable engagement. Notifications are a trust contract with the user — abuse it and they churn.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Core Principle: Every Notification Must Earn Its Send
 
 ```
@@ -421,6 +430,19 @@ analytics:
   events: Firebase Analytics + custom notification events
   dashboards: Mixpanel or PostHog notification funnels
 ```
+
+## Code Generation (Required)
+
+Generate notification infrastructure using Write:
+
+1. **FCM handler** (Android): `services/FirebaseMessagingService.kt` — token management and notification display
+2. **APNs setup** (iOS): `Services/NotificationService.swift` — UNUserNotificationCenter delegate
+3. **Web push worker**: `public/firebase-messaging-sw.js` — service worker for web push
+4. **Cloud Function**: `functions/src/notifications/send.ts` — multi-channel notification dispatcher
+5. **Email templates**: `functions/src/notifications/templates/` — welcome, receipt, alert templates (MJML or React Email)
+6. **Preference schema**: Firestore collection schema for user notification preferences
+
+Before generating, Grep for existing notification code (`FCM|messaging|notification|push`) to understand current state.
 
 ## Cross-References
 

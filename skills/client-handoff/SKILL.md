@@ -8,6 +8,15 @@ argument-hint: "[project-name]"
 
 Structured handoff framework for consulting engagements at Cure Consulting Group. Every project leaves the client with complete documentation, operational runbooks, secure credential transfers, and a knowledge transfer plan. No project is "done" until the client can operate it independently.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Handoff Type
 
 | Type | Scope | Timeline | Key Deliverables |
@@ -16,6 +25,24 @@ Structured handoff framework for consulting engagements at Cure Consulting Group
 | Phase completion | Milestone delivery within ongoing engagement — hand off a module or feature | 3-5 days | Module docs, integration guide, test results, demo recording |
 | Maintenance transition | Move from active development to support/maintenance mode | 1-2 weeks | Runbooks, monitoring setup, SLA agreement, escalation paths |
 | Emergency handoff | Unplanned transfer — consultant unavailable, client relationship change | 1-3 days | Priority: credentials + deployment ability + critical runbooks |
+
+## Automated Discovery
+
+Before creating handoff package, auto-scan the project:
+1. **Architecture**: Glob for all major file types, count by extension, detect frameworks
+2. **Dependencies**: Read package.json/build.gradle for dependency inventory
+3. **Infrastructure**: Glob for Docker, Terraform, firebase.json configs
+4. **Environment vars**: Glob for .env.example to document required variables
+5. **CI/CD**: Read .github/workflows/ to document deployment process
+
+## Artifact Generation (Required)
+
+Generate handoff documentation using Write:
+1. **Architecture diagram**: `docs/handoff/architecture.md` — Mermaid diagram of system components
+2. **Dependency inventory**: `docs/handoff/dependencies.md` — all deps with versions and purposes
+3. **Runbook**: `docs/handoff/runbook.md` — using runbook output style
+4. **Credential checklist**: `docs/handoff/credentials.md` — all services requiring access
+5. **Maintenance SLA**: `docs/handoff/maintenance-sla.md` — response times, update schedule
 
 ## Step 2: Gather Context
 

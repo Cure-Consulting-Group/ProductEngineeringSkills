@@ -8,6 +8,15 @@ argument-hint: "[project-or-platform]"
 
 Build and maintain cross-platform design systems with design tokens as the single source of truth. Covers token architecture, component libraries for Android (Compose), iOS (SwiftUI), and Web (React/Tailwind), documentation and playground setup, governance processes, and cross-platform consistency rules. A design system is not a component library -- it is the shared language between design and engineering.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Design System Need
 
 | Need | Scope | Typical Trigger |
@@ -597,6 +606,27 @@ These differences are BUGS and must be fixed:
   - Missing dark mode support on any platform
   - Accessibility works on one platform but not others
 ```
+
+## Code Generation (Required)
+
+You MUST generate actual token and config files using the Write tool:
+
+1. **Tokens**: `tokens/tokens.json` — Style Dictionary format with color, spacing, typography, elevation
+2. **CSS**: `tokens/variables.css` — CSS custom properties generated from tokens
+3. **Tailwind**: Update `tailwind.config.ts` with token values
+4. **Android**: `tokens/Theme.kt` — Compose MaterialTheme with token values
+5. **iOS**: `tokens/DesignTokens.swift` — Swift extension with Color/Font/Spacing
+6. **Style Dictionary**: `style-dictionary.config.json` — build configuration
+
+Before generating, Read existing theme files (Glob for `**/theme/**`, `**/tokens/**`, `**/designSystem/**`) and extend rather than replace.
+
+## Cross-References
+
+- `/product-design` — for design principles, platform guidelines, and Figma handoff standards
+- `/accessibility-audit` — for WCAG contrast ratio verification and screen reader compliance
+- `/android-feature-scaffold` — for Compose component implementation patterns
+- `/ios-architect` — for SwiftUI component and theme implementation patterns
+- `/nextjs-feature-scaffold` — for React/Tailwind component and token usage patterns
 
 ## Step 8: Output
 

@@ -8,6 +8,37 @@ argument-hint: "[feature-or-project]"
 
 Defines testing standards, pyramid ratios, and patterns for every platform. Write tests that catch real bugs, not tests that test the framework.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
+## Automated Test Coverage Analysis
+
+Before defining strategy, analyze current testing state:
+
+1. **Test File Count**: Use Glob to count:
+   - Source files: `**/*.kt` `**/*.swift` `**/*.ts` `**/*.tsx` (excluding node_modules, build)
+   - Test files: `**/*Test.*` `**/*Spec.*` `**/*.test.*` `**/*.spec.*`
+   - Calculate ratio: test files / source files
+2. **Test Framework Detection**: Grep for:
+   - `describe|it|test|expect` → Jest/Vitest
+   - `@Test|@ParameterizedTest` → JUnit5
+   - `XCTestCase|func test` → XCTest
+   - `pytest|def test_` → pytest
+3. **Coverage Config**: Glob for existing coverage configs:
+   - `jest.config*`, `vitest.config*`, `jacoco*`, `.nycrc*`
+4. **Missing Test Patterns**: Grep for source files without corresponding tests:
+   - Find all ViewModels, UseCases, Repositories and check for matching test files
+5. **Disabled Tests**: Grep for:
+   - `@Ignore|@Disabled|.skip|xit|xdescribe|@pytest.mark.skip`
+
+Report current coverage state before recommending strategy.
+
 ## Testing Pyramid (Default Ratios)
 
 ```

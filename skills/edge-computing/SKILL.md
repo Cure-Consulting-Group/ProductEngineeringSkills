@@ -8,6 +8,15 @@ argument-hint: "[use-case-or-platform]"
 
 Edge architecture framework for low-latency, globally distributed applications. Use when optimizing TTFB, implementing edge middleware, designing caching strategies, or distributing compute closer to users. Covers Vercel Edge Functions, Cloudflare Workers, Next.js middleware, and Firebase Hosting.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Edge Need
 
 | Type | When to Use | Output |
@@ -472,3 +481,12 @@ RELATED SKILLS:
   - /nextjs-feature-scaffold — Next.js-specific edge patterns
   - /security-review — edge security (auth, rate limiting, WAF)
 ```
+
+## Code Generation (Required)
+
+Generate edge infrastructure using Write:
+
+1. **Edge middleware**: `src/middleware.ts` — Next.js middleware for geo-routing, A/B testing, auth
+2. **Edge function**: `functions/edge/handler.ts` — Cloudflare Worker or Vercel Edge Function template
+3. **Cache config**: `vercel.json` or `_headers` — CDN cache rules with stale-while-revalidate
+4. **Cache invalidation**: `scripts/purge-cache.sh` — CDN cache purge script

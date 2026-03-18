@@ -8,6 +8,15 @@ argument-hint: "[product-name]"
 
 Design onboarding flows that drive activation and retention. The first 5 minutes determine whether a user stays or churns.
 
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
+
 ## Step 1: Classify the Onboarding Type
 
 | Product Type | Onboarding Pattern |
@@ -163,6 +172,18 @@ Segmentation:
   - By persona/role (if applicable)
   - By cohort (week-over-week improvement)
 ```
+
+## Code Generation (Required)
+
+Generate onboarding infrastructure using Write:
+
+1. **Onboarding screens** (React): `src/onboarding/steps/` — Step1Welcome.tsx, Step2Setup.tsx, Step3Complete.tsx
+2. **Onboarding state**: `src/onboarding/use-onboarding.ts` — hook managing onboarding progress
+3. **Analytics events**: Add onboarding_started, onboarding_step_completed, onboarding_completed events
+4. **Email sequence**: `docs/onboarding-emails.md` — Day 1, Day 3, Day 7 email templates
+5. **Empty states**: `src/components/EmptyState.tsx` — reusable empty state with CTA
+
+Reference `/analytics-implementation` for event taxonomy integration.
 
 ## Step 9: Onboarding Checklist Before Ship
 
