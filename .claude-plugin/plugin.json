@@ -1,7 +1,7 @@
 {
   "name": "cure-product-engineering",
-  "description": "Cure Consulting Group's complete product engineering skill library — 63 production-grade skills for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, and cloud infrastructure. Includes hooks (command, prompt, agent), MCP server configs, custom agents, output styles, and path-specific rules.",
-  "version": "3.1.0",
+  "description": "Cure Consulting Group's complete product engineering skill library — 63 production-grade skills, 9 custom agents, 11 path-specific rules, 9 output styles, multi-layer hooks (command + prompt + agent), MCP server configs, and LSP server configs for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, Python, Go, Rust, and cloud infrastructure.",
+  "version": "3.2.0",
   "author": {
     "name": "Cure Consulting Group",
     "url": "https://github.com/Cure-Consulting-Group"
@@ -10,5 +10,31 @@
     "type": "git",
     "url": "https://github.com/Cure-Consulting-Group/ProductEngineeringSkills"
   },
-  "license": "MIT"
+  "homepage": "https://github.com/Cure-Consulting-Group/ProductEngineeringSkills#readme",
+  "bugs": {
+    "url": "https://github.com/Cure-Consulting-Group/ProductEngineeringSkills/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code-plugin",
+    "product-engineering",
+    "android",
+    "ios",
+    "web",
+    "firebase",
+    "python",
+    "go",
+    "rust",
+    "clean-architecture",
+    "sdlc",
+    "security",
+    "devops",
+    "compliance",
+    "observability",
+    "consulting",
+    "finops",
+    "llmops",
+    "infrastructure",
+    "testing"
+  ]
 }

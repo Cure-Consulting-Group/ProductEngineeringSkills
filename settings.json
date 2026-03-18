@@ -3,10 +3,40 @@
   "permissions": {
     "deny": [
       "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
       "Bash(*--force*push*main*)",
       "Bash(*--force*push*master*)",
+      "Bash(*push --force*main*)",
+      "Bash(*push --force*master*)",
+      "Bash(*git reset --hard*)",
+      "Bash(*git clean -f*)",
+      "Bash(*git clean -fd*)",
+      "Bash(*git clean -fdx*)",
+      "Bash(*DROP TABLE*)",
+      "Bash(*drop table*)",
+      "Bash(*DROP DATABASE*)",
+      "Bash(*drop database*)",
+      "Bash(*TRUNCATE TABLE*)",
+      "Bash(*truncate table*)",
+      "Bash(*terraform destroy*)",
+      "Bash(*kubectl delete namespace*)",
       "Edit(.env*)",
-      "Write(.env*)"
+      "Write(.env*)",
+      "Edit(*.tfstate*)",
+      "Write(*.tfstate*)",
+      "Edit(*credentials*)",
+      "Write(*credentials*)",
+      "Edit(*serviceAccount*)",
+      "Write(*serviceAccount*)",
+      "Edit(*service-account*)",
+      "Write(*service-account*)",
+      "Edit(*.pem)",
+      "Write(*.pem)",
+      "Edit(*id_rsa*)",
+      "Write(*id_rsa*)",
+      "Edit(*id_ed25519*)",
+      "Write(*id_ed25519*)"
     ]
   }
 }

@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "cure-product-engineering",
-      "description": "Complete product engineering skill library — 58 skills for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, and cloud infrastructure. Includes hooks for enforcement, custom agents for review, and path-specific coding rules.",
+      "description": "Complete product engineering skill library — 63 skills, 9 agents, 11 rules, 9 output styles, multi-layer hooks (14 events), MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
       "source": {
         "type": "github",
         "repo": "Cure-Consulting-Group/ProductEngineeringSkills"
@@ -17,6 +17,11 @@
         "ios",
         "nextjs",
         "firebase",
+        "python",
+        "go",
+        "rust",
+        "docker",
+        "terraform",
         "clean-architecture",
         "sdlc",
         "security",
@@ -25,7 +30,9 @@
         "observability",
         "consulting",
         "finops",
-        "llmops"
+        "llmops",
+        "testing",
+        "infrastructure"
       ]
     }
   ]
