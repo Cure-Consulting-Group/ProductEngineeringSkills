@@ -1,6 +1,6 @@
 {
   "name": "@cure-consulting-group/product-engineering-skills",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Cure Consulting Group's complete product engineering skill library — 58 production-grade skills for Claude Code. Includes hooks, agents, MCP configs, output styles, and path-specific rules.",
   "keywords": [
     "claude-code-plugin",
