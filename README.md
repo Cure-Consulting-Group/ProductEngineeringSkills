@@ -10,7 +10,7 @@ The complete skill library that Cure Consulting Group uses to build apps, platfo
 ProductEngineeringSkills/
 ├── .claude-plugin/           # Plugin manifest
 │   └── plugin.json
-├── skills/                   # 58 skills (new SKILL.md format with frontmatter)
+├── skills/                   # 63 skills (new SKILL.md format with frontmatter)
 │   ├── sdlc/
 │   ├── android-feature-scaffold/
 │   ├── incident-response/     # NEW
@@ -102,7 +102,7 @@ The postinstall script automatically:
 - Symlinks the package to `~/.claude/plugins/ProductEngineeringSkills`
 - Registers the plugin in `~/.claude/settings.json`
 
-All 58 skills, hooks, agents, rules, and output styles are immediately available.
+All 63 skills, hooks, agents, rules, and output styles are immediately available.
 
 **3. Enable auto-updates with Dependabot** (recommended):
 
@@ -210,7 +210,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 - `SKILL.md` — The main skill definition
 - `references/` — Supporting documents and templates
 
-## Skill Inventory (58 Skills)
+## Skill Inventory (63 Skills)
 
 ### Product & Strategy (7)
 | Skill | What It Does | Auto-Invoked? |
@@ -276,15 +276,24 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **growth-engineering** | Activation funnels, referral programs, lifecycle automation, PLG patterns | Yes |
 | **design-system** | Design tokens, component libraries, Storybook/Catalog, cross-platform consistency | Yes |
 
-### Business & Finance (4)
+### Business & Finance (7)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **engineering-cost-model** | Project estimates, infrastructure costs, build vs buy | Yes (read-only) |
 | **saas-financial-model** | Unit economics, MRR/ARR, pricing tiers, break-even | Yes (read-only) |
 | **finops** | Cloud cost optimization, budget alerts, resource right-sizing, FinOps practices | Yes |
+| **investor-reporting** | Investor updates, board decks, portfolio financials, cap table, runway modeling | Yes |
+| **fundraising-materials** | Pitch decks, data rooms, investor updates, cap table scenarios, fundraising pipeline | Yes |
+| **burn-rate-tracker** | Burn rates, runway scenarios, break-even analysis, cash flow projections | Yes |
 | **legal-doc-scaffold** | ToS, Privacy Policy, SOW, NDA scaffolds | No (manual only) |
 
-### Consulting Operations (3) — NEW
+### Portfolio Management (2) — NEW
+| Skill | What It Does | Auto-Invoked? |
+|-------|-------------|---------------|
+| **portfolio-registry** | Product portfolio registry — single source of truth for all products, stacks, teams, stages | Yes |
+| **technology-radar** | ThoughtWorks-style technology radar — Adopt/Trial/Assess/Hold across the portfolio | Yes |
+
+### Consulting Operations (3)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **client-handoff** | Handoff packages, runbooks, credential transfers, maintenance SLAs, knowledge transfer | Yes |

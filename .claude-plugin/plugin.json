@@ -1,7 +1,7 @@
 {
   "name": "cure-product-engineering",
-  "description": "Cure Consulting Group's complete product engineering skill library — 58 production-grade skills for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, and cloud infrastructure. Includes hooks (command, prompt, agent), MCP server configs, custom agents, output styles, and path-specific rules.",
-  "version": "3.0.0",
+  "description": "Cure Consulting Group's complete product engineering skill library — 63 production-grade skills for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, and cloud infrastructure. Includes hooks (command, prompt, agent), MCP server configs, custom agents, output styles, and path-specific rules.",
+  "version": "3.1.0",
   "author": {
     "name": "Cure Consulting Group",
     "url": "https://github.com/Cure-Consulting-Group"
