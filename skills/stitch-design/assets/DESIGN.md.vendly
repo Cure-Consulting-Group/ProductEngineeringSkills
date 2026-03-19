@@ -1,0 +1,112 @@
+# Design System: Vendly
+
+**Project ID:** vendly-pos
+**Platform:** Android (Jetpack Compose) — Material 3
+**Locale:** es-DO (Dominican Republic, Spanish)
+
+## 1. Visual Theme & Atmosphere
+
+Bold, confident, and high-contrast — built for outdoor POS terminals and bright sunlight conditions. Clean layouts with generous touch targets, designed for rapid merchant transactions. The aesthetic conveys trust and reliability with a fresh, modern energy. Minimal decorative elements — every pixel serves a function.
+
+## 2. Color Palette & Roles
+
+### Light Mode (Primary)
+- **Vendly Green** (#00A859) — primary actions, CTAs, success states, brand identity
+- **On Primary White** (#FFFFFF) — text and icons on primary green surfaces
+- **Deep Charcoal** (#1A1A2E) — primary text, headings, high-emphasis content
+- **Slate Gray** (#4A5568) — secondary text, labels, supporting content
+- **Soft Mint Surface** (#F8FAF9) — page backgrounds, content areas
+- **White** (#FFFFFF) — card backgrounds, elevated surfaces
+- **Light Gray Border** (#E2E8F0) — dividers, input borders, separators
+- **Alert Red** (#DC2626) — error states, destructive actions, validation failures
+- **On Error White** (#FFFFFF) — text on error surfaces
+- **Warning Amber** (#F59E0B) — caution states, pending transactions
+- **Info Blue** (#2563EB) — informational callouts, links
+
+### Dark Mode
+- **Vendly Green** (#00A859) — primary actions (unchanged for brand consistency)
+- **On Primary White** (#FFFFFF) — text on primary surfaces
+- **Deep Dark Surface** (#0F1119) — page backgrounds
+- **Dark Card Surface** (#1A1D2E) — card backgrounds, elevated surfaces
+- **Light Text** (#F1F5F9) — primary text
+- **Muted Text** (#94A3B8) — secondary text, labels
+- **Dark Border** (#2D3748) — dividers, separators
+
+### High-Contrast Overrides (Outdoor Mode)
+- Minimum contrast ratio: 7:1 (WCAG AAA) for all text
+- Primary green on white background meets 4.5:1 at standard, boosted to 7:1 in outdoor mode via darker green (#007A3D)
+
+## 3. Typography Rules
+
+- **Font Family:** Inter (all weights)
+- **Fallback:** system-ui, -apple-system, sans-serif
+- **Display Large:** 36px / Bold (700) — hero prices, totals
+- **Headline Large:** 28px / SemiBold (600) — screen titles
+- **Headline Medium:** 22px / SemiBold (600) — section headers
+- **Body Large:** 16px / Regular (400) — primary content, descriptions
+- **Body Medium:** 14px / Regular (400) — secondary content
+- **Label Large:** 14px / Medium (500) — button text, input labels
+- **Label Medium:** 12px / Medium (500) — captions, metadata, timestamps
+- **Letter Spacing:** Normal for body, -0.02em for headlines
+- **Line Height:** 1.5 for body, 1.2 for display/headlines
+
+## 4. Spacing Scale
+
+- **Base unit:** 4px grid
+- **xs:** 4px — tight internal padding, icon gaps
+- **sm:** 8px — compact element spacing, chip padding
+- **md:** 16px — standard content padding, card internal spacing
+- **lg:** 24px — section gaps, generous breathing room
+- **xl:** 32px — major section separators
+- **2xl:** 48px — page-level top/bottom margins
+
+## 5. Elevation & Depth
+
+- **Level 0:** Flat — no shadow (backgrounds, inline content)
+- **Level 1:** Whisper shadow — `0 1px 3px rgba(0,0,0,0.08)` (cards, list items)
+- **Level 2:** Soft shadow — `0 2px 8px rgba(0,0,0,0.12)` (dropdowns, popovers)
+- **Level 3:** Medium shadow — `0 4px 16px rgba(0,0,0,0.15)` (modals, bottom sheets)
+- **Level 4:** Strong shadow — `0 8px 24px rgba(0,0,0,0.18)` (floating actions)
+- **Level 5:** Dramatic shadow — `0 16px 48px rgba(0,0,0,0.22)` (full-screen overlays)
+
+Strategy: Subtle and functional. Shadows convey interactivity, not decoration.
+
+## 6. Component Defaults
+
+- **Buttons:** Subtly rounded (8px radius), minimum height 48px, full-width on mobile forms. Primary uses Vendly Green bg with white text. Secondary uses outlined style with green border.
+- **Cards:** Gently rounded (12px), white background on light mode, Level 1 elevation. 16px internal padding.
+- **Inputs:** 48px height, 8px border-radius, 1px light gray border, 16px horizontal padding. Focus state: 2px green border.
+- **Bottom Sheets:** 16px top radius, Level 3 elevation, drag handle indicator.
+- **List Items:** 56px minimum height for touch targets, 16px horizontal padding, subtle bottom border separator.
+- **Icon Size:** 24px standard, 20px compact, 32px prominent.
+- **Touch Targets:** Minimum 48x48dp for all interactive elements (POS accessibility requirement).
+
+## 7. Motion & Animation
+
+- **Fast:** 150ms — button press feedback, toggle switches, micro-interactions
+- **Medium:** 300ms — screen transitions, card expansions, bottom sheet slides
+- **Slow:** 500ms — page-level transitions, onboarding animations
+- **Easing Standard:** cubic-bezier(0.4, 0, 0.2, 1) — most transitions
+- **Easing Decelerate:** cubic-bezier(0, 0, 0.2, 1) — elements entering the screen
+- **Easing Accelerate:** cubic-bezier(0.4, 0, 1, 1) — elements leaving the screen
+- **Reduced Motion:** Respect `prefers-reduced-motion`. Disable all animations except essential state changes.
+
+## 8. Platform Notes
+
+- **Framework:** Jetpack Compose with Material 3
+- **Theme:** MaterialTheme with custom ColorScheme, Typography, and Shapes
+- **Navigation:** Bottom navigation bar (3-5 tabs max for POS efficiency)
+- **Gestures:** Swipe-to-dismiss on transaction cards, pull-to-refresh on lists
+- **Haptics:** Light haptic on successful transaction, medium on errors
+- **Orientation:** Portrait locked for POS terminal use
+
+## 9. Locale & Accessibility Notes
+
+- **Primary Locale:** es-DO (Dominican Republic Spanish)
+- **RTL Support:** Not required (Spanish is LTR), but flag is set to false explicitly
+- **Number Format:** Period for thousands, comma for decimals (DR convention): `1.500,00`
+- **Currency:** DOP (Dominican Peso) — symbol `RD$` displayed before amount
+- **Date Format:** DD/MM/YYYY
+- **Accessibility Level:** WCAG AA minimum, AAA for primary text contrast
+- **Screen Reader:** All interactive elements must have Spanish `contentDescription`
+- **Font Scaling:** Support up to 200% system font scaling without layout breakage

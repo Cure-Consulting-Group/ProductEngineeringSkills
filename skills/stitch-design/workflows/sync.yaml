@@ -1,0 +1,96 @@
+name: stitch-design-sync
+description: "Pull all screens from an existing Stitch project into the local repo"
+trigger:
+  skill: stitch-design
+  intent: sync
+  phrases:
+    - "sync designs"
+    - "pull screens from Stitch"
+    - "download Stitch project"
+    - "import designs"
+
+steps:
+  - id: resolve_project_id
+    agent: stitch-design
+    tool: stitch-mcp
+    inputs:
+      tool_name: "list_projects"
+      arguments:
+        filter: "view=owned"
+    outputs:
+      project_id: "string"
+      project_title: "string"
+    notes: "If user provides a project ID directly, skip this step. Otherwise match by title."
+
+  - id: list_screens
+    agent: stitch-design
+    tool: stitch-mcp
+    inputs:
+      tool_name: "list_screens"
+      arguments:
+        projectId: "${resolve_project_id.project_id}"
+    outputs:
+      screens: "array"
+
+  - id: download_screens
+    agent: stitch-design
+    tool: stitch-mcp
+    loop: "${list_screens.screens}"
+    inputs:
+      - tool_name: "get_screen_code"
+        arguments:
+          projectId: "${resolve_project_id.project_id}"
+          screenId: "${item.screen_id}"
+      - tool_name: "get_screen_image"
+        arguments:
+          projectId: "${resolve_project_id.project_id}"
+          screenId: "${item.screen_id}"
+    outputs:
+      screen_data: "array"
+
+  - id: write_outputs
+    agent: stitch-design
+    tool: Write
+    loop: "${download_screens.screen_data}"
+    inputs:
+      files:
+        - path: "[repo]/design/screens/${item.screen_title}/index.html"
+          content: "${item.html_content}"
+        - path: "[repo]/design/screens/${item.screen_title}/preview.png"
+          content: "${item.image_base64}"
+    outputs:
+      written_files: "array"
+
+  - id: update_state
+    agent: stitch-design
+    tool: Edit
+    inputs:
+      file: "[repo]/STATE.md"
+      append: |
+        ## Design Sync
+        - Project: ${resolve_project_id.project_title} (${resolve_project_id.project_id})
+        - Screens synced: ${list_screens.screens.length}
+        - Last sync: ${date}
+        - Files: ${write_outputs.written_files}
+
+error_handling:
+  on_mcp_failure:
+    action: retry
+    max_retries: 2
+    backoff_seconds: 3
+    fallback: "Notify user that Stitch MCP is unavailable. Check auth and network."
+  on_empty_project:
+    action: "Notify user that the Stitch project has no screens to sync."
+  on_write_failure:
+    action: "Log failed file writes. Continue with remaining screens. Report failures at end."
+
+state_updates:
+  - file: "STATE.md"
+    section: "Design Sync"
+    action: upsert
+    data:
+      project_id: "${resolve_project_id.project_id}"
+      project_title: "${resolve_project_id.project_title}"
+      screen_count: "${list_screens.screens.length}"
+      synced_at: "${date}"
+      screen_manifest: "${write_outputs.written_files}"
