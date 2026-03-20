@@ -1,0 +1,210 @@
+# Design System: Default
+
+**Project ID:** (set your project ID here)
+**Platform:** Web (React/Tailwind) — adaptable to Android/iOS
+
+## 1. Visual Theme & Atmosphere
+
+Clean, professional, and content-focused — a neutral foundation that works for any product. Generous whitespace, clear hierarchy, and subtle depth cues create a modern feel without imposing a strong brand personality. Light mode first with a carefully considered dark mode. The system is designed to be extended with product-specific brand colors while maintaining structural consistency.
+
+## 2. Color Palette & Roles
+
+### Light Mode (Primary)
+- **Confident Blue** (#2563EB) — primary actions, CTAs, links, focused states
+- **On Primary White** (#FFFFFF) — text and icons on primary blue surfaces
+- **Near Black** (#111827) — primary text, headings, high-emphasis content
+- **Cool Gray** (#6B7280) — secondary text, labels, placeholders
+- **Light Gray Surface** (#F9FAFB) — page backgrounds
+- **White** (#FFFFFF) — card backgrounds, elevated surfaces
+- **Border Gray** (#E5E7EB) — dividers, input borders, separators
+- **Error Red** (#EF4444) — error states, destructive actions, validation failures
+- **On Error White** (#FFFFFF) — text on error surfaces
+- **Success Green** (#10B981) — success messages, positive indicators
+- **Warning Amber** (#F59E0B) — caution states, pending actions
+- **Info Indigo** (#6366F1) — informational callouts, badges
+
+### Dark Mode
+- **Confident Blue** (#3B82F6) — primary actions (slightly lighter for dark bg contrast)
+- **On Primary White** (#FFFFFF) — text on primary surfaces
+- **Dark Surface** (#111827) — page backgrounds
+- **Dark Card** (#1F2937) — card backgrounds, elevated surfaces
+- **Light Text** (#F9FAFB) — primary text
+- **Muted Text** (#9CA3AF) — secondary text, labels
+- **Dark Border** (#374151) — dividers, separators
+- **Error Red** (#F87171) — error states (lighter variant for dark bg)
+- **Success Green** (#34D399) — success states (lighter variant)
+
+## 3. Typography Rules
+
+- **Font Family:** Inter (all weights)
+- **Fallback:** system-ui, -apple-system, BlinkMacSystemFont, sans-serif
+- **Display Large:** 48px / Bold (700) — hero headlines, landing page titles
+- **Display Medium:** 36px / Bold (700) — major section titles
+- **Headline Large:** 30px / SemiBold (600) — page titles, screen headers
+- **Headline Medium:** 24px / SemiBold (600) — section headers, card titles
+- **Headline Small:** 20px / SemiBold (600) — subsection headers
+- **Body Large:** 16px / Regular (400) — primary content, paragraphs
+- **Body Medium:** 14px / Regular (400) — secondary content, descriptions
+- **Body Small:** 12px / Regular (400) — fine print, helper text
+- **Label Large:** 14px / Medium (500) — button text, form labels, nav items
+- **Label Medium:** 12px / Medium (500) — badges, captions, metadata
+- **Letter Spacing:** Normal for body text, -0.02em for display/headlines
+- **Line Height:** 1.5 for body, 1.2 for display, 1.3 for headlines
+
+## 4. Spacing Scale
+
+- **Base unit:** 4px grid
+- **xs:** 4px — tight internal padding, inline element gaps
+- **sm:** 8px — compact spacing, chip padding, icon-to-text gap
+- **md:** 16px — standard padding, card internal spacing, form field gaps
+- **lg:** 24px — section spacing, generous card padding
+- **xl:** 32px — major section separators, page-level margins
+- **2xl:** 48px — hero section padding, page top/bottom margins
+- **3xl:** 64px — landing page section gaps (web only)
+
+## 5. Elevation & Depth
+
+- **Level 0:** Flat — no shadow (backgrounds, inline elements)
+- **Level 1:** Subtle — `0 1px 2px rgba(0,0,0,0.05)` (cards, list items)
+- **Level 2:** Soft — `0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)` (hover states, active cards)
+- **Level 3:** Medium — `0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)` (dropdowns, popovers)
+- **Level 4:** Strong — `0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)` (modals, dialogs)
+- **Level 5:** Dramatic — `0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04)` (floating actions)
+
+Strategy: Subtle and minimal. Use elevation sparingly to denote interactive layers, not decoration.
+
+## 6. Component Defaults
+
+- **Buttons:** Subtly rounded (8px radius), 40px height (sm), 44px (md), 48px (lg). Primary: blue background, white text. Secondary: outlined with blue border. Ghost: transparent with blue text.
+- **Cards:** Gently rounded (12px), white background, Level 1 elevation, 16px padding. Hover: Level 2 elevation transition.
+- **Inputs:** 44px height, 8px radius, 1px gray border (#E5E7EB), 12px horizontal padding. Focus: 2px blue ring. Error: red border with helper text below.
+- **Modals/Dialogs:** 16px radius, Level 4 elevation, overlay at rgba(0,0,0,0.5). Max width 480px for confirmations, 640px for forms.
+- **Navigation:** Top navbar (web), bottom tabs (mobile). Active: blue icon + text. Inactive: gray.
+- **Lists:** 48px row height, 16px horizontal padding, 1px bottom border separator.
+- **Chips/Badges:** Pill-shaped (full radius), 28px height. Blue for active, gray-outlined for inactive.
+- **Icon Size:** 20px inline, 24px standard, 32px prominent.
+- **Touch Targets:** 44px minimum (web), 48px minimum (mobile).
+
+## 7. Motion & Animation
+
+- **Fast:** 150ms — micro-interactions, toggles, icon transitions, ripples
+- **Medium:** 300ms — component transitions, accordion expand, tab switch
+- **Slow:** 500ms — page transitions, modal entry/exit, skeleton-to-content
+- **Easing Standard:** cubic-bezier(0.4, 0, 0.2, 1) — default for most transitions
+- **Easing Decelerate:** cubic-bezier(0, 0, 0.2, 1) — elements entering the viewport
+- **Easing Accelerate:** cubic-bezier(0.4, 0, 1, 1) — elements leaving the viewport
+- **Reduced Motion:** Honor `prefers-reduced-motion: reduce`. Replace all animations with instant state transitions. Never disable functionality, only motion.
+
+## 8. Platform Notes
+
+### Web (React/Tailwind) — Primary
+
+- Next.js App Router with Tailwind CSS
+- shadcn/ui component library as base (Radix primitives)
+- Responsive: mobile-first, breakpoints at sm(640px), md(768px), lg(1024px), xl(1280px)
+- CSS custom properties for theme tokens in HSL format
+- Dark mode via Tailwind `dark:` variant with `class` strategy
+- Icons: Lucide React (`lucide-react`)
+- Forms: react-hook-form + zod + shadcn Form components
+
+**shadcn Token Configuration (globals.css):**
+```css
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --primary: 221 83% 53%;          /* #2563EB */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --border: 220 13% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --destructive: 0 63% 31%;
+    --border: 217 33% 17%;
+    --ring: 224 76% 48%;
+  }
+}
+```
+
+**Key shadcn Components:**
+- Navigation: `NavigationMenu` (desktop), `Sheet` + drawer (mobile)
+- Forms: `Input`, `Select`, `Textarea`, `Switch`, `Checkbox` with `Form` wrapper
+- Feedback: `Toast` (sonner), `AlertDialog`, `Dialog`
+- Data: `Table`, `DataTable` (with TanStack Table), `Badge`, `Avatar`
+
+### Android (Compose) — If Applicable
+
+- MaterialTheme with custom ColorScheme mapped from DESIGN.md tokens
+- Inter font via Google Fonts Compose
+- Follow Material 3 adaptive layout guidelines
+- Icons: Material Symbols Outlined (variable weight)
+
+**M3 Tonal Palette (Generated from Default Blue #2563EB):**
+
+| Role | Light Theme | Dark Theme |
+|---|---|---|
+| primary | #2563EB (T40) | #93B4FF (T80) |
+| onPrimary | #FFFFFF (T100) | #002F6B (T20) |
+| primaryContainer | #D6E2FF (T90) | #00458F (T30) |
+| onPrimaryContainer | #001A40 (T10) | #D6E2FF (T90) |
+| surfaceContainer | #EDEDEB (N94) | #201F1D (N12) |
+| surfaceContainerHigh | #E7E7E5 (N92) | #2B2A28 (N17) |
+
+### iOS (SwiftUI) — If Applicable
+
+- Custom AppTheme with SwiftUI Color extensions
+- SF Pro as system font (override with Inter if brand requires via `@ScaledMetric`)
+- Follow Human Interface Guidelines for navigation patterns
+- Icons: SF Symbols with monochrome rendering (match Lucide where possible)
+
+**HIG System Color Mapping:**
+
+| DESIGN.md Token | HIG Color | Usage |
+|---|---|---|
+| primary (#2563EB) | `.tint` (custom) | Buttons, links, focused states |
+| surface (#F9FAFB) | `.systemGroupedBackground` | Page backgrounds |
+| surface-variant (#F3F4F6) | `.secondarySystemGroupedBackground` | Card backgrounds |
+| on-surface (#111827) | `.label` | Primary text |
+| on-surface-secondary (#6B7280) | `.secondaryLabel` | Supporting text |
+| error (#EF4444) | `.systemRed` | Error states |
+| success (#10B981) | `.systemGreen` | Success states |
+
+**Dynamic Type Implementation:**
+```swift
+// Custom Inter font that scales with Dynamic Type
+extension Font {
+    static let designBody: Font = .custom("Inter", size: 16, relativeTo: .body)
+    static let designHeadline: Font = .custom("Inter", size: 24, relativeTo: .title2).weight(.semibold)
+    static let designLabel: Font = .custom("Inter", size: 14, relativeTo: .subheadline).weight(.medium)
+}
+```
+
+## 9. Locale & Accessibility Notes
+
+- **Primary Locale:** en-US (English)
+- **RTL Support:** Prepared but not active. Set RTL flag to false. Use logical properties (start/end) instead of left/right in CSS.
+- **Number Format:** Comma for thousands, period for decimals: `1,500.00`
+- **Currency:** USD ($) by default — configurable per product
+- **Date Format:** MMM DD, YYYY (e.g., "Mar 19, 2026")
+- **Accessibility Level:** WCAG AA minimum for all text and interactive elements
+- **Contrast Ratios:** Blue (#2563EB) on white = 4.6:1 (passes AA large text). For small text, ensure 4.5:1 minimum.
+- **Focus Indicators:** Visible 2px blue ring on all focusable elements. Never remove outline without replacement.
+- **Screen Reader:** All images require alt text. All form inputs require associated labels. All buttons require accessible names.
+- **Keyboard Navigation:** Full keyboard support. Tab order follows visual order. Escape closes modals/dropdowns.
+- **Font Scaling:** Support up to 200% without layout breakage or content clipping.

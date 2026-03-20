@@ -1,0 +1,128 @@
+name: stitch-design-generate
+description: "Generate a new UI screen from a natural language prompt via Stitch MCP"
+trigger:
+  skill: stitch-design
+  intent: generate
+  phrases:
+    - "design a screen"
+    - "generate UI"
+    - "create a mockup"
+    - "vibe design"
+    - "build a page"
+
+steps:
+  - id: load_design_md
+    agent: stitch-design
+    tool: Read
+    inputs:
+      paths:
+        - "[repo]/.stitch/DESIGN.md"
+        - "[repo]/DESIGN.md"
+      fallback: "[skill-root]/assets/DESIGN.md.default"
+    outputs:
+      design_system: "string"
+
+  - id: enhance_prompt
+    agent: stitch-design
+    skill: stitch-design
+    inputs:
+      raw_prompt: "${trigger.user_prompt}"
+      design_system: "${load_design_md.design_system}"
+      platform: "${detect_platform.result}"
+    outputs:
+      enhanced_prompt: "string"
+      generation_mode: "string"
+
+  - id: stitch_generate
+    agent: stitch-design
+    tool: stitch-mcp
+    inputs:
+      tool_name: "generate_screen"
+      arguments:
+        projectId: "${resolve_project.project_id}"
+        prompt: "${enhance_prompt.enhanced_prompt}"
+        designSystem: "${load_design_md.design_system}"
+    outputs:
+      screen_id: "string"
+      screen_title: "string"
+
+  - id: get_screen_code
+    agent: stitch-design
+    tool: stitch-mcp
+    inputs:
+      tool_name: "get_screen_code"
+      arguments:
+        projectId: "${resolve_project.project_id}"
+        screenId: "${stitch_generate.screen_id}"
+    outputs:
+      html_content: "string"
+
+  - id: get_screen_image
+    agent: stitch-design
+    tool: stitch-mcp
+    inputs:
+      tool_name: "get_screen_image"
+      arguments:
+        projectId: "${resolve_project.project_id}"
+        screenId: "${stitch_generate.screen_id}"
+    outputs:
+      image_base64: "string"
+
+  - id: convert_to_platform
+    agent: stitch-design
+    skill: react:components
+    condition: "${detect_platform.result} in ['web', 'android']"
+    inputs:
+      html_content: "${get_screen_code.html_content}"
+      platform: "${detect_platform.result}"
+      design_system: "${load_design_md.design_system}"
+    outputs:
+      platform_code: "string"
+      file_extension: "string"
+
+  - id: write_outputs
+    agent: stitch-design
+    tool: Write
+    inputs:
+      files:
+        - path: "[repo]/design/screens/${feature_name}/${screen_name}.html"
+          content: "${get_screen_code.html_content}"
+        - path: "[repo]/design/screens/${feature_name}/${screen_name}.png"
+          content: "${get_screen_image.image_base64}"
+        - path: "[repo]/design/screens/${feature_name}/${screen_name}.${convert_to_platform.file_extension}"
+          content: "${convert_to_platform.platform_code}"
+          condition: "${convert_to_platform.platform_code} != null"
+    outputs:
+      written_files: "array"
+
+  - id: update_state
+    agent: stitch-design
+    tool: Edit
+    inputs:
+      file: "[repo]/STATE.md"
+      append: |
+        ## Design Assets
+        - ${feature_name}/${screen_name}: Generated ${date}, Stitch project ${resolve_project.project_id}
+        - Files: ${write_outputs.written_files}
+
+error_handling:
+  on_mcp_failure:
+    action: retry
+    max_retries: 2
+    backoff_seconds: 3
+    fallback: "Notify user that Stitch MCP is unavailable. Check auth and network."
+  on_design_md_missing:
+    action: "Copy default seed to [repo]/.stitch/DESIGN.md and continue."
+  on_conversion_failure:
+    action: "Skip platform conversion. Write HTML output only. Notify user."
+
+state_updates:
+  - file: "STATE.md"
+    section: "Design Assets"
+    action: append
+    data:
+      screen_name: "${stitch_generate.screen_title}"
+      screen_id: "${stitch_generate.screen_id}"
+      project_id: "${resolve_project.project_id}"
+      generated_at: "${date}"
+      files: "${write_outputs.written_files}"

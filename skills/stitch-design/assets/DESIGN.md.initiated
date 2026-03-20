@@ -1,0 +1,155 @@
+# Design System: The Initiated
+
+**Project ID:** the-initiated
+**Platform:** Android (Jetpack Compose) + Web (React/Tailwind)
+
+## 1. Visual Theme & Atmosphere
+
+Dark, bold, and editorial — athletic energy channeled through premium design. Card-heavy layouts with striking imagery, gold accent moments, and confident typography. The aesthetic sits between a sports magazine and a luxury brand lookbook. Deep navy backgrounds create depth while gold highlights draw the eye to key actions. Despite the boldness, readability is never sacrificed — generous line height and careful contrast ratios keep content scannable.
+
+## 2. Color Palette & Roles
+
+### Dark Mode (Primary)
+- **Initiated Gold** (#C9A84C) — primary actions, CTAs, highlights, badges, brand accent
+- **On Gold Dark** (#1A1A2E) — text and icons on gold surfaces
+- **Deep Navy** (#1B2A4A) — primary surface, card backgrounds, main canvas
+- **Darker Navy** (#111B30) — page backgrounds, deepest layer
+- **Soft White** (#F1F5F9) — primary text, headings
+- **Muted Silver** (#94A3B8) — secondary text, metadata, timestamps
+- **Navy Border** (#2D3F5E) — subtle dividers, card borders
+- **White Surface** (#FFFFFF) — rare light accent surfaces, avatar rings
+- **Alert Red** (#EF4444) — error states, elimination indicators
+- **Success Emerald** (#10B981) — success states, advancement indicators
+- **Info Blue** (#3B82F6) — informational callouts, links
+
+### Light Mode (Secondary)
+- **Initiated Gold** (#C9A84C) — primary accent (consistent with dark mode)
+- **On Gold Dark** (#1A1A2E) — text on gold surfaces
+- **Light Surface** (#F8FAFC) — page backgrounds
+- **White** (#FFFFFF) — card backgrounds
+- **Near Black** (#0F172A) — primary text
+- **Slate** (#64748B) — secondary text
+- **Light Border** (#E2E8F0) — dividers, separators
+
+## 3. Typography Rules
+
+- **Display Font:** Bebas Neue — used exclusively for hero headlines, athlete names, event titles. All uppercase. Never for body text.
+- **Body Font:** Inter — all body text, labels, buttons, navigation, metadata
+- **Fallback:** system-ui, -apple-system, sans-serif
+- **Display Large:** Bebas Neue, 48px / Regular (400) — hero headlines, event names
+- **Display Medium:** Bebas Neue, 36px / Regular (400) — section titles, athlete spotlights
+- **Headline Large:** Inter, 28px / Bold (700) — screen titles, card headings
+- **Headline Medium:** Inter, 22px / SemiBold (600) — section headers
+- **Body Large:** Inter, 16px / Regular (400) — primary content, descriptions
+- **Body Medium:** Inter, 14px / Regular (400) — secondary content, card descriptions
+- **Label Large:** Inter, 14px / SemiBold (600) — button text, tab labels
+- **Label Medium:** Inter, 12px / Medium (500) — metadata, captions, stat labels
+- **Letter Spacing:** Bebas Neue: 0.05em (wide tracking for display). Inter: normal for body, -0.01em for headlines.
+- **Line Height:** 1.6 for body (generous for readability on dark backgrounds), 1.1 for Bebas Neue display.
+
+## 4. Spacing Scale
+
+- **Base unit:** 4px grid
+- **xs:** 4px — tight gaps between inline elements, stat label spacing
+- **sm:** 8px — compact card internal padding, badge spacing
+- **md:** 16px — standard card padding, content margins
+- **lg:** 24px — section gaps, card-to-card spacing
+- **xl:** 32px — major section separators, screen-level padding
+- **2xl:** 48px — hero section vertical padding, page margins
+
+## 5. Elevation & Depth
+
+- **Level 0:** Flat — flush with surface (inline content, list items)
+- **Level 1:** Subtle glow — `0 1px 4px rgba(0,0,0,0.3)` (cards on dark background)
+- **Level 2:** Soft depth — `0 4px 12px rgba(0,0,0,0.4)` (featured cards, popovers)
+- **Level 3:** Pronounced — `0 8px 24px rgba(0,0,0,0.5)` (modals, overlays)
+- **Level 4:** Dramatic — `0 12px 32px rgba(0,0,0,0.6)` (full-screen takeovers)
+- **Level 5:** Deep — `0 20px 48px rgba(0,0,0,0.7)` (hero image overlays)
+
+Strategy: Shadows are bolder on dark backgrounds to maintain visual separation. Use darker rgba values than typical light-mode systems.
+
+## 6. Component Defaults
+
+- **Buttons:** Medium rounding (8px), 48px height. Primary uses gold background with dark text. Secondary uses outlined with gold border on navy. Ghost buttons for tertiary actions.
+- **Cards:** Editorial layout — 12px rounding, navy background, full-bleed images with gradient overlays. Cards are the primary content vessel. Standard card: image top (60% height), content bottom (40%).
+- **Athlete Cards:** Special variant — large hero image with gradient overlay, Bebas Neue name overlay, stat chips at bottom.
+- **Inputs:** 48px height, 8px radius, navy-dark background (#111B30), 1px navy-border, gold focus ring. Placeholder text in muted silver.
+- **Navigation:** Bottom tab bar (mobile), side nav (web). Active state: gold icon + label. Inactive: muted silver.
+- **Chips/Badges:** Pill-shaped (full radius), 28px height. Gold background for active/featured, navy-border for inactive.
+- **Icon Size:** 24px standard, 20px inline, 32px navigation.
+- **Touch Targets:** 48x48dp minimum.
+
+## 7. Motion & Animation
+
+- **Fast:** 150ms — button feedback, chip toggles, icon transitions
+- **Medium:** 300ms — card reveals, tab transitions, content fades
+- **Slow:** 500ms — hero image transitions, page-level animations, spotlight reveals
+- **Easing Standard:** cubic-bezier(0.4, 0, 0.2, 1)
+- **Easing Decelerate:** cubic-bezier(0, 0, 0.2, 1) — content entering view
+- **Easing Accelerate:** cubic-bezier(0.4, 0, 1, 1) — content exiting
+- **Special:** Card flip animation for athlete reveals (800ms, spring easing)
+- **Reduced Motion:** Respect system preference. Replace animations with instant state changes.
+
+## 8. Platform Notes
+
+### Android (Compose) — Material 3
+
+- MaterialTheme with custom dark ColorScheme
+- Bebas Neue loaded via Google Fonts Compose integration
+- Bottom navigation with 4 tabs: Home, Discover, Events, Profile
+- Swipe gestures on athlete cards (swipe to save/dismiss)
+
+**M3 Dark Tonal Palette (Generated from Initiated Gold #C9A84C):**
+
+| Role | Dark Theme |
+|---|---|
+| primary | #C9A84C (T80) |
+| onPrimary | #3D2E00 (T20) |
+| primaryContainer | #584400 (T30) |
+| onPrimaryContainer | #E8C76A (T90) |
+| surface | #111B30 (custom deep navy) |
+| surfaceContainer | #1B2A4A (custom navy) |
+| surfaceContainerHigh | #243556 (custom lighter navy) |
+
+**M3 Component Overrides:**
+- **Cards:** `ElevatedCard` with custom navy `surfaceContainer` background. Use `Level 1` shadow with rgba(0,0,0,0.3) for dark bg visibility.
+- **Chips:** `AssistChip` with gold border for active filters. `FilterChip` with gold `selectedContainerColor`.
+- **NavigationBar:** Custom dark navy background, gold `indicatorColor` for active tab.
+
+### Web (React/Tailwind) — shadcn/Radix
+
+- Dark mode as default (`class="dark"` on html element)
+- Bebas Neue via Google Fonts (`@import`)
+- Responsive: mobile-first, breakpoints at 768px and 1024px
+- Sidebar navigation on desktop, bottom tabs on mobile viewport
+
+**shadcn Token Overrides (globals.css):**
+```css
+.dark {
+  --background: 220 43% 8%;        /* #111B30 deep navy */
+  --foreground: 210 40% 96%;       /* #F1F5F9 soft white */
+  --primary: 42 52% 54%;           /* #C9A84C gold */
+  --primary-foreground: 240 25% 13%; /* #1A1A2E dark text on gold */
+  --card: 218 44% 20%;             /* #1B2A4A navy cards */
+  --card-foreground: 210 40% 96%;
+  --muted: 218 40% 25%;            /* #2D3F5E navy border */
+  --muted-foreground: 215 20% 65%; /* #94A3B8 muted silver */
+  --border: 218 30% 27%;           /* #2D3F5E */
+}
+```
+
+**Web Component Notes:**
+- Card layout: `<Card>` with full-bleed `<AspectRatio ratio={16/9}>` image + gradient overlay
+- Athlete names: `<h2 className="font-display text-display-lg uppercase tracking-wide">`
+- Editorial grid: `grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6` with featured card spanning `md:col-span-2`
+
+## 9. Locale & Accessibility Notes
+
+- **Primary Locale:** en-US (English)
+- **RTL Support:** Not required initially. Flag: false
+- **Number Format:** Comma for thousands, period for decimals: `1,500.00`
+- **Date Format:** MMM DD, YYYY (e.g., "Mar 19, 2026")
+- **Accessibility Level:** WCAG AA minimum
+- **Dark Mode Contrast:** Gold (#C9A84C) on navy (#1B2A4A) = 4.8:1 ratio (passes AA for large text). For small text, use Soft White (#F1F5F9) on navy = 11.2:1 ratio.
+- **Image Alt Text:** All athlete photos require descriptive alt text including name and action
+- **Screen Reader:** Card content must be announced as a single group with title, subtitle, and action
