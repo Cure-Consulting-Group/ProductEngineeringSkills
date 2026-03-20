@@ -92,17 +92,56 @@ Strategy: Shadows are bolder on dark backgrounds to maintain visual separation. 
 
 ## 8. Platform Notes
 
-### Android (Compose)
+### Android (Compose) — Material 3
+
 - MaterialTheme with custom dark ColorScheme
 - Bebas Neue loaded via Google Fonts Compose integration
 - Bottom navigation with 4 tabs: Home, Discover, Events, Profile
 - Swipe gestures on athlete cards (swipe to save/dismiss)
 
-### Web (React/Tailwind)
+**M3 Dark Tonal Palette (Generated from Initiated Gold #C9A84C):**
+
+| Role | Dark Theme |
+|---|---|
+| primary | #C9A84C (T80) |
+| onPrimary | #3D2E00 (T20) |
+| primaryContainer | #584400 (T30) |
+| onPrimaryContainer | #E8C76A (T90) |
+| surface | #111B30 (custom deep navy) |
+| surfaceContainer | #1B2A4A (custom navy) |
+| surfaceContainerHigh | #243556 (custom lighter navy) |
+
+**M3 Component Overrides:**
+- **Cards:** `ElevatedCard` with custom navy `surfaceContainer` background. Use `Level 1` shadow with rgba(0,0,0,0.3) for dark bg visibility.
+- **Chips:** `AssistChip` with gold border for active filters. `FilterChip` with gold `selectedContainerColor`.
+- **NavigationBar:** Custom dark navy background, gold `indicatorColor` for active tab.
+
+### Web (React/Tailwind) — shadcn/Radix
+
 - Dark mode as default (`class="dark"` on html element)
 - Bebas Neue via Google Fonts (`@import`)
 - Responsive: mobile-first, breakpoints at 768px and 1024px
 - Sidebar navigation on desktop, bottom tabs on mobile viewport
+
+**shadcn Token Overrides (globals.css):**
+```css
+.dark {
+  --background: 220 43% 8%;        /* #111B30 deep navy */
+  --foreground: 210 40% 96%;       /* #F1F5F9 soft white */
+  --primary: 42 52% 54%;           /* #C9A84C gold */
+  --primary-foreground: 240 25% 13%; /* #1A1A2E dark text on gold */
+  --card: 218 44% 20%;             /* #1B2A4A navy cards */
+  --card-foreground: 210 40% 96%;
+  --muted: 218 40% 25%;            /* #2D3F5E navy border */
+  --muted-foreground: 215 20% 65%; /* #94A3B8 muted silver */
+  --border: 218 30% 27%;           /* #2D3F5E */
+}
+```
+
+**Web Component Notes:**
+- Card layout: `<Card>` with full-bleed `<AspectRatio ratio={16/9}>` image + gradient overlay
+- Athlete names: `<h2 className="font-display text-display-lg uppercase tracking-wide">`
+- Editorial grid: `grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6` with featured card spanning `md:col-span-2`
 
 ## 9. Locale & Accessibility Notes
 

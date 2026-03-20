@@ -2,20 +2,61 @@
 
 Maps DESIGN.md tokens to platform-specific implementations for Android Compose, React/Web (Tailwind + shadcn), and raw CSS.
 
-## Color Tokens
+## Color Tokens — Core
+
+| DESIGN.md Token | Material 3 (Compose) | Tailwind/shadcn | CSS Custom Property | HIG (SwiftUI) |
+|---|---|---|---|---|
+| `primary` | `colorScheme.primary` | `bg-primary` | `var(--color-primary)` | `.tint` (app accent) |
+| `on-primary` | `colorScheme.onPrimary` | `text-primary-foreground` | `var(--color-on-primary)` | `.white` on tint |
+| `secondary` | `colorScheme.secondary` | `bg-secondary` | `var(--color-secondary)` | `.secondary` (system) |
+| `on-secondary` | `colorScheme.onSecondary` | `text-secondary-foreground` | `var(--color-on-secondary)` | `.white` on secondary |
+| `surface` | `colorScheme.surface` | `bg-background` | `var(--color-surface)` | `.systemBackground` |
+| `on-surface` | `colorScheme.onSurface` | `text-foreground` | `var(--color-on-surface)` | `.label` |
+| `surface-variant` | `colorScheme.surfaceVariant` | `bg-muted` | `var(--color-surface-variant)` | `.secondarySystemBackground` |
+| `error` | `colorScheme.error` | `bg-destructive` | `var(--color-error)` | `.systemRed` |
+| `on-error` | `colorScheme.onError` | `text-destructive-foreground` | `var(--color-on-error)` | `.white` on red |
+| `outline` | `colorScheme.outline` | `border-border` | `var(--color-outline)` | `.separator` |
+
+## Color Tokens — M3 Extended (Container System)
 
 | DESIGN.md Token | Material 3 (Compose) | Tailwind/shadcn | CSS Custom Property |
 |---|---|---|---|
-| `primary` | `MaterialTheme.colorScheme.primary` | `bg-primary` / `text-primary` | `var(--color-primary)` |
-| `on-primary` | `MaterialTheme.colorScheme.onPrimary` | `text-primary-foreground` | `var(--color-on-primary)` |
-| `secondary` | `MaterialTheme.colorScheme.secondary` | `bg-secondary` / `text-secondary` | `var(--color-secondary)` |
-| `on-secondary` | `MaterialTheme.colorScheme.onSecondary` | `text-secondary-foreground` | `var(--color-on-secondary)` |
-| `surface` | `MaterialTheme.colorScheme.surface` | `bg-background` | `var(--color-surface)` |
-| `on-surface` | `MaterialTheme.colorScheme.onSurface` | `text-foreground` | `var(--color-on-surface)` |
-| `surface-variant` | `MaterialTheme.colorScheme.surfaceVariant` | `bg-muted` | `var(--color-surface-variant)` |
-| `error` | `MaterialTheme.colorScheme.error` | `bg-destructive` | `var(--color-error)` |
-| `on-error` | `MaterialTheme.colorScheme.onError` | `text-destructive-foreground` | `var(--color-on-error)` |
-| `outline` | `MaterialTheme.colorScheme.outline` | `border-border` | `var(--color-outline)` |
+| `primary-container` | `colorScheme.primaryContainer` | `bg-primary/10` | `var(--color-primary-container)` |
+| `on-primary-container` | `colorScheme.onPrimaryContainer` | `text-primary` | `var(--color-on-primary-container)` |
+| `secondary-container` | `colorScheme.secondaryContainer` | `bg-secondary/10` | `var(--color-secondary-container)` |
+| `on-secondary-container` | `colorScheme.onSecondaryContainer` | `text-secondary` | `var(--color-on-secondary-container)` |
+| `tertiary` | `colorScheme.tertiary` | `bg-accent` | `var(--color-tertiary)` |
+| `tertiary-container` | `colorScheme.tertiaryContainer` | `bg-accent/10` | `var(--color-tertiary-container)` |
+| `surface-container` | `colorScheme.surfaceContainer` | `bg-muted` | `var(--color-surface-container)` |
+| `surface-container-high` | `colorScheme.surfaceContainerHigh` | `bg-muted/80` | `var(--color-surface-container-high)` |
+| `surface-container-highest` | `colorScheme.surfaceContainerHighest` | `bg-card` | `var(--color-surface-container-highest)` |
+| `surface-container-low` | `colorScheme.surfaceContainerLow` | `bg-background/95` | `var(--color-surface-container-low)` |
+| `surface-dim` | `colorScheme.surfaceDim` | `bg-muted/60` | `var(--color-surface-dim)` |
+| `surface-bright` | `colorScheme.surfaceBright` | `bg-background` | `var(--color-surface-bright)` |
+| `inverse-surface` | `colorScheme.inverseSurface` | `bg-foreground` | `var(--color-inverse-surface)` |
+| `inverse-on-surface` | `colorScheme.inverseOnSurface` | `text-background` | `var(--color-inverse-on-surface)` |
+| `inverse-primary` | `colorScheme.inversePrimary` | `text-primary-foreground` | `var(--color-inverse-primary)` |
+| `outline-variant` | `colorScheme.outlineVariant` | `border-border/50` | `var(--color-outline-variant)` |
+| `scrim` | `colorScheme.scrim` | `bg-black/50` | `var(--color-scrim)` |
+
+## Color Tokens — HIG System Colors
+
+| HIG Role | SwiftUI Color | Light | Dark | DESIGN.md Equivalent |
+|---|---|---|---|---|
+| Primary label | `.label` | `#000000` | `#FFFFFF` | `on-surface` |
+| Secondary label | `.secondaryLabel` | `#3C3C43` (60%) | `#EBEBF5` (60%) | `on-surface` (secondary) |
+| Tertiary label | `.tertiaryLabel` | `#3C3C43` (30%) | `#EBEBF5` (30%) | `on-surface` (tertiary) |
+| System background | `.systemBackground` | `#FFFFFF` | `#000000` | `surface` |
+| Secondary background | `.secondarySystemBackground` | `#F2F2F7` | `#1C1C1E` | `surface-variant` |
+| Tertiary background | `.tertiarySystemBackground` | `#FFFFFF` | `#2C2C2E` | `surface-container` |
+| Grouped background | `.systemGroupedBackground` | `#F2F2F7` | `#000000` | `surface` (grouped) |
+| System blue | `.systemBlue` | `#007AFF` | `#0A84FF` | `info` |
+| System green | `.systemGreen` | `#34C759` | `#30D158` | `success` |
+| System red | `.systemRed` | `#FF3B30` | `#FF453A` | `error` |
+| System yellow | `.systemYellow` | `#FFCC00` | `#FFD60A` | `warning` |
+| System orange | `.systemOrange` | `#FF9500` | `#FF9F0A` | `warning` (alt) |
+| Separator | `.separator` | `#3C3C43` (29%) | `#545458` (65%) | `outline` |
+| Fill | `.systemFill` | `#787880` (20%) | `#787880` (36%) | `surface-variant` |
 
 ### Android Compose Example
 

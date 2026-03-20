@@ -100,6 +100,25 @@ Strategy: Subtle and functional. Shadows convey interactivity, not decoration.
 - **Haptics:** Light haptic on successful transaction, medium on errors
 - **Orientation:** Portrait locked for POS terminal use
 
+### Material 3 Tonal Palette (Generated from Vendly Green #00A859)
+
+| Role | Light Theme | Dark Theme |
+|---|---|---|
+| primary | #006D35 (T40) | #55E08B (T80) |
+| onPrimary | #FFFFFF (T100) | #003919 (T20) |
+| primaryContainer | #73FDA5 (T90) | #005227 (T30) |
+| onPrimaryContainer | #002110 (T10) | #73FDA5 (T90) |
+| surfaceContainer | #EDEDEB (N94) | #201F1D (N12) |
+| surfaceContainerHigh | #E7E7E5 (N92) | #2B2A28 (N17) |
+| surfaceContainerHighest | #E1E1DF (N90) | #363533 (N22) |
+
+### M3 Component Overrides (Vendly-Specific)
+
+- **NavigationBar:** 3 destinations max (Home, Transactions, Profile). Active = primaryContainer fill.
+- **Snackbar:** Use `Snackbar` with `SnackbarHost` for transaction status. Duration: SHORT for success, INDEFINITE for errors.
+- **BottomSheet:** Use `ModalBottomSheet` for product selection. Drag handle visible. PeekHeight: 256dp.
+- **Cards:** `ElevatedCard` with `surfaceContainerHighest` for product items. `OutlinedCard` for transaction summaries.
+
 ## 9. Locale & Accessibility Notes
 
 - **Primary Locale:** es-DO (Dominican Republic Spanish)

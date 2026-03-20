@@ -98,21 +98,102 @@ Strategy: Subtle and minimal. Use elevation sparingly to denote interactive laye
 ## 8. Platform Notes
 
 ### Web (React/Tailwind) — Primary
+
 - Next.js App Router with Tailwind CSS
-- shadcn/ui component library as base
+- shadcn/ui component library as base (Radix primitives)
 - Responsive: mobile-first, breakpoints at sm(640px), md(768px), lg(1024px), xl(1280px)
-- CSS custom properties for theme tokens
+- CSS custom properties for theme tokens in HSL format
 - Dark mode via Tailwind `dark:` variant with `class` strategy
+- Icons: Lucide React (`lucide-react`)
+- Forms: react-hook-form + zod + shadcn Form components
+
+**shadcn Token Configuration (globals.css):**
+```css
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --primary: 221 83% 53%;          /* #2563EB */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --border: 220 13% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --destructive: 0 63% 31%;
+    --border: 217 33% 17%;
+    --ring: 224 76% 48%;
+  }
+}
+```
+
+**Key shadcn Components:**
+- Navigation: `NavigationMenu` (desktop), `Sheet` + drawer (mobile)
+- Forms: `Input`, `Select`, `Textarea`, `Switch`, `Checkbox` with `Form` wrapper
+- Feedback: `Toast` (sonner), `AlertDialog`, `Dialog`
+- Data: `Table`, `DataTable` (with TanStack Table), `Badge`, `Avatar`
 
 ### Android (Compose) — If Applicable
-- MaterialTheme with custom ColorScheme
+
+- MaterialTheme with custom ColorScheme mapped from DESIGN.md tokens
 - Inter font via Google Fonts Compose
 - Follow Material 3 adaptive layout guidelines
+- Icons: Material Symbols Outlined (variable weight)
+
+**M3 Tonal Palette (Generated from Default Blue #2563EB):**
+
+| Role | Light Theme | Dark Theme |
+|---|---|---|
+| primary | #2563EB (T40) | #93B4FF (T80) |
+| onPrimary | #FFFFFF (T100) | #002F6B (T20) |
+| primaryContainer | #D6E2FF (T90) | #00458F (T30) |
+| onPrimaryContainer | #001A40 (T10) | #D6E2FF (T90) |
+| surfaceContainer | #EDEDEB (N94) | #201F1D (N12) |
+| surfaceContainerHigh | #E7E7E5 (N92) | #2B2A28 (N17) |
 
 ### iOS (SwiftUI) — If Applicable
+
 - Custom AppTheme with SwiftUI Color extensions
-- SF Pro as system font (override with Inter if brand requires)
+- SF Pro as system font (override with Inter if brand requires via `@ScaledMetric`)
 - Follow Human Interface Guidelines for navigation patterns
+- Icons: SF Symbols with monochrome rendering (match Lucide where possible)
+
+**HIG System Color Mapping:**
+
+| DESIGN.md Token | HIG Color | Usage |
+|---|---|---|
+| primary (#2563EB) | `.tint` (custom) | Buttons, links, focused states |
+| surface (#F9FAFB) | `.systemGroupedBackground` | Page backgrounds |
+| surface-variant (#F3F4F6) | `.secondarySystemGroupedBackground` | Card backgrounds |
+| on-surface (#111827) | `.label` | Primary text |
+| on-surface-secondary (#6B7280) | `.secondaryLabel` | Supporting text |
+| error (#EF4444) | `.systemRed` | Error states |
+| success (#10B981) | `.systemGreen` | Success states |
+
+**Dynamic Type Implementation:**
+```swift
+// Custom Inter font that scales with Dynamic Type
+extension Font {
+    static let designBody: Font = .custom("Inter", size: 16, relativeTo: .body)
+    static let designHeadline: Font = .custom("Inter", size: 24, relativeTo: .title2).weight(.semibold)
+    static let designLabel: Font = .custom("Inter", size: 14, relativeTo: .subheadline).weight(.medium)
+}
+```
 
 ## 9. Locale & Accessibility Notes
 

@@ -53,13 +53,16 @@ Ensure Stitch MCP is configured:
 
 Alternative: Use `STITCH_USE_SYSTEM_GCLOUD=1` for gcloud ADC auth.
 
-## Step 4: Prompt Enhancement
+## Step 4: Prompt Enhancement with Platform Patterns
 
-Before sending to Stitch MCP, enhance the user's prompt:
+Before sending to Stitch MCP, enhance the user's prompt with platform-aware design vocabulary:
 
-1. Detect platform target from project files
-2. Load DESIGN.md tokens (colors, typography, spacing)
-3. Replace vague UI terms with professional design vocabulary
+1. Detect platform target from project files (build.gradle.kts → M3, Package.swift → HIG, package.json → Web)
+2. Load DESIGN.md tokens (colors, typography, spacing) including M3 tonal palette or HIG system colors
+3. Replace vague UI terms with platform-specific design vocabulary:
+   - **Android:** M3 components (NavigationBar, ElevatedCard, OutlinedTextField), Material Symbols, tonal elevation
+   - **iOS:** HIG components (TabView, NavigationSplitView, .sheet), SF Symbols, Dynamic Type, haptic feedback
+   - **Web:** shadcn/Radix components (Card, Sheet, Command), Lucide icons, responsive breakpoints, CSS variables
 4. Structure as: atmosphere → design system → page sections → constraints
 5. Select generation mode (Flash for ideation, Pro for production)
 
@@ -113,8 +116,11 @@ Before sending to Stitch MCP, enhance the user's prompt:
 
 ## Cross-References
 
-- `/design-system` — for design token architecture and component libraries
-- `/android-feature-scaffold` — for Compose implementation after design handoff
-- `/nextjs-feature-scaffold` — for React implementation after design handoff
-- `/product-design` — for design principles and platform guidelines
-- `/accessibility-audit` — for WCAG compliance verification of generated screens
+- `/android-design-expert` — Deep Material 3 patterns (tonal palettes, M3 components, motion, Material Symbols)
+- `/ios-design-expert` — Deep Apple HIG patterns (Dynamic Type, SF Symbols, haptics, system colors)
+- `/web-design-expert` — Deep web patterns (responsive, container queries, Core Web Vitals, accessibility)
+- `/design-system` — Design token architecture, component libraries, cross-platform consistency
+- `/android-feature-scaffold` — Compose implementation after design handoff
+- `/nextjs-feature-scaffold` — React implementation after design handoff
+- `/product-design` — Platform detection router, design principles, Figma handoff
+- `/accessibility-audit` — WCAG compliance verification of generated screens

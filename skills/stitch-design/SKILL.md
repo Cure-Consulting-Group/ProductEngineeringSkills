@@ -103,9 +103,11 @@ Check the project for platform signals:
 
 Extract: color palette, typography scale, spacing grid, component defaults, and platform notes.
 
-### Step 3: Inject UI/UX Vocabulary
+### Step 3: Inject Platform-Specific Design Vocabulary
 
-Replace vague terms with professional design terminology:
+Replace vague terms with professional, platform-aware design terminology. Use Material 3 patterns for Android, Apple HIG patterns for iOS, and shadcn/Radix patterns for Web.
+
+**General UI/UX Vocabulary:**
 
 | Vague Input | Enhanced Output |
 |---|---|
@@ -114,6 +116,19 @@ Replace vague terms with professional design terminology:
 | "button" | "Primary call-to-action button with label and optional leading icon" |
 | "form" | "Form with labeled input fields, validation states, and submit CTA" |
 | "menu" | "Navigation drawer / bottom sheet with grouped menu items and icons" |
+
+**Platform-Specific Injection (applied automatically based on Step 1 detection):**
+
+| Context | Android (M3) Injection | iOS (HIG) Injection | Web Injection |
+|---|---|---|---|
+| Navigation | "Bottom NavigationBar with 3-5 destinations, NavigationRail on tablet" | "TabView with SF Symbol icons, NavigationSplitView on iPad" | "Responsive sidebar (Sheet on mobile, persistent on desktop)" |
+| Cards | "M3 ElevatedCard with surfaceContainerHighest fill, 12dp rounding" | "Grouped list section with .secondarySystemGroupedBackground" | "shadcn Card with CardHeader/CardContent, hover:shadow-md" |
+| Inputs | "M3 OutlinedTextField with supportingText, 56dp height" | "TextField with .roundedBorder, Dynamic Type scaling" | "shadcn Input with Label, FormMessage for zod validation" |
+| Colors | "M3 tonal palette: primary, primaryContainer, surface roles" | "HIG system colors: .label, .systemBackground, .tint" | "CSS variables: --primary, --background, --foreground HSL" |
+| Icons | "Material Symbols Outlined, 24dp, onSurface tint" | "SF Symbols with hierarchical rendering, Dynamic Type scaling" | "Lucide icons, h-4 w-4 className, currentColor" |
+| Motion | "M3 motion: FastOutSlowIn 300ms for shared axis transitions" | "Spring animation with .sensoryFeedback for haptics" | "Tailwind duration-300 ease-in-out, prefers-reduced-motion" |
+
+Cross-reference [references/platform-patterns.md](references/platform-patterns.md) for complete component mapping tables.
 
 ### Step 4: Select Generation Mode
 
@@ -306,4 +321,13 @@ For Autograph: start with the default seed, then override surface colors to clin
 - [assets/DESIGN.md.initiated](assets/DESIGN.md.initiated) — The Initiated design system
 - [assets/DESIGN.md.default](assets/DESIGN.md.default) — Generic fallback
 
-See [references/platform-tokens.md](references/platform-tokens.md) for token translation tables across platforms.
+See [references/platform-tokens.md](references/platform-tokens.md) for token translation tables and [references/platform-patterns.md](references/platform-patterns.md) for Material 3, Apple HIG, and Web component pattern mappings.
+
+### Cross-References
+
+- `/android-design-expert` — Deep Material 3 patterns (tonal palettes, M3 components, motion system, Material Symbols)
+- `/ios-design-expert` — Deep Apple HIG patterns (Dynamic Type, SF Symbols, haptics, system colors, Live Activities)
+- `/web-design-expert` — Deep web patterns (responsive design, container queries, Core Web Vitals, accessibility)
+- `/design-system` — Design token architecture, component libraries, cross-platform consistency rules
+- `/product-design` — Platform detection router, design principles, Figma handoff standards
+- `/accessibility-audit` — WCAG compliance verification, contrast ratios, screen reader testing
