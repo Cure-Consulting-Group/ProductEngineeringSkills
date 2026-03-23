@@ -1,6 +1,6 @@
 # Cure Consulting Group — Product Engineering Standards
 
-Use these standards for ALL engineering work. This is the condensed version of our 63-skill library.
+Use these standards for ALL engineering work. This is the condensed version of our 64-skill library.
 
 ## Tech Stack Defaults
 

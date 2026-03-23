@@ -10,7 +10,7 @@ The complete skill library that Cure Consulting Group uses to build apps, platfo
 ProductEngineeringSkills/
 ├── .claude-plugin/           # Plugin manifest
 │   └── plugin.json
-├── skills/                   # 63 skills (new SKILL.md format with frontmatter)
+├── skills/                   # 64 skills (new SKILL.md format with frontmatter)
 │   ├── sdlc/
 │   ├── android-feature-scaffold/
 │   ├── incident-response/     # NEW
@@ -122,7 +122,7 @@ The postinstall script automatically:
 - Symlinks the package to `~/.claude/plugins/ProductEngineeringSkills`
 - Registers the plugin in `~/.claude/settings.json`
 
-All 63 skills, hooks, agents, rules, and output styles are immediately available.
+All 64 skills, hooks, agents, rules, and output styles are immediately available.
 
 **3. Enable auto-updates with Dependabot** (recommended):
 
@@ -230,7 +230,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 - `SKILL.md` — The main skill definition
 - `references/` — Supporting documents and templates
 
-## Skill Inventory (63 Skills)
+## Skill Inventory (64 Skills)
 
 ### Product & Strategy (7)
 | Skill | What It Does | Auto-Invoked? |
@@ -320,12 +320,13 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **client-communication** | Sprint demo scripts, stakeholder updates, risk escalation, executive summaries | Yes |
 | **proposal-generator** | Consulting proposals, SOWs, milestone pricing, engagement structure | No (manual only) |
 
-### Platform Design (3)
+### Platform Design (4)
 | Skill | What It Does | Auto-Invoked? |
 |-------|-------------|---------------|
 | **android-design-expert** | Material Design 3 — dynamic color, component tokens, adaptive layouts, motion, Compose patterns | Yes |
 | **ios-design-expert** | Apple HIG — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components | Yes |
 | **web-design-expert** | Responsive design, CSS architecture, design tokens, container queries, accessibility-first, Tailwind | Yes |
+| **stitch-design** | AI-native UI design via Stitch MCP — vibe design, mockups, screen generation, design tokens, component export | Yes |
 
 ## Hooks (Multi-Layer Automated Enforcement)
 
