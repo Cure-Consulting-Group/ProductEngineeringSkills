@@ -35,7 +35,7 @@ gemini skills/*.skill          — Google Gemini skill packages
 
 ## Versioning
 
-Current version: **3.3.0**
+Current version: **3.3.2**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording

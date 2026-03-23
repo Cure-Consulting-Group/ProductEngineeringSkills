@@ -320,6 +320,13 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **client-communication** | Sprint demo scripts, stakeholder updates, risk escalation, executive summaries | Yes |
 | **proposal-generator** | Consulting proposals, SOWs, milestone pricing, engagement structure | No (manual only) |
 
+### Platform Design (3)
+| Skill | What It Does | Auto-Invoked? |
+|-------|-------------|---------------|
+| **android-design-expert** | Material Design 3 — dynamic color, component tokens, adaptive layouts, motion, Compose patterns | Yes |
+| **ios-design-expert** | Apple HIG — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components | Yes |
+| **web-design-expert** | Responsive design, CSS architecture, design tokens, container queries, accessibility-first, Tailwind | Yes |
+
 ## Hooks (Multi-Layer Automated Enforcement)
 
 The plugin includes three types of hooks across **12 event types**: `SessionStart`, `PreCompact`, `PostCompact`, `PostToolUse`, `PostToolUseFailure`, `UserPromptSubmit`, `PreToolUse`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCompleted`, `Stop`.

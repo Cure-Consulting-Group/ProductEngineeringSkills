@@ -44,7 +44,8 @@
     "settings.json",
     "setup.sh",
     "install-plugin.js",
-    "verify-install.sh"
+    "verify-install.sh",
+    "cross-platform/"
   ],
   "scripts": {
     "postinstall": "node install-plugin.js"
