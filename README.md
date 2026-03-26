@@ -44,7 +44,7 @@ ProductEngineeringSkills/
 │   ├── green-software/
 │   ├── proposal-generator/
 │   ├── api-gateway/
-│   ├── ... (63 total)
+│   ├── ... (64 total)
 │   └── legal-doc-scaffold/
 ├── agents/                   # 9 custom subagent definitions
 │   ├── code-reviewer.md      # Security + quality review agent
@@ -84,7 +84,7 @@ ProductEngineeringSkills/
 ├── .lsp.json                 # LSP server configs (TypeScript, Python/Pyright)
 ├── marketplace.json          # Plugin marketplace manifest
 ├── settings.json             # Default permission rules
-├── claude-commands/           # Legacy format (backwards compat, 29 files)
+├── claude-commands/           # Legacy format (backwards compat, 64 files)
 ├── gemini skills/             # Google Gemini skills (.skill ZIP)
 ├── CLAUDE.md                  # Project instructions
 ├── setup.sh                  # Setup script for Antigravity & other projects
