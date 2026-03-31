@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "cure-product-engineering",
-      "description": "Complete product engineering skill library — 63 skills, 9 agents, 11 rules, 9 output styles, multi-layer hooks (14 events), MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
+      "description": "Complete product engineering skill library — 64 skills, 31 agents (engineering, product, marketing, business, data, security), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering (14 events), MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
       "source": {
         "type": "github",
         "repo": "Cure-Consulting-Group/ProductEngineeringSkills"

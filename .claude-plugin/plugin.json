@@ -1,7 +1,7 @@
 {
   "name": "cure-product-engineering",
-  "description": "Cure Consulting Group's complete product engineering skill library — 64 production-grade skills, 9 custom agents, 11 path-specific rules, 9 output styles, multi-layer hooks (command + prompt + agent), MCP server configs, and LSP server configs for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, Python, Go, Rust, and cloud infrastructure.",
-  "version": "3.4.0",
+  "description": "Cure Consulting Group's complete product engineering skill library — 64 production-grade skills, 31 custom agents (engineering, product, marketing, business, data, security), 11 path-specific rules, 9 output styles, multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, and LSP server configs for building apps, platforms, and products with consistent standards across Android, iOS, Web, Firebase, Python, Go, Rust, and cloud infrastructure.",
+  "version": "4.0.0",
   "author": {
     "name": "Cure Consulting Group",
     "url": "https://github.com/Cure-Consulting-Group"

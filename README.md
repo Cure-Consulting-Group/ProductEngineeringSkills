@@ -46,16 +46,38 @@ ProductEngineeringSkills/
 │   ├── api-gateway/
 │   ├── ... (64 total)
 │   └── legal-doc-scaffold/
-├── agents/                   # 9 custom subagent definitions
+├── agents/                   # 31 custom subagent definitions
 │   ├── code-reviewer.md      # Security + quality review agent
 │   ├── project-bootstrapper.md  # New project setup agent
 │   ├── test-runner.md        # Execute test suites, report coverage
+│   ├── pr-reviewer.md        # Automated PR diff review
+│   ├── refactor-assistant.md # Safe refactoring with test validation
+│   ├── ci-debugger.md        # Diagnose failed CI/CD runs
+│   ├── release-coordinator.md # Version bump, changelog, deploy validation
+│   ├── doc-generator.md      # API docs, ADRs, changelogs from code
+│   ├── codebase-explainer.md # Onboarding — explain architecture, trace flows
 │   ├── migration-validator.md # Database migration safety checks
 │   ├── deployment-validator.md # Pre-deployment checklist validation
 │   ├── dependency-auditor.md # Vulnerability and outdated package audit
+│   ├── api-validator.md      # OpenAPI spec and contract validation
+│   ├── product-analyst.md    # Feature adoption, analytics instrumentation
+│   ├── ux-researcher.md      # Usability analysis, friction mapping
+│   ├── roadmap-strategist.md # RICE scoring, dependency mapping, roadmaps
+│   ├── competitive-intel.md  # Feature matrices, positioning, moat analysis
+│   ├── content-strategist.md # Editorial calendars, SEO, content briefs
+│   ├── campaign-analyst.md   # Attribution, funnel analysis, channel ROI
+│   ├── brand-guardian.md     # Voice/tone, visual identity, microcopy audit
+│   ├── growth-analyst.md     # Activation, retention, viral mechanics
+│   ├── financial-analyst.md  # Revenue forecasts, unit economics, scenarios
+│   ├── market-intelligence.md # TAM/SAM/SOM, trends, market timing
+│   ├── investor-relations.md # Board updates, KPIs, fundraising narratives
+│   ├── contract-reviewer.md  # SOW/contract risk, terms, IP review
+│   ├── data-analyst.md       # Schema exploration, queries, data quality
+│   ├── metrics-dashboard.md  # KPI definitions, SLOs, dashboard wireframes
+│   ├── ab-test-analyst.md    # Experiment design, statistical analysis
+│   ├── qa-engineer.md         # Test planning, edge cases, regression, quality gates
 │   ├── accessibility-checker.md # WCAG 2.2 automated compliance
-│   ├── firebase-security-auditor.md # Firestore rules and Functions audit
-│   └── api-validator.md      # OpenAPI spec and contract validation
+│   └── firebase-security-auditor.md # Firestore rules and Functions audit
 ├── hooks/                    # Multi-layer automated enforcement
 │   └── hooks.json            # Command + Prompt + Agent hooks (12 event types)
 ├── rules/                    # 11 path-specific coding standards
@@ -87,6 +109,7 @@ ProductEngineeringSkills/
 ├── claude-commands/           # Legacy format (backwards compat, 64 files)
 ├── gemini skills/             # Google Gemini skills (.skill ZIP)
 ├── CLAUDE.md                  # Project instructions
+├── AGENT-GUIDE.md             # How to structure prompts for agents & skills
 ├── setup.sh                  # Setup script for Antigravity & other projects
 ├── EVALUATION.md              # Full evaluation document
 └── README.md
@@ -328,36 +351,41 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **web-design-expert** | Responsive design, CSS architecture, design tokens, container queries, accessibility-first, Tailwind | Yes |
 | **stitch-design** | AI-native UI design via Stitch MCP — vibe design, mockups, screen generation, design tokens, component export | Yes |
 
-## Hooks (Multi-Layer Automated Enforcement)
+## Hooks (Multi-Layer Automated Enforcement + Agent Auto-Triggering)
 
 The plugin includes three types of hooks across **12 event types**: `SessionStart`, `PreCompact`, `PostCompact`, `PostToolUse`, `PostToolUseFailure`, `UserPromptSubmit`, `PreToolUse`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCompleted`, `Stop`.
 
+**New in v4.0**: Hooks now suggest and auto-trigger agents based on context. Every code edit, test run, deployment, and PR action recommends the most relevant agent(s).
+
 ### Command Hooks (Deterministic)
-| Hook | Event | What It Does |
-|------|-------|--------------|
-| **Welcome** | SessionStart | Confirms plugin loaded, lists available skills |
-| **Git status** | SessionStart | Reports current branch, uncommitted changes, last commit |
-| **Platform reminder** | PostToolUse (Edit/Write) | After editing source files, reminds to run audit/testing |
-| **Tool failure logger** | PostToolUseFailure | Logs tool failures with context for debugging |
-| **Subagent start banner** | SubagentStart | Announces subagent invocation with role and scope |
-| **Task completed summary** | TaskCompleted | Summarizes completed tasks and outputs artifacts list |
-| **Protected files** | PreToolUse (Edit/Write) | Blocks edits to .env, lock files, and credential files |
-| **Dangerous commands** | PreToolUse (Bash) | Blocks force push to main, destructive rm, DROP TABLE, prod deploys |
-| **Context re-injection** | PreCompact | Re-injects Cure standards and skill list after context compaction |
-| **Post-compact restore** | PostCompact | Confirms context restored and re-validates active skill state |
+| Hook | Event | What It Does | Agent Integration |
+|------|-------|--------------|-------------------|
+| **Welcome + Agent roster** | SessionStart | Confirms plugin loaded, lists all 31 agents by domain | Displays full agent inventory |
+| **Git status** | SessionStart | Reports current branch, uncommitted changes, last commit | — |
+| **Dependency check** | SessionStart | Detects outdated packages | Suggests dependency-auditor |
+| **Code edit advisor** | PostToolUse (Edit/Write) | Context-aware suggestions based on file type (.kt, .swift, .ts, .sql, .tf, etc.) | Suggests code-reviewer, test-runner, brand-guardian, migration-validator |
+| **Command advisor** | PostToolUse (Bash) | Post-action guidance for tests, installs, deploys, PRs, releases | Suggests ci-debugger, dependency-auditor, pr-reviewer, release-coordinator |
+| **Failure recovery** | PostToolUseFailure | Diagnoses failure type and suggests fix approach | Auto-suggests ci-debugger, deployment-validator, dependency-auditor |
+| **Destructive prompt guard** | UserPromptSubmit | Detects destructive operations in prompts | Blocks and confirms |
+| **Protected files** | PreToolUse (Edit/Write) | Blocks edits to .env, lock files, credentials, tfstate | — |
+| **Dangerous commands** | PreToolUse (Bash) | Blocks force push, destructive rm, DROP TABLE, prod deploys | — |
+| **Context re-injection** | PreCompact | Re-injects all 64 skills, 31 agents, and Cure standards | Full agent roster preserved |
+| **Post-compact restore** | PostCompact | Confirms context restored with agent availability | — |
+| **Subagent start banner** | SubagentStart | Announces agent with role, standards, and companion agents | Lists companion agents |
+| **Subagent completion** | SubagentStop | Suggests follow-up agents (test-runner, code-reviewer, pr-reviewer) | Agent chaining |
+| **Task quality check** | TaskCompleted | Validates tests, security, docs, brand consistency | Suggests test-runner, code-reviewer, doc-generator, brand-guardian |
 
 ### Prompt Hooks (LLM-Validated)
-| Hook | Event | What It Does |
-|------|-------|--------------|
-| **Code quality gate** | PreToolUse (Edit/Write) | Haiku validates: no hardcoded secrets, no debug logs, no disabled tests, no `any` types |
-| **Deployment safety** | PreToolUse (Bash) | Haiku validates: blocks production deployments outside CI/CD |
-| **Prompt intent classifier** | UserPromptSubmit | Classifies prompt intent to auto-select the most relevant skill |
+| Hook | Event | What It Does | Agent Integration |
+|------|-------|--------------|-------------------|
+| **Code quality gate** | PreToolUse (Edit/Write) | Haiku validates: no secrets, no debug logs, no disabled tests, no `any` types | — |
+| **Deployment safety** | PreToolUse (Bash) | Haiku validates: blocks production deployments outside CI/CD | — |
+| **Intent classifier** | UserPromptSubmit | Haiku classifies prompt intent and suggests the most relevant agent(s) from all 30 | Maps prompts → agents with confidence scores |
 
 ### Agent Hooks (Multi-Turn Verification)
-| Hook | Event | What It Does |
-|------|-------|--------------|
-| **Completion validator** | Stop | Agent checks if tests were written for new code and security reviews were run for sensitive changes |
-| **Notification dispatcher** | Notification | Routes system notifications to the appropriate agent or hook handler |
+| Hook | Event | What It Does | Agent Integration |
+|------|-------|--------------|-------------------|
+| **Completion validator** | Stop | Validates: tests for new code, security review for sensitive changes, rollback for migrations, docs for features, brand consistency for UI, analytics for events, API contracts | Suggests specific agents for each gap found |
 
 ## MCP Server Integrations
 
@@ -395,19 +423,68 @@ Custom output formatting for different artifact types:
 | **test-plan** | Testing strategy, QA skills | Coverage tables, test case templates, pass/fail criteria |
 | **monitoring-alert** | Observability, incident response | Alert definition tables, threshold rationale, runbook links |
 
-## Custom Agents
+## Custom Agents (30)
+
+### Engineering Agents (14)
+
+| Agent | Purpose | Tools | Auto-Triggered By |
+|-------|---------|-------|--------------------|
+| **code-reviewer** | Security + quality review against Cure standards | Read-only | Stop hook, SubagentStop |
+| **project-bootstrapper** | Set up new projects with correct architecture | Full access | Manual |
+| **test-runner** | Execute test suites and report coverage gaps | Read + Bash | PostToolUse (code edits) |
+| **pr-reviewer** | Automated PR diff review — security, performance, test gaps | Read + Bash | PostToolUse (gh pr) |
+| **refactor-assistant** | Safe refactoring with test validation before/after every change | Full access | Manual |
+| **ci-debugger** | Diagnose failed CI/CD runs and suggest targeted fixes | Read + Bash | PostToolUseFailure (build/test) |
+| **release-coordinator** | Version bump, changelog, tagging, deploy validation | Read + Edit + Bash | PostToolUse (git tag/gh release) |
+| **doc-generator** | API docs, ADRs, changelogs, onboarding guides from code | Read + Bash | TaskCompleted |
+| **codebase-explainer** | Onboarding — explains architecture, traces data flows | Read + Bash | Manual |
+| **migration-validator** | Validate database migrations for safety and correctness | Read + Bash | PostToolUse (*.sql edits) |
+| **deployment-validator** | Pre-deployment checklist and config validation | Read + Bash | PostToolUse (infra edits) |
+| **dependency-auditor** | Audit dependencies for vulnerabilities and outdated packages | Read + Bash | PostToolUse (npm/pip install) |
+| **api-validator** | OpenAPI spec validation, contract testing, breaking change detection | Read + Bash | Stop hook |
+| **qa-engineer** | Test planning, edge case discovery, regression analysis, bug triage, quality gates | Read + Bash | Stop hook, pre-release |
+
+### Product Agents (4)
 
 | Agent | Purpose | Tools |
 |-------|---------|-------|
-| **code-reviewer** | Security + quality review against Cure standards | Read-only |
-| **project-bootstrapper** | Set up new projects with correct architecture | Full access |
-| **test-runner** | Execute test suites and report coverage gaps | Read + Bash |
-| **migration-validator** | Validate database migrations for safety and correctness | Read-only |
-| **deployment-validator** | Pre-deployment checklist and config validation | Read-only |
-| **dependency-auditor** | Audit dependencies for vulnerabilities and outdated packages | Read + Bash |
-| **accessibility-checker** | Automated WCAG 2.2 compliance checking | Read-only |
-| **firebase-security-auditor** | Firestore rules and Cloud Functions security audit | Read-only |
-| **api-validator** | OpenAPI spec validation, contract testing, breaking change detection | Read-only |
+| **product-analyst** | Feature adoption, user journey mapping, analytics instrumentation audit | Read + Bash |
+| **ux-researcher** | Usability analysis, friction mapping, form evaluation, cognitive load | Read-only |
+| **roadmap-strategist** | RICE scoring, dependency mapping, capacity planning, quarterly roadmaps | Read + Bash |
+| **competitive-intel** | Feature comparison matrices, positioning analysis, moat assessment | Read + Web |
+
+### Marketing Agents (4)
+
+| Agent | Purpose | Tools |
+|-------|---------|-------|
+| **content-strategist** | Editorial calendars, content briefs, SEO strategy, distribution plans | Read + Web |
+| **campaign-analyst** | Attribution tracking, funnel analysis, channel ROI, A/B test infra audit | Read + Bash |
+| **brand-guardian** | Voice/tone consistency, visual identity, microcopy quality, cross-platform | Read-only |
+| **growth-analyst** | Activation funnels, retention mechanics, viral coefficients, experiments | Read + Bash |
+
+### Business & Finance Agents (4)
+
+| Agent | Purpose | Tools |
+|-------|---------|-------|
+| **financial-analyst** | Revenue forecasts, unit economics, cost structures, scenario analysis | Read + Bash |
+| **market-intelligence** | TAM/SAM/SOM, Porter's Five Forces, trend analysis, market timing | Read + Web |
+| **investor-relations** | Board updates, KPI dashboards, fundraising narratives, investor materials | Read + Bash |
+| **contract-reviewer** | SOW/contract risk analysis, missing clauses, unfavorable terms, IP issues | Read-only |
+
+### Data & Analytics Agents (3)
+
+| Agent | Purpose | Tools |
+|-------|---------|-------|
+| **data-analyst** | Schema exploration, query generation, data quality assessment, anomalies | Read + Bash |
+| **metrics-dashboard** | KPI definitions, SLO/SLI targets, dashboard wireframes, alert thresholds | Read + Bash |
+| **ab-test-analyst** | Experiment design, sample size calculation, statistical significance | Read + Bash |
+
+### Security & Compliance Agents (2)
+
+| Agent | Purpose | Tools | Auto-Triggered By |
+|-------|---------|-------|--------------------|
+| **accessibility-checker** | Automated WCAG 2.2 compliance checking | Read-only | Stop hook |
+| **firebase-security-auditor** | Firestore rules and Cloud Functions security audit | Read + Bash | PostToolUse (Firebase edits) |
 
 ## Path-Specific Rules
 
