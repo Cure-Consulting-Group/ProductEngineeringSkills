@@ -1,0 +1,40 @@
+name: Auto-merge Skills Updates
+
+# This workflow auto-merges Dependabot PRs for the skills package.
+# Copy this to your consuming project's .github/workflows/ directory
+# to enable fully automatic updates.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge-skills:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Check if this is a skills update
+        id: check
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if echo "$PR_TITLE" | grep -qi "product-engineering-skills"; then
+            echo "is_skills=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_skills=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Auto-approve skills update
+        if: steps.check.outputs.is_skills == 'true'
+        run: gh pr review "${{ github.event.pull_request.number }}" --approve --body "Auto-approved: ProductEngineeringSkills update. Skills, agents, hooks, and rules will be updated on merge."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge
+        if: steps.check.outputs.is_skills == 'true'
+        run: gh pr merge "${{ github.event.pull_request.number }}" --auto --squash --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

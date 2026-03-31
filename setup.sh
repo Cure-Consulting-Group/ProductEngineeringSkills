@@ -148,14 +148,29 @@ with open('$user_settings', 'w') as f:
     ok "Created $user_settings with plugin enabled."
   fi
 
+  # Install auto-update
+  local auto_update_script="$plugin_path/auto-update.sh"
+  if [ -f "$auto_update_script" ]; then
+    chmod +x "$auto_update_script"
+    if [[ "$OSTYPE" == darwin* ]]; then
+      info "Installing daily auto-update via launchd..."
+      "$auto_update_script" --install-launchd
+    else
+      info "Installing daily auto-update via cron..."
+      "$auto_update_script" --install-cron
+    fi
+    ok "Auto-update installed. Plugin will pull latest daily at 9:00 AM."
+  fi
+
   echo ""
   ok "Global installation complete!"
   echo ""
   echo "  Plugin location: $plugin_path"
   echo "  User settings:   $user_settings"
+  echo "  Auto-update:     Daily at 9:00 AM"
   echo ""
-  echo "  All Claude Code sessions will now have access to 64 skills."
-  echo "  To update later: cd $plugin_path && git pull"
+  echo "  All Claude Code sessions will have access to 64 skills and 31 agents."
+  echo "  Manual update: $auto_update_script"
   echo ""
   echo "  Or load manually per-session:"
   echo "    claude --plugin-dir $plugin_path"
@@ -314,6 +329,20 @@ DEPBOT
     ok "Created $dependabot_file for auto-updating skills plugin"
   fi
 
+  # Install auto-merge workflow for Dependabot skills updates
+  local workflows_dir="$project_dir/.github/workflows"
+  local automerge_file="$workflows_dir/auto-merge-skills.yml"
+  mkdir -p "$workflows_dir"
+
+  if [ ! -f "$automerge_file" ]; then
+    if [ -f "$plugin_path/.github/workflows/auto-merge-skills.yml" ]; then
+      cp "$plugin_path/.github/workflows/auto-merge-skills.yml" "$automerge_file"
+      ok "Installed auto-merge workflow for skills updates"
+    fi
+  else
+    ok "Auto-merge workflow already exists."
+  fi
+
   # Create .gitignore entry for local settings
   local gitignore="$project_dir/.gitignore"
   if [ -f "$gitignore" ]; then
@@ -366,7 +395,7 @@ main() {
   echo ""
   echo "╔══════════════════════════════════════════════════════════╗"
   echo "║  Cure Consulting Group — ProductEngineeringSkills Setup ║"
-  echo "║  Plugin v3.4.0 — 64 Skills, Hooks, Agents, Rules       ║"
+  echo "║  Plugin v4.0.0 — 64 Skills, 31 Agents, Hooks, Rules     ║"
   echo "╚══════════════════════════════════════════════════════════╝"
   echo ""
 
