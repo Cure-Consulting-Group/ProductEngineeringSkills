@@ -1,6 +1,8 @@
 ---
 name: android-feature-scaffold
+version: "1.0.0"
 description: "Scaffold Android features with Clean Architecture, MVI, Jetpack Compose, Hilt, and Kotlin"
+when_to_use: "Use when scaffolding a new Android feature module with Clean Architecture, MVI, Compose, and Hilt. NOT for design guidance (use android-design-expert)."
 argument-hint: "[feature-name]"
 ---
 

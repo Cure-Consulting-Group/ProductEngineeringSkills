@@ -1,6 +1,8 @@
 ---
 name: observability
+version: "1.0.0"
 description: "Set up observability stacks — structured logging, distributed tracing, alerting, SLO/SLI definition, and dashboards with Crashlytics, Sentry, or Datadog"
+when_to_use: "Use when setting up structured logging, distributed tracing, alerting, SLO/SLI definition, or dashboards with Crashlytics, Sentry, or Datadog."
 argument-hint: "[project-or-service]"
 context: fork
 ---

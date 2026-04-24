@@ -1,6 +1,8 @@
 ---
 name: finops
+version: "1.0.0"
 description: "Optimize cloud costs — budget alerts, resource right-sizing, usage analysis, FinOps practices, and cost allocation for Firebase and GCP"
+when_to_use: "Use when optimizing cloud costs, setting budget alerts, or right-sizing resources on Firebase/GCP. NOT for financial modeling (use saas-financial-model). NOT for burn rate tracking (use burn-rate-tracker)."
 argument-hint: "[project-or-service]"
 ---
 

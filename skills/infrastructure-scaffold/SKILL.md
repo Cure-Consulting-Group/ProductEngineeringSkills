@@ -1,6 +1,8 @@
 ---
 name: infrastructure-scaffold
+version: "1.0.0"
 description: "Generate cloud infrastructure configs for Firebase, GCP, Vercel, and Docker with IaC templates and environment management"
+when_to_use: "Use when generating cloud infrastructure configs for Firebase, GCP, Vercel, or Docker with IaC templates. NOT for Terraform-specific guidance (follow rules/terraform.md)."
 argument-hint: "[project-name]"
 ---
 

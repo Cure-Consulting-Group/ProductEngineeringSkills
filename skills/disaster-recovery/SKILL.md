@@ -1,6 +1,8 @@
 ---
 name: disaster-recovery
+version: "1.0.0"
 description: "Design disaster recovery and business continuity plans — RTO/RPO targets, backup strategies, failover architecture, and DR testing runbooks"
+when_to_use: "Use when designing DR plans, backup strategies, failover architecture, or RTO/RPO targets. NOT for incident response (use incident-response)."
 argument-hint: "[project-or-service]"
 context: fork
 ---

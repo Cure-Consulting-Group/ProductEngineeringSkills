@@ -1,6 +1,8 @@
 ---
 name: legal-doc-scaffold
+version: "1.0.0"
 description: "Generate Terms of Service, Privacy Policy, SOW, and NDA scaffolds with attorney disclaimer"
+when_to_use: "Use when generating Terms of Service, Privacy Policy, SOW, NDA, EULA, or DPA scaffolds. Requires attorney review. NOT for NIL contracts (use nil-contracts when available)."
 argument-hint: "[company-or-product]"
 disable-model-invocation: true
 ---

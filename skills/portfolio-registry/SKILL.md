@@ -1,6 +1,8 @@
 ---
 name: portfolio-registry
+version: "1.0.0"
 description: "Generate and maintain a structured product portfolio registry — the single source of truth for all products, stacks, teams, stages, and shared infrastructure across the venture studio"
+when_to_use: "Use when creating or maintaining a product portfolio registry — the source of truth for all products, stacks, teams, and stages across the venture studio."
 argument-hint: "[portfolio-or-product]"
 context: fork
 ---

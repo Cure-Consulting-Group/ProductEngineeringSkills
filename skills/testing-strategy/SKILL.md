@@ -1,6 +1,8 @@
 ---
 name: testing-strategy
-description: "Define testing pyramid, platform standards, coverage rules, and CI integration plans"
+version: "1.0.0"
+description: "Define the overall testing architecture — pyramid ratios, platform-specific frameworks (JUnit5/MockK, XCTest, Vitest/Playwright), coverage thresholds, and CI integration for a project or feature"
+when_to_use: "Use when setting up testing for a new project, defining test standards, or asked 'what tests do we need'. NOT for writing specific E2E tests (use e2e-testing). NOT for test data/accounts (use test-accounts). NOT for UAT checklists (use uat)."
 argument-hint: "[feature-or-project]"
 ---
 

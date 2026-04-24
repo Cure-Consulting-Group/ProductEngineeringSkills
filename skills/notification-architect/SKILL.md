@@ -1,6 +1,8 @@
 ---
 name: notification-architect
+version: "1.0.0"
 description: "Design notification systems — push (FCM/APNs), in-app messaging, email transactional flows, preference management, and delivery optimization"
+when_to_use: "Use when designing push notifications (FCM/APNs), in-app messaging, email transactional flows, or notification preference management."
 argument-hint: "[notification-type-or-project]"
 ---
 

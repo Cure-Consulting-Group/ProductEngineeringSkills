@@ -1,6 +1,8 @@
 ---
 name: compliance-architect
+version: "1.0.0"
 description: "Architect compliance frameworks for HIPAA, COPPA, GDPR, CCPA, and PCI — consent flows, audit trails, data classification, and privacy-by-design"
+when_to_use: "Use for HIPAA, COPPA, GDPR, CCPA, or PCI compliance frameworks. NOT for QSBS (use qsbs-compliance). NOT for FERPA or ECAG (use dedicated skills when available). NOT for OWASP security (use security-review)."
 argument-hint: "[regulation-or-project]"
 context: fork
 ---

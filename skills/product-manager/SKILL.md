@@ -1,6 +1,8 @@
 ---
 name: product-manager
-description: "Define product strategy, OKRs, roadmaps, RICE prioritization, and feature briefs"
+version: "1.0.0"
+description: "Product strategy and prioritization — OKRs, RICE-scored roadmaps, feature briefs, and outcome-driven planning for product leaders"
+when_to_use: "Use when asked to 'prioritize features', 'write OKRs', 'build a roadmap', or 'create a feature brief'. NOT for engineering specs (use sdlc). NOT for sprint/project execution (use project-manager). NOT for market sizing (use market-research)."
 argument-hint: "[product-or-feature-name]"
 ---
 

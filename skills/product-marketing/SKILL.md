@@ -1,6 +1,8 @@
 ---
 name: product-marketing
+version: "1.0.0"
 description: "Product voice and content marketing expert — generates platform-native content packages across Instagram, YouTube, LinkedIn, and X/Twitter for portfolio brands"
+when_to_use: "Use when creating platform-native content packages for Instagram, YouTube, LinkedIn, or X/Twitter. NOT for SEO content (use seo-content-engine). NOT for GTM strategy (use go-to-market)."
 argument-hint: "[product-name] [platform-or-campaign]"
 ---
 

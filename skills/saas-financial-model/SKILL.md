@@ -1,6 +1,8 @@
 ---
 name: saas-financial-model
+version: "1.0.0"
 description: "Model unit economics, MRR/ARR projections, pricing tiers, runway, and break-even analysis"
+when_to_use: "Use when modeling SaaS unit economics, MRR/ARR projections, pricing tiers, or customer lifetime value. NOT for burn rate or runway (use burn-rate-tracker)."
 argument-hint: "[product-name]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]
 ---

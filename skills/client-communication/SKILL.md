@@ -1,6 +1,8 @@
 ---
 name: client-communication
+version: "1.0.0"
 description: "Generate client-facing artifacts — sprint demo scripts, stakeholder updates, risk escalation reports, and executive status summaries"
+when_to_use: "Use when generating sprint demo scripts, stakeholder updates, risk escalation reports, or executive summaries for clients."
 argument-hint: "[sprint-or-milestone]"
 ---
 

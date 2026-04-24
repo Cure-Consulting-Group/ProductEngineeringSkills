@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 64 production-grade skills, 31 custom agents (engineering, product, marketing, business, data, security), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 65 production-grade skills, 34 custom agents (engineering, product, marketing, business, data, security, legal), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
@@ -35,7 +35,7 @@ gemini skills/*.skill          — Google Gemini skill packages
 
 ## Versioning
 
-Current version: **4.0.0**
+Current version: **5.0.0**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording
@@ -146,5 +146,4 @@ Pre-configured LSP servers in `.lsp.json`:
 | **TypeScript** | `.ts`, `.tsx`, `.js` | Type checking, auto-imports, refactoring, go-to-definition |
 | **Python (Pyright)** | `*.py` | Static type analysis, import resolution, error diagnostics |
 
-@README.md
-@AGENT-GUIDE.md
+<!-- README.md and AGENT-GUIDE.md are available as user documentation but not loaded into runtime context to save ~7,400 tokens per session -->

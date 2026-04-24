@@ -1,6 +1,8 @@
 ---
 name: accessibility-audit
+version: "1.0.0"
 description: "Audit apps and websites for WCAG 2.2 compliance, screen reader support, and inclusive design across Android, iOS, and Web"
+when_to_use: "Use when checking WCAG compliance, screen reader support, or inclusive design. NOT for security audits (use security-review)."
 argument-hint: "[feature-or-screen]"
 allowed-tools: ["Read", "Grep", "Glob"]
 context: fork

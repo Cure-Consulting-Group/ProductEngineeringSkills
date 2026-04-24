@@ -1,6 +1,8 @@
 ---
 name: api-gateway
+version: "1.0.0"
 description: "Design API gateway and BFF layers — rate limiting, request transformation, auth middleware, GraphQL federation, and mobile-optimized backends"
+when_to_use: "Use when designing API gateway layers, BFF patterns, GraphQL federation, or request transformation. NOT for individual API endpoint design (use api-architect)."
 argument-hint: "[api-or-project]"
 ---
 

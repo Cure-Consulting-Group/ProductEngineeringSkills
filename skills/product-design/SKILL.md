@@ -1,6 +1,8 @@
 ---
 name: product-design
+version: "1.0.0"
 description: "Create design specs following Apple HIG, Material Design 3, design tokens, and accessibility standards"
+when_to_use: "Use for cross-platform design specs combining Apple HIG and Material Design 3. For deep platform-specific guidance, use android-design-expert, ios-design-expert, or web-design-expert instead."
 argument-hint: "[feature-or-screen-name]"
 ---
 

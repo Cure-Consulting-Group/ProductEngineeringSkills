@@ -1,6 +1,8 @@
 ---
 name: nextjs-feature-scaffold
+version: "1.0.0"
 description: "Scaffold Next.js features with App Router, Server/Client components, Tailwind, and data fetching patterns"
+when_to_use: "Use when scaffolding Next.js features with App Router, Server/Client components, Tailwind, and data fetching. NOT for web design guidance (use web-design-expert)."
 argument-hint: "[feature-name]"
 ---
 

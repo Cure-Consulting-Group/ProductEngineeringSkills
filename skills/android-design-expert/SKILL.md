@@ -1,6 +1,8 @@
 ---
 name: android-design-expert
+version: "1.0.0"
 description: "Expert Android design guidance following Material Design 3 — dynamic color, component tokens, adaptive layouts, motion system, and Jetpack Compose implementation patterns"
+when_to_use: "Use for Material Design 3 guidance on Android screens — dynamic color, Compose components, adaptive layouts. NOT for scaffolding code (use android-feature-scaffold)."
 argument-hint: "[screen-or-component-name]"
 ---
 

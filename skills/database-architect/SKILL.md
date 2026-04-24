@@ -1,6 +1,8 @@
 ---
 name: database-architect
+version: "1.0.0"
 description: "Design database schemas, plan migrations, optimize queries, define indexing strategies for Firestore, PostgreSQL, and SQLite"
+when_to_use: "Use when designing schemas, planning migrations, or optimizing queries for Firestore, PostgreSQL, or SQLite. NOT for data migration pipelines (use data-migration)."
 argument-hint: "[database-or-feature]"
 ---
 

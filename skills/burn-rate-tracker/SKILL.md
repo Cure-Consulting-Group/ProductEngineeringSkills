@@ -1,6 +1,8 @@
 ---
 name: burn-rate-tracker
+version: "1.0.0"
 description: "Model burn rates, runway scenarios, break-even analysis, and cash flow projections for multi-product venture studios"
+when_to_use: "Use when modeling portfolio burn rates, runway scenarios, or cash flow projections. NOT for SaaS unit economics (use saas-financial-model). NOT for cloud cost optimization (use finops)."
 argument-hint: "[product-or-portfolio]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]
 ---

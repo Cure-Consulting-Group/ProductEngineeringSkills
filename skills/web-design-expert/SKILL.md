@@ -1,6 +1,8 @@
 ---
 name: web-design-expert
+version: "1.0.0"
 description: "Expert web design guidance — responsive design, CSS architecture, design tokens, container queries, accessibility-first patterns, dark mode, and Tailwind/CSS implementation"
+when_to_use: "Use for responsive design, CSS architecture, design tokens, container queries, dark mode, and Tailwind patterns. NOT for scaffolding code (use nextjs-feature-scaffold)."
 argument-hint: "[page-or-component-name]"
 ---
 

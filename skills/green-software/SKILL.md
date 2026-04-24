@@ -1,6 +1,8 @@
 ---
 name: green-software
+version: "1.0.0"
 description: "Apply sustainable software practices — carbon-aware computing, energy-efficient architecture, resource optimization, and sustainability reporting"
+when_to_use: "Use when applying sustainable software practices — carbon-aware computing, energy-efficient architecture, or sustainability reporting."
 argument-hint: "[project-or-infrastructure]"
 ---
 

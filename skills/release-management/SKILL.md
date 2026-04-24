@@ -1,6 +1,8 @@
 ---
 name: release-management
+version: "1.0.0"
 description: "Manage release workflows — app store submissions, staged rollouts, versioning strategy, changelogs, and ASO for Android and iOS"
+when_to_use: "Use when managing app store submissions, staged rollouts, versioning strategy, changelogs, or ASO for Android and iOS."
 argument-hint: "[platform-or-version]"
 ---
 

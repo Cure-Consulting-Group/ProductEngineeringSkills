@@ -1,6 +1,8 @@
 ---
 name: growth-engineering
+version: "1.0.0"
 description: "Build growth systems — activation funnels, referral programs, lifecycle automation, cohort analysis, and product-led growth patterns"
+when_to_use: "Use when building activation funnels, referral programs, lifecycle automation, or product-led growth patterns. NOT for onboarding flows (use customer-onboarding)."
 argument-hint: "[metric-or-feature]"
 ---
 

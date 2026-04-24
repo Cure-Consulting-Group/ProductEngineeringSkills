@@ -1,6 +1,8 @@
 ---
 name: api-architect
+version: "1.0.0"
 description: "Design REST/GraphQL APIs with versioning, auth, rate limiting, and error standards"
+when_to_use: "Use when designing API endpoints, versioning, auth, or error contracts. NOT for API gateway/BFF layer (use api-gateway). NOT for validating existing APIs (use api-validator agent)."
 argument-hint: "[api-name]"
 ---
 

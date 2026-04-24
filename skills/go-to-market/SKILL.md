@@ -1,6 +1,8 @@
 ---
 name: go-to-market
-description: "Build GTM plans, launch strategies, channel selection, and growth playbooks"
+version: "1.0.0"
+description: "Pre-launch planning — positioning, channel strategy, pricing, launch timeline, and distribution playbooks for new products or major feature releases"
+when_to_use: "Use when launching a new product, entering a new market, or planning a major release. NOT for post-launch growth (use growth-engineering) or content creation (use product-marketing)."
 argument-hint: "[product-name]"
 ---
 

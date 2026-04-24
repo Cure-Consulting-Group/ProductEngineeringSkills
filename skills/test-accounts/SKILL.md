@@ -1,6 +1,8 @@
 ---
 name: test-accounts
+version: "1.0.0"
 description: "Generate test account strategies, seed data scripts, test user personas, and environment-scoped credentials for all platforms"
+when_to_use: "Use when generating test user personas, seed data scripts, or environment-scoped credentials. NOT for test strategy (use testing-strategy). NOT for E2E tests (use e2e-testing)."
 argument-hint: "[project-or-feature]"
 ---
 

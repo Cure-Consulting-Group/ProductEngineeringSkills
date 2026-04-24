@@ -1,6 +1,8 @@
 ---
 name: feature-flags
+version: "1.0.0"
 description: "Implement feature flag systems — progressive rollouts, A/B testing, kill switches, and experimentation frameworks with Firebase Remote Config or LaunchDarkly"
+when_to_use: "Use when implementing feature flags, progressive rollouts, A/B test infrastructure, or kill switches with Firebase Remote Config or LaunchDarkly."
 argument-hint: "[feature-name]"
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: ios-architect
+version: "1.0.0"
 description: "Scaffold iOS features with Swift/SwiftUI, Clean Architecture, MVVM, and structured concurrency"
+when_to_use: "Use when scaffolding iOS features with Swift/SwiftUI, Clean Architecture, MVVM, and structured concurrency. NOT for design guidance (use ios-design-expert)."
 argument-hint: "[feature-name]"
 ---
 

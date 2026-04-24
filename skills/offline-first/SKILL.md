@@ -1,6 +1,8 @@
 ---
 name: offline-first
+version: "1.0.0"
 description: "Architect offline-first mobile apps — local storage, sync strategies, conflict resolution, optimistic UI, and background sync patterns"
+when_to_use: "Use when architecting offline-first mobile apps — local storage, sync strategies, conflict resolution, optimistic UI, or background sync."
 argument-hint: "[feature-or-project]"
 ---
 

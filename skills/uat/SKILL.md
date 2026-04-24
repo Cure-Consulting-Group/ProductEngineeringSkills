@@ -1,6 +1,8 @@
 ---
 name: uat
+version: "1.0.0"
 description: "Generate UAT plans, acceptance criteria checklists, stakeholder sign-off workflows, and go/no-go release gates"
+when_to_use: "Use when generating UAT plans, acceptance criteria checklists, stakeholder sign-off workflows, or go/no-go release gates."
 argument-hint: "[feature-or-release]"
 ---
 

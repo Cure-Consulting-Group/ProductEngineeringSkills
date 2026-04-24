@@ -1,6 +1,8 @@
 ---
 name: i18n
+version: "1.0.0"
 description: "Implement internationalization and localization — string extraction, RTL support, locale-aware formatting, translation workflows, and platform i18n patterns"
+when_to_use: "Use when implementing internationalization — string extraction, RTL support, locale-aware formatting, or translation workflows across Android, iOS, and Web."
 argument-hint: "[project-or-locale]"
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: micro-frontends
+version: "1.0.0"
 description: "Architect micro-frontend systems — module federation, monorepo management, shared dependencies, independent deployments, and cross-team coordination"
+when_to_use: "Use when architecting micro-frontend systems with module federation, monorepo management, or independent deployments."
 argument-hint: "[project-or-architecture]"
 ---
 

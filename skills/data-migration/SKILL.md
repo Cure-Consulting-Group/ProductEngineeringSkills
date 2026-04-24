@@ -1,6 +1,8 @@
 ---
 name: data-migration
+version: "1.0.0"
 description: "Plan and execute data migrations — ETL pipelines, zero-downtime cutover, validation, rollback strategies, and legacy system integration"
+when_to_use: "Use when planning ETL pipelines, zero-downtime data migrations, or legacy system cutover. NOT for schema design (use database-architect)."
 argument-hint: "[source-to-target]"
 ---
 

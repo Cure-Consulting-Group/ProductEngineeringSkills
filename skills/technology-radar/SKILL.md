@@ -1,6 +1,8 @@
 ---
 name: technology-radar
+version: "1.0.0"
 description: "Generate and maintain a ThoughtWorks-style technology radar — track Adopt/Trial/Assess/Hold decisions across the portfolio with rationale and migration plans"
+when_to_use: "Use when evaluating technology choices, conducting quarterly tech reviews, or planning migrations away from deprecated technologies across the portfolio."
 argument-hint: "[portfolio-or-domain]"
 context: fork
 ---

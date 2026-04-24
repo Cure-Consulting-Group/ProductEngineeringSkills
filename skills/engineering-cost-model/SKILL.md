@@ -1,6 +1,8 @@
 ---
 name: engineering-cost-model
-description: "Estimate project costs, infrastructure spend, build vs buy decisions, and SOW pricing"
+version: "1.0.0"
+description: "Engineering cost estimation — developer hours, infrastructure spend (Firebase/GCP/AWS), build-vs-buy analysis, and project budgeting for internal planning"
+when_to_use: "Use when estimating 'how much will this cost', 'how long will this take', or evaluating build-vs-buy. NOT for client-facing SOWs (use proposal-generator). NOT for SaaS unit economics (use saas-financial-model). NOT for cloud cost optimization (use finops)."
 argument-hint: "[project-name]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]
 ---

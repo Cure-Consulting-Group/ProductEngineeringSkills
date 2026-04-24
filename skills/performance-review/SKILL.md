@@ -1,6 +1,8 @@
 ---
 name: performance-review
+version: "1.0.0"
 description: "Define performance budgets, load testing plans, optimization strategies, and monitoring dashboards across mobile, web, and backend"
+when_to_use: "Use when defining performance budgets, load testing plans, or optimization strategies across mobile, web, and backend. NOT for DORA metrics (use dora-metrics)."
 argument-hint: "[app-or-feature]"
 context: fork
 ---

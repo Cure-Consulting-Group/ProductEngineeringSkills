@@ -1,6 +1,8 @@
 ---
 name: customer-onboarding
-description: "Design activation flows, empty states, email sequences, and retention metrics"
+version: "1.0.0"
+description: "Design user activation and first-run experiences — onboarding flows, empty states, welcome emails, tooltips, and time-to-value optimization for mobile (Android/iOS) and web apps"
+when_to_use: "Use when designing first-time user experience, reducing churn in first 7 days, or asked to 'improve onboarding' or 'design the empty state'. NOT for growth funnels beyond onboarding (use growth-engineering). NOT for email marketing campaigns (use product-marketing)."
 argument-hint: "[product-name]"
 ---
 

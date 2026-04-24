@@ -1,6 +1,8 @@
 ---
 name: client-handoff
+version: "1.0.0"
 description: "Generate client handoff packages — architecture docs, runbooks, credential transfers, maintenance SLAs, and knowledge transfer plans for consulting engagements"
+when_to_use: "Use when preparing client handoff packages — architecture docs, runbooks, credential transfers, SLAs, and knowledge transfer plans."
 argument-hint: "[project-name]"
 context: fork
 ---

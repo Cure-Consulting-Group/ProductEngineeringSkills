@@ -1,6 +1,8 @@
 ---
 name: project-bootstrap
+version: "1.0.0"
 description: "Bootstrap any project repo with CLAUDE.md and STATE.md — interviews the developer, inspects the codebase, and generates agent coordination files"
+when_to_use: "Use when bootstrapping a new project repo with CLAUDE.md and STATE.md — interviews the developer, inspects the codebase, and generates coordination files."
 argument-hint: "[project-name]"
 ---
 

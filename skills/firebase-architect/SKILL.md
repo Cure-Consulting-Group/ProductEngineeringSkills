@@ -1,6 +1,8 @@
 ---
 name: firebase-architect
+version: "1.0.0"
 description: "Design Firestore schemas, security rules, Cloud Functions, and data layer architecture"
+when_to_use: "Use when designing Firestore schemas, security rules, Cloud Functions v2, or Firebase data layer architecture. NOT for Firebase security auditing (use firebase-security-auditor agent)."
 argument-hint: "[feature-or-collection]"
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: analytics-implementation
+version: "1.0.0"
 description: "Design event taxonomy, tracking plans, funnels, dashboards, and privacy/consent flows"
+when_to_use: "Use when designing event tracking, analytics funnels, or dashboard instrumentation. NOT for KPI definitions (use metrics-dashboard agent)."
 argument-hint: "[product-name]"
 ---
 

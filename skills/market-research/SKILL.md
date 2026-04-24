@@ -1,6 +1,8 @@
 ---
 name: market-research
+version: "1.0.0"
 description: "Conduct TAM/SAM/SOM analysis, competitive research, ICP definition, and pricing research"
+when_to_use: "Use when conducting TAM/SAM/SOM analysis, competitive research, ICP definition, or pricing research."
 argument-hint: "[market-or-product]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch", "WebFetch"]
 ---

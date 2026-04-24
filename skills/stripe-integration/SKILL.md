@@ -1,6 +1,8 @@
 ---
 name: stripe-integration
+version: "1.0.0"
 description: "Integrate Stripe payments and subscriptions via Firebase Cloud Functions with webhook handling"
+when_to_use: "Use when integrating Stripe subscriptions, one-time payments, or billing portal via Firebase Cloud Functions. NOT for marketplace/Connect (use stripe-connect when available)."
 argument-hint: "[payment-feature]"
 ---
 

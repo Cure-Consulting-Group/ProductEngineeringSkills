@@ -1,6 +1,8 @@
 ---
 name: ci-cd-pipeline
+version: "1.0.0"
 description: "Generate GitHub Actions workflows for build, test, deploy with environment configs and secrets management"
+when_to_use: "Use when creating GitHub Actions workflows, deployment pipelines, or CI/CD configs. NOT for diagnosing CI failures (use ci-debugger agent)."
 argument-hint: "[project-name]"
 ---
 

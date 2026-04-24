@@ -1,6 +1,8 @@
 ---
 name: dora-metrics
+version: "1.0.0"
 description: "Implement DORA and SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, and developer experience dashboards"
+when_to_use: "Use when implementing DORA or SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, developer experience dashboards."
 argument-hint: "[team-or-project]"
 context: fork
 ---

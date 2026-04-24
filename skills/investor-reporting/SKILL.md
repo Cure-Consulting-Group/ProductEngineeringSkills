@@ -1,6 +1,8 @@
 ---
 name: investor-reporting
+version: "1.0.0"
 description: "Generate investor updates, board decks, portfolio financial reports, cap table scenarios, runway modeling, and fundraising pipeline tracking"
+when_to_use: "Use when generating monthly investor updates, quarterly board decks, portfolio P&L, or runway modeling. NOT for pitch decks or fundraising (use fundraising-materials)."
 argument-hint: "[product-or-portfolio]"
 ---
 

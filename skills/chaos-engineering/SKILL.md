@@ -1,6 +1,8 @@
 ---
 name: chaos-engineering
+version: "1.0.0"
 description: "Design resilience testing — failure injection, graceful degradation, game days, and fault tolerance verification for distributed systems"
+when_to_use: "Use when designing resilience tests, failure injection, or game days for distributed systems. Requires operational maturity — verify the team is ready."
 argument-hint: "[service-or-project]"
 context: fork
 ---

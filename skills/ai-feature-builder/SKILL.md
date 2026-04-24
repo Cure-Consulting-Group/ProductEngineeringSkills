@@ -1,6 +1,8 @@
 ---
 name: ai-feature-builder
+version: "1.0.0"
 description: "Build production AI features with LLM integration, RAG pipelines, prompt engineering, and guardrails"
+when_to_use: "Use when building LLM/AI features, RAG pipelines, or prompt engineering. NOT for LLM operationalization (use llmops). NOT for healthcare AI (use medical-ai when available)."
 argument-hint: "[ai-feature-name]"
 ---
 

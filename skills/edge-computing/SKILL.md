@@ -1,6 +1,8 @@
 ---
 name: edge-computing
+version: "1.0.0"
 description: "Architect edge computing solutions — edge functions, CDN strategies, cache invalidation, edge middleware, and global latency optimization"
+when_to_use: "Use when architecting edge functions, CDN strategies, cache invalidation, or edge middleware for latency-sensitive apps."
 argument-hint: "[use-case-or-platform]"
 ---
 

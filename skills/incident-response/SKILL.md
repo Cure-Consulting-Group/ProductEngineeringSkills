@@ -1,6 +1,8 @@
 ---
 name: incident-response
+version: "1.0.0"
 description: "Create incident runbooks, severity classification, on-call procedures, post-mortems, and escalation paths"
+when_to_use: "Use when creating incident runbooks, severity classification, on-call procedures, or post-mortem templates. NOT for DR planning (use disaster-recovery)."
 argument-hint: "[incident-or-system]"
 context: fork
 ---

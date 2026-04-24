@@ -1,6 +1,8 @@
 ---
 name: sdlc
-description: "Generate SDLC artifacts — PRDs, ADRs, RFCs, Epics, Stories, Task specs, and test specs"
+version: "1.0.0"
+description: "Generate structured engineering documents — PRDs, ADRs, RFCs, Epics, User Stories, Task specs, and test specs from a feature description"
+when_to_use: "Use when the user says 'write a PRD', 'create an ADR', 'draft an RFC', 'break this into stories', or 'spec this out'. NOT for product strategy or OKRs (use product-manager). NOT for sprint planning (use project-manager)."
 argument-hint: "[feature-name]"
 ---
 

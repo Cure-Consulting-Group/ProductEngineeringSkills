@@ -1,6 +1,8 @@
 ---
 name: e2e-testing
+version: "1.0.0"
 description: "Generate end-to-end test suites with page objects, CI integration, visual regression, and cross-platform test strategies"
+when_to_use: "Use when writing end-to-end test suites, page objects, or visual regression tests. NOT for overall test strategy (use testing-strategy). NOT for test accounts (use test-accounts)."
 argument-hint: "[feature-or-flow]"
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: llmops
+version: "1.0.0"
 description: "Operationalize LLM features — prompt versioning, evaluation pipelines, cost optimization, guardrails, RAG monitoring, and model lifecycle management"
+when_to_use: "Use when operationalizing LLM features — prompt versioning, eval pipelines, cost optimization, guardrails, or model lifecycle management. NOT for building new AI features (use ai-feature-builder)."
 argument-hint: "[ai-feature-or-pipeline]"
 ---
 

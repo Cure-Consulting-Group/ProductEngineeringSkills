@@ -1,7 +1,10 @@
 ---
 name: proposal-generator
+version: "1.0.0"
 description: "Generate consulting proposals and SOWs — project scoping, milestone-based pricing, deliverable definitions, and engagement structure"
+when_to_use: "Use when creating a client proposal, drafting a SOW, or scoping an engagement. NOT for internal cost estimation (use engineering-cost-model)."
 argument-hint: "[project-name]"
+disable-model-invocation: true
 ---
 
 # Proposal Generator

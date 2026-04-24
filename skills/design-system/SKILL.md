@@ -1,6 +1,8 @@
 ---
 name: design-system
+version: "1.0.0"
 description: "Build cross-platform design systems — design tokens, component libraries, Storybook/Catalog setup, theme architecture, and platform consistency"
+when_to_use: "Use when building design token systems, component libraries, Storybook/Catalog, or cross-platform theme architecture."
 argument-hint: "[project-or-platform]"
 ---
 
