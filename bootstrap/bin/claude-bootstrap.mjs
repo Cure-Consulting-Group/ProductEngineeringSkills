@@ -6,6 +6,9 @@ import { dirname, resolve } from "node:path";
 import { createManifest, validateManifest } from "../src/manifest/index.mjs";
 import { detectStack } from "../src/detect/stack.mjs";
 import { buildPlan, applyPlan, readManifest, summarizePlan, MANIFEST_FILENAME } from "../src/apply/index.mjs";
+import { resolveSkillsSource } from "../src/vendor/index.mjs";
+import { diagnose, summarizeDiagnose } from "../src/diagnose/doctor.mjs";
+import { buildInventory, formatInventoryCsv } from "../src/diagnose/inventory.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(resolve(here, "../package.json"), "utf8"));
@@ -13,10 +16,12 @@ const pkg = JSON.parse(readFileSync(resolve(here, "../package.json"), "utf8"));
 const HELP = `claude-bootstrap v${pkg.version}
 
 Usage:
-  claude-bootstrap init    [options]   create claude.manifest.json + scaffold managed files
-  claude-bootstrap apply   [options]   re-render templates against existing manifest
-  claude-bootstrap version             print version
-  claude-bootstrap help                print this help
+  claude-bootstrap init      [options]   create claude.manifest.json + scaffold managed files
+  claude-bootstrap apply     [options]   re-render templates against existing manifest
+  claude-bootstrap doctor    [options]   audit a project for drift; nonzero exit on findings
+  claude-bootstrap inventory [paths...]  read manifests across many projects, emit CSV
+  claude-bootstrap version               print version
+  claude-bootstrap help                  print this help
 
 Options:
   --cwd <path>             target project root (default: process.cwd())
@@ -68,7 +73,7 @@ function parse() {
     allowPositionals: true,
     strict: true,
   });
-  return { command: positionals[0] ?? "help", flags: values };
+  return { command: positionals[0] ?? "help", flags: values, positionals };
 }
 
 function fail(message, code = 1) {
@@ -157,6 +162,32 @@ async function cmdApply(flags) {
   reportResult(result);
 }
 
+function cmdDoctor(flags) {
+  const cwd = resolveCwd(flags);
+  const manifest = readManifest(cwd);
+  if (!manifest) fail(`no ${MANIFEST_FILENAME} at ${cwd}.`);
+  let skillsSourcePath = null;
+  try { skillsSourcePath = resolveSkillsSource({ flag: flags["skills-source"] }).path; }
+  catch { /* tolerated; doctor still reports manifest-level issues */ }
+
+  const result = diagnose({ cwd, manifest, skillsSourcePath });
+  process.stdout.write(`${summarizeDiagnose(result)}\n`);
+  if (result.findings.some((f) => f.severity === "error")) process.exit(2);
+  if (result.findings.length > 0) process.exit(1);
+}
+
+function cmdInventory(flags, paths) {
+  if (paths.length === 0) fail("inventory: at least one project path is required");
+  let skillsSourcePath = null;
+  try { skillsSourcePath = resolveSkillsSource({ flag: flags["skills-source"] }).path; }
+  catch { /* tolerated */ }
+  const inv = buildInventory({ projectPaths: paths, skillsSourcePath });
+  process.stdout.write(`${formatInventoryCsv(inv)}\n`);
+  const anyError = inv.rows.some((r) => r.error);
+  const anyDrift = inv.rows.some((r) => (r.drift ?? 0) > 0);
+  if (anyError || anyDrift) process.exit(1);
+}
+
 function reportResult({ writes, conflicts, vendor, generated }) {
   for (const w of writes) process.stdout.write(`  ${w.decision.padEnd(9)} ${w.filePath}\n`);
   for (const v of vendor?.writes ?? []) process.stdout.write(`  ${v.decision.padEnd(9)} ${v.targetPath}\n`);
@@ -208,10 +239,12 @@ async function main() {
   if (flags.help || command === "help") return process.stdout.write(HELP);
 
   switch (command) {
-    case "init":    return cmdInit(flags);
-    case "apply":   return cmdApply(flags);
-    case "version": return process.stdout.write(`${pkg.version}\n`);
-    default:        fail(`unknown command: ${command}`);
+    case "init":      return cmdInit(flags);
+    case "apply":     return cmdApply(flags);
+    case "doctor":    return cmdDoctor(flags);
+    case "inventory": return cmdInventory(flags, parsed.positionals.slice(1));
+    case "version":   return process.stdout.write(`${pkg.version}\n`);
+    default:          fail(`unknown command: ${command}`);
   }
 }
 

@@ -5,6 +5,7 @@ import { planFile, DECISIONS } from "../blocks/index.mjs";
 import { validateManifest } from "../manifest/index.mjs";
 import { resolveSkillsSource, planVendor, applyVendor, VENDOR_DECISIONS } from "../vendor/index.mjs";
 import { planGenerated, applyGenerated, GENERATED_DECISIONS } from "../generated/index.mjs";
+import { loadOrgManifest, enforceOrgPolicy } from "../org/index.mjs";
 
 export const MANIFEST_FILENAME = "claude.manifest.json";
 
@@ -37,6 +38,15 @@ export function buildPlan({ cwd, manifest, skillsSource }) {
   if (wantsVendoring) {
     resolvedSource = resolveSkillsSource({ flag: skillsSource });
     vendorPlan = planVendor({ cwd, source: resolvedSource.path, manifest });
+  }
+
+  if (resolvedSource) {
+    const orgManifest = loadOrgManifest({ skillsSourcePath: resolvedSource.path });
+    const { errors: orgErrors } = enforceOrgPolicy({ projectManifest: manifest, orgManifest });
+    if (orgErrors.length > 0) {
+      const formatted = orgErrors.map((e) => `  ${e.path}: ${e.message}`).join("\n");
+      throw new Error(`org policy violation:\n${formatted}`);
+    }
   }
 
   const generatedPlan = planGenerated({ cwd, manifest });

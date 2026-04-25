@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cure.dev/schemas/org-manifest/v1.json",
+  "title": "Cure Org Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "manifestVersion": { "const": 1 },
+    "bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minimumSkillsVersion": { "$ref": "#/$defs/semver" }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required":  { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] },
+        "forbidden": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required":  { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] },
+        "forbidden": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required":  { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] },
+        "forbidden": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] }
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "minLength": 1,
+      "maxLength": 64
+    }
+  }
+}
