@@ -1,0 +1,90 @@
+# <%= ctx.project.name %>
+
+<!-- CLAUDE-BOOTSTRAP:BEGIN preamble -->
+This project is bootstrapped from Cure's ProductEngineeringSkills v<%= ctx.bootstrap.skillsRepoVersion %>.
+
+- **Project type:** <%= ctx.project.type %>
+- **Primary language:** <%= ctx.project.primaryLanguage %>
+- **Phase:** <%= ctx.project.phase %>
+<% if (ctx.stack.length > 0) { -%>
+- **Stack:** <%= ctx.stack.join(", ") %>
+<% } -%>
+<% if (ctx.activeCompliance.length > 0) { -%>
+- **Compliance:** <%= ctx.activeCompliance.map(c => c.toUpperCase()).join(", ") %>
+<% } -%>
+
+Edits inside `CLAUDE-BOOTSTRAP:BEGIN/END` fences are managed by `claude-bootstrap` and will be regenerated. Put project-specific notes outside fences or in `CLAUDE.local.md`.
+<!-- CLAUDE-BOOTSTRAP:END preamble -->
+
+<!-- CLAUDE-BOOTSTRAP:BEGIN active-skills -->
+## Active skills
+
+<% if (ctx.skills.active.length === 0) { -%>
+_No skills active. Add entries to `claude.manifest.json` → `skills.active`._
+<% } else { -%>
+<% for (const s of ctx.skills.active) { -%>
+- `<%= s %>`
+<% } -%>
+<% } -%>
+<!-- CLAUDE-BOOTSTRAP:END active-skills -->
+
+<!-- CLAUDE-BOOTSTRAP:BEGIN active-agents -->
+## Active agents
+
+<% if (ctx.agents.active.length === 0) { -%>
+_No agents active._
+<% } else { -%>
+<% for (const a of ctx.agents.active) { -%>
+- `<%= a %>`
+<% } -%>
+<% } -%>
+<!-- CLAUDE-BOOTSTRAP:END active-agents -->
+
+<!-- CLAUDE-BOOTSTRAP:BEGIN lifecycle-hooks -->
+## Lifecycle hooks
+
+- **pre-commit:** <%= ctx.hooks.preCommit.length ? ctx.hooks.preCommit.map(h => `\`${h}\``).join(", ") : "_none_" %>
+- **post-feature:** <%= ctx.hooks.postFeature.length ? ctx.hooks.postFeature.map(h => `\`${h}\``).join(", ") : "_none_" %>
+- **pre-PR:** <%= ctx.hooks.prePR.length ? ctx.hooks.prePR.map(h => `\`${h}\``).join(", ") : "_none_" %>
+<!-- CLAUDE-BOOTSTRAP:END lifecycle-hooks -->
+
+<% if (ctx.compliance.hipaa) { -%>
+<!-- CLAUDE-BOOTSTRAP:BEGIN compliance-hipaa -->
+## HIPAA notes
+
+This project handles Protected Health Information. Key rules:
+
+- No PHI in logs, error messages, or analytics events.
+- All persistence layers must be BAA-covered services.
+- Access to production data requires audit-logged break-glass.
+- Run `security-review` skill before any PR touching auth, storage, or transport.
+<!-- CLAUDE-BOOTSTRAP:END compliance-hipaa -->
+<% } -%>
+<% if (ctx.compliance.pci) { -%>
+<!-- CLAUDE-BOOTSTRAP:BEGIN compliance-pci -->
+## PCI notes
+
+This project touches cardholder data. Key rules:
+
+- Never log PAN, CVV, or full track data — even in debug builds.
+- Tokenize at the earliest boundary; downstream services see tokens only.
+- Quarterly ASV scan and annual SAQ are required artifacts.
+<!-- CLAUDE-BOOTSTRAP:END compliance-pci -->
+<% } -%>
+<% if (ctx.compliance.gdpr) { -%>
+<!-- CLAUDE-BOOTSTRAP:BEGIN compliance-gdpr -->
+## GDPR notes
+
+- Lawful basis must be documented for every processing activity.
+- DSAR (export, delete, rectify) endpoints must exist and be tested.
+- Data minimization: collect only what the feature requires.
+<!-- CLAUDE-BOOTSTRAP:END compliance-gdpr -->
+<% } -%>
+<% if (ctx.compliance.coppa) { -%>
+<!-- CLAUDE-BOOTSTRAP:BEGIN compliance-coppa -->
+## COPPA notes
+
+- No collection of personal info from users under 13 without verifiable parental consent.
+- Audit all third-party SDKs for child-directed data flows.
+<!-- CLAUDE-BOOTSTRAP:END compliance-coppa -->
+<% } -%>

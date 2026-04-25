@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cure.dev/schemas/claude-manifest/v1.json",
+  "title": "Cure Claude Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "bootstrap", "project", "compliance", "skills"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "manifestVersion": { "const": 1 },
+
+    "bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cliVersion", "skillsRepoVersion", "lastAppliedAt", "installMode"],
+      "properties": {
+        "cliVersion":         { "$ref": "#/$defs/semver" },
+        "skillsRepoVersion":  { "$ref": "#/$defs/semver" },
+        "skillsRepoSha":      { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "lastAppliedAt":      { "type": "string", "format": "date-time" },
+        "installMode":        { "enum": ["symlink", "vendored", "plugin"] }
+      }
+    },
+
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "primaryLanguage", "phase"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+          "description": "kebab-case, 1-64 chars, must start alphanumeric"
+        },
+        "type": { "enum": ["android", "ios", "firebase", "web", "cli", "mixed"] },
+        "stack": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/identifier" },
+          "uniqueItems": true,
+          "default": []
+        },
+        "primaryLanguage": {
+          "enum": ["typescript", "javascript", "kotlin", "swift", "python", "go", "rust", "java"]
+        },
+        "phase": { "enum": ["discovery", "mvp", "beta", "ga", "maintenance"] },
+        "owners": {
+          "type": "array",
+          "items": { "type": "string", "format": "email" },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    },
+
+    "compliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hipaa": { "type": "boolean", "default": false },
+        "coppa": { "type": "boolean", "default": false },
+        "gdpr":  { "type": "boolean", "default": false },
+        "pci":   { "type": "boolean", "default": false },
+        "soc2":  { "type": "boolean", "default": false },
+        "qsbs":  { "type": "boolean", "default": false }
+      }
+    },
+
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active"],
+      "properties": {
+        "active":   { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true },
+        "disabled": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] },
+        "pinned": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/semver" },
+          "propertyNames": { "$ref": "#/$defs/identifier" },
+          "default": {}
+        }
+      }
+    },
+
+    "agents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "active": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] }
+      }
+    },
+
+    "hooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preCommit":   { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] },
+        "postFeature": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] },
+        "prePR":       { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] }
+      }
+    },
+
+    "managedBlocks": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+      "default": {}
+    },
+
+    "customizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preserveFiles": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "default": []
+        },
+        "templateOverrides": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 },
+          "default": {}
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "minLength": 1,
+      "maxLength": 64
+    }
+  }
+}
