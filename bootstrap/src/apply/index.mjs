@@ -4,6 +4,7 @@ import { renderTemplate, TEMPLATE_FILES } from "../template/render.mjs";
 import { planFile, DECISIONS } from "../blocks/index.mjs";
 import { validateManifest } from "../manifest/index.mjs";
 import { resolveSkillsSource, planVendor, applyVendor, VENDOR_DECISIONS } from "../vendor/index.mjs";
+import { planGenerated, applyGenerated, GENERATED_DECISIONS } from "../generated/index.mjs";
 
 export const MANIFEST_FILENAME = "claude.manifest.json";
 
@@ -30,6 +31,7 @@ export function buildPlan({ cwd, manifest, skillsSource }) {
   const wantsVendoring =
     (manifest.skills?.active?.length ?? 0) > 0 ||
     (manifest.agents?.active?.length ?? 0) > 0 ||
+    (manifest.rules?.active?.length ?? 0) > 0 ||
     Object.keys(manifest.vendored ?? {}).length > 0;
 
   if (wantsVendoring) {
@@ -37,7 +39,9 @@ export function buildPlan({ cwd, manifest, skillsSource }) {
     vendorPlan = planVendor({ cwd, source: resolvedSource.path, manifest });
   }
 
-  return { filePlans, vendorPlan, resolvedSource };
+  const generatedPlan = planGenerated({ cwd, manifest });
+
+  return { filePlans, vendorPlan, generatedPlan, resolvedSource };
 }
 
 export function applyPlan({ cwd, manifest, plan, write = true }) {
@@ -56,7 +60,11 @@ export function applyPlan({ cwd, manifest, plan, write = true }) {
 
   const vendorResult = applyVendor({ cwd, plan: plan.vendorPlan ?? { decisions: [] }, write });
   const vendorChanged = vendorResult.writes.length > 0 || vendorResult.removes.length > 0;
-  const hasChanges = writes.length > 0 || vendorChanged;
+
+  const generatedResult = applyGenerated({ cwd, plan: plan.generatedPlan ?? { decisions: [] }, write });
+  const generatedChanged = generatedResult.writes.length > 0;
+
+  const hasChanges = writes.length > 0 || vendorChanged || generatedChanged;
 
   const updatedManifest = hasChanges
     ? {
@@ -64,6 +72,7 @@ export function applyPlan({ cwd, manifest, plan, write = true }) {
         bootstrap: { ...manifest.bootstrap, lastAppliedAt: new Date().toISOString() },
         managedBlocks: nextManagedBlocks,
         vendored: vendorResult.nextVendored,
+        generated: generatedResult.nextGenerated,
       }
     : manifest;
 
@@ -91,6 +100,7 @@ export function applyPlan({ cwd, manifest, plan, write = true }) {
     writes,
     conflicts,
     vendor: vendorResult,
+    generated: generatedResult,
     manifest: updatedManifest,
   };
 }
@@ -114,6 +124,10 @@ export function summarizePlan(plan) {
   for (const d of plan.vendorPlan?.decisions ?? []) {
     if (d.decision === VENDOR_DECISIONS.UNCHANGED) continue;
     lines.push(`  [${d.decision.padEnd(9)}] ${d.targetPath}`);
+  }
+  for (const d of plan.generatedPlan?.decisions ?? []) {
+    if (d.decision === GENERATED_DECISIONS.UNCHANGED) continue;
+    lines.push(`  [${d.decision.padEnd(9)}] ${d.target}`);
   }
   if (plan.resolvedSource) {
     lines.push(`  (skills source: ${plan.resolvedSource.source} → ${plan.resolvedSource.path})`);

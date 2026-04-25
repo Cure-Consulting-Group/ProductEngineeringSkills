@@ -81,6 +81,17 @@ function collectExpectedFiles({ source, manifest }) {
       sourceRel: relative(source, sourceAbs),
     });
   }
+  for (const rule of manifest.rules?.active ?? []) {
+    const sourceAbs = join(source, "rules", `${rule}.md`);
+    if (!existsSync(sourceAbs)) {
+      throw new Error(`rule '${rule}' not found in source: expected ${sourceAbs}`);
+    }
+    expected.push({
+      targetPath: join(".claude", "rules", `${rule}.md`),
+      sourceAbs,
+      sourceRel: relative(source, sourceAbs),
+    });
+  }
   return expected;
 }
 

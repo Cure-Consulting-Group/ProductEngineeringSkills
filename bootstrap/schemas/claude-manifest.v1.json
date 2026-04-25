@@ -89,6 +89,14 @@
       }
     },
 
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "active": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "uniqueItems": true, "default": [] }
+      }
+    },
+
     "hooks": {
       "type": "object",
       "additionalProperties": false,
@@ -114,6 +122,20 @@
         "properties": {
           "source": { "type": "string", "minLength": 1 },
           "hash":   { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      },
+      "default": {}
+    },
+
+    "generated": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["template", "hash"],
+        "properties": {
+          "template": { "type": "string", "minLength": 1 },
+          "hash":     { "type": "string", "pattern": "^[0-9a-f]{64}$" }
         }
       },
       "default": {}

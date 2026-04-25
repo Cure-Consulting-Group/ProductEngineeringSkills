@@ -31,6 +31,8 @@ Options:
   --hipaa, --pci, --gdpr, --coppa, --soc2, --qsbs   compliance flags (init)
   --skill <id>             repeatable; mark skill active (init)
   --agent <id>             repeatable; mark agent active (init)
+  --rule <id>              repeatable; mark path-rule active (init)
+  --no-default-rules       skip auto-deriving rules from detected stack (init)
   --dry-run                print plan, do not write
   --force                  overwrite even on conflict (dangerous; preserves prior in .claude/upgrades/)
 `;
@@ -53,6 +55,8 @@ const cliOptions = {
   qsbs:            { type: "boolean" },
   skill:           { type: "string", multiple: true },
   agent:           { type: "string", multiple: true },
+  rule:            { type: "string", multiple: true },
+  "no-default-rules": { type: "boolean" },
   "dry-run":       { type: "boolean" },
   force:           { type: "boolean" },
   help:            { type: "boolean", short: "h" },
@@ -108,6 +112,13 @@ async function cmdInit(flags) {
     },
     activeSkills: flags.skill ?? [],
     activeAgents: flags.agent ?? [],
+    activeRules: flags.rule ?? defaultRulesForStack({
+      detected,
+      explicit: flags.rule,
+      noDefaults: flags["no-default-rules"],
+      language: flags.language ?? detected.primaryLanguage,
+      type: flags.type ?? detected.projectType,
+    }),
   });
 
   const { valid, errors } = validateManifest(manifest);
@@ -146,15 +157,33 @@ async function cmdApply(flags) {
   reportResult(result);
 }
 
-function reportResult({ writes, conflicts, vendor }) {
+function reportResult({ writes, conflicts, vendor, generated }) {
   for (const w of writes) process.stdout.write(`  ${w.decision.padEnd(9)} ${w.filePath}\n`);
   for (const v of vendor?.writes ?? []) process.stdout.write(`  ${v.decision.padEnd(9)} ${v.targetPath}\n`);
   for (const r of vendor?.removes ?? []) process.stdout.write(`  remove    ${r.targetPath}\n`);
-  const allConflicts = [...conflicts, ...(vendor?.conflicts ?? [])];
+  for (const g of generated?.writes ?? []) process.stdout.write(`  ${g.decision.padEnd(9)} ${g.target}\n`);
+  const allConflicts = [...conflicts, ...(vendor?.conflicts ?? []), ...(generated?.conflicts ?? [])];
   if (allConflicts.length > 0) {
     process.stdout.write(`\n${allConflicts.length} conflict(s); rendered content saved under .claude/upgrades/. Existing content preserved in target.\n`);
     process.exit(2);
   }
+}
+
+function defaultRulesForStack({ detected, explicit, noDefaults, language, type }) {
+  if (explicit?.length) return explicit;
+  if (noDefaults) return [];
+  const rules = new Set();
+  const stack = detected.stack ?? [];
+  if (stack.includes("nextjs") || stack.includes("react")) rules.add("web");
+  if (stack.includes("firebase")) rules.add("firebase");
+  if (stack.includes("docker")) rules.add("docker");
+  if (stack.includes("terraform")) rules.add("terraform");
+  if (language === "python") rules.add("python");
+  if (language === "go") rules.add("go");
+  if (language === "rust") rules.add("rust");
+  if (type === "android") rules.add("android");
+  if (type === "ios") rules.add("ios");
+  return [...rules];
 }
 
 function deriveProjectName(cwd) {

@@ -14,6 +14,7 @@ export function createManifest({
   compliance = {},
   activeSkills = [],
   activeAgents = [],
+  activeRules = [],
   hooks = {},
   owners = [],
   now = () => new Date(),
@@ -58,6 +59,9 @@ export function createManifest({
     agents: {
       active: [...activeAgents],
     },
+    rules: {
+      active: [...activeRules],
+    },
     hooks: {
       preCommit: hooks.preCommit ?? [],
       postFeature: hooks.postFeature ?? [],
@@ -65,6 +69,7 @@ export function createManifest({
     },
     managedBlocks: {},
     vendored: {},
+    generated: {},
     customizations: {
       preserveFiles: ["CLAUDE.local.md", "STATE.local.md", ".claude/local/**"],
       templateOverrides: {},

@@ -1,0 +1,64 @@
+<%
+const postFeature = ctx.hooks.postFeature ?? [];
+const preCommit = ctx.hooks.preCommit ?? [];
+const prePR = ctx.hooks.prePR ?? [];
+const events = [];
+if (postFeature.length > 0) {
+  events.push({
+    event: "PostToolUse",
+    matcher: "Edit|Write",
+    skills: postFeature,
+    label: "post-feature",
+  });
+}
+if (preCommit.length > 0) {
+  events.push({
+    event: "PreToolUse",
+    matcher: "Bash",
+    bashPattern: "git commit",
+    skills: preCommit,
+    label: "pre-commit",
+  });
+}
+if (prePR.length > 0) {
+  events.push({
+    event: "PreToolUse",
+    matcher: "Bash",
+    bashPattern: "gh pr create",
+    skills: prePR,
+    label: "pre-PR",
+  });
+}
+const grouped = {};
+for (const e of events) {
+  grouped[e.event] ??= [];
+  grouped[e.event].push(e);
+}
+const eventNames = Object.keys(grouped);
+-%>
+{
+  "$generated": "by @cure-consulting-group/claude-bootstrap from manifest.hooks; do not edit by hand",
+  "$project": "<%= ctx.project.name %>",
+  "hooks": {
+<% eventNames.forEach((name, i) => { -%>
+    "<%= name %>": [
+<% grouped[name].forEach((e, j) => {
+     const reminder = `${e.label}: consider running ${e.skills.join(', ')}`;
+     const cmd = e.bashPattern
+       ? `CMD=$(echo $CLAUDE_TOOL_INPUT | python3 -c \\"import sys,json; d=json.load(sys.stdin); print(d.get('command',''))\\" 2>/dev/null); case \\"$CMD\\" in *'${e.bashPattern}'*) echo '{\\"reminder\\": \\"${reminder}\\"}' ;; esac`
+       : `echo '{\\"reminder\\": \\"${reminder}\\"}'`;
+-%>
+      {
+        "matcher": "<%= e.matcher %>",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "<%- cmd %>"
+          }
+        ]
+      }<%= j < grouped[name].length - 1 ? "," : "" %>
+<% }); -%>
+    ]<%= i < eventNames.length - 1 ? "," : "" %>
+<% }); -%>
+  }
+}

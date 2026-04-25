@@ -1,0 +1,24 @@
+# <%= ctx.project.name %> — Cursor
+
+This project's authoritative engineering rules live in `CLAUDE.md` and
+`.claude/rules/*.md` (managed by `@cure-consulting-group/claude-bootstrap`).
+
+Cursor agents should follow those files. Treat this `.cursorrules` as a pointer.
+
+Project type: <%= ctx.project.type %>
+Primary language: <%= ctx.project.primaryLanguage %>
+<% if (ctx.stack.length > 0) { -%>
+Stack: <%= ctx.stack.join(", ") %>
+<% } -%>
+<% if (ctx.activeCompliance.length > 0) { -%>
+Compliance: <%= ctx.activeCompliance.map(c => c.toUpperCase()).join(", ") %>
+<% } -%>
+
+Active path-rules (load these from `.claude/rules/`):
+<% if ((ctx.manifest.rules?.active ?? []).length === 0) { -%>
+  (none — see `.claude/rules/` for any installed rules)
+<% } else { -%>
+<% for (const r of ctx.manifest.rules.active) { -%>
+- <%= r %>.md
+<% } -%>
+<% } -%>
