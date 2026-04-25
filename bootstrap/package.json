@@ -1,13 +1,19 @@
 {
   "name": "@cure-consulting-group/claude-bootstrap",
-  "version": "0.1.0",
-  "description": "Bootstraps Cure's Claude development infrastructure into any project. Idempotent, manifest-driven, version-pinned.",
+  "version": "0.2.0",
+  "description": "Bootstraps Cure's Claude development infrastructure into any project. Idempotent, manifest-driven, version-pinned. Provisions CLAUDE.md, STATE.md, .claude/{settings,skills,agents,rules,hooks}, .cursorrules, .gemini/. Includes drift detection (doctor) and multi-project inventory.",
   "type": "module",
   "exports": {
     ".": "./src/index.mjs",
     "./manifest": "./src/manifest/index.mjs",
     "./blocks": "./src/blocks/index.mjs",
-    "./schema": "./schemas/claude-manifest.v1.json"
+    "./vendor": "./src/vendor/index.mjs",
+    "./generated": "./src/generated/index.mjs",
+    "./diagnose": "./src/diagnose/doctor.mjs",
+    "./inventory": "./src/diagnose/inventory.mjs",
+    "./org": "./src/org/index.mjs",
+    "./schema": "./schemas/claude-manifest.v1.json",
+    "./org-schema": "./schemas/org-manifest.v1.json"
   },
   "bin": {
     "claude-bootstrap": "./bin/claude-bootstrap.mjs"
@@ -16,7 +22,8 @@
     "bin/",
     "src/",
     "schemas/",
-    "templates/"
+    "templates/",
+    "README.md"
   ],
   "engines": {
     "node": ">=20"
