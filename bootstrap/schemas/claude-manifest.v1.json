@@ -105,6 +105,20 @@
       "default": {}
     },
 
+    "vendored": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "hash"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "hash":   { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      },
+      "default": {}
+    },
+
     "customizations": {
       "type": "object",
       "additionalProperties": false,

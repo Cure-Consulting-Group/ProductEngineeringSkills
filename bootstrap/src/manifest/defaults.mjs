@@ -64,6 +64,7 @@ export function createManifest({
       prePR: hooks.prePR ?? [],
     },
     managedBlocks: {},
+    vendored: {},
     customizations: {
       preserveFiles: ["CLAUDE.local.md", "STATE.local.md", ".claude/local/**"],
       templateOverrides: {},

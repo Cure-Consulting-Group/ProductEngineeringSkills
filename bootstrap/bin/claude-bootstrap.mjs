@@ -22,6 +22,7 @@ Options:
   --cwd <path>             target project root (default: process.cwd())
   --skills-version <ver>   skills repo version to pin (init only; required for init)
   --skills-sha <sha>       skills repo commit (init, optional)
+  --skills-source <path>   skills repo path; falls back to $CLAUDE_SKILLS_DIR or installed npm package
   --name <name>            project name override (init)
   --type <type>            project type override (init): android|ios|firebase|web|cli|mixed
   --language <lang>        primary language override (init)
@@ -38,6 +39,7 @@ const cliOptions = {
   cwd:             { type: "string" },
   "skills-version":{ type: "string" },
   "skills-sha":    { type: "string" },
+  "skills-source": { type: "string" },
   name:            { type: "string" },
   type:            { type: "string" },
   language:        { type: "string" },
@@ -115,7 +117,7 @@ async function cmdInit(flags) {
 
   process.stdout.write(`detected: type=${detected.projectType}, language=${detected.primaryLanguage}, stack=[${detected.stack.join(",")}]\n`);
 
-  const plan = buildPlan({ cwd, manifest });
+  const plan = buildPlan({ cwd, manifest, skillsSource: flags["skills-source"] });
   process.stdout.write(`plan:\n${summarizePlan(plan)}\n`);
 
   if (flags["dry-run"]) {
@@ -132,7 +134,7 @@ async function cmdApply(flags) {
   const manifest = readManifest(cwd);
   if (!manifest) fail(`no ${MANIFEST_FILENAME} at ${cwd}. Run 'init' first.`);
 
-  const plan = buildPlan({ cwd, manifest });
+  const plan = buildPlan({ cwd, manifest, skillsSource: flags["skills-source"] });
   process.stdout.write(`plan:\n${summarizePlan(plan)}\n`);
 
   if (flags["dry-run"]) {
@@ -144,10 +146,13 @@ async function cmdApply(flags) {
   reportResult(result);
 }
 
-function reportResult({ writes, conflicts }) {
+function reportResult({ writes, conflicts, vendor }) {
   for (const w of writes) process.stdout.write(`  ${w.decision.padEnd(9)} ${w.filePath}\n`);
-  if (conflicts.length > 0) {
-    process.stdout.write(`\n${conflicts.length} conflict(s); rendered content saved under .claude/upgrades/. Existing content preserved in target.\n`);
+  for (const v of vendor?.writes ?? []) process.stdout.write(`  ${v.decision.padEnd(9)} ${v.targetPath}\n`);
+  for (const r of vendor?.removes ?? []) process.stdout.write(`  remove    ${r.targetPath}\n`);
+  const allConflicts = [...conflicts, ...(vendor?.conflicts ?? [])];
+  if (allConflicts.length > 0) {
+    process.stdout.write(`\n${allConflicts.length} conflict(s); rendered content saved under .claude/upgrades/. Existing content preserved in target.\n`);
     process.exit(2);
   }
 }

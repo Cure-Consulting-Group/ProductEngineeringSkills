@@ -3,10 +3,11 @@ import { dirname, join } from "node:path";
 import { renderTemplate, TEMPLATE_FILES } from "../template/render.mjs";
 import { planFile, DECISIONS } from "../blocks/index.mjs";
 import { validateManifest } from "../manifest/index.mjs";
+import { resolveSkillsSource, planVendor, applyVendor, VENDOR_DECISIONS } from "../vendor/index.mjs";
 
 export const MANIFEST_FILENAME = "claude.manifest.json";
 
-export function buildPlan({ cwd, manifest }) {
+export function buildPlan({ cwd, manifest, skillsSource }) {
   const { valid, errors } = validateManifest(manifest);
   if (!valid) {
     const formatted = errors.map((e) => `  ${e.path}: ${e.message}`).join("\n");
@@ -24,7 +25,19 @@ export function buildPlan({ cwd, manifest }) {
     filePlans.push(plan);
   }
 
-  return { filePlans };
+  let vendorPlan = { decisions: [] };
+  let resolvedSource = null;
+  const wantsVendoring =
+    (manifest.skills?.active?.length ?? 0) > 0 ||
+    (manifest.agents?.active?.length ?? 0) > 0 ||
+    Object.keys(manifest.vendored ?? {}).length > 0;
+
+  if (wantsVendoring) {
+    resolvedSource = resolveSkillsSource({ flag: skillsSource });
+    vendorPlan = planVendor({ cwd, source: resolvedSource.path, manifest });
+  }
+
+  return { filePlans, vendorPlan, resolvedSource };
 }
 
 export function applyPlan({ cwd, manifest, plan, write = true }) {
@@ -41,12 +54,16 @@ export function applyPlan({ cwd, manifest, plan, write = true }) {
     writes.push({ filePath: fp.filePath, content: fp.nextContent, decision: fp.decision });
   }
 
-  const hasChanges = writes.length > 0;
+  const vendorResult = applyVendor({ cwd, plan: plan.vendorPlan ?? { decisions: [] }, write });
+  const vendorChanged = vendorResult.writes.length > 0 || vendorResult.removes.length > 0;
+  const hasChanges = writes.length > 0 || vendorChanged;
+
   const updatedManifest = hasChanges
     ? {
         ...manifest,
         bootstrap: { ...manifest.bootstrap, lastAppliedAt: new Date().toISOString() },
         managedBlocks: nextManagedBlocks,
+        vendored: vendorResult.nextVendored,
       }
     : manifest;
 
@@ -70,7 +87,12 @@ export function applyPlan({ cwd, manifest, plan, write = true }) {
     }
   }
 
-  return { writes, conflicts, manifest: updatedManifest };
+  return {
+    writes,
+    conflicts,
+    vendor: vendorResult,
+    manifest: updatedManifest,
+  };
 }
 
 export function readManifest(cwd) {
@@ -88,6 +110,13 @@ export function summarizePlan(plan) {
       if (r.status === "unchanged") continue;
       lines.push(`             - ${r.id}: ${r.status}`);
     }
+  }
+  for (const d of plan.vendorPlan?.decisions ?? []) {
+    if (d.decision === VENDOR_DECISIONS.UNCHANGED) continue;
+    lines.push(`  [${d.decision.padEnd(9)}] ${d.targetPath}`);
+  }
+  if (plan.resolvedSource) {
+    lines.push(`  (skills source: ${plan.resolvedSource.source} → ${plan.resolvedSource.path})`);
   }
   return lines.join("\n");
 }
