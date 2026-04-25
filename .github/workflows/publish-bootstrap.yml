@@ -1,0 +1,55 @@
+name: Publish bootstrap to GitHub Packages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bootstrap/**"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test-and-publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bootstrap
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: "@cure-consulting-group"
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Resolve versions
+        id: ver
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LOCAL=$(jq -r '.version' package.json)
+          PUBLISHED=$(npm view @cure-consulting-group/claude-bootstrap version --registry=https://npm.pkg.github.com 2>/dev/null || echo "")
+          echo "local=$LOCAL" >> $GITHUB_OUTPUT
+          echo "published=$PUBLISHED" >> $GITHUB_OUTPUT
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Version $LOCAL already published; skipping."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Will publish $LOCAL (latest published: ${PUBLISHED:-none})"
+          fi
+
+      - name: Publish
+        if: steps.ver.outputs.skip == 'false'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
