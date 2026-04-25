@@ -1,8 +1,10 @@
 name: Auto-merge Skills Updates
 
+# TEMPLATE — DO NOT RENAME IN THIS REPO.
 # This workflow auto-merges Dependabot PRs for the skills package.
-# Copy this to your consuming project's .github/workflows/ directory
-# to enable fully automatic updates.
+# In consuming projects, copy this file to .github/workflows/auto-merge-skills.yml
+# (drop the .example suffix). The .example suffix here keeps GitHub Actions from
+# trying to run this template in the source repo on every push.
 
 on:
   pull_request:

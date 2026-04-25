@@ -335,8 +335,12 @@ DEPBOT
   mkdir -p "$workflows_dir"
 
   if [ ! -f "$automerge_file" ]; then
-    if [ -f "$plugin_path/.github/workflows/auto-merge-skills.yml" ]; then
-      cp "$plugin_path/.github/workflows/auto-merge-skills.yml" "$automerge_file"
+    local automerge_src="$plugin_path/.github/workflows/auto-merge-skills.yml.example"
+    if [ ! -f "$automerge_src" ]; then
+      automerge_src="$plugin_path/.github/workflows/auto-merge-skills.yml"
+    fi
+    if [ -f "$automerge_src" ]; then
+      cp "$automerge_src" "$automerge_file"
       ok "Installed auto-merge workflow for skills updates"
     fi
   else
