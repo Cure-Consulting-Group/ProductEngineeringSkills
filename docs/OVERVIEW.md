@@ -7,7 +7,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 5.1.0 |
+| Version | 6.0.1 |
 | Skills | 75 |
 | Agents | 35 |
 | Personas | 4 |
@@ -16,7 +16,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Output Styles | 9 |
 | MCP Servers | 4 |
 | LSP Servers | 2 |
-| Generated | 2026-04-29 14:50:36 UTC |
+| Generated | 2026-04-29 16:27:55 UTC |
 
 
 ## 2. Skills
@@ -233,12 +233,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v5.0.0). 65 skills, 34 agents, 11 rules, … |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v6.0.1). 75 skills (domain-organized), 35… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
-| SessionStart | startup | command | echo '\nAvailable Agents (34):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
+| SessionStart | startup | command | echo '\nAvailable Agents (35):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION:\n\nCure Consulting Group Standards (always apply):\n- Clean Arch… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 65 skills, 34 agents available. Use /cure-prod… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 75 skills, 35 agents, 4 personas available. Us… |
 | PostToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
 | PostToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
 | PostToolUseFailure | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |

@@ -81,6 +81,7 @@ check_prerequisites() {
 }
 
 # --- Clone or update the plugin ---
+# Tries git clone first; falls back to gh CLI for private-repo auth.
 install_plugin() {
   local dest="$1"
 
@@ -90,13 +91,40 @@ install_plugin() {
       git -C "$dest" pull origin master --quiet 2>/dev/null || \
       warn "Could not pull latest. Using existing version."
     ok "Plugin updated."
-  else
-    info "Cloning ProductEngineeringSkills plugin..."
-    mkdir -p "$(dirname "$dest")"
-    git clone --quiet "$PLUGIN_REPO" "$dest" 2>/dev/null || \
-      error "Failed to clone plugin. Check your network and GitHub access."
-    ok "Plugin cloned to $dest"
+    return 0
   fi
+
+  info "Cloning ProductEngineeringSkills plugin..."
+  mkdir -p "$(dirname "$dest")"
+
+  # Try plain git clone first (works for public repos or when git already has creds)
+  if git clone --quiet "$PLUGIN_REPO" "$dest" 2>/dev/null; then
+    ok "Plugin cloned to $dest"
+    return 0
+  fi
+
+  warn "git clone failed (private repo without git credentials)."
+
+  # Fallback: gh CLI handles auth via stored token
+  if command -v gh >/dev/null 2>&1; then
+    if gh auth status >/dev/null 2>&1; then
+      info "Retrying via gh CLI..."
+      if gh repo clone Cure-Consulting-Group/ProductEngineeringSkills "$dest" -- --quiet 2>/dev/null; then
+        ok "Plugin cloned to $dest (via gh)"
+        return 0
+      fi
+      warn "gh repo clone also failed."
+    else
+      warn "gh CLI is installed but not authenticated. Run: gh auth login"
+    fi
+  else
+    warn "gh CLI not found. Install via: brew install gh (macOS) or apt install gh (Linux)."
+  fi
+
+  error "Failed to clone plugin. Fix one of the following and retry:
+  1. Run 'gh auth login' (then 'gh auth setup-git' to wire git too)
+  2. Or set GH_TOKEN env var with a PAT that has 'repo' scope
+  3. Or install via npm: npm install --save-dev @cure-consulting-group/product-engineering-skills"
 }
 
 # --- Global install (user-level, all projects) ---

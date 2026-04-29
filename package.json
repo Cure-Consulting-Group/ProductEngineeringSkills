@@ -1,6 +1,6 @@
 {
   "name": "@cure-consulting-group/product-engineering-skills",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Cure Consulting Group's complete product engineering skill library — 75 skills (domain-organized), 35 agents, 4 personas, 11 path-specific rules, 9 output styles, multi-layer hooks with agent auto-triggering, bundled stdlib Python tooling, MCP/LSP configs.",
   "keywords": [
     "claude-code-plugin",
