@@ -57,12 +57,26 @@ function listFilesShallow(dir) {
     .filter((e) => statSync(e.full).isFile());
 }
 
+// Skills live under skills/<domain>/<name>/ post T1 reorg, but legacy flat
+// skills/<name>/ may still exist. Resolve by checking both layouts.
+function resolveSkillDir(source, skill) {
+  const flat = join(source, "skills", skill);
+  if (existsSync(flat) && statSync(flat).isDirectory()) return flat;
+  const skillsRoot = join(source, "skills");
+  if (!existsSync(skillsRoot)) return null;
+  for (const domain of readdirSync(skillsRoot)) {
+    const candidate = join(skillsRoot, domain, skill);
+    if (existsSync(candidate) && statSync(candidate).isDirectory()) return candidate;
+  }
+  return null;
+}
+
 function collectExpectedFiles({ source, manifest }) {
   const expected = [];
   for (const skill of manifest.skills?.active ?? []) {
-    const skillDir = join(source, "skills", skill);
-    if (!existsSync(skillDir)) {
-      throw new Error(`skill '${skill}' not found in source: expected ${skillDir}`);
+    const skillDir = resolveSkillDir(source, skill);
+    if (!skillDir) {
+      throw new Error(`skill '${skill}' not found in source under ${join(source, "skills")}`);
     }
     for (const f of listFilesShallow(skillDir)) {
       const targetPath = join(".claude", "skills", skill, f.name);

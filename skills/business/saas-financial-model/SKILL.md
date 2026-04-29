@@ -244,6 +244,16 @@ Generate using Write:
 2. **Pricing analysis**: `docs/pricing-analysis.md` — tier comparison with value metrics
 3. **Unit economics**: `docs/unit-economics.md` — CAC, LTV, payback period with sensitivity analysis
 
+## Scripts
+
+This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
+
+- `scripts/unit_economics.py` — ARR, ARPU, LTV, LTV:CAC ratio, payback period from `--mrr`, `--customers`, `--churn-rate`, `--cac`. Optional `--gross-margin` for margin-adjusted LTV.
+  ```bash
+  python3 skills/saas-financial-model/scripts/unit_economics.py \
+    --mrr 50000 --customers 200 --churn-rate 0.03 --cac 800 --gross-margin 0.75 --json
+  ```
+
 ## Step 9: SaaS Benchmarks
 
 ```

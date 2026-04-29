@@ -26,7 +26,8 @@ mkdir -p "$GEMINI_DIR"
 GENERATED=0
 SKIPPED=0
 
-for skill_dir in "$SKILLS_DIR"/*/; do
+# Skills live at skills/<domain>/<name>/SKILL.md post T1 reorg.
+for skill_dir in "$SKILLS_DIR"/*/*/; do
   SKILL_NAME=$(basename "$skill_dir")
   SKILL_FILE="$skill_dir/SKILL.md"
   GEMINI_FILE="$GEMINI_DIR/${SKILL_NAME}.skill"

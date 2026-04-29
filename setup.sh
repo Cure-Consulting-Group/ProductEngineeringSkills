@@ -169,7 +169,7 @@ with open('$user_settings', 'w') as f:
   echo "  User settings:   $user_settings"
   echo "  Auto-update:     Daily at 9:00 AM"
   echo ""
-  echo "  All Claude Code sessions will have access to 64 skills and 31 agents."
+  echo "  All Claude Code sessions will have access to 75 skills, 35 agents, and 4 personas."
   echo "  Manual update: $auto_update_script"
   echo ""
   echo "  Or load manually per-session:"
@@ -210,7 +210,7 @@ claude --plugin-dir ~/.claude/plugins/ProductEngineeringSkills
 ```
 
 Available skills: /cure-product-engineering:sdlc, /cure-product-engineering:feature-audit,
-/cure-product-engineering:security-review, and 61 more. Run any skill with /cure-product-engineering:<name>.
+/cure-product-engineering:security-review, and 72 more. Run any skill with /cure-product-engineering:<name>.
 CLAUDEMD
       ok "Updated $claude_md"
     fi
@@ -228,7 +228,7 @@ Load the plugin when starting Claude Code:
 claude --plugin-dir ~/.claude/plugins/ProductEngineeringSkills
 ```
 
-## Available Skills (64)
+## Available Skills (75)
 
 Run any skill with `/cure-product-engineering:<skill-name>`:
 
@@ -384,7 +384,7 @@ setup_legacy() {
   # Copy command files
   mkdir -p "$project_dir/.claude/commands"
   cp "$plugin_path/claude-commands/"*.md "$project_dir/.claude/commands/"
-  ok "Copied 64 skills to $project_dir/.claude/commands/"
+  ok "Copied 75 skills to $project_dir/.claude/commands/"
 
   echo ""
   warn "Legacy mode: hooks, agents, output styles, and MCP configs are NOT included."
@@ -399,7 +399,7 @@ main() {
   echo ""
   echo "╔══════════════════════════════════════════════════════════╗"
   echo "║  Cure Consulting Group — ProductEngineeringSkills Setup ║"
-  echo "║  Plugin v4.0.0 — 64 Skills, 31 Agents, Hooks, Rules     ║"
+  echo "║  Plugin v6.0.0 — 75 Skills, 35 Agents, 4 Personas      ║"
   echo "╚══════════════════════════════════════════════════════════╝"
   echo ""
 

@@ -1,0 +1,45 @@
+# MEMORY.md — [ENGAGEMENT_NAME]
+
+> Session memory index. Curated by the `self-improving-memory` skill.
+> Do not edit manually mid-session — let the skill propose changes, then confirm.
+> Four memory types only: `user`, `feedback`, `project`, `reference`. Do not invent new types.
+
+Bootstrapped: [YYYY-MM-DD]
+Last health-check: [YYYY-MM-DD]
+Index size budget: 200 lines (force consolidation pass if exceeded)
+
+---
+
+## user
+
+> Who the user is — role, preferences, knowledge depth, communication style.
+> Long-lived. Rarely decays inside a single engagement.
+
+- (none yet — populated during kickoff interview)
+
+---
+
+## feedback
+
+> Corrections AND validated approaches. Every entry must include Rule + Why + How to apply.
+> Decays in ~60 days — re-validate before acting on older entries.
+
+- (none yet — populated as the user corrects or validates)
+
+---
+
+## project
+
+> Initiatives in flight, deadlines (absolute dates only), stakeholder context.
+> Decays fast. Retire when shipped or when `by:` passes without slip rationale.
+
+- (none yet — populated during kickoff interview)
+
+---
+
+## reference
+
+> Pointers to external systems — Linear, Slack, dashboards, runbooks, account IDs.
+> Verify URL/handle on recall — these go stale silently.
+
+- (none yet — populated during kickoff interview)

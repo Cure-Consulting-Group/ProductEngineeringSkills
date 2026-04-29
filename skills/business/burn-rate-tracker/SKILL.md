@@ -376,6 +376,17 @@ Generate using Write:
 2. **Cash flow projection**: `docs/cash-flow.md` — 18-month runway projection
 3. **Budget alerts config**: `monitoring/budget-alerts.json` — alert thresholds for cloud spend
 
+## Scripts
+
+This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
+
+- `scripts/runway_calculator.py` — Runway in months with best/expected/worst scenarios from `--cash`, `--monthly-burn`, optional `--monthly-revenue`, `--revenue-growth`, `--burn-growth`.
+  ```bash
+  python3 skills/burn-rate-tracker/scripts/runway_calculator.py \
+    --cash 1500000 --monthly-burn 120000 --monthly-revenue 30000 \
+    --revenue-growth 0.10 --burn-growth 0.02 --json
+  ```
+
 ## Step 10: Output
 
 ```

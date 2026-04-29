@@ -4,34 +4,45 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 65 production-grade skills, 34 custom agents (engineering, product, marketing, business, data, security, legal), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 75 production-grade skills (organized into 7 domain folders), 35 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
 ```
-.claude-plugin/plugin.json    — Plugin manifest (name, version, metadata)
-skills/*/SKILL.md             — 64 skills with frontmatter (new format)
-agents/*.md                   — 30 custom subagent definitions
-hooks/hooks.json              — Multi-layer hooks (command, prompt, agent) across 12 event types
-rules/*.md                    — 11 path-specific coding standards
+.claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
+skills/{domain}/{name}/SKILL.md — 75 skills, organized by domain folder
+                                 Domains: engineering (39), platform (10), product (10),
+                                 business (7), marketing (4), security (4), legal (1)
+skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
+agents/*.md                    — 35 custom subagent definitions
+personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant)
+hooks/hooks.json               — Multi-layer hooks (command, prompt, agent) across 12 event types
+rules/*.md                     — 11 path-specific coding standards
 output-styles/*/output-style.md — 9 custom output styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts)
-.mcp.json                     — MCP server configurations (GitHub, Sentry, Firestore, PostgreSQL)
-.lsp.json                     — LSP server configurations (TypeScript, Python/Pyright)
-marketplace.json              — Plugin marketplace manifest for distribution
-settings.json                 — Default permission rules (35 deny rules)
+.mcp.json                      — MCP server configurations (GitHub, Sentry, Firestore, PostgreSQL)
+.lsp.json                      — LSP server configurations (TypeScript, Python/Pyright)
+settings.json                  — Default permission rules (35 deny rules)
 claude-commands/*.md           — Legacy command format (backwards compat)
-gemini skills/*.skill          — Google Gemini skill packages
+gemini skills/*.skill          — Google Gemini skill packages (flat, .skill zip files)
+docs/OVERVIEW.md               — Auto-generated overview (regenerate via scripts/generate-overview.py)
+docs/SCRIPTS_CONVENTION.md     — Convention for bundled Python scripts in skills
+scripts/generate-overview.py   — Regenerates docs/OVERVIEW.md from frontmatter
+scripts/verify-skill-scripts.sh — Smoke-tests every bundled skill script via --help
+BACKLOG.md                     — Internal improvement backlog (not for distribution)
 ```
 
 ## Development Rules
 
-- When adding a new skill, create it in `skills/{name}/SKILL.md` with proper YAML frontmatter
+- When adding a new skill, create it in `skills/{domain}/{name}/SKILL.md` with proper YAML frontmatter. Domain is one of: engineering, platform, product, business, marketing, security, legal. If unsure, run `python3 scripts/generate-overview.py` after — it categorizes by name patterns and will surface the inferred domain.
 - Every skill must have: `name`, `description`, and `argument-hint` in frontmatter
 - Read-only skills (audits, analysis) should set `allowed-tools: ["Read", "Grep", "Glob"]`
 - Destructive or sensitive skills should set `disable-model-invocation: true`
 - Keep the legacy `claude-commands/` format in sync for backwards compatibility
-- Create both Claude and Gemini versions of each skill
+- Create both Claude and Gemini versions of each skill (Gemini files are flat zips in `gemini skills/`, regenerated via `generate-gemini-skills.sh`)
 - Follow the existing format: Step 1 (Classify), Step 2 (Gather Context), Step 3+ (Framework/Output)
+- When adding a new persona, create it in `personas/{name}.md` with frontmatter (`name`, `description`, `type: persona`). Personas reference only existing skills/agents — never invent names. Match Cure's voice: terse, opinionated, concrete with numbers, no marketing fluff.
+- A skill MAY ship `skills/{domain}/{name}/scripts/*.py` — Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`. See `docs/SCRIPTS_CONVENTION.md` for the full convention.
+- After adding/modifying skills, agents, or personas: run `python3 scripts/generate-overview.py` to regenerate `docs/OVERVIEW.md`.
 
 ## Versioning
 
@@ -42,9 +53,9 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Minor (x.x.0): Add new skills, add hooks, add rules
 - Major (x.0.0): Breaking changes to skill interfaces or structure
 
-## Custom Agents (30)
+## Custom Agents (35)
 
-### Engineering Agents (14)
+### Engineering Agents (15)
 
 | Agent | Purpose | Tools |
 |-------|---------|-------|
@@ -98,12 +109,24 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 | **metrics-dashboard** | KPI definitions, SLO/SLI targets, dashboard wireframes, alert thresholds | Read + Bash |
 | **ab-test-analyst** | Experiment design, sample size calculation, statistical significance, result interpretation | Read + Bash |
 
-### Security & Compliance Agents (2)
+### Security & Compliance Agents (3)
 
 | Agent | Purpose | Tools |
 |-------|---------|-------|
 | **accessibility-checker** | Automated WCAG 2.2 compliance checking | Read-only |
 | **firebase-security-auditor** | Firestore rules and Cloud Functions security audit | Read + Bash |
+| **skill-security-auditor** | Audit new SKILL.md, agent, and persona files for command injection, code execution, exfiltration, prompt injection, supply chain risks, privilege escalation, and secret leakage. Returns PASS/WARN/FAIL. Wired into PreToolUse hook. | Read-only |
+
+## Personas (4)
+
+Personas are cross-domain identities. Skills answer *how*, agents answer *what*, personas answer *who is thinking*. Each persona ships a curated skill loadout, agent loadout, decision frameworks, and voice — designed to slot into a specific Cure consulting engagement role.
+
+| Persona | Engagement Role | Loads |
+|---------|----------------|-------|
+| **cure-tech-lead** | Engineering lead — architecture, code quality, mentoring | Engineering skills + review/QA agents |
+| **cure-product-lead** | Product/PM lead — discovery, roadmap, stakeholder management | Product skills + UX/analytics agents |
+| **cure-engagement-pm** | Program/project manager — sprint cadence, scope, handoff | Project + business skills + financial/PM agents |
+| **cure-solo-consultant** | Single consultant on small engagements — cross-domain | Bootstrap + pragmatic cross-domain mix |
 
 ## Path-Specific Rules (11)
 

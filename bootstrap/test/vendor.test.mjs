@@ -80,12 +80,12 @@ test("planVendor: CREATE for new skills and agents", () => {
 test("planVendor: UNCHANGED when target hash matches source", () => {
   const cwd = tmp();
   const m = createManifest({ ...baseInput, activeSkills: ["feature-audit"] });
-  const sourcePath = join(SKILLS_REPO, "skills/feature-audit/SKILL.md");
+  const sourcePath = join(SKILLS_REPO, "skills/product/feature-audit/SKILL.md");
   const sourceContent = readFileSync(sourcePath, "utf8");
   const targetPath = ".claude/skills/feature-audit/SKILL.md";
   mkdirSync(join(cwd, dirname(targetPath)), { recursive: true });
   writeFileSync(join(cwd, targetPath), sourceContent);
-  m.vendored = { [targetPath]: { source: "skills/feature-audit/SKILL.md", hash: sha256(sourceContent) } };
+  m.vendored = { [targetPath]: { source: "skills/product/feature-audit/SKILL.md", hash: sha256(sourceContent) } };
 
   const plan = planVendor({ cwd, source: SKILLS_REPO, manifest: m });
   const d = plan.decisions.find((x) => x.targetPath === targetPath);
@@ -95,12 +95,12 @@ test("planVendor: UNCHANGED when target hash matches source", () => {
 test("planVendor: CONFLICT when user edited a vendored file", () => {
   const cwd = tmp();
   const m = createManifest({ ...baseInput, activeSkills: ["feature-audit"] });
-  const sourcePath = join(SKILLS_REPO, "skills/feature-audit/SKILL.md");
+  const sourcePath = join(SKILLS_REPO, "skills/product/feature-audit/SKILL.md");
   const sourceContent = readFileSync(sourcePath, "utf8");
   const targetPath = ".claude/skills/feature-audit/SKILL.md";
   mkdirSync(join(cwd, dirname(targetPath)), { recursive: true });
   writeFileSync(join(cwd, targetPath), sourceContent + "\n\n# user added section\n");
-  m.vendored = { [targetPath]: { source: "skills/feature-audit/SKILL.md", hash: sha256(sourceContent) } };
+  m.vendored = { [targetPath]: { source: "skills/product/feature-audit/SKILL.md", hash: sha256(sourceContent) } };
 
   const plan = planVendor({ cwd, source: SKILLS_REPO, manifest: m });
   const d = plan.decisions.find((x) => x.targetPath === targetPath);
@@ -159,7 +159,7 @@ test("integration: init with skill+agent vendors actual files from this repo", (
   assert.ok(m.vendored[".claude/agents/pr-reviewer.md"]);
 
   const targetSkill = readFileSync(join(dir, ".claude/skills/feature-audit/SKILL.md"), "utf8");
-  const sourceSkill = readFileSync(join(SKILLS_REPO, "skills/feature-audit/SKILL.md"), "utf8");
+  const sourceSkill = readFileSync(join(SKILLS_REPO, "skills/product/feature-audit/SKILL.md"), "utf8");
   assert.equal(targetSkill, sourceSkill, "vendored content matches source byte for byte");
 });
 

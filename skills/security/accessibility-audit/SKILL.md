@@ -316,6 +316,16 @@ Run automated tools as a **supplement** to manual testing. Automated tools catch
 - **Color contrast analyzers**: Colour Contrast Analyser (CCA), WebAIM Contrast Checker
 - **Keyboard-only testing**: navigate entire flow without mouse/touch
 
+## Scripts
+
+This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
+
+- `scripts/wcag_check.py` — Static WCAG 2.2 smoke check on an HTML file or URL. Catches missing alt text, unlabeled inputs, headings that skip levels, missing `lang`, suspicious ARIA roles, removed focus outlines. Use as a pre-audit filter, not a replacement for manual screen-reader testing.
+  ```bash
+  python3 skills/accessibility-audit/scripts/wcag_check.py --html-file page.html --json
+  python3 skills/accessibility-audit/scripts/wcag_check.py --url https://example.com --json
+  ```
+
 ## Step 9: Audit Report Output
 
 ```
