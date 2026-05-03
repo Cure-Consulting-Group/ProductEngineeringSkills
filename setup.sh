@@ -391,6 +391,85 @@ DEPBOT
   echo "  Plugin:        $plugin_path"
   echo "  Rules:         $project_dir/.claude/rules/"
   echo "  CLAUDE.md:     $claude_md"
+  echo "  GEMINI.md:     $gemini_md"
+  echo ""
+  echo "  Start Claude Code with the plugin:"
+  echo "    claude --plugin-dir $plugin_path"
+  echo ""
+  echo "  Files added (commit these to share with your team):"
+  echo "    .claude/CLAUDE.md"
+  echo "    .claude/GEMINI.md"
+  echo "    .claude/rules/*.md"
+}
+
+# --- Legacy install (copy commands, no plugin features) ---
+setup_legacy() {
+  local project_dir="$1"
+  info "Legacy setup: copying skills to $project_dir/.claude/commands/"
+
+  # Clone plugin to temp or shared location
+  local plugin_path="${INSTALL_BASE}/${PLUGIN_DIR_NAME}"
+  install_plugin "$plugin_path"
+
+  # Copy command files
+  mkdir -p "$project_dir/.claude/commands"
+  cp "$plugin_path/claude-commands/"*.md "$project_dir/.claude/commands/"
+  ok "Copied 64 skills to $project_dir/.claude/commands/"
+
+  echo ""
+  warn "Legacy mode: hooks, agents, output styles, and MCP configs are NOT included."
+  warn "Consider using plugin mode instead: ./setup.sh $project_dir"
+  echo ""
+  echo "  Available as slash commands:"
+  echo "    /sdlc, /feature-audit, /security-review, /android-feature-scaffold, etc."
+}
+
+# --- Main ---
+main() {
+  echo ""
+  echo "╔══════════════════════════════════════════════════════════╗"
+  echo "║  Cure Consulting Group — ProductEngineeringSkills Setup ║"
+  echo "║  Plugin v4.0.0 — 64 Skills, 31 Agents, Hooks, Rules     ║"
+  echo "╚══════════════════════════════════════════════════════════╝"
+  echo ""
+
+  check_prerequisites
+
+  case "$MODE" in
+    global)  setup_global ;;
+    project) setup_project "$TARGET_DIR" ;;
+    legacy)  setup_legacy "$TARGET_DIR" ;;
+  esac
+
+  echo ""
+  info "Documentation: https://github.com/Cure-Consulting-Group/ProductEngineeringSkills"
+  echo ""
+}
+
+main
+ows/auto-merge-skills.yml" "$automerge_file"
+      ok "Installed auto-merge workflow for skills updates"
+    fi
+  else
+    ok "Auto-merge workflow already exists."
+  fi
+
+  # Create .gitignore entry for local settings
+  local gitignore="$project_dir/.gitignore"
+  if [ -f "$gitignore" ]; then
+    if ! grep -q ".claude/settings.local.json" "$gitignore" 2>/dev/null; then
+      echo -e "\n# Claude Code local settings\n.claude/settings.local.json" >> "$gitignore"
+      ok "Added .claude/settings.local.json to .gitignore"
+    fi
+  fi
+
+  echo ""
+  ok "Project setup complete!"
+  echo ""
+  echo "  Project:       $project_dir"
+  echo "  Plugin:        $plugin_path"
+  echo "  Rules:         $project_dir/.claude/rules/"
+  echo "  CLAUDE.md:     $claude_md"
   echo ""
   echo "  Start Claude Code with the plugin:"
   echo "    claude --plugin-dir $plugin_path"

@@ -109,7 +109,8 @@ ProductEngineeringSkills/
 ├── settings.json             # Default permission rules
 ├── claude-commands/           # Legacy format (backwards compat, 64 files)
 ├── gemini skills/             # Google Gemini skills (.skill ZIP)
-├── CLAUDE.md                  # Project instructions
+├── CLAUDE.md                  # Project instructions (Claude)
+├── GEMINI.md                  # Project instructions (Gemini CLI)
 ├── AGENT-GUIDE.md             # How to structure prompts for agents & skills
 ├── setup.sh                  # Setup script for Antigravity & other projects
 ├── EVALUATION.md              # Full evaluation document

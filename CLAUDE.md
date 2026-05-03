@@ -21,15 +21,20 @@ rules/*.md                     — 11 path-specific coding standards
 output-styles/*/output-style.md — 9 custom output styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts)
 .mcp.json                      — MCP server configurations (GitHub, Sentry, Firestore, PostgreSQL)
 .lsp.json                      — LSP server configurations (TypeScript, Python/Pyright)
+marketplace.json               — Plugin marketplace manifest for distribution
 settings.json                  — Default permission rules (35 deny rules)
 claude-commands/*.md           — Legacy command format (backwards compat)
 gemini skills/*.skill          — Google Gemini skill packages (flat, .skill zip files)
+CLAUDE.md                      — Project instructions (Claude)
+GEMINI.md                      — Project instructions (Gemini CLI)
+AGENT-GUIDE.md                 — How to structure prompts for agents & skills
 docs/OVERVIEW.md               — Auto-generated overview (regenerate via scripts/generate-overview.py)
 docs/SCRIPTS_CONVENTION.md     — Convention for bundled Python scripts in skills
 scripts/generate-overview.py   — Regenerates docs/OVERVIEW.md from frontmatter
 scripts/verify-skill-scripts.sh — Smoke-tests every bundled skill script via --help
 BACKLOG.md                     — Internal improvement backlog (not for distribution)
 ```
+
 
 ## Development Rules
 
@@ -46,7 +51,7 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 
 ## Versioning
 
-Current version: **5.0.0**
+Current version: **6.0.3**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording
