@@ -8,15 +8,15 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- |
 | Plugin | cure-product-engineering |
 | Version | 6.0.1 |
-| Skills | 75 |
-| Agents | 35 |
+| Skills | 79 |
+| Agents | 38 |
 | Personas | 4 |
 | Hooks (entries) | 21 |
 | Rules | 11 |
 | Output Styles | 9 |
 | MCP Servers | 4 |
 | LSP Servers | 2 |
-| Generated | 2026-04-29 16:27:55 UTC |
+| Generated | 2026-05-05 22:10:28 UTC |
 
 
 ## 2. Skills
@@ -78,6 +78,16 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | test-accounts | Generate test account strategies, seed data scripts, test user personas, and environment-scoped credentials for all platforms | default |
 | testing-strategy | Define the overall testing architecture — pyramid ratios, platform-specific frameworks (JUnit5/MockK, XCTest, Vitest/Playwright), coverage thresholds, and CI integration for a project or feature | default |
 | web-design-expert | Expert web design guidance — responsive design, CSS architecture, design tokens, container queries, accessibility-first patterns, dark mode, and Tailwind/CSS implementation | default |
+
+
+### Finance (4)
+
+| Skill | Description | Allowed Tools |
+| --- | --- | --- |
+| comps-analysis | Performs Comparable Company Analysis (Comps) to value a company relative to peers. Use when you need to benchmark multiples (EV/EBITDA, P/E), analyze industry premiums, or calculate enterprise value. | default |
+| dcf-modeling | Performs Discounted Cash Flow (DCF) valuation. Use when you need to calculate intrinsic value based on projected free cash flows, WACC, and terminal value. | default |
+| equity-research | Conducts public equity research and investment analysis. Use when you need to analyze earnings calls, parse SEC filings (10-K, 10-Q), track catalysts, or draft investment theses. | default |
+| merger-modeling | Performs Accretion/Dilution analysis for M&A transactions. Use when you need to model pro-forma financial impact, calculate synergy requirements, or analyze purchase price accounting. | default |
 
 
 ### Legal (1)
@@ -161,7 +171,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | metrics-dashboard | Designs KPI dashboards with metric definitions, alert thresholds, SLO/SLI targets, and visualization specs for engineering, product, and business stakeholders. | Read, Grep, Glob, Bash |
 
 
-### Engineering (15)
+### Engineering (18)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
@@ -172,8 +182,11 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | dependency-auditor | Audits project dependencies for security vulnerabilities, outdated packages, license compliance, and supply chain risks. Use after installing or updating packages. | Read, Grep, Glob, Bash |
 | deployment-validator | Pre-deployment checklist validator. Verifies environment variables, secrets management, feature flags, smoke tests, and rollback readiness before any deployment. | Read, Grep, Glob, Bash |
 | doc-generator | Generates and maintains technical documentation from code — API docs, architecture decision records, changelogs, onboarding guides, and inline documentation. | Read, Grep, Glob, Bash |
+| equity-analyst | Public markets research specialist. Analyzes SEC filings, earnings transcripts, and market news to develop investment theses, track catalysts, and update valuation models. | Read, Grep, Glob, Bash, WebFetch |
+| investment-banker | Specialized M&A and capital markets agent. Builds valuation models (Comps, DCF, LBO), drafts deal materials (CIMs, teasers), and analyzes pro-forma transaction impact. | Read, Grep, Glob, Bash |
 | migration-validator | Validates database migrations for correctness, rollback safety, naming conventions, and zero-downtime compatibility. Use before applying migrations to staging or production. | Read, Grep, Glob, Bash |
 | pr-reviewer | Automated pull request reviewer that analyzes diffs for quality, security, performance, and adherence to Cure standards. Suggests improvements and flags blockers before merge. | Read, Grep, Glob, Bash |
+| private-equity-analyst | Private markets specialist focused on deal sourcing, commercial due diligence, and portfolio monitoring. Analyzes unit economics, builds LBO models, and drafts IC memos. | Read, Grep, Glob, Bash |
 | project-bootstrapper | Sets up new projects with correct architecture, configuration, and Cure Consulting Group standards | Read, Grep, Glob, Bash, Edit, Write |
 | qa-engineer | QA engineer agent that performs comprehensive quality assurance — test plan generation, edge case discovery, regression analysis, exploratory testing checklists, bug triage, and quality gate enforcement across all platforms. | Read, Grep, Glob, Bash |
 | refactor-assistant | Safe refactoring agent that restructures code while maintaining behavior. Runs tests before and after every change to ensure nothing breaks. | Read, Grep, Glob, Bash, Edit, Write |
@@ -236,7 +249,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v6.0.1). 75 skills (domain-organized), 35… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
-| SessionStart | startup | command | echo '\nAvailable Agents (35):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
+| SessionStart | startup | command | echo '\nAvailable Agents (38):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION:\n\nCure Consulting Group Standards (always apply):\n- Clean Arch… |
 | PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 75 skills, 35 agents, 4 personas available. Us… |
 | PostToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |

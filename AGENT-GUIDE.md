@@ -149,6 +149,9 @@ Quality gates:
 | Building a dashboard | `@agent-metrics-dashboard` |
 | Designing an API | `/api-architect` then `@agent-api-validator` |
 | Fundraising prep | `@agent-investor-relations` + `@agent-financial-analyst` |
+| M&A / Valuation | `@agent-investment-banker` |
+| Public Research | `@agent-equity-analyst` |
+| Private Equity | `@agent-private-equity-analyst` |
 | Content planning | `@agent-content-strategist` |
 | Reviewing a contract | `@agent-contract-reviewer` |
 | Refactoring safely | `@agent-refactor-assistant` |
@@ -282,13 +285,16 @@ These are multi-agent sequences for common complex workflows.
 | `brand-guardian` | Voice/tone, visual identity, microcopy consistency |
 | `growth-analyst` | Activation, retention, viral mechanics, experiments |
 
-### Business & Finance (4)
+### Business & Finance (7)
 | Agent | What It Does |
 |-------|-------------|
 | `financial-analyst` | Revenue forecasts, unit economics, scenarios |
 | `market-intelligence` | TAM/SAM/SOM, Porter's Five Forces, trends |
 | `investor-relations` | Board updates, KPIs, fundraising narratives |
 | `contract-reviewer` | SOW/contract risk, terms, IP review |
+| `investment-banker` | M&A execution, valuation (DCF/Comps), CIMs |
+| `equity-analyst` | Public markets, earnings transcripts, SEC filings |
+| `private-equity-analyst` | Deal sourcing, LBO modeling, due diligence |
 
 ### Data & Analytics (3)
 | Agent | What It Does |
