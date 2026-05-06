@@ -7,16 +7,16 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 6.0.1 |
-| Skills | 79 |
-| Agents | 38 |
+| Version | 6.1.0 |
+| Skills | 80 |
+| Agents | 39 |
 | Personas | 4 |
 | Hooks (entries) | 21 |
 | Rules | 11 |
 | Output Styles | 9 |
 | MCP Servers | 4 |
 | LSP Servers | 2 |
-| Generated | 2026-05-05 22:10:28 UTC |
+| Generated | 2026-05-06 01:02:14 UTC |
 
 
 ## 2. Skills
@@ -97,7 +97,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | legal-doc-scaffold | Generate Terms of Service, Privacy Policy, SOW, and NDA scaffolds with attorney disclaimer | default |
 
 
-### Marketing (4)
+### Marketing (5)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
@@ -105,6 +105,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | growth-engineering | Build growth systems — activation funnels, referral programs, lifecycle automation, cohort analysis, and product-led growth patterns | default |
 | product-marketing | Product voice and content marketing expert — generates platform-native content packages across Instagram, YouTube, LinkedIn, and X/Twitter for portfolio brands | default |
 | seo-content-engine | Technical SEO and content strategy for web properties — meta tags, Open Graph, JSON-LD structured data, sitemap generation, keyword research, and content calendars | default |
+| technical-blog-writer | Crafts high-impact technical blog posts modeled after Netflix/Uber engineering blogs, translated for business owners. Use when you need to explain complex engineering feats using the 'Famous Actor' simple-explanation tone with clear visual concepts. | default |
 
 
 ### Platform (10)
@@ -203,7 +204,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | legal-compliance | Legal compliance agent that monitors QSBS qualification, NCAA ECAG rules, FERPA data handling, trademark strategy, and entity compliance across the Cure Consulting Group venture portfolio. | Read, Grep, Glob |
 
 
-### Marketing (4)
+### Marketing (5)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
@@ -211,6 +212,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | campaign-analyst | Analyzes marketing campaign performance — attribution, conversion funnels, A/B test results, CAC/LTV, channel ROI, and campaign optimization recommendations. | Read, Grep, Glob, Bash |
 | content-strategist | Plans and generates content strategy — editorial calendars, blog posts, social media plans, SEO content, email sequences, and content audits aligned with product and growth goals. | Read, Grep, Glob, Bash, WebSearch |
 | growth-analyst | Analyzes growth metrics — activation funnels, retention cohorts, viral coefficients, revenue attribution, and identifies growth levers from product data and code. | Read, Grep, Glob, Bash |
+| technical-content-strategist | High-level technical marketing agent that translates complex engineering feats into simple, accessible blog posts and visuals. Uses the Netflix/Uber/Pinterest/Square style of engineering authority, but with the 'Famous Actor' simple-explanation tone for business owners. | Read, Grep, Glob, WebFetch, WebSearch, NanoBanana |
 
 
 ### Product (4)
