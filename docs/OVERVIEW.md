@@ -7,16 +7,16 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 6.1.0 |
+| Version | 6.2.1 |
 | Skills | 80 |
 | Agents | 39 |
 | Personas | 4 |
-| Hooks (entries) | 21 |
+| Hooks (entries) | 19 |
 | Rules | 11 |
 | Output Styles | 9 |
 | MCP Servers | 4 |
 | LSP Servers | 2 |
-| Generated | 2026-05-06 01:02:14 UTC |
+| Generated | 2026-05-06 01:24:33 UTC |
 
 
 ## 2. Skills
@@ -248,10 +248,10 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v6.0.1). 80 skills (domain-organized), 35… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v6.2.1). 80 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
-| SessionStart | startup | command | echo '\nAvailable Agents (38):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
+| SessionStart | startup | command | echo '\nAvailable Agents (39):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION:\n\nCure Consulting Group Standards (always apply):\n- Clean Arch… |
 | PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 80 skills, 39 agents, 4 personas available. Us… |
 | PostToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
@@ -266,9 +266,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | PreToolUse | Edit\|Write | prompt | You are the skill-security-auditor for Cure Consulting Group. This file is being written into the plugin (ski… |
 | Notification |  | command | echo '{"notification_logged": true}' |
 | SubagentStart |  | command | AGENT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('name', d.… |
-| SubagentStop |  | command | echo 'Agent completed. Review output against Cure Consulting Group quality standards. If code was modified, c… |
-| TaskCompleted |  | command | echo 'Task completed. Quality checklist: (1) Tests pass and coverage >= 80%? (2) Security review done for sen… |
-| Stop |  | agent | You are a completion validator for Cure Consulting Group. Before the session ends, quickly check: |
+| SubagentStop |  | command | echo "Expert task complete. Final quality check checklist:\n- Tests added? \u2192 test-runner agent\n- Lint/T… |
 
 
 ## 6. Rules
