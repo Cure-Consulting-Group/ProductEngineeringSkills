@@ -12,7 +12,7 @@ All initial tickets resolved in a single batch session.
 
 | # | Ticket | Status | Outcome |
 |---|--------|--------|---------|
-| T1 | Filesystem reorg | ✅ Done | 75 skills moved into 7 domain folders: engineering (39), platform (10), product (10), business (7), marketing (4), security (4), legal (1) |
+| T1 | Filesystem reorg | ✅ Done | 80 skills moved into 7 domain folders: engineering (39), platform (10), product (10), business (7), marketing (4), security (4), legal (1) |
 | T2 | Personas | ✅ Done | 4 personas: cure-tech-lead, cure-product-lead, cure-engagement-pm, cure-solo-consultant |
 | T3 | Scripts pattern + 5 pilots | ✅ Done | 7 stdlib Python scripts across dora-metrics, engineering-cost-model, saas-financial-model, burn-rate-tracker, accessibility-audit; convention doc + smoke test |
 | T4 | 8 POWERFUL skills | ✅ Done | mcp-server-builder, rag-architect, agent-designer, agent-workflow-designer, monorepo-navigator, git-worktree-manager, env-secrets-manager, interview-system-designer (+ Gemini parity) |
@@ -20,7 +20,7 @@ All initial tickets resolved in a single batch session.
 | T6 | Self-improving memory | ✅ Done | New skill + 3 templates (MEMORY.md.template, feedback_template.md, project_template.md) |
 | T7 | Internal overview doc | ✅ Done | scripts/generate-overview.py + docs/OVERVIEW.md (re-runnable) |
 
-**Net delta:** 65 → 75 skills, 34 → 35 agents, 0 → 4 personas. Bootstrap test suite (106 tests) still green. JSON configs valid. All bundled scripts pass `--help` smoke test.
+**Net delta:** 65 → 80 skills, 34 → 39 agents, 0 → 4 personas. Bootstrap test suite (106 tests) still green. JSON configs valid. All bundled scripts pass `--help` smoke test.
 
 Detailed tickets below kept for historical reference.
 

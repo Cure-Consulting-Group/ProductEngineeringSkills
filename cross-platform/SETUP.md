@@ -21,7 +21,7 @@ How to get Cure Consulting Group's engineering standards on every Claude platfor
 
 ## 1. Claude Code CLI (Full Power)
 
-Already installed. All 75 skills, 35 agents, 4 personas, hooks, rules, and output styles are active.
+Already installed. All 80 skills, 39 agents, 4 personas, hooks, rules, and output styles are active.
 
 ```bash
 # Verify
@@ -94,7 +94,7 @@ export DATABASE_URL="postgresql://user:pass@host:5432/db"
 
 | Platform | What You Get |
 |----------|-------------|
-| **Claude Code CLI** | Everything — 75 skills, 35 agents, 4 personas, hooks, rules, MCP, LSP |
+| **Claude Code CLI** | Everything — 80 skills, 39 agents, 4 personas, hooks, rules, MCP, LSP |
 | **Claude Desktop** | MCP servers (all 4) + project knowledge |
 | **claude.ai** | Custom instructions (global) + project knowledge + remote MCP (GitHub, Sentry only) |
 

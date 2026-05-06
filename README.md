@@ -10,7 +10,7 @@ The complete skill library that Cure Consulting Group uses to build apps, platfo
 ProductEngineeringSkills/
 ├── .claude-plugin/           # Plugin manifest
 │   └── plugin.json
-├── skills/{domain}/          # 75 skills, organized by domain (engineering/platform/product/business/marketing/security/legal)
+├── skills/{domain}/          # 80 skills, organized by domain (engineering/platform/product/business/marketing/security/legal)
 │   ├── sdlc/
 │   ├── android-feature-scaffold/
 │   ├── incident-response/     # NEW
@@ -147,7 +147,7 @@ The postinstall script automatically:
 - Symlinks the package to `~/.claude/plugins/ProductEngineeringSkills`
 - Registers the plugin in `~/.claude/settings.json`
 
-All 75 skills, 35 agents, 4 personas, hooks, rules, and output styles are immediately available.
+All 80 skills, 39 agents, 4 personas, hooks, rules, and output styles are immediately available.
 
 **3. Enable auto-updates with Dependabot** (recommended):
 
@@ -362,7 +362,7 @@ The plugin includes three types of hooks across **12 event types**: `SessionStar
 ### Command Hooks (Deterministic)
 | Hook | Event | What It Does | Agent Integration |
 |------|-------|--------------|-------------------|
-| **Welcome + Agent roster** | SessionStart | Confirms plugin loaded, lists all 35 agents and 4 personas by domain | Displays full agent inventory |
+| **Welcome + Agent roster** | SessionStart | Confirms plugin loaded, lists all 39 agents and 4 personas by domain | Displays full agent inventory |
 | **Git status** | SessionStart | Reports current branch, uncommitted changes, last commit | — |
 | **Dependency check** | SessionStart | Detects outdated packages | Suggests dependency-auditor |
 | **Code edit advisor** | PostToolUse (Edit/Write) | Context-aware suggestions based on file type (.kt, .swift, .ts, .sql, .tf, etc.) | Suggests code-reviewer, test-runner, brand-guardian, migration-validator |
@@ -371,7 +371,7 @@ The plugin includes three types of hooks across **12 event types**: `SessionStar
 | **Destructive prompt guard** | UserPromptSubmit | Detects destructive operations in prompts | Blocks and confirms |
 | **Protected files** | PreToolUse (Edit/Write) | Blocks edits to .env, lock files, credentials, tfstate | — |
 | **Dangerous commands** | PreToolUse (Bash) | Blocks force push, destructive rm, DROP TABLE, prod deploys | — |
-| **Context re-injection** | PreCompact | Re-injects all 75 skills, 35 agents, 4 personas, and Cure standards | Full inventory preserved |
+| **Context re-injection** | PreCompact | Re-injects all 80 skills, 39 agents, 4 personas, and Cure standards | Full inventory preserved |
 | **Post-compact restore** | PostCompact | Confirms context restored with agent availability | — |
 | **Subagent start banner** | SubagentStart | Announces agent with role, standards, and companion agents | Lists companion agents |
 | **Subagent completion** | SubagentStop | Suggests follow-up agents (test-runner, code-reviewer, pr-reviewer) | Agent chaining |

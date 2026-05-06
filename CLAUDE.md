@@ -10,11 +10,11 @@ A **Claude Code plugin** containing 75 production-grade skills (organized into 7
 
 ```
 .claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
-skills/{domain}/{name}/SKILL.md — 75 skills, organized by domain folder
+skills/{domain}/{name}/SKILL.md — 80 skills, organized by domain folder
                                  Domains: engineering (39), platform (10), product (10),
-                                 business (7), marketing (4), security (4), legal (1)
+                                 business (11), marketing (5), security (4), legal (1)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
-agents/*.md                    — 35 custom subagent definitions
+agents/*.md                    — 39 specialized subagents with tool/skill bindings
 personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant)
 hooks/hooks.json               — Multi-layer hooks (command, prompt, agent) across 12 event types
 rules/*.md                     — 11 path-specific coding standards

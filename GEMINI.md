@@ -13,9 +13,9 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## Repository Structure
 
-- `skills/{domain}/{name}/SKILL.md`: 75 skills organized by domain. Domains: engineering (39), platform (10), product (10), business (7), marketing (4), security (4), legal (1).
+- `skills/{domain}/{name}/SKILL.md`: 80 skills organized by domain. Domains: engineering (39), platform (10), product (10), business (11), marketing (5), security (4), legal (1).
 - `skills/{domain}/{name}/scripts/`: Optional bundled Python stdlib scripts (zero pip). See `docs/SCRIPTS_CONVENTION.md`.
-- `agents/`: 35 custom subagent definitions in Markdown.
+- `agents/`: 39 custom subagent definitions in Markdown.
 - `personas/`: 4 cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant).
 - `hooks/hooks.json`: Multi-layer automated enforcement (command, prompt, agent — 12 event types).
 - `rules/`: 11 path-specific coding standards (Android, iOS, Web, Firebase, Python, Go, Rust, SQL, Docker, Terraform, CI/CD).
