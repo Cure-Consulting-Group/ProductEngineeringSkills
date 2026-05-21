@@ -1,88 +1,126 @@
 #!/usr/bin/env node
 /**
- * Postinstall script for @cure-consulting-group/product-engineering-skills
+ * Postinstall for @cure-consulting-group/product-engineering-skills.
  *
- * Symlinks (or copies) the installed package into ~/.claude/plugins/
- * so Claude Code can discover it as a plugin automatically.
+ * Vendors the skill library into the consuming project's .claude/ directory
+ * so the files get checked into that project's git repo. Anyone who pulls
+ * the project then has the skills without needing this npm package.
+ *
+ * Behavior:
+ *   - Skip-if-exists by default (won't clobber project customizations).
+ *   - Set CURE_SKILLS_FORCE=1 to overwrite from upstream.
+ *   - Set SKIP_CURE_SKILLS_INSTALL=1 or CI=1 to skip entirely.
  */
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 
-const PLUGIN_DIR_NAME = "ProductEngineeringSkills";
-const PLUGIN_NAME = "cure-product-engineering";
+const DIRS_INTO_DOT_CLAUDE = [
+  "skills",
+  "agents",
+  "personas",
+  "rules",
+  "output-styles",
+  "hooks",
+  "claude-commands",
+];
+
+const FILES_INTO_DOT_CLAUDE = ["settings.json"];
+
+const FILES_INTO_PROJECT_ROOT = [".mcp.json", ".lsp.json"];
 
 function main() {
-  // Where npm installed this package
   const packageRoot = __dirname;
+  const projectRoot = process.env.INIT_CWD;
 
-  // Where Claude Code looks for plugins
-  const claudePluginsDir = path.join(os.homedir(), ".claude", "plugins");
-  const pluginDest = path.join(claudePluginsDir, PLUGIN_DIR_NAME);
-
-  // Where Gemini CLI looks for extensions/skills
-  const geminiExtensionsDir = path.join(os.homedir(), ".gemini", "extensions");
-  const geminiDest = path.join(geminiExtensionsDir, PLUGIN_NAME);
-
-  // Skip if running in CI or if SKIP_CLAUDE_PLUGIN_INSTALL is set
-  if (process.env.CI || process.env.SKIP_CLAUDE_PLUGIN_INSTALL) {
-    console.log("[cure-plugin] Skipping plugin install (CI or opt-out detected).");
+  if (process.env.CI || process.env.SKIP_CURE_SKILLS_INSTALL) {
+    console.log("[cure-skills] Skipping vendor step (CI or opt-out detected).");
     return;
   }
 
-  try {
-    // 1. Claude Install
-    fs.mkdirSync(claudePluginsDir, { recursive: true });
-    setupSymlink(packageRoot, pluginDest, "[Claude]");
-
-    // Register in user-level Claude settings
-    registerInClaudeSettings(PLUGIN_NAME);
-
-    // 2. Gemini Install
-    fs.mkdirSync(geminiExtensionsDir, { recursive: true });
-    setupSymlink(packageRoot, geminiDest, "[Gemini]");
-
-    console.log("[cure-plugin] Done! Plugin is ready for Claude Code and Gemini CLI sessions.");
-  } catch (err) {
-    // Non-fatal — don't break npm install if plugin linking fails
-    console.warn(`[cure-plugin] Could not auto-install plugin: ${err.message}`);
-    console.warn("[cure-plugin] You can manually load it with: claude --plugin-dir <path>");
+  if (!projectRoot || projectRoot === packageRoot) {
+    console.log("[cure-skills] Not running inside a consuming project — skipping.");
+    return;
   }
-}
 
-function setupSymlink(source, dest, label) {
-  if (fs.existsSync(dest)) {
-    const stat = fs.lstatSync(dest);
-    if (stat.isSymbolicLink()) {
-      fs.unlinkSync(dest);
-    } else {
-      console.log(`${label} ${dest} already exists (not a symlink). Skipping.`);
-      return;
+  if (!fs.existsSync(path.join(projectRoot, "package.json"))) {
+    console.log(`[cure-skills] No package.json at ${projectRoot} — skipping.`);
+    return;
+  }
+
+  const force = process.env.CURE_SKILLS_FORCE === "1";
+  const claudeDir = path.join(projectRoot, ".claude");
+  fs.mkdirSync(claudeDir, { recursive: true });
+
+  let copied = 0;
+  let skipped = 0;
+
+  for (const dir of DIRS_INTO_DOT_CLAUDE) {
+    const src = path.join(packageRoot, dir);
+    const dest = path.join(claudeDir, dir);
+    if (!fs.existsSync(src)) continue;
+    if (fs.existsSync(dest) && !force) {
+      console.log(`[cure-skills] skip  .claude/${dir} (exists)`);
+      skipped++;
+      continue;
     }
+    copyRecursive(src, dest);
+    console.log(`[cure-skills] copy  ${dir} → .claude/${dir}`);
+    copied++;
   }
-  fs.symlinkSync(source, dest, "dir");
-  console.log(`${label} Linked plugin to ${dest}`);
-}
 
-function registerInClaudeSettings(pluginName) {
-  const settingsPath = path.join(os.homedir(), ".claude", "settings.json");
-  let settings = {};
-  if (fs.existsSync(settingsPath)) {
-    try {
-      settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
-    } catch {
-      settings = {};
+  for (const file of FILES_INTO_DOT_CLAUDE) {
+    const src = path.join(packageRoot, file);
+    const dest = path.join(claudeDir, file);
+    if (!fs.existsSync(src)) continue;
+    if (fs.existsSync(dest) && !force) {
+      console.log(`[cure-skills] skip  .claude/${file} (exists)`);
+      skipped++;
+      continue;
     }
+    fs.copyFileSync(src, dest);
+    console.log(`[cure-skills] copy  ${file} → .claude/${file}`);
+    copied++;
   }
 
-  const plugins = settings.enabledPlugins || [];
-  if (!plugins.includes(pluginName)) {
-    plugins.push(pluginName);
-    settings.enabledPlugins = plugins;
-    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
-    console.log(`[Claude] Registered "${pluginName}" in ${settingsPath}`);
+  for (const file of FILES_INTO_PROJECT_ROOT) {
+    const src = path.join(packageRoot, file);
+    const dest = path.join(projectRoot, file);
+    if (!fs.existsSync(src)) continue;
+    if (fs.existsSync(dest) && !force) {
+      console.log(`[cure-skills] skip  ${file} (exists)`);
+      skipped++;
+      continue;
+    }
+    fs.copyFileSync(src, dest);
+    console.log(`[cure-skills] copy  ${file} → ${file}`);
+    copied++;
+  }
+
+  console.log("");
+  if (copied === 0 && skipped > 0) {
+    console.log(`[cure-skills] All ${skipped} target(s) already exist. Set CURE_SKILLS_FORCE=1 to refresh from upstream.`);
+  } else {
+    console.log(`[cure-skills] Vendored ${copied} target(s)${skipped ? ` (${skipped} skipped)` : ""}.`);
+    console.log("[cure-skills] Next: review the files, then `git add .claude/ .mcp.json .lsp.json && git commit`.");
   }
 }
 
-main();
+function copyRecursive(src, dest) {
+  const stat = fs.statSync(src);
+  if (stat.isDirectory()) {
+    fs.mkdirSync(dest, { recursive: true });
+    for (const entry of fs.readdirSync(src)) {
+      copyRecursive(path.join(src, entry), path.join(dest, entry));
+    }
+  } else {
+    fs.copyFileSync(src, dest);
+  }
+}
+
+try {
+  main();
+} catch (err) {
+  console.warn(`[cure-skills] Vendor step failed: ${err.message}`);
+  console.warn("[cure-skills] You can re-run manually with: node node_modules/@cure-consulting-group/product-engineering-skills/install-plugin.js");
+}

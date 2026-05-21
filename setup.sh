@@ -2,18 +2,31 @@
 #
 # Cure Consulting Group — ProductEngineeringSkills Plugin Setup
 #
-# Sets up any project (including Antigravity projects) to use the
-# ProductEngineeringSkills plugin with Claude Code.
+# DEPRECATED as of v6.2.2.
 #
-# Usage:
-#   npm install @cure-consulting-group/product-engineering-skills   # GitHub Package (recommended)
-#   — or —
-#   curl -sSL https://raw.githubusercontent.com/Cure-Consulting-Group/ProductEngineeringSkills/main/setup.sh | bash
-#   — or —
-#   ./setup.sh                     # Run from the target project directory
-#   ./setup.sh /path/to/project    # Specify a target project
-#   ./setup.sh --global            # Install for all projects (user-level)
+# This script installs into ~/.claude/plugins/ (per-user) and predates the
+# vendor-into-project model. The supported install path is now:
 #
+#   npm install --save-dev @cure-consulting-group/product-engineering-skills
+#
+# That postinstall vendors the skills into <project>/.claude/ so they can be
+# committed to the project repo and travel with `git pull`.
+#
+# Re-run vendoring after upstream updates:
+#   CURE_SKILLS_FORCE=1 npm rebuild @cure-consulting-group/product-engineering-skills
+#
+# Verify with: ./verify-install.sh
+#
+# This script still works for the legacy per-user install if you need it.
+# Set CURE_SKILLS_ALLOW_LEGACY=1 to suppress this banner.
+
+if [ -z "${CURE_SKILLS_ALLOW_LEGACY:-}" ]; then
+  echo ""
+  echo "  [DEPRECATED] setup.sh uses the legacy per-user install model."
+  echo "  Prefer: npm install --save-dev @cure-consulting-group/product-engineering-skills"
+  echo "  Set CURE_SKILLS_ALLOW_LEGACY=1 to silence this notice."
+  echo ""
+fi
 
 set -euo pipefail
 
