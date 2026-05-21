@@ -51,7 +51,7 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 
 ## Versioning
 
-Current version: **7.0.0**
+Current version: **7.0.1**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording

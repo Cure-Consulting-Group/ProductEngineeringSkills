@@ -49,6 +49,20 @@ else
   fail "No skills found under .claude/skills/"
 fi
 
+NESTED_SKILLS=$(find "$CLAUDE_DIR/skills" -mindepth 3 -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+if [ "$NESTED_SKILLS" -gt 0 ]; then
+  fail "$NESTED_SKILLS skill(s) nested too deep — Claude Code discovery needs .claude/skills/<name>/SKILL.md, not .claude/skills/<category>/<name>/SKILL.md"
+else
+  ok "Skills layout is flat (Claude Code-discoverable)"
+fi
+
+if [ -d "$CLAUDE_DIR/claude-commands" ] && [ ! -d "$CLAUDE_DIR/commands" ]; then
+  fail "Found legacy .claude/claude-commands/ — Claude Code reads .claude/commands/. Rename: mv .claude/claude-commands .claude/commands"
+elif [ -d "$CLAUDE_DIR/commands" ]; then
+  CMD_COUNT=$(find "$CLAUDE_DIR/commands" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+  ok ".claude/commands/ present ($CMD_COUNT slash commands)"
+fi
+
 AGENT_COUNT=$(find "$CLAUDE_DIR/agents" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
 if [ "$AGENT_COUNT" -eq "$EXPECTED_AGENTS" ]; then
   ok "All $EXPECTED_AGENTS agents vendored"
