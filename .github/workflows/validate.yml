@@ -1,0 +1,68 @@
+name: Validate library
+
+# Quality gate for the skill library. Runs on every PR and push so no skill,
+# agent, or doc can drift out of spec or out of sync before it ships.
+
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+      - "agents/**"
+      - "personas/**"
+      - "hooks/**"
+      - "rules/**"
+      - ".claude-plugin/**"
+      - "marketplace.json"
+      - "CLAUDE.md"
+      - "README.md"
+      - "scripts/**"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Lint skills + agents against Anthropic spec
+        # Hard spec violations (invalid names, broken preload refs) fail the
+        # build. Threshold is a floor, not a target — raise it as quality rises.
+        run: |
+          python3 scripts/audit-library.py
+          python3 scripts/audit-library.py --fail-under 9.0 --min-item 7.0
+
+      - name: No compliance fixes pending (inert fields, broken refs, missing hints)
+        run: python3 scripts/fix-library.py --check
+
+      - name: All SKILL.md bodies within 500-line limit (progressive disclosure)
+        run: python3 scripts/split-oversized-skills.py --check
+
+      - name: Metadata in sync (counts + version, single source of truth)
+        run: python3 scripts/sync-metadata.py --check
+
+      - name: Legacy claude-commands/ in sync with skills/
+        run: python3 scripts/sync-legacy-commands.py --check
+
+      - name: docs/OVERVIEW.md is up to date
+        run: |
+          python3 scripts/generate-overview.py
+          if ! git diff --quiet -- docs/OVERVIEW.md; then
+            echo "::error::docs/OVERVIEW.md is stale. Run: python3 scripts/generate-overview.py"
+            git --no-pager diff -- docs/OVERVIEW.md
+            exit 1
+          fi
+
+      - name: Bundled skill scripts smoke-test (--help)
+        run: bash scripts/verify-skill-scripts.sh
+
+      - name: Validate plugin manifest is well-formed JSON
+        run: |
+          for f in .claude-plugin/plugin.json marketplace.json .mcp.json .lsp.json settings.json; do
+            python3 -c "import json,sys; json.load(open('$f')); print('ok: $f')"
+          done

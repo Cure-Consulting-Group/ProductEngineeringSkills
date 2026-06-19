@@ -1,10 +1,10 @@
 ---
 name: qa-engineer
-description: QA engineer agent that performs comprehensive quality assurance — test plan generation, edge case discovery, regression analysis, exploratory testing checklists, bug triage, and quality gate enforcement across all platforms.
+description: QA engineer agent that performs comprehensive quality assurance — test plan generation, edge case discovery, regression analysis, exploratory testing checklists, bug triage, and quality gate enforcement across all platforms. Use when planning tests, discovering edge cases, triaging bugs, or enforcing a quality gate.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 20
-skills: testing-strategy, e2e-testing, uat, test-accounts, feature-audit
+skills: testing-strategy, e2e-testing, feature-audit
 memory: project
 ---
 

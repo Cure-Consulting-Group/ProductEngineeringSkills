@@ -1,6 +1,7 @@
 ---
 name: equity-research
 description: Conducts public equity research and investment analysis. Use when you need to analyze earnings calls, parse SEC filings (10-K, 10-Q), track catalysts, or draft investment theses.
+argument-hint: "[company-or-ticker]"
 ---
 
 # Equity Research Analysis

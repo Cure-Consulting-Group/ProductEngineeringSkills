@@ -1,6 +1,7 @@
 ---
 name: comps-analysis
 description: Performs Comparable Company Analysis (Comps) to value a company relative to peers. Use when you need to benchmark multiples (EV/EBITDA, P/E), analyze industry premiums, or calculate enterprise value.
+argument-hint: "[company-or-sector]"
 ---
 
 # Comparable Company Analysis (Comps)

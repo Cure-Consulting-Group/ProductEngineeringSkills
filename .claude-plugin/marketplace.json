@@ -1,4 +1,5 @@
 {
+  "name": "cure",
   "owner": {
     "name": "Cure Consulting Group",
     "url": "https://github.com/Cure-Consulting-Group"
@@ -6,12 +7,13 @@
   "plugins": [
     {
       "name": "cure-product-engineering",
-      "description": "Complete product engineering skill library — 80 skills (domain-organized), 39 agents (engineering, product, marketing, business, data, security), 4 personas (cross-domain engagement archetypes), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering (12 events), bundled stdlib Python tooling, MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
-      "source": {
-        "type": "github",
-        "repo": "Cure-Consulting-Group/ProductEngineeringSkills"
+      "source": ".",
+      "description": "Complete product engineering skill library — 80 skills (domain-organized), 39 agents (engineering, product, marketing, business, data, security), 4 personas (cross-domain engagement archetypes), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering, bundled stdlib Python tooling, MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
       },
-      "tags": [
+      "keywords": [
         "product-engineering",
         "android",
         "ios",

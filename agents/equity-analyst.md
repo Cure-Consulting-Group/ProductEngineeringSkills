@@ -1,6 +1,6 @@
 ---
 name: equity-analyst
-description: Public markets research specialist. Analyzes SEC filings, earnings transcripts, and market news to develop investment theses, track catalysts, and update valuation models.
+description: Public markets research specialist. Analyzes SEC filings, earnings transcripts, and market news to develop investment theses, track catalysts, and update valuation models. Use when researching a public company — analyzing filings or earnings and building or updating a valuation thesis.
 tools: Read, Grep, Glob, Bash, WebFetch
 model: sonnet
 maxTurns: 15

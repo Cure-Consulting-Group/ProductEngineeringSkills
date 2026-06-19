@@ -1,6 +1,5 @@
 ---
 name: seo-content-engine
-version: "1.0.0"
 description: "Technical SEO and content strategy for web properties — meta tags, Open Graph, JSON-LD structured data, sitemap generation, keyword research, and content calendars"
 when_to_use: "Use when optimizing a website for search, adding structured data, planning blog/content strategy, or asked about 'SEO', 'meta tags', or 'search ranking'. NOT for social media content (use product-marketing). NOT for GTM strategy (use go-to-market)."
 argument-hint: "[domain-or-topic]"

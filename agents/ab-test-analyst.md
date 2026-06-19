@@ -1,6 +1,6 @@
 ---
 name: ab-test-analyst
-description: Designs and analyzes A/B tests — experiment design, sample size calculation, statistical significance testing, guardrail metrics, and result interpretation with actionable recommendations.
+description: Designs and analyzes A/B tests — experiment design, sample size calculation, statistical significance testing, guardrail metrics, and result interpretation with actionable recommendations. Use when designing an experiment, sizing a test, or interpreting A/B results.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

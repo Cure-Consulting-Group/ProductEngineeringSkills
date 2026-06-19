@@ -1,6 +1,6 @@
 ---
 name: campaign-analyst
-description: Analyzes marketing campaign performance — attribution, conversion funnels, A/B test results, CAC/LTV, channel ROI, and campaign optimization recommendations.
+description: Analyzes marketing campaign performance — attribution, conversion funnels, A/B test results, CAC/LTV, channel ROI, and campaign optimization recommendations. Use when analyzing campaign performance, attribution, conversion funnels, or channel ROI.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

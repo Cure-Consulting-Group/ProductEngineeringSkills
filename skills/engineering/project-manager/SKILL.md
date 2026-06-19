@@ -1,6 +1,5 @@
 ---
 name: project-manager
-version: "1.0.0"
 description: "Sprint execution and delivery management — sprint planning, RACI matrices, risk registers, retrospectives, and velocity tracking for engineering teams"
 when_to_use: "Use when asked to 'plan a sprint', 'create a RACI', 'run a retro', or 'track velocity'. NOT for product strategy or OKRs (use product-manager). NOT for engineering specs (use sdlc)."
 argument-hint: "[project-name]"

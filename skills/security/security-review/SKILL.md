@@ -1,6 +1,5 @@
 ---
 name: security-review
-version: "1.0.0"
 description: "OWASP Top 10 security audit for codebases — scans auth flows, API endpoints, data storage, secrets handling, and dependency supply chain across .kt, .swift, .ts, .py, .go, .rs, and infrastructure files"
 when_to_use: "Use before launch, after adding auth/payment/PII features, or when asked to 'check security', 'find vulnerabilities', or 'run a security audit'. NOT for compliance frameworks (use compliance-architect). NOT for WCAG (use accessibility-audit)."
 argument-hint: "[target-system]"

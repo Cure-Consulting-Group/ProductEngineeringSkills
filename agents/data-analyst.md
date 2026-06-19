@@ -1,6 +1,6 @@
 ---
 name: data-analyst
-description: Data analysis agent that explores schemas, writes queries, analyzes data patterns, identifies anomalies, and generates visualization recommendations from database and analytics code.
+description: Data analysis agent that explores schemas, writes queries, analyzes data patterns, identifies anomalies, and generates visualization recommendations from database and analytics code. Use when exploring a schema, writing analytical queries, or investigating data anomalies.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 20

@@ -1,6 +1,6 @@
 ---
 name: growth-analyst
-description: Analyzes growth metrics — activation funnels, retention cohorts, viral coefficients, revenue attribution, and identifies growth levers from product data and code.
+description: Analyzes growth metrics — activation funnels, retention cohorts, viral coefficients, revenue attribution, and identifies growth levers from product data and code. Use when analyzing activation, retention, or virality and identifying growth levers.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

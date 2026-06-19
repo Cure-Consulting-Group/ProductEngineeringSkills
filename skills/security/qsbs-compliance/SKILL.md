@@ -1,6 +1,5 @@
 ---
 name: qsbs-compliance
-version: "1.0.0"
 description: "Track and enforce IRC §1202 QSBS qualification — gross asset test (<$50M), active business test (>80% qualified), C-Corp status, holding period tracking, and disqualifying event detection"
 when_to_use: "Use when reviewing entity structure, equity changes, asset growth, business activity classification, or any change that could affect QSBS qualification. Also use for annual QSBS health checks. NOT for general tax advice (consult a CPA). NOT for compliance frameworks like HIPAA/GDPR (use compliance-architect)."
 argument-hint: "[entity-or-product]"

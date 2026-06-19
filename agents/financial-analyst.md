@@ -1,6 +1,6 @@
 ---
 name: financial-analyst
-description: Financial modeling agent that builds revenue forecasts, unit economics, scenario analyses, cost structures, and P&L projections from product data and business logic in code.
+description: Financial modeling agent that builds revenue forecasts, unit economics, scenario analyses, cost structures, and P&L projections from product data and business logic in code. Use when building a revenue forecast, unit-economics model, scenario analysis, or P&L projection.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

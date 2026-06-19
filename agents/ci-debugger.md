@@ -1,6 +1,6 @@
 ---
 name: ci-debugger
-description: Diagnoses failed CI/CD pipeline runs by analyzing logs, identifying root causes, and suggesting targeted fixes. Supports GitHub Actions, Firebase Deploy, Fastlane, and Docker builds.
+description: Diagnoses failed CI/CD pipeline runs by analyzing logs, identifying root causes, and suggesting targeted fixes. Supports GitHub Actions, Firebase Deploy, Fastlane, and Docker builds. Use when a CI/CD run fails and you need root-cause analysis and a targeted fix.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

@@ -1,6 +1,5 @@
 ---
 name: fundraising-materials
-version: "1.0.0"
 description: "Generate pitch decks, investor updates, data room checklists, cap table scenarios, and fundraising pipeline management for venture-backed startups"
 when_to_use: "Use when preparing pitch decks, data rooms, or fundraising pipeline management. NOT for ongoing investor updates (use investor-reporting)."
 argument-hint: "[product-or-round]"

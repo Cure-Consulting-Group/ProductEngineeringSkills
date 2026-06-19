@@ -1,6 +1,5 @@
 ---
 name: agent-designer
-version: "1.0.0"
 description: "Design single-agent and multi-agent systems — tool schemas, memory, termination, evals, cost, and failure modes"
 when_to_use: "Use when designing an LLM agent or multi-agent system: tool design, memory strategy, termination logic, observability, eval, cost. NOT for choosing whether to use an agent vs. a workflow (use agent-workflow-designer). NOT for building the underlying AI feature (use ai-feature-builder). NOT for operationalizing prompts and evals once built (use llmops)."
 argument-hint: "[agent-name-or-system]"

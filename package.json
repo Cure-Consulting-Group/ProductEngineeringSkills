@@ -43,7 +43,6 @@
     "docs/",
     ".mcp.json",
     ".lsp.json",
-    "marketplace.json",
     "settings.json",
     "setup.sh",
     "install-plugin.js",

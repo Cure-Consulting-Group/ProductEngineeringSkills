@@ -7,7 +7,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 6.2.1 |
+| Version | 7.0.1 |
 | Skills | 80 |
 | Agents | 39 |
 | Personas | 4 |
@@ -16,7 +16,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Output Styles | 9 |
 | MCP Servers | 4 |
 | LSP Servers | 2 |
-| Generated | 2026-05-06 01:24:33 UTC |
+| Generated | 2026-06-19 19:00:03 UTC |
 
 
 ## 2. Skills
@@ -47,9 +47,9 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | android-feature-scaffold | Scaffold Android features with Clean Architecture, MVI, Jetpack Compose, Hilt, and Kotlin | default |
 | api-architect | Design REST/GraphQL APIs with versioning, auth, rate limiting, and error standards | default |
 | api-gateway | Design API gateway and BFF layers — rate limiting, request transformation, auth middleware, GraphQL federation, and mobile-optimized backends | default |
-| claude-bootstrap | Provision Cure's standardized Claude development infrastructure into any project (greenfield or existing). Idempotently scaffolds CLAUDE.md, STATE.md, .claude/{settings.json,skills,agents,rules,hooks}, .cursorrules, .gemini/config.yaml. Manifest-driven, version-pinned, conflict-aware. | Read, Bash |
 | client-communication | Generate client-facing artifacts — sprint demo scripts, stakeholder updates, risk escalation reports, and executive status summaries | default |
 | client-handoff | Generate client handoff packages — architecture docs, runbooks, credential transfers, maintenance SLAs, and knowledge transfer plans for consulting engagements | default |
+| cure-infra-bootstrap | Provision Cure's standardized Claude development infrastructure into any project (greenfield or existing). Idempotently scaffolds CLAUDE.md, STATE.md, .claude/{settings.json,skills,agents,rules,hooks}, .cursorrules, .gemini/config.yaml. Manifest-driven, version-pinned, conflict-aware. | Read, Bash |
 | data-migration | Plan and execute data migrations — ETL pipelines, zero-downtime cutover, validation, rollback strategies, and legacy system integration | default |
 | database-architect | Design database schemas, plan migrations, optimize queries, define indexing strategies for Firestore, PostgreSQL, and SQLite | default |
 | e2e-testing | Generate end-to-end test suites with page objects, CI integration, visual regression, and cross-platform test strategies | default |
@@ -157,8 +157,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| financial-analyst | Financial modeling agent that builds revenue forecasts, unit economics, scenario analyses, cost structures, and P&L projections from product data and business logic in code. | Read, Grep, Glob, Bash |
-| investor-relations | Generates investor-facing materials — board updates, quarterly reports, KPI dashboards, fundraising narratives, and cap table scenarios from product and financial data. | Read, Grep, Glob, Bash |
+| financial-analyst | Financial modeling agent that builds revenue forecasts, unit economics, scenario analyses, cost structures, and P&L projections from product data and business logic in code. Use when building a revenue forecast, unit-economics model, scenario analysis, or P&L projection. | Read, Grep, Glob, Bash |
+| investor-relations | Generates investor-facing materials — board updates, quarterly reports, KPI dashboards, fundraising narratives, and cap table scenarios from product and financial data. Use when preparing board updates, investor reports, KPI dashboards, or fundraising materials. | Read, Grep, Glob, Bash |
 | market-intelligence | Market intelligence agent for TAM/SAM/SOM analysis, industry trends, regulatory landscape, market timing, and investment thesis validation. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
 | ops-finance | Operational finance agent that assists with invoice generation, 1099 tracking, bookkeeping, tax compliance prep, and multi-entity consolidation for Cure Consulting Group. | Read, Grep, Glob, Bash |
 
@@ -167,8 +167,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| ab-test-analyst | Designs and analyzes A/B tests — experiment design, sample size calculation, statistical significance testing, guardrail metrics, and result interpretation with actionable recommendations. | Read, Grep, Glob, Bash |
-| data-analyst | Data analysis agent that explores schemas, writes queries, analyzes data patterns, identifies anomalies, and generates visualization recommendations from database and analytics code. | Read, Grep, Glob, Bash |
+| ab-test-analyst | Designs and analyzes A/B tests — experiment design, sample size calculation, statistical significance testing, guardrail metrics, and result interpretation with actionable recommendations. Use when designing an experiment, sizing a test, or interpreting A/B results. | Read, Grep, Glob, Bash |
+| data-analyst | Data analysis agent that explores schemas, writes queries, analyzes data patterns, identifies anomalies, and generates visualization recommendations from database and analytics code. Use when exploring a schema, writing analytical queries, or investigating data anomalies. | Read, Grep, Glob, Bash |
 | metrics-dashboard | Designs KPI dashboards with metric definitions, alert thresholds, SLO/SLI targets, and visualization specs for engineering, product, and business stakeholders. | Read, Grep, Glob, Bash |
 
 
@@ -176,22 +176,22 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| api-validator | Validates API implementations match OpenAPI/GraphQL schemas. Checks endpoint coverage, request/response contracts, error handling consistency, and documentation completeness. | Read, Grep, Glob, Bash |
-| ci-debugger | Diagnoses failed CI/CD pipeline runs by analyzing logs, identifying root causes, and suggesting targeted fixes. Supports GitHub Actions, Firebase Deploy, Fastlane, and Docker builds. | Read, Grep, Glob, Bash |
-| code-reviewer | Security and quality code review agent that audits code against Cure Consulting Group standards | Read, Grep, Glob |
-| codebase-explainer | Onboarding agent that answers questions about the codebase, explains architecture, traces data flows, and helps new developers understand how things work. | Read, Grep, Glob, Bash |
+| api-validator | Validates API implementations match OpenAPI/GraphQL schemas. Checks endpoint coverage, request/response contracts, error handling consistency, and documentation completeness. Use when validating an API against its OpenAPI/GraphQL schema, checking contract coverage, or reviewing breaking changes. | Read, Grep, Glob, Bash |
+| ci-debugger | Diagnoses failed CI/CD pipeline runs by analyzing logs, identifying root causes, and suggesting targeted fixes. Supports GitHub Actions, Firebase Deploy, Fastlane, and Docker builds. Use when a CI/CD run fails and you need root-cause analysis and a targeted fix. | Read, Grep, Glob, Bash |
+| code-reviewer | Security and quality code review agent that audits code against Cure Consulting Group standards. Use when reviewing a diff or pull request for security, quality, and adherence to Cure standards. | Read, Grep, Glob |
+| codebase-explainer | Onboarding agent that answers questions about the codebase, explains architecture, traces data flows, and helps new developers understand how things work. Use when onboarding to an unfamiliar codebase or asking how the architecture or a data flow works. | Read, Grep, Glob, Bash |
 | dependency-auditor | Audits project dependencies for security vulnerabilities, outdated packages, license compliance, and supply chain risks. Use after installing or updating packages. | Read, Grep, Glob, Bash |
-| deployment-validator | Pre-deployment checklist validator. Verifies environment variables, secrets management, feature flags, smoke tests, and rollback readiness before any deployment. | Read, Grep, Glob, Bash |
-| doc-generator | Generates and maintains technical documentation from code — API docs, architecture decision records, changelogs, onboarding guides, and inline documentation. | Read, Grep, Glob, Bash |
-| equity-analyst | Public markets research specialist. Analyzes SEC filings, earnings transcripts, and market news to develop investment theses, track catalysts, and update valuation models. | Read, Grep, Glob, Bash, WebFetch |
-| investment-banker | Specialized M&A and capital markets agent. Builds valuation models (Comps, DCF, LBO), drafts deal materials (CIMs, teasers), and analyzes pro-forma transaction impact. | Read, Grep, Glob, Bash |
+| deployment-validator | Pre-deployment checklist validator. Verifies environment variables, secrets management, feature flags, smoke tests, and rollback readiness before any deployment. Use before a deployment to validate env vars, secrets, feature flags, smoke tests, and rollback readiness. | Read, Grep, Glob, Bash |
+| doc-generator | Generates and maintains technical documentation from code — API docs, architecture decision records, changelogs, onboarding guides, and inline documentation. Use when generating or updating API docs, ADRs, changelogs, or onboarding guides from code. | Read, Grep, Glob, Bash |
+| equity-analyst | Public markets research specialist. Analyzes SEC filings, earnings transcripts, and market news to develop investment theses, track catalysts, and update valuation models. Use when researching a public company — analyzing filings or earnings and building or updating a valuation thesis. | Read, Grep, Glob, Bash, WebFetch |
+| investment-banker | Specialized M&A and capital markets agent. Builds valuation models (Comps, DCF, LBO), drafts deal materials (CIMs, teasers), and analyzes pro-forma transaction impact. Use when building M&A valuation models (Comps/DCF/LBO) or drafting deal materials. | Read, Grep, Glob, Bash |
 | migration-validator | Validates database migrations for correctness, rollback safety, naming conventions, and zero-downtime compatibility. Use before applying migrations to staging or production. | Read, Grep, Glob, Bash |
 | pr-reviewer | Automated pull request reviewer that analyzes diffs for quality, security, performance, and adherence to Cure standards. Suggests improvements and flags blockers before merge. | Read, Grep, Glob, Bash |
-| private-equity-analyst | Private markets specialist focused on deal sourcing, commercial due diligence, and portfolio monitoring. Analyzes unit economics, builds LBO models, and drafts IC memos. | Read, Grep, Glob, Bash |
-| project-bootstrapper | Sets up new projects with correct architecture, configuration, and Cure Consulting Group standards | Read, Grep, Glob, Bash, Edit, Write |
-| qa-engineer | QA engineer agent that performs comprehensive quality assurance — test plan generation, edge case discovery, regression analysis, exploratory testing checklists, bug triage, and quality gate enforcement across all platforms. | Read, Grep, Glob, Bash |
-| refactor-assistant | Safe refactoring agent that restructures code while maintaining behavior. Runs tests before and after every change to ensure nothing breaks. | Read, Grep, Glob, Bash, Edit, Write |
-| release-coordinator | Orchestrates the full release process — version bump, changelog generation, tagging, deploy validation, and rollback readiness. Coordinates across mobile, web, and backend releases. | Read, Grep, Glob, Bash, Edit |
+| private-equity-analyst | Private markets specialist focused on deal sourcing, commercial due diligence, and portfolio monitoring. Analyzes unit economics, builds LBO models, and drafts IC memos. Use when sourcing or diligencing a private deal, building an LBO, or drafting an IC memo. | Read, Grep, Glob, Bash |
+| project-bootstrapper | Sets up new projects with correct architecture, configuration, and Cure Consulting Group standards. Use when starting a new project that needs correct architecture, configuration, and Cure standards. | Read, Grep, Glob, Bash, Edit, Write |
+| qa-engineer | QA engineer agent that performs comprehensive quality assurance — test plan generation, edge case discovery, regression analysis, exploratory testing checklists, bug triage, and quality gate enforcement across all platforms. Use when planning tests, discovering edge cases, triaging bugs, or enforcing a quality gate. | Read, Grep, Glob, Bash |
+| refactor-assistant | Safe refactoring agent that restructures code while maintaining behavior. Runs tests before and after every change to ensure nothing breaks. Use when restructuring code that must preserve behavior, with tests run before and after each change. | Read, Grep, Glob, Bash, Edit, Write |
+| release-coordinator | Orchestrates the full release process — version bump, changelog generation, tagging, deploy validation, and rollback readiness. Coordinates across mobile, web, and backend releases. Use when cutting a release — version bump, changelog, tag, deploy validation, and rollback readiness. | Read, Grep, Glob, Bash, Edit |
 | system-architect | System architecture agent that generates RFCs, reviews system design, evaluates architectural trade-offs, and creates architecture decision records for Cure Consulting Group projects. | Read, Grep, Glob, Bash |
 | test-runner | Validates test suite health, runs tests, checks coverage thresholds, and flags flaky tests. Use after writing new code or before commits. | Read, Grep, Glob, Bash |
 
@@ -201,17 +201,17 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Agent | Purpose | Tools |
 | --- | --- | --- |
 | contract-reviewer | Reviews contracts, SOWs, NDAs, and legal documents for risk, scope gaps, unfavorable terms, IP issues, and liability exposure. Flags items requiring legal counsel. | Read, Grep, Glob |
-| legal-compliance | Legal compliance agent that monitors QSBS qualification, NCAA ECAG rules, FERPA data handling, trademark strategy, and entity compliance across the Cure Consulting Group venture portfolio. | Read, Grep, Glob |
+| legal-compliance | Legal compliance agent that monitors QSBS qualification, NCAA ECAG rules, FERPA data handling, trademark strategy, and entity compliance across the Cure Consulting Group venture portfolio. Use when checking QSBS, FERPA, NCAA ECAG, trademark, or entity-compliance questions across the portfolio. | Read, Grep, Glob |
 
 
 ### Marketing (5)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| brand-guardian | Enforces brand consistency across the product — validates voice/tone, visual identity, naming conventions, microcopy, and style guide adherence in UI code and content. | Read, Grep, Glob |
-| campaign-analyst | Analyzes marketing campaign performance — attribution, conversion funnels, A/B test results, CAC/LTV, channel ROI, and campaign optimization recommendations. | Read, Grep, Glob, Bash |
-| content-strategist | Plans and generates content strategy — editorial calendars, blog posts, social media plans, SEO content, email sequences, and content audits aligned with product and growth goals. | Read, Grep, Glob, Bash, WebSearch |
-| growth-analyst | Analyzes growth metrics — activation funnels, retention cohorts, viral coefficients, revenue attribution, and identifies growth levers from product data and code. | Read, Grep, Glob, Bash |
+| brand-guardian | Enforces brand consistency across the product — validates voice/tone, visual identity, naming conventions, microcopy, and style guide adherence in UI code and content. Use when reviewing UI copy, microcopy, naming, or visual identity for brand and style-guide consistency. | Read, Grep, Glob |
+| campaign-analyst | Analyzes marketing campaign performance — attribution, conversion funnels, A/B test results, CAC/LTV, channel ROI, and campaign optimization recommendations. Use when analyzing campaign performance, attribution, conversion funnels, or channel ROI. | Read, Grep, Glob, Bash |
+| content-strategist | Plans and generates content strategy — editorial calendars, blog posts, social media plans, SEO content, email sequences, and content audits aligned with product and growth goals. Use when planning an editorial calendar, content brief, SEO plan, or distribution strategy. | Read, Grep, Glob, Bash, WebSearch |
+| growth-analyst | Analyzes growth metrics — activation funnels, retention cohorts, viral coefficients, revenue attribution, and identifies growth levers from product data and code. Use when analyzing activation, retention, or virality and identifying growth levers. | Read, Grep, Glob, Bash |
 | technical-content-strategist | High-level technical marketing agent that translates complex engineering feats into simple, accessible blog posts and visuals. Uses the Netflix/Uber/Pinterest/Square style of engineering authority, but with the 'Famous Actor' simple-explanation tone for business owners. | Read, Grep, Glob, WebFetch, WebSearch, NanoBanana |
 
 
@@ -219,9 +219,9 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| competitive-intel | Competitive intelligence agent that analyzes market positioning, feature gaps, pricing strategies, and differentiation opportunities by examining product code and public data. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
-| product-analyst | Analyzes product usage patterns, feature adoption, user journeys, and product-market fit signals from analytics data, code instrumentation, and user feedback. | Read, Grep, Glob, Bash |
-| roadmap-strategist | Builds and validates product roadmaps using RICE scoring, dependency mapping, capacity planning, and strategic alignment. Generates quarterly plans and milestone tracking. | Read, Grep, Glob, Bash |
+| competitive-intel | Competitive intelligence agent that analyzes market positioning, feature gaps, pricing strategies, and differentiation opportunities by examining product code and public data. Use when comparing the product to competitors, mapping feature gaps, or assessing positioning. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
+| product-analyst | Analyzes product usage patterns, feature adoption, user journeys, and product-market fit signals from analytics data, code instrumentation, and user feedback. Use when analyzing feature adoption, user journeys, or product-market-fit signals from analytics. | Read, Grep, Glob, Bash |
+| roadmap-strategist | Builds and validates product roadmaps using RICE scoring, dependency mapping, capacity planning, and strategic alignment. Generates quarterly plans and milestone tracking. Use when prioritizing a roadmap with RICE, mapping dependencies, or planning a quarter. | Read, Grep, Glob, Bash |
 | ux-researcher | Synthesizes UX research — analyzes UI code for usability issues, maps user flows for friction points, evaluates information architecture, and generates research plans. | Read, Grep, Glob |
 
 
@@ -248,7 +248,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v6.2.1). 80 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.0.1). 80 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
 | SessionStart | startup | command | echo '\nAvailable Agents (39):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |

@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 75 production-grade skills (organized into 7 domain folders), 35 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 80 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
@@ -12,7 +12,7 @@ A **Claude Code plugin** containing 75 production-grade skills (organized into 7
 .claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
 skills/{domain}/{name}/SKILL.md — 80 skills, organized by domain folder
                                  Domains: engineering (39), platform (10), product (10),
-                                 business (11), marketing (5), security (4), legal (1)
+                                 business (7), finance (4), marketing (5), security (4), legal (1)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
 agents/*.md                    — 39 specialized subagents with tool/skill bindings
 personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant)
@@ -21,7 +21,7 @@ rules/*.md                     — 11 path-specific coding standards
 output-styles/*/output-style.md — 9 custom output styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts)
 .mcp.json                      — MCP server configurations (GitHub, Sentry, Firestore, PostgreSQL)
 .lsp.json                      — LSP server configurations (TypeScript, Python/Pyright)
-marketplace.json               — Plugin marketplace manifest for distribution
+.claude-plugin/marketplace.json — Private plugin-marketplace manifest (name: "cure"); see docs/DISTRIBUTION.md
 settings.json                  — Default permission rules (35 deny rules)
 claude-commands/*.md           — Legacy command format (backwards compat)
 gemini skills/*.skill          — Google Gemini skill packages (flat, .skill zip files)
@@ -38,10 +38,13 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 
 ## Development Rules
 
-- When adding a new skill, create it in `skills/{domain}/{name}/SKILL.md` with proper YAML frontmatter. Domain is one of: engineering, platform, product, business, marketing, security, legal. If unsure, run `python3 scripts/generate-overview.py` after — it categorizes by name patterns and will surface the inferred domain.
-- Every skill must have: `name`, `description`, and `argument-hint` in frontmatter
-- Read-only skills (audits, analysis) should set `allowed-tools: ["Read", "Grep", "Glob"]`
+- When adding a new skill, create it in `skills/{domain}/{name}/SKILL.md` with proper YAML frontmatter. Domain is one of: engineering, platform, product, business, finance, marketing, security, legal. If unsure, run `python3 scripts/generate-overview.py` after — it categorizes by name patterns and will surface the inferred domain.
+- Every skill must have: `name`, `description`, and `argument-hint` in frontmatter. Fold the trigger ("Use when…") into `description` itself (or `when_to_use`) — it drives auto-discovery. Keep `description` + `when_to_use` combined under 1,536 chars (the skill-listing truncates past that). Skill `name` must be lowercase/hyphens, ≤64 chars, and **must not contain "claude" or "anthropic"** (reserved words — the harness rejects them).
+- To make a skill genuinely read-only, set `disallowed-tools` (e.g. `Write Edit Bash`). NOTE: `allowed-tools` does **not** restrict anything — it only grants no-prompt permission for the listed tools; every other tool stays callable. Do not rely on `allowed-tools` as a sandbox.
 - Destructive or sensitive skills should set `disable-model-invocation: true`
+- Keep SKILL.md bodies under 500 lines; push long reference material into sibling files (one level deep) per progressive disclosure.
+- Do NOT add a `version:` field to skills — it is not read by the harness. Library version lives only in `.claude-plugin/plugin.json`.
+- After any change to skills/agents/personas, run `python3 scripts/audit-library.py` (must stay green) and `python3 scripts/sync-metadata.py --write` (keeps all docs/counts in sync).
 - Keep the legacy `claude-commands/` format in sync for backwards compatibility
 - Create both Claude and Gemini versions of each skill (Gemini files are flat zips in `gemini skills/`, regenerated via `generate-gemini-skills.sh`)
 - Follow the existing format: Step 1 (Classify), Step 2 (Gather Context), Step 3+ (Framework/Output)
@@ -58,7 +61,9 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Minor (x.x.0): Add new skills, add hooks, add rules
 - Major (x.0.0): Breaking changes to skill interfaces or structure
 
-## Custom Agents (35)
+## Custom Agents (39)
+
+> Canonical, always-current agent and skill inventory is generated in `docs/OVERVIEW.md` (run `python3 scripts/generate-overview.py`). The tables below are a curated summary — if they disagree with OVERVIEW.md, OVERVIEW.md wins.
 
 ### Engineering Agents (15)
 

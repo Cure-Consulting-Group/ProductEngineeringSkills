@@ -4,7 +4,7 @@ description: Designs KPI dashboards with metric definitions, alert thresholds, S
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15
-skills: observability, analytics-implementation, dora-metrics
+skills: observability, analytics-implementation
 memory: project
 ---
 
