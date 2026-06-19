@@ -1,8 +1,3 @@
----
-name: technical-blog-writer
-description: "Crafts high-impact technical blog posts modeled after Netflix/Uber engineering blogs, translated for business owners. Use when you need to explain complex engineering feats using the 'Famous Actor' simple-explanation tone with clear visual concepts."
----
-
 # Technical Blog Writer Skill
 
 This skill translates deep engineering complexity into high-leverage business narratives. It balances the technical authority of a "Tier 1" engineering blog (Netflix, Uber, Square) with the accessibility of a "Famous Actor" explaining a product to a common person.

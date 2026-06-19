@@ -13,7 +13,6 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -505,7 +504,6 @@ def render_overview(
     output_styles: list[dict],
     mcp_servers: list[dict],
     lsp_servers: list[dict],
-    timestamp: str,
 ) -> str:
     parts: list[str] = []
     parts.append("# ProductEngineeringSkills — Overview\n")
@@ -530,7 +528,6 @@ def render_overview(
                 ["Output Styles", str(len(output_styles))],
                 ["MCP Servers", str(len(mcp_servers))],
                 ["LSP Servers", str(len(lsp_servers))],
-                ["Generated", timestamp],
             ],
         )
     )
@@ -631,8 +628,6 @@ def build(repo: Path, out: Path) -> int:
     mcp_servers = collect_mcp(repo)
     lsp_servers = collect_lsp(repo)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-
     content = render_overview(
         plugin=plugin,
         skills=skills,
@@ -643,7 +638,6 @@ def build(repo: Path, out: Path) -> int:
         output_styles=output_styles,
         mcp_servers=mcp_servers,
         lsp_servers=lsp_servers,
-        timestamp=timestamp,
     )
 
     out.parent.mkdir(parents=True, exist_ok=True)

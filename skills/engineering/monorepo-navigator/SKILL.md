@@ -1,6 +1,5 @@
 ---
 name: monorepo-navigator
-version: "1.0.0"
 description: "Navigate, work in, and improve monorepos — pnpm workspaces, Turborepo, Nx, Lerna, Yarn workspaces, Bazel, or untangling a folder that thinks it's a monorepo"
 when_to_use: "Use when joining a client codebase that's a monorepo (or claims to be), introducing one, fixing slow CI, deduplicating shared deps, or extracting a package. NOT for single-package repos — those don't need this skill."
 argument-hint: "[repo-path-or-task]"

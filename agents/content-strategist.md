@@ -1,6 +1,6 @@
 ---
 name: content-strategist
-description: Plans and generates content strategy — editorial calendars, blog posts, social media plans, SEO content, email sequences, and content audits aligned with product and growth goals.
+description: Plans and generates content strategy — editorial calendars, blog posts, social media plans, SEO content, email sequences, and content audits aligned with product and growth goals. Use when planning an editorial calendar, content brief, SEO plan, or distribution strategy.
 tools: Read, Grep, Glob, Bash, WebSearch
 model: sonnet
 maxTurns: 15

@@ -1,6 +1,6 @@
 ---
 name: api-validator
-description: Validates API implementations match OpenAPI/GraphQL schemas. Checks endpoint coverage, request/response contracts, error handling consistency, and documentation completeness.
+description: Validates API implementations match OpenAPI/GraphQL schemas. Checks endpoint coverage, request/response contracts, error handling consistency, and documentation completeness. Use when validating an API against its OpenAPI/GraphQL schema, checking contract coverage, or reviewing breaking changes.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 10

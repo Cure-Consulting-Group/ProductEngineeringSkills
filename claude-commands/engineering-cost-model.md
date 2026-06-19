@@ -227,6 +227,17 @@ Use WebSearch to fetch current pricing for infrastructure components:
 
 Flag any assumptions that differ from current published pricing.
 
+## Scripts
+
+This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
+
+- `scripts/cost_estimator.py` — Total project cost from `--hours`, `--rate`, `--infra-monthly`, `--duration-months`. Includes PM/QA overhead and optional contingency.
+  ```bash
+  python3 skills/engineering-cost-model/scripts/cost_estimator.py \
+    --hours 400 --rate 175 --infra-monthly 250 --duration-months 6 \
+    --pm-pct 10 --qa-pct 15 --contingency-pct 15 --json
+  ```
+
 ## Step 7: Cost Estimate Output
 
 ```

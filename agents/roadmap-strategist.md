@@ -1,6 +1,6 @@
 ---
 name: roadmap-strategist
-description: Builds and validates product roadmaps using RICE scoring, dependency mapping, capacity planning, and strategic alignment. Generates quarterly plans and milestone tracking.
+description: Builds and validates product roadmaps using RICE scoring, dependency mapping, capacity planning, and strategic alignment. Generates quarterly plans and milestone tracking. Use when prioritizing a roadmap with RICE, mapping dependencies, or planning a quarter.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

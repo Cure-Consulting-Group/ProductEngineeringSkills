@@ -4,7 +4,7 @@ description: "High-level technical marketing agent that translates complex engin
 tools: Read, Grep, Glob, WebFetch, WebSearch, NanoBanana
 model: sonnet
 maxTurns: 15
-skills: technical-blog-writer, content-strategist, product-marketing, seo-content-engine
+skills: technical-blog-writer, product-marketing, seo-content-engine
 memory: project
 ---
 

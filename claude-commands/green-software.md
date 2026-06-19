@@ -246,6 +246,12 @@ Energy estimated via [cloud provider tool / Scaphandre / Cloud Carbon Footprint]
 Carbon intensity sourced from [Electricity Maps / provider averages].
 ```
 
+## Live Carbon Data
+
+Use WebFetch or WebSearch to gather:
+- Current carbon intensity for user's cloud region from Electricity Maps API
+- Latest Green Software Foundation SCI guidance
+
 ## Code Generation (Required)
 
 Generate sustainability tooling using Write:

@@ -7,15 +7,6 @@ Expert design across Apple HIG, Material Design 3, and Web. Platform-native firs
 - `android-design-expert` — Material Design 3, dynamic color, tonal palettes, adaptive layouts, Compose
 - `web-design-expert` — Responsive design, CSS architecture, design tokens, container queries, Tailwind
 
-## Pre-Processing (Auto-Context)
-
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
-
 ## Design System Hierarchy
 
 ```
@@ -29,6 +20,15 @@ Brand Foundation
         ├── Android (MD3-compliant — Compose components)
         └── Web (CSS custom properties + component library)
 ```
+
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
 
 ## Step 1: Classify the Request
 

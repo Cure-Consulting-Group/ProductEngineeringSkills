@@ -1,4 +1,3 @@
-
 # Product Marketing
 
 Product voice and content marketing engine. Generates platform-native content packages rooted in each product's ICP, tone of voice, and target demographic — not generic marketing copy.

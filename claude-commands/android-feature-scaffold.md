@@ -2,15 +2,6 @@
 
 Generates complete, production-ready Android feature scaffolding using Clean Architecture, MVI, Jetpack Compose, Hilt, and Kotlin Coroutines/Flow.
 
-## Pre-Processing (Auto-Context)
-
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
-
 ## Architecture Layers Generated
 
 ```
@@ -30,6 +21,15 @@ Before starting, gather project context silently:
 └── di/
     └── [FeatureName]Module.kt                           ← Hilt module
 ```
+
+## Pre-Processing (Auto-Context)
+
+Before starting, gather project context silently:
+- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
+- Run: `git log --oneline -5 2>/dev/null` for recent changes
+- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+- Use this context to tailor all output to the actual project
 
 ## Step 1: Gather Requirements
 

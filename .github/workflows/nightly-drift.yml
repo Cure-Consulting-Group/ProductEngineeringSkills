@@ -1,0 +1,78 @@
+name: Nightly drift check
+
+# The loop that keeps the library honest between PRs. validate.yml gates every
+# PR; this runs the same spec + metadata + sync checks on a schedule to catch
+# drift introduced out-of-band (a hand-edited skill, a count that diverged from
+# the filesystem, a stale OVERVIEW). On any drift it opens (or refreshes) a
+# single tracking issue instead of failing silently.
+
+on:
+  schedule:
+    - cron: "17 8 * * *" # 08:17 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run all library checks, collect drift
+        id: check
+        run: |
+          report=drift-report.md
+          : > "$report"
+          fail=0
+          run() {
+            local label="$1"; shift
+            if ! out=$("$@" 2>&1); then
+              fail=1
+              { echo "### ❌ $label"; echo '```'; echo "$out"; echo '```'; echo; } >> "$report"
+            fi
+          }
+          run "Spec lint (audit-library)"        python3 scripts/audit-library.py --fail-under 9.0 --min-item 7.0
+          run "Compliance fixes pending"          python3 scripts/fix-library.py --check
+          run "Oversized skill bodies"            python3 scripts/split-oversized-skills.py --check
+          run "Metadata in sync"                  python3 scripts/sync-metadata.py --check
+          run "Legacy commands in sync"           python3 scripts/sync-legacy-commands.py --check
+          python3 scripts/generate-overview.py >/dev/null
+          if ! git diff --quiet -- docs/OVERVIEW.md; then
+            fail=1
+            { echo "### ❌ docs/OVERVIEW.md is stale"; echo '```'; git --no-pager diff -- docs/OVERVIEW.md | head -100; echo '```'; } >> "$report"
+          fi
+          echo "fail=$fail" >> "$GITHUB_OUTPUT"
+
+      - name: Open or refresh drift issue
+        if: steps.check.outputs.fail == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="🔧 Library drift detected"
+          body="$(cat drift-report.md)
+          ---
+          Auto-detected by the nightly drift check. Fix locally:
+          \`\`\`
+          python3 scripts/fix-library.py --apply
+          python3 scripts/sync-metadata.py --write
+          python3 scripts/sync-legacy-commands.py --write
+          python3 scripts/generate-overview.py
+          \`\`\`
+          Then commit, or run \`scripts/release.sh patch\`."
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number' || true)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body" --label "drift" 2>/dev/null \
+              || gh issue create --title "$title" --body "$body"
+          fi
+
+      - name: Report clean
+        if: steps.check.outputs.fail != '1'
+        run: echo "No drift. Library is in sync. ✓"

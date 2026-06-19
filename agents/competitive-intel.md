@@ -1,6 +1,6 @@
 ---
 name: competitive-intel
-description: Competitive intelligence agent that analyzes market positioning, feature gaps, pricing strategies, and differentiation opportunities by examining product code and public data.
+description: Competitive intelligence agent that analyzes market positioning, feature gaps, pricing strategies, and differentiation opportunities by examining product code and public data. Use when comparing the product to competitors, mapping feature gaps, or assessing positioning.
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
 model: sonnet
 maxTurns: 15

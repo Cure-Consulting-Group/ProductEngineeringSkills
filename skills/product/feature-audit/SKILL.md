@@ -1,6 +1,5 @@
 ---
 name: feature-audit
-version: "1.0.0"
 description: "Post-ship quality gate — audits a completed feature for missing tests, security gaps, accessibility, analytics, and documentation across Android (.kt), iOS (.swift), Web (.ts/.tsx), and Firebase"
 when_to_use: "Use after finishing a feature, before marking a PR as ready, or when asked to 'audit', 'review completeness', or 'check what's missing'. NOT for in-progress code review (use code-reviewer agent)."
 argument-hint: "[feature-name]"

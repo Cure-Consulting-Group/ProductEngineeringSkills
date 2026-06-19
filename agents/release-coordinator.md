@@ -1,10 +1,10 @@
 ---
 name: release-coordinator
-description: Orchestrates the full release process — version bump, changelog generation, tagging, deploy validation, and rollback readiness. Coordinates across mobile, web, and backend releases.
+description: Orchestrates the full release process — version bump, changelog generation, tagging, deploy validation, and rollback readiness. Coordinates across mobile, web, and backend releases. Use when cutting a release — version bump, changelog, tag, deploy validation, and rollback readiness.
 tools: Read, Grep, Glob, Bash, Edit
 model: sonnet
 maxTurns: 20
-skills: release-management, ci-cd-pipeline, observability
+skills: release-management, ci-cd-pipeline
 memory: project
 ---
 

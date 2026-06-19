@@ -39,15 +39,53 @@ Before starting, gather project context silently:
 6. **Accessibility level** — WCAG AA (standard) or AAA (enhanced)?
 7. **Implementation** — Jetpack Compose (preferred) or XML Views?
 
-## Step 3: Apply M3 Expertise
+## Step 3: M3 Design Foundations (Always Apply)
 
-Cover all applicable areas: tonal palette generation (5 key colors, 13 tones), color roles (40+ role assignments for light/dark), dynamic color (API 31+), M3 type scale (15 roles from displayLarge to labelSmall), window size classes and canonical layouts (list-detail, feed, supporting pane), adaptive navigation (bar/rail/drawer), M3 component patterns (buttons, cards, text fields, bottom sheets), motion system (easing curves and duration tokens), Material Symbols (style, fill, weight, grade, optical size), widgets, and dark theme with tonal elevation.
+See [reference/details.md](reference/details.md) (section “Step 3: M3 Design Foundations (Always Apply)”) for full detail.
 
 ## Step 4: Output Format
 
-For screen specs: purpose, canonical layout pattern, layout anatomy with dp values, all states, window size class adaptations, color role assignments, typography roles, dark theme, TalkBack reading order, motion specs, Compose hierarchy.
+### For Screen Specs
+```
+1. Screen purpose and user goal
+2. Canonical layout pattern (list-detail, feed, supporting pane, or full-screen)
+3. Layout anatomy with dp values for all spacing
+4. All screen states: Loading (skeleton/shimmer), Empty, Content, Error, Partial
+5. Window size class adaptations (compact → medium → expanded)
+6. Color role assignments for every element
+7. Typography role assignments for every text element
+8. Dark theme appearance
+9. TalkBack reading order and semantics tree
+10. Motion specifications (transitions, easing, duration tokens)
+11. Compose component hierarchy recommendation
+```
 
-For component specs: anatomy with M3 token names, all states with color roles per state, typography roles, shape (corner radius), elevation, spacing in dp, Material Symbol config, motion spec (easing + duration), ripple spec, accessibility (role, contentDescription, stateDescription), Compose skeleton.
+### For Component Specs
+```
+1. Component anatomy (named parts with M3 component token names)
+2. All states: enabled, disabled, hovered, focused, pressed, dragged, selected, error
+3. Color role assignments per state
+4. Typography roles used
+5. Shape (corner radius from M3 shape scale)
+6. Elevation level (tonal or shadow)
+7. Spacing spec (internal padding, margins — in dp)
+8. Material Symbol names, style, fill, and optical size
+9. Motion spec (state transitions with easing and duration tokens)
+10. Ripple/indication spec
+11. Accessibility: role, contentDescription, stateDescription, custom actions
+12. Compose implementation skeleton
+```
+
+### For Navigation Architecture
+```
+1. NavigationSuiteScaffold configuration
+2. Navigation component per window size class
+3. Destination list with icons (filled/outlined variants)
+4. Top app bar style per destination
+5. Transition type between destinations (fade through, shared axis)
+6. Deep link URI patterns
+7. Back stack behavior
+```
 
 ## Code Generation (Required)
 

@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Security and quality code review agent that audits code against Cure Consulting Group standards
+description: Security and quality code review agent that audits code against Cure Consulting Group standards. Use when reviewing a diff or pull request for security, quality, and adherence to Cure standards.
 tools: Read, Grep, Glob
 model: sonnet
 maxTurns: 15

@@ -209,17 +209,18 @@ Never force-push main. Always revert-and-push-forward.
 
 You MUST generate actual workflow files using the Write tool:
 
-1. **Primary workflow**: `.github/workflows/ci.yml` — lint, test, build for the detected platform
-2. **Deploy workflow**: `.github/workflows/deploy.yml` — staging and production deployment
-3. **Mobile workflow** (if Android/iOS): `.github/workflows/mobile.yml` — build, sign, distribute
-4. **Dependabot config**: `.github/dependabot.yml` — automated dependency updates
+1. **CI workflow**: `.github/workflows/ci.yml` — lint, type-check, test, build (matrix for affected platforms)
+2. **Deploy workflow**: `.github/workflows/deploy.yml` — staging auto-deploy, production with approval
+3. **Release workflow**: `.github/workflows/release.yml` — version bump, changelog, tag, publish
 
-Before generating, use Glob to find existing workflows (`.github/workflows/*.yml`) and Read them to match the project's existing patterns.
+Before generating, use Glob to find existing workflows (`.github/workflows/*.yml`) and Read them to understand current setup. Adapt, don't duplicate.
+
+Use Grep to find test commands in package.json/build.gradle to set correct test steps.
 
 ## Cross-References
 
-- `/infrastructure-scaffold` — for the infrastructure configs that these pipelines deploy
-- `/testing-strategy` — for test stage configuration and coverage thresholds
+- `/infrastructure-scaffold` — for Firebase, GCP, Vercel, and Docker configs the pipeline deploys
+- `/testing-strategy` — for test runner commands and coverage thresholds to enforce in CI
 - `/security-review` — for secret scanning and SAST steps to add to the pipeline
 - `/e2e-testing` — for E2E workflow integration and sharding patterns
 

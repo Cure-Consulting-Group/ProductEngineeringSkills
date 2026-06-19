@@ -4,7 +4,7 @@ description: System architecture agent that generates RFCs, reviews system desig
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 20
-skills: sdlc, api-architect, database-architect, infrastructure-scaffold
+skills: sdlc, api-architect, database-architect
 memory: project
 ---
 

@@ -41,15 +41,59 @@ Before starting, gather project context silently:
 7. **Accessibility level** — WCAG AA (standard) or AAA (enhanced)?
 8. **Performance budget** — Critical rendering path constraints, LCP targets?
 
-## Step 3: Apply Web Design Expertise
+## Step 3: Web Design Foundations (Always Apply)
 
-Cover all applicable areas: responsive breakpoint system (mobile-first, 6 breakpoints), container queries for component-level responsiveness, layout patterns (CSS Grid, Flexbox, auto-fit/auto-fill), fluid typography (clamp()), design token architecture (primitives → semantic → component), color system with dark mode (system preference + manual toggle), spacing system (4px base, token scale), component patterns (buttons, cards, forms, navigation, modals), performant animation (GPU-accelerated properties, reduced motion), image optimization (srcset, WebP/AVIF, lazy loading), and Core Web Vitals awareness.
+See [reference/details.md](reference/details.md) (section “Step 3: Web Design Foundations (Always Apply)”) for full detail.
 
 ## Step 4: Output Format
 
-For page specs: purpose, layout strategy, content hierarchy, all states, responsive behavior at each breakpoint, typography tokens, color tokens, dark mode, SEO (heading hierarchy, meta, structured data), accessibility (landmarks, headings, skip links, focus order), performance (LCP, critical CSS, lazy loading), CSS/Tailwind skeleton.
+### For Page Specs
+```
+1. Page purpose and user goals
+2. Layout strategy (Grid/Flexbox) with responsive breakdowns
+3. Content hierarchy and visual weight distribution
+4. All page states: Loading (skeleton), Empty, Content, Error, Offline
+5. Responsive behavior at each breakpoint (320, 640, 768, 1024, 1280, 1536)
+6. Typography assignments (token names for every text element)
+7. Color token assignments for every element
+8. Dark mode appearance
+9. SEO: heading hierarchy, meta description, structured data
+10. Accessibility: landmark regions, heading levels, skip links, focus order
+11. Performance: LCP element, critical rendering path, lazy loading strategy
+12. CSS/Tailwind implementation skeleton
+```
 
-For component specs: anatomy, all states (default, hover, focus-visible, active, disabled, loading, error, selected), size variants, color tokens per state, typography tokens, spacing tokens, border radius and shadow tokens, animation spec, responsive behavior, accessibility (role, aria attributes, keyboard behavior), dark mode, CSS/Tailwind classes.
+### For Component Specs
+```
+1. Component anatomy (named parts)
+2. All states: default, hover, focus-visible, active, disabled, loading, error, selected
+3. Size variants with exact dimensions
+4. Color tokens per state
+5. Typography tokens
+6. Spacing (padding, margin, gap — in px/rem using token names)
+7. Border radius and shadow tokens
+8. Animation/transition spec (property, duration, easing)
+9. Responsive behavior (breakpoints or container queries)
+10. Accessibility: role, aria attributes, keyboard behavior, screen reader announcements
+11. Dark mode appearance
+12. CSS/Tailwind class list
+```
+
+### For Design System Specs
+```
+1. Token architecture (primitives → semantic → component)
+2. Color palette with light/dark mode mappings
+3. Typography scale with font loading strategy
+4. Spacing scale
+5. Shadow/elevation scale
+6. Border radius scale
+7. Breakpoint system
+8. Component inventory with state matrix
+9. Animation/motion tokens
+10. Icon system (source, sizing, coloring)
+11. CSS custom properties file
+12. Tailwind theme extension config
+```
 
 ## Code Generation (Required)
 
@@ -62,3 +106,27 @@ When designing for web, generate actual files using Write:
 5. **Responsive test matrix**: `docs/responsive-test-matrix.md` — viewport checklist for QA
 
 Before generating, Read existing `tailwind.config.ts` and Glob for `components/ui/**` to understand current design system.
+
+## Step 5: Anti-Patterns (Never Do These)
+
+```
+✗ Placeholder-only labels on form inputs (must have visible <label>)
+✗ outline: none without a replacement focus indicator
+✗ Fixed-width layouts that break on small screens
+✗ Pixel font sizes (use rem/em for scalability)
+✗ z-index wars (use a managed z-index scale: --z-dropdown: 10, --z-modal: 50, etc.)
+✗ !important for styling (only for utility overrides and reduced motion)
+✗ Layout animation (animating width/height/top/left — use transform instead)
+✗ Auto-playing video with sound (autoplay is muted-only)
+✗ Infinite scroll without a "load more" fallback and visible item count
+✗ Carousel as the only way to see content (all items must be reachable)
+✗ Text over images without sufficient contrast overlay
+✗ Custom scrollbars that break keyboard scrolling
+✗ Hover-only interactions with no touch/keyboard alternative
+✗ Light gray text on white backgrounds (contrast ratio < 4.5:1)
+✗ Hamburger menu on desktop (only mobile/tablet)
+✗ Modal overload — popups on page load, stacked modals, modals for simple messages
+✗ Disabled buttons without explanation of why (use tooltip or helper text)
+✗ Content that requires horizontal scrolling at 320px viewport width
+✗ Images without width/height causing layout shift (CLS)
+```

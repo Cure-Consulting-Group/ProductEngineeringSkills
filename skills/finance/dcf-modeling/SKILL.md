@@ -1,6 +1,7 @@
 ---
 name: dcf-modeling
 description: Performs Discounted Cash Flow (DCF) valuation. Use when you need to calculate intrinsic value based on projected free cash flows, WACC, and terminal value.
+argument-hint: "[company-or-ticker]"
 ---
 
 # Discounted Cash Flow (DCF) Modeling

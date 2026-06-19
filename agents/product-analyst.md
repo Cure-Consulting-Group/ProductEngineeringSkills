@@ -1,6 +1,6 @@
 ---
 name: product-analyst
-description: Analyzes product usage patterns, feature adoption, user journeys, and product-market fit signals from analytics data, code instrumentation, and user feedback.
+description: Analyzes product usage patterns, feature adoption, user journeys, and product-market fit signals from analytics data, code instrumentation, and user feedback. Use when analyzing feature adoption, user journeys, or product-market-fit signals from analytics.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15

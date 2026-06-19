@@ -40,15 +40,52 @@ Before starting, gather project context silently:
 6. **Accessibility level** — WCAG AA (standard) or AAA (enhanced)?
 7. **Implementation framework** — SwiftUI (preferred) or UIKit?
 
-## Step 3: Apply HIG Expertise
+## Step 3: HIG Design Principles (Always Apply)
 
-Cover all applicable areas: layout system (safe areas, size classes, 4pt grid), Dynamic Type (all system text styles, @ScaledMetric, AX sizes), semantic color system (light/dark/high contrast), SF Symbols (rendering modes, variable value, symbol effects), navigation patterns (NavigationStack, TabView, NavigationSplitView, sheets), component patterns (lists, buttons, forms), motion and haptics, widgets and Live Activities, and dark mode design.
+See [reference/details.md](reference/details.md) (section “Step 3: HIG Design Principles (Always Apply)”) for full detail.
 
 ## Step 4: Output Format
 
-For screen specs: purpose, navigation context, layout anatomy with pt values, all states, size class adaptations, Dynamic Type behavior, dark mode, VoiceOver reading order, haptic feedback points, SwiftUI hierarchy.
+### For Screen Specs
+```
+1. Screen purpose and user goal
+2. Navigation context (how user arrives, where they can go)
+3. Layout anatomy (regions, components, spacing — with pt values)
+4. All screen states: Loading (skeleton), Empty, Content, Error, Partial
+5. Size class adaptations (compact width vs regular width)
+6. Dynamic Type behavior at standard and accessibility sizes
+7. Dark mode appearance
+8. VoiceOver reading order and accessibility tree
+9. Haptic feedback points
+10. SwiftUI view hierarchy recommendation
+```
 
-For component specs: anatomy, all states, size variants, spacing in pt, typography styles, color tokens, SF Symbol names, animation spec, haptics, accessibility (role, label, traits, hints), SwiftUI skeleton, Dynamic Type scaling.
+### For Component Specs
+```
+1. Component anatomy (named parts)
+2. All states: default, highlighted/pressed, focused, disabled, selected, loading, error
+3. Size variants and .controlSize options
+4. Spacing spec (internal padding, margins — in pt)
+5. Typography styles used (system text style names)
+6. Color tokens (semantic system colors)
+7. SF Symbol names and rendering modes
+8. Animation/transition spec
+9. Haptic feedback (if interactive)
+10. Accessibility: role, label pattern, traits, hints, custom actions
+11. SwiftUI implementation skeleton
+12. Dynamic Type scaling behavior
+```
+
+### For Navigation Architecture
+```
+1. Navigation hierarchy diagram
+2. Tab bar configuration (icons, labels, badge patterns)
+3. NavigationStack/NavigationSplitView structure
+4. Modal presentation strategy (sheets, alerts, full-screen covers)
+5. Deep link URL scheme
+6. State restoration strategy
+7. iPad adaptation (split view, sidebar)
+```
 
 ## Code Generation (Required)
 
@@ -61,3 +98,23 @@ When designing for iOS, generate actual SwiftUI code using Write:
 5. **Preview**: Embedded #Preview blocks in each component file
 
 Before generating, Glob for existing design system files (`**/DesignSystem/**`, `**/Theme/**`) and extend.
+
+## Step 5: Anti-Patterns (Never Do These)
+
+```
+✗ Custom back buttons that break swipe-to-go-back gesture
+✗ Hiding the tab bar during non-fullscreen flows
+✗ Non-standard navigation patterns (hamburger menus on iOS)
+✗ Fixed font sizes that ignore Dynamic Type
+✗ Custom alert/action sheet implementations instead of system .alert()/.confirmationDialog()
+✗ Pixel-based (px) dimensions instead of points (pt)
+✗ Circular corner radius instead of continuous (squircle) curves
+✗ Custom pull-to-refresh instead of .refreshable {}
+✗ Tab bar with more than 5 visible tabs
+✗ Using bottom sheets as primary navigation (that's Android/Material pattern)
+✗ Putting destructive actions in easy-to-tap positions without confirmation
+✗ Ignoring safe areas (content under status bar, home indicator)
+✗ Skip links (that's a web pattern — iOS uses VoiceOver rotor)
+✗ Material Design ripple effects (that's Android — iOS uses highlight/opacity feedback)
+✗ Text that doesn't reflow at large Dynamic Type sizes
+```

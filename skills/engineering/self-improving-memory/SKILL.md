@@ -1,6 +1,5 @@
 ---
 name: self-improving-memory
-version: "1.0.0"
 description: "Curate Claude Code auto-memory (user / feedback / project / reference) for an engagement — bootstrap, audit, detect patterns, and run health checks on MEMORY.md"
 when_to_use: "Use when starting a new client engagement that needs MEMORY.md seeded, when MEMORY.md has grown unwieldy, when feedback memories are accumulating on the same topic, or when project memories look stale. NOT for CLAUDE.md content (that's project identity, not session memory). NOT for code-derivable facts (read the code instead)."
 argument-hint: "[bootstrap | audit | detect-patterns | health-check]"

@@ -1,6 +1,7 @@
 ---
 name: merger-modeling
 description: Performs Accretion/Dilution analysis for M&A transactions. Use when you need to model pro-forma financial impact, calculate synergy requirements, or analyze purchase price accounting.
+argument-hint: "[acquirer-and-target]"
 ---
 
 # Merger Modeling (Accretion/Dilution)

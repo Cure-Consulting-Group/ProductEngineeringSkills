@@ -1,10 +1,10 @@
 ---
 name: investor-relations
-description: Generates investor-facing materials — board updates, quarterly reports, KPI dashboards, fundraising narratives, and cap table scenarios from product and financial data.
+description: Generates investor-facing materials — board updates, quarterly reports, KPI dashboards, fundraising narratives, and cap table scenarios from product and financial data. Use when preparing board updates, investor reports, KPI dashboards, or fundraising materials.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 15
-skills: investor-reporting, fundraising-materials, saas-financial-model, burn-rate-tracker
+skills: investor-reporting, fundraising-materials, saas-financial-model
 memory: project
 ---
 
