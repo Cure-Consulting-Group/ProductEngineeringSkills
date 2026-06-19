@@ -1,6 +1,6 @@
 {
   "name": "@cure-consulting-group/claude-bootstrap",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Bootstraps Cure's Claude development infrastructure into any project. Idempotent, manifest-driven, version-pinned. Provisions CLAUDE.md, STATE.md, .claude/{settings,skills,agents,rules,hooks}, .cursorrules, .gemini/. Includes drift detection (doctor) and multi-project inventory.",
   "type": "module",
   "exports": {
@@ -44,5 +44,8 @@
     "url": "https://github.com/Cure-Consulting-Group/ProductEngineeringSkills.git",
     "directory": "bootstrap"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "fast-uri": ">=3.1.2"
+  }
 }
