@@ -16,7 +16,6 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Output Styles | 9 |
 | MCP Servers | 4 |
 | LSP Servers | 2 |
-| Generated | 2026-06-19 19:00:03 UTC |
 
 
 ## 2. Skills
