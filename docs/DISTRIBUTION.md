@@ -7,6 +7,9 @@ How the Cure skill library ships to projects and how it stays current. There is
 > **Access:** the marketplace lives in the **private** `Cure-Consulting-Group/ProductEngineeringSkills`
 > repo. Only members of the GitHub org can add or install it. Nothing here is
 > public; we do **not** submit to the community marketplace.
+>
+> **Consuming a project?** For copy-paste per-project setup, see
+> [CONSUMING-PROJECTS.md](CONSUMING-PROJECTS.md). This file is the architecture/maintainer view.
 
 ---
 
