@@ -63,6 +63,6 @@ jobs:
 
       - name: Validate plugin manifest is well-formed JSON
         run: |
-          for f in .claude-plugin/plugin.json marketplace.json .mcp.json .lsp.json settings.json; do
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json .lsp.json settings.json; do
             python3 -c "import json,sys; json.load(open('$f')); print('ok: $f')"
           done
