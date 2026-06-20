@@ -61,8 +61,30 @@ jobs:
       - name: Bundled skill scripts smoke-test (--help)
         run: bash scripts/verify-skill-scripts.sh
 
-      - name: Validate plugin manifest is well-formed JSON
+      - name: Validate plugin + marketplace manifest schema
         run: |
           for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json .lsp.json settings.json; do
-            python3 -c "import json,sys; json.load(open('$f')); print('ok: $f')"
+            python3 -c "import json,sys; json.load(open('$f')); print('ok json: $f')"
           done
+          # Plugin manifest field TYPES must match the Claude Code schema
+          # (repository/homepage/license = string, author = object, keywords = array).
+          # A wrong type here fails `/plugin install` at the consumer, not here — so assert it.
+          python3 - <<'PY'
+          import json, sys
+          p = json.load(open(".claude-plugin/plugin.json"))
+          errs = []
+          def need(field, typ, label):
+              if field in p and not isinstance(p[field], typ):
+                  errs.append(f"plugin.json: `{field}` must be {label}, got {type(p[field]).__name__}")
+          need("name", str, "string"); need("version", str, "string")
+          need("description", str, "string"); need("repository", str, "string")
+          need("homepage", str, "string"); need("license", str, "string")
+          need("author", dict, "object"); need("keywords", list, "array")
+          if "bugs" in p: errs.append("plugin.json: `bugs` is not a plugin-manifest field; remove it")
+          m = json.load(open(".claude-plugin/marketplace.json"))
+          for f in ("name", "owner", "plugins"):
+              if f not in m: errs.append(f"marketplace.json: missing required `{f}`")
+          if errs:
+              print("MANIFEST SCHEMA ERRORS:", *errs, sep="\n  "); sys.exit(1)
+          print("plugin + marketplace manifest schema OK")
+          PY

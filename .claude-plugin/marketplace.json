@@ -1,5 +1,6 @@
 {
   "name": "cure",
+  "description": "Cure Consulting Group's private plugin marketplace — the product engineering skill library and tooling.",
   "owner": {
     "name": "Cure Consulting Group",
     "url": "https://github.com/Cure-Consulting-Group"
