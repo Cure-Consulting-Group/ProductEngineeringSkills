@@ -7,11 +7,11 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.1.3 |
+| Version | 7.1.4 |
 | Skills | 80 |
 | Agents | 39 |
 | Personas | 4 |
-| Hooks (entries) | 18 |
+| Hooks (entries) | 15 |
 | Rules | 11 |
 | Output Styles | 9 |
 | MCP Servers | 0 |
@@ -247,7 +247,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.3). 80 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.4). 80 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
 | SessionStart | startup | command | echo '\nAvailable Agents (39):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
@@ -259,9 +259,6 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | UserPromptSubmit |  | command | PROMPT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt',… |
 | PreToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
 | PreToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
-| PreToolUse | Edit\|Write | prompt | You are a code quality validator for Cure Consulting Group. Check if the code change follows these rules: |
-| PreToolUse | Bash | prompt | You are a deployment safety validator. Check if this bash command involves deploying to production or a share… |
-| PreToolUse | Edit\|Write | prompt | You are the skill-security-auditor for Cure Consulting Group. This file is being written into the plugin (ski… |
 | Notification |  | command | echo '{"notification_logged": true}' |
 | SubagentStart |  | command | AGENT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('name', d.… |
 | SubagentStop |  | command | echo "Expert task complete. Final quality check checklist:\n- Tests added? \u2192 test-runner agent\n- Lint/T… |

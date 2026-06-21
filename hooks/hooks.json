@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.3). 80 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles, 4 MCP servers, 2 LSP servers. Use /cure-product-engineering:<skill-name> to invoke. Run /cure-product-engineering:project-bootstrap to set up a new project.'"
+            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.4). 80 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles, 4 MCP servers, 2 LSP servers. Use /cure-product-engineering:<skill-name> to invoke. Run /cure-product-engineering:project-bootstrap to set up a new project.'"
           }
         ]
       },
@@ -117,37 +117,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CMD=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('command',''))\" 2>/dev/null); if [ -n \"$CMD\" ]; then case \"$CMD\" in *'rm -rf /'*|*'rm -rf '*|*'mkfs'*|*'dd if='*) echo 'BLOCKED: Dangerous system command detected.' >&2; exit 2 ;; esac; fi; exit 0"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "You are a code quality validator for Cure Consulting Group. Check if the code change follows these rules:\n1. Adheres to Clean Architecture (entities first, no UI in business logic).\n2. Follows domain-specific standards in rules/ folder.\n3. Does not introduce technical debt (duplicated code, hardcoded strings).\n4. Includes necessary documentation updates if behavior changes.\n\nIf the change is high quality, respond 'yes'. Otherwise, provide specific improvements required.",
-            "model": "claude-haiku-4-5"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "You are a deployment safety validator. Check if this bash command involves deploying to production or a shared environment. If so, remind the agent to check the deployment-validator checklist first. If the command involves destructive operations (e.g. dropping a DB), respond with explanation: 'Dangerous operation requires explicit user confirmation.'\nIf the command is safe, respond 'yes'.",
-            "model": "claude-haiku-4-5"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "You are the skill-security-auditor for Cure Consulting Group. This file is being written into the plugin (skills, agents, or personas). Check for:\n1. Command injection vulnerabilities in Bash tools.\n2. Potential data exfiltration via WebFetch/WebSearch.\n3. Prompt injection vulnerabilities in instruction files.\n4. Secret leakage (API keys, hardcoded credentials).\n\nRespond with 'PASS' if secure, or a detailed 'WARN/FAIL' report.",
-            "model": "claude-haiku-4-5"
+            "command": "CMD=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('command',''))\" 2>/dev/null); if [ -n \"$CMD\" ]; then case \"$CMD\" in *'rm -rf /'*|*'rm -rf /*'*|*'rm -rf ~'*|*'rm -rf $HOME'*|*'rm -rf .'*|*'mkfs'*|*'dd if='*) echo 'BLOCKED: Dangerous system command detected.' >&2; exit 2 ;; esac; fi; exit 0"
           }
         ]
       }
