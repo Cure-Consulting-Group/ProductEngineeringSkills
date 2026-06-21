@@ -7,15 +7,15 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.1.2 |
+| Version | 7.1.3 |
 | Skills | 80 |
 | Agents | 39 |
 | Personas | 4 |
-| Hooks (entries) | 20 |
+| Hooks (entries) | 18 |
 | Rules | 11 |
 | Output Styles | 9 |
-| MCP Servers | 4 |
-| LSP Servers | 2 |
+| MCP Servers | 0 |
+| LSP Servers | 0 |
 
 
 ## 2. Skills
@@ -247,7 +247,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.2). 80 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.3). 80 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
 | SessionStart | startup | command | echo '\nAvailable Agents (39):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
@@ -257,8 +257,6 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | PostToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
 | PostToolUseFailure | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
 | UserPromptSubmit |  | command | PROMPT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt',… |
-| UserPromptSubmit |  | prompt | You are an intent classifier for Cure Consulting Group. Analyze the user's prompt and suggest the most releva… |
-| UserPromptSubmit |  | prompt | You are a prompt coach for Cure Consulting Group. The user just submitted a prompt to a Claude Code agent. Yo… |
 | PreToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
 | PreToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
 | PreToolUse | Edit\|Write | prompt | You are a code quality validator for Cure Consulting Group. Check if the code change follows these rules: |
@@ -303,20 +301,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 ## 8. MCP Servers
 
-| Server | Type | Transport / URL / Command | Note |
-| --- | --- | --- | --- |
-| firebase-firestore | stdio | npx | Firestore — direct database queries, schema inspection, document management |
-| github | http | https://api.githubcopilot.com/mcp/ | GitHub API — PR management, issue tracking, code search, repository operations |
-| postgres | stdio | npx | PostgreSQL — database queries, schema inspection, migration support |
-| sentry | http | https://mcp.sentry.dev/sse | Sentry — error monitoring, issue tracking, release health |
+_n/a_
 
 
 ## 9. LSP Servers
 
-| Server | Extensions | Command |
-| --- | --- | --- |
-| python | .py, .pyi | npx pyright-langserver --stdio |
-| typescript | .js, .jsx, .ts, .tsx | npx typescript-language-server --stdio |
+_n/a_
 
 
 ---

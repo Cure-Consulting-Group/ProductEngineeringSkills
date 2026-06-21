@@ -19,7 +19,7 @@ personas/*.md                  — Cross-domain engagement archetypes (tech-lead
 hooks/hooks.json               — Multi-layer hooks (command, prompt, agent) across 12 event types
 rules/*.md                     — 11 path-specific coding standards
 output-styles/*/output-style.md — 9 custom output styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts)
-.mcp.json                      — MCP server configurations (GitHub, Sentry, Firestore, PostgreSQL)
+.mcp.json.example              — Opt-in MCP server template (GitHub, Sentry, Firestore, PostgreSQL); see docs/MCP-SETUP.md. NOT auto-loaded — needs per-project secrets.
 .lsp.json                      — LSP server configurations (TypeScript, Python/Pyright)
 .claude-plugin/marketplace.json — Private plugin-marketplace manifest (name: "cure"); see docs/DISTRIBUTION.md
 settings.json                  — Default permission rules (35 deny rules)

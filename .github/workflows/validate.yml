@@ -63,7 +63,7 @@ jobs:
 
       - name: Validate plugin + marketplace manifest schema
         run: |
-          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json .lsp.json settings.json; do
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json.example .lsp.json settings.json; do
             python3 -c "import json,sys; json.load(open('$f')); print('ok json: $f')"
           done
           # Plugin manifest field TYPES must match the Claude Code schema
@@ -84,6 +84,18 @@ jobs:
           m = json.load(open(".claude-plugin/marketplace.json"))
           for f in ("name", "owner", "plugins"):
               if f not in m: errs.append(f"marketplace.json: missing required `{f}`")
+          # .lsp.json: standalone form is top-level server names (NO `lspServers`
+          # wrapper); each needs string `command` + record `extensionToLanguage`.
+          lsp = json.load(open(".lsp.json"))
+          if "lspServers" in lsp:
+              errs.append(".lsp.json: remove the `lspServers` wrapper (standalone file uses top-level server names)")
+          LSP_OK = {"command","extensionToLanguage","args","transport","env","initializationOptions","settings","workspaceFolder","startupTimeout","maxRestarts","diagnostics"}
+          for n, c in lsp.items():
+              if isinstance(c, dict):
+                  if not isinstance(c.get("command"), str): errs.append(f".lsp.json: `{n}.command` must be a string")
+                  if not isinstance(c.get("extensionToLanguage"), dict): errs.append(f".lsp.json: `{n}.extensionToLanguage` must be a record")
+                  bad = set(c) - LSP_OK
+                  if bad: errs.append(f".lsp.json: `{n}` has unknown keys {sorted(bad)}")
           if errs:
               print("MANIFEST SCHEMA ERRORS:", *errs, sep="\n  "); sys.exit(1)
           print("plugin + marketplace manifest schema OK")

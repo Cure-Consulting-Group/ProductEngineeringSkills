@@ -36,7 +36,10 @@ const RENAMED_DIRS = [
 
 const FILES_INTO_DOT_CLAUDE = ["settings.json"];
 
-const FILES_INTO_PROJECT_ROOT = [".mcp.json", ".lsp.json"];
+// .mcp.json is intentionally NOT auto-copied/activated — MCP servers need
+// per-project credentials. The template ships as .mcp.json.example; see
+// docs/MCP-SETUP.md to opt in. .lsp.json is safe to auto-activate.
+const FILES_INTO_PROJECT_ROOT = [".lsp.json", ".mcp.json.example"];
 
 function main() {
   const packageRoot = __dirname;
@@ -141,7 +144,8 @@ function main() {
     console.log(`[cure-skills] All ${skipped} target(s) already exist. Set CURE_SKILLS_FORCE=1 to refresh from upstream.`);
   } else {
     console.log(`[cure-skills] Vendored ${copied} target(s)${skipped ? ` (${skipped} skipped)` : ""}.`);
-    console.log("[cure-skills] Next: review the files, then `git add .claude/ .mcp.json .lsp.json && git commit`.");
+    console.log("[cure-skills] Next: review the files, then `git add .claude/ .lsp.json && git commit`.");
+    console.log("[cure-skills] MCP is opt-in: `cp .mcp.json.example .mcp.json` and set env vars — see docs/MCP-SETUP.md.");
   }
 }
 

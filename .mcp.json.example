@@ -2,13 +2,11 @@
   "mcpServers": {
     "github": {
       "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "note": "GitHub API — PR management, issue tracking, code search, repository operations"
+      "url": "https://api.githubcopilot.com/mcp/"
     },
     "sentry": {
       "type": "http",
-      "url": "https://mcp.sentry.dev/sse",
-      "note": "Sentry — error monitoring, issue tracking, release health"
+      "url": "https://mcp.sentry.dev/mcp"
     },
     "firebase-firestore": {
       "type": "stdio",
@@ -17,8 +15,7 @@
       "env": {
         "SERVICE_ACCOUNT_KEY_PATH": "${GOOGLE_APPLICATION_CREDENTIALS}",
         "FIRESTORE_PROJECT_ID": "${FIREBASE_PROJECT_ID}"
-      },
-      "note": "Firestore — direct database queries, schema inspection, document management"
+      }
     },
     "postgres": {
       "type": "stdio",
@@ -26,8 +23,7 @@
       "args": ["-y", "@bytebase/dbhub", "--transport", "stdio"],
       "env": {
         "DB_URL": "${DATABASE_URL}"
-      },
-      "note": "PostgreSQL — database queries, schema inspection, migration support"
+      }
     }
   }
 }
