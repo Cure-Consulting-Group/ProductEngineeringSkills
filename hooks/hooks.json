@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.1). 80 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles, 4 MCP servers, 2 LSP servers. Use /cure-product-engineering:<skill-name> to invoke. Run /cure-product-engineering:project-bootstrap to set up a new project.'"
+            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.2). 80 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles, 4 MCP servers, 2 LSP servers. Use /cure-product-engineering:<skill-name> to invoke. Run /cure-product-engineering:project-bootstrap to set up a new project.'"
           }
         ]
       },
@@ -108,6 +108,16 @@
             "type": "prompt",
             "prompt": "You are an intent classifier for Cure Consulting Group. Analyze the user's prompt and suggest the most relevant agent(s) to assist. Available agents by domain:\n\nEngineering: code-reviewer (code quality review), test-runner (run tests), qa-engineer (test planning, edge cases, quality gates), pr-reviewer (review PRs), refactor-assistant (safe refactoring), ci-debugger (fix CI failures), release-coordinator (manage releases), doc-generator (generate docs), codebase-explainer (explain code), migration-validator (validate DB migrations), deployment-validator (pre-deploy checks), dependency-auditor (audit deps), api-validator (validate APIs), project-bootstrapper (new project setup), system-architect (system design, RFCs, architecture decisions)\n\nProduct: product-analyst (product metrics/analytics), ux-researcher (UX analysis), roadmap-strategist (roadmap planning), competitive-intel (competitive analysis)\n\nMarketing: content-strategist (content planning), campaign-analyst (campaign analytics), brand-guardian (brand consistency), growth-analyst (growth metrics), technical-content-strategist (technical blogs/storytelling)\n\nBusiness: financial-analyst (financial modeling), market-intelligence (market sizing), investor-relations (investor materials), contract-reviewer (contract review), ops-finance (invoicing, bookkeeping, tax compliance), investment-banker (M&A, valuation, CIMs), equity-analyst (public markets research, earnings), private-equity-analyst (sourcing, LBO, diligence)\n\nData: data-analyst (data exploration), metrics-dashboard (KPI dashboards), ab-test-analyst (experiment design/analysis)\n\nSecurity & Legal: accessibility-checker (WCAG audit), firebase-security-auditor (Firebase security), legal-compliance (QSBS, ECAG, FERPA, entity compliance), skill-security-auditor (audits new skills/agents/personas for command injection, exfil, prompt injection, supply chain, secret leakage)\n\nRespond ONLY with a JSON object: {\"suggested_agents\": [\"agent-name\"], \"confidence\": \"high|medium|low\", \"reason\": \"brief reason\"}. If no agent is relevant, respond with {\"suggested_agents\": [], \"confidence\": \"high\", \"reason\": \"general task\"}.",
             "model": "claude-haiku-4-5"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "model": "claude-haiku-4-5",
+            "prompt": "You are a prompt coach for Cure Consulting Group. The user just submitted a prompt to a Claude Code agent. You must NEVER block, deny, or stop it \u2014 the user's work ALWAYS proceeds regardless of your output. Your only job is to help the user phrase better requests over time.\n\nDecide if the prompt is already good enough. Treat as GOOD (output nothing) when it is: a slash command (e.g. /login, /commit), a short operational command, a greeting, a one-word confirmation, a direct follow-up to the current work, or any request that clearly names an action and its target. Bias strongly toward GOOD \u2014 only coach when phrasing would genuinely produce a worse result.\n\nIf the prompt is genuinely vague (no clear action, no target, or missing detail that would change the outcome), produce: (1) one sentence on what is unclear, and (2) a restructured version that names the concrete action, the target/scope, and any success criteria \u2014 inferring sensibly from context. Keep it under 80 words. Do not actually perform the task here.\n\nRespond ONLY with JSON. If good: {\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"\"}}. If coaching: {\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"PROMPT COACH (non-blocking \u2014 proceeding anyway):\\nUnclear: <one sentence>.\\nTry next time: \\\"<restructured prompt>\\\"\"}}"
           }
         ]
       }
