@@ -25,6 +25,13 @@ safe to fix; report what is not. Stay read-only on anything listed under
 
 ## Rules
 
+- **Every iteration must terminate — never block.** Run all commands
+  non-interactively: no watch mode (`--watch`, `-w`, `dev` servers), no REPLs,
+  no commands that prompt for input, nothing left running when the iteration
+  ends. If a tool only offers watch mode, skip it and note the skip.
+- **Bound every check.** If a check could run long (full test suite on a big
+  repo, network-dependent audits), run its fast subset with a hard timeout and
+  report what was skipped. A slow check is skipped, never awaited indefinitely.
 - Never touch: production configs, migrations, secrets, lockfile major
   versions, anything under `.claude/`.
 - Every applied fix must leave the test suite green. If tests were already red
