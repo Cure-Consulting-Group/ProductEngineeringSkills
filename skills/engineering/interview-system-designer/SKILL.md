@@ -1,7 +1,7 @@
 ---
 name: interview-system-designer
-description: "Design calibrated, fair, predictive engineering interview loops for client hires — from phone screen to debrief, with stage rubrics, question banks, and evaluation metrics"
-when_to_use: "Use when a client engagement involves designing a hiring loop for an engineering role — senior IC, EM, staff+, new grad, or contractor. Also for calibrating an existing loop with low pass rate, low offer accept, or poor on-the-job performance correlation. NOT for sourcing strategy or compensation benchmarking."
+description: "Design calibrated, fair, predictive engineering interview loops — phone screen to debrief, with stage rubrics, question banks, and evaluation metrics"
+when_to_use: "Use when designing a hiring loop for an engineering role (IC, EM, staff+, new grad, contractor) or recalibrating a loop with low pass/accept rates. NOT sourcing strategy or comp benchmarking."
 argument-hint: "[role: senior-ic | em | staff | new-grad | contractor]"
 context: fork
 ---

@@ -2,7 +2,6 @@
 name: technical-content-strategist
 description: "High-level technical marketing agent that translates complex engineering feats into simple, accessible blog posts and visuals. Uses the Netflix/Uber/Pinterest/Square style of engineering authority, but with the 'Famous Actor' simple-explanation tone for business owners."
 tools: Read, Grep, Glob, WebFetch, WebSearch, NanoBanana
-model: sonnet
 maxTurns: 15
 skills: technical-blog-writer, product-marketing, seo-content-engine
 memory: project

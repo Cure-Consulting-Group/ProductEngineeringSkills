@@ -1,6 +1,6 @@
 {
   "name": "cure-product-engineering",
-  "description": "Cure Consulting Group's complete product engineering skill library — 80 production-grade skills (organized into 7 domain folders: engineering, platform, product, business, marketing, security, legal), 39 custom agents, 4 personas (cross-domain engagement archetypes: tech-lead, product-lead, engagement-pm, solo-consultant), 11 path-specific rules, 9 output styles, multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, and bundled stdlib Python tooling for executable skills. Standards across Android, iOS, Web, Firebase, Python, Go, Rust, and cloud infrastructure.",
+  "description": "Cure Consulting Group's complete product engineering skill library — 80 production-grade skills (organized into 7 domain folders: engineering, platform, product, business, marketing, security, legal), 39 custom agents, 4 personas (cross-domain engagement archetypes: tech-lead, product-lead, engagement-pm, solo-consultant), 11 path-specific rules, 9 output styles, multi-layer hooks (command + prompt) with a quality gate and skill security guard, MCP server configs, LSP server configs, and bundled stdlib Python tooling for executable skills. Standards across Android, iOS, Web, Firebase, Python, Go, Rust, and cloud infrastructure.",
   "version": "7.1.5",
   "author": {
     "name": "Cure Consulting Group",

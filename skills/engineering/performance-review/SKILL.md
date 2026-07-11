@@ -4,6 +4,7 @@ description: "Define performance budgets, load testing plans, optimization strat
 when_to_use: "Use when defining performance budgets, load testing plans, or optimization strategies across mobile, web, and backend. NOT for DORA metrics (use dora-metrics)."
 argument-hint: "[app-or-feature]"
 context: fork
+effort: high
 ---
 
 # Performance Review

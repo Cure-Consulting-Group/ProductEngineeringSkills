@@ -1,7 +1,7 @@
 ---
 name: cure-infra-bootstrap
-description: "Provision Cure's standardized Claude development infrastructure into any project (greenfield or existing). Idempotently scaffolds CLAUDE.md, STATE.md, .claude/{settings.json,skills,agents,rules,hooks}, .cursorrules, .gemini/config.yaml. Manifest-driven, version-pinned, conflict-aware."
-when_to_use: "Use to set up a new project with Cure standards, OR to upgrade an existing project's Cure infrastructure to a newer skills version, OR to audit drift across projects. NOT for ad-hoc skill installs (the bootstrap is the only supported path now)."
+description: "Provision Cure's standardized Claude dev infrastructure into any project — idempotent, manifest-driven, version-pinned scaffold of CLAUDE.md, STATE.md, .claude/, .cursorrules, .gemini"
+when_to_use: "Use to set up a new project with Cure standards, upgrade a project's Cure infrastructure, or audit drift. NOT for ad-hoc skill installs (bootstrap is the only supported path)."
 argument-hint: "[init|apply|doctor|inventory] [flags...]"
 allowed-tools: ["Read", "Bash"]
 context: fork

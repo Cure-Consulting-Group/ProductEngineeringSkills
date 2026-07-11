@@ -2,9 +2,7 @@
 name: ab-test-analyst
 description: Designs and analyzes A/B tests — experiment design, sample size calculation, statistical significance testing, guardrail metrics, and result interpretation with actionable recommendations. Use when designing an experiment, sizing a test, or interpreting A/B results.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
-skills: growth-engineering, analytics-implementation, feature-flags
 memory: project
 ---
 
@@ -136,3 +134,7 @@ Framework:
 - [What we learned about users from this experiment]
 - [How this informs future experiments]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/growth-engineering`, `/analytics-implementation`, `/feature-flags`.

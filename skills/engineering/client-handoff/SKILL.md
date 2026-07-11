@@ -425,24 +425,13 @@ CHANGE REQUEST PROCESS:
 ```
 BILLING OPTIONS
 
-Option A: Monthly Retainer
-  - [X] hours per month included
-  - Unused hours do not roll over
-  - Overage billed at $[RATE]/hour
-  - P0 incidents covered outside retainer hours at no additional cost
-  - Monthly usage report provided
-
-Option B: Time and Materials
-  - Billed at $[RATE]/hour
-  - Minimum 1-hour increment per incident
-  - P0 escalation premium: 1.5x rate outside business hours
-  - Weekly timesheet provided for approval
-  - Net 30 payment terms
-
-Option C: Hybrid
-  - [X] hours retainer for routine maintenance
-  - T&M for incidents exceeding retainer
-  - Quarterly review to adjust retainer size
+Option A — Monthly Retainer: [X] hrs/month included, no rollover; overage at
+  $[RATE]/hr; P0 incidents covered outside retainer hours at no extra cost;
+  monthly usage report provided.
+Option B — Time & Materials: $[RATE]/hr, 1-hr minimum per incident; P0 premium
+  1.5x outside business hours; weekly timesheet for approval; Net 30 terms.
+Option C — Hybrid: [X]-hr retainer for routine maintenance plus T&M for
+  incidents beyond it; quarterly review to adjust retainer size.
 ```
 
 ## Step 8: Sign-Off Checklist

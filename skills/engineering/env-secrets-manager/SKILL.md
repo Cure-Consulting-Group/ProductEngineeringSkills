@@ -1,7 +1,7 @@
 ---
 name: env-secrets-manager
-description: ".env hygiene, secret leak detection, rotation playbooks, and migration to managed secret stores — read-only audits and recommendations across local, CI, and production environments"
-when_to_use: "Use when designing .env schema for a new project, auditing an existing repo for secret leaks, responding to a leak incident, designing a rotation cadence, or migrating from .env files to a secret manager (Doppler / 1Password / AWS Secrets Manager / GCP Secret Manager / Vault). NOT for cloud-IAM design (use security-review). NOT for full infrastructure scaffolding (use infrastructure-scaffold)."
+description: ".env hygiene, secret leak detection, rotation playbooks, and migration to managed secret stores — read-only audits"
+when_to_use: "Use when designing .env schema, auditing for leaked secrets, responding to a leak, planning rotation, or migrating to a secret manager. NOT cloud-IAM design (security-review) or infra scaffolding (infrastructure-scaffold)."
 argument-hint: "[scope: greenfield | audit | leak-response | rotation | migrate]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash"]
 context: fork

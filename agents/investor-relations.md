@@ -2,9 +2,7 @@
 name: investor-relations
 description: Generates investor-facing materials — board updates, quarterly reports, KPI dashboards, fundraising narratives, and cap table scenarios from product and financial data. Use when preparing board updates, investor reports, KPI dashboards, or fundraising materials.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
-skills: investor-reporting, fundraising-materials, saas-financial-model
 memory: project
 ---
 
@@ -142,3 +140,7 @@ If fundraising context is needed:
 - [Metrics that can't be extracted from code]
 - [Strategic decisions that need founder input]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/investor-reporting`, `/fundraising-materials`, `/saas-financial-model`.

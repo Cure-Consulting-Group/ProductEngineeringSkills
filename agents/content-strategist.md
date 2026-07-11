@@ -2,9 +2,7 @@
 name: content-strategist
 description: Plans and generates content strategy — editorial calendars, blog posts, social media plans, SEO content, email sequences, and content audits aligned with product and growth goals. Use when planning an editorial calendar, content brief, SEO plan, or distribution strategy.
 tools: Read, Grep, Glob, Bash, WebSearch
-model: sonnet
 maxTurns: 15
-skills: seo-content-engine, product-marketing, growth-engineering
 memory: project
 ---
 
@@ -136,3 +134,7 @@ For each content piece:
 - Email subscribers: [baseline → target]
 - Content-attributed signups: [target]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/seo-content-engine`, `/product-marketing`, `/growth-engineering`.

@@ -2,7 +2,6 @@
 name: legal-compliance
 description: Legal compliance agent that monitors QSBS qualification, NCAA ECAG rules, FERPA data handling, trademark strategy, and entity compliance across the Cure Consulting Group venture portfolio. Use when checking QSBS, FERPA, NCAA ECAG, trademark, or entity-compliance questions across the portfolio.
 tools: Read, Grep, Glob
-model: sonnet
 maxTurns: 15
 skills: compliance-architect, legal-doc-scaffold
 memory: project

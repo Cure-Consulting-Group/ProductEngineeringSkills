@@ -1,7 +1,7 @@
 ---
 name: mcp-server-builder
-description: "Design and build MCP (Model Context Protocol) servers — the integration protocol Claude Code, Codex, and other agents use to call tools, expose resources, and consume prompts"
-when_to_use: "Use when building, scaffolding, or migrating an MCP server (Python or TypeScript SDK), wrapping an existing REST API as MCP, or designing tool/resource schemas for agent consumption. NOT for consuming an existing MCP server (just wire it into .mcp.json). NOT for general API design (use api-architect)."
+description: "Design and build MCP (Model Context Protocol) servers — the protocol agents use to call tools, expose resources, and consume prompts"
+when_to_use: "Use when building or migrating an MCP server (Python/TypeScript SDK), wrapping a REST API as MCP, or designing tool schemas for agents. NOT for consuming an MCP server (.mcp.json) or general API design (api-architect)."
 argument-hint: "[server-name]"
 ---
 

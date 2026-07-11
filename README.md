@@ -80,7 +80,7 @@ ProductEngineeringSkills/
 │   ├── accessibility-checker.md # WCAG 2.2 automated compliance
 │   └── firebase-security-auditor.md # Firestore rules and Functions audit
 ├── hooks/                    # Multi-layer automated enforcement
-│   └── hooks.json            # Command + Prompt + Agent hooks (12 event types)
+│   └── hooks.json            # Command + Prompt hooks (9 event types)
 ├── rules/                    # 11 path-specific coding standards
 │   ├── android.md             # Loads for *.kt files
 │   ├── ios.md                 # Loads for *.swift files
@@ -355,7 +355,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 
 ## Hooks (Multi-Layer Automated Enforcement + Agent Auto-Triggering)
 
-The plugin includes three types of hooks across **12 event types**: `SessionStart`, `PreCompact`, `PostCompact`, `PostToolUse`, `PostToolUseFailure`, `UserPromptSubmit`, `PreToolUse`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCompleted`, `Stop`.
+The plugin ships command and prompt hooks across **9 event types**: `SessionStart`, `PreCompact`, `PostCompact`, `ConfigChange`, `PostToolUseFailure`, `UserPromptSubmit`, `PreToolUse`, `Stop`, `SubagentStop`. Highlights: a Stop-hook quality gate (blocks "done" without verification), a PreToolUse static security guard on skill/agent/persona files, and a ConfigChange audit trigger when skill files change mid-session.
 
 **New in v4.0**: Hooks now suggest and auto-trigger agents based on context. Every code edit, test run, deployment, and PR action recommends the most relevant agent(s).
 

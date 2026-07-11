@@ -5,6 +5,7 @@ when_to_use: "Use when checking WCAG compliance, screen reader support, or inclu
 argument-hint: "[feature-or-screen]"
 allowed-tools: ["Read", "Grep", "Glob"]
 context: fork
+disallowed-tools: Write Edit
 ---
 
 # Accessibility Audit

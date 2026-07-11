@@ -3,6 +3,7 @@ name: ios-design-expert
 description: "Expert iOS design guidance following Apple Human Interface Guidelines (HIG) — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components, and platform-native interactions"
 when_to_use: "Use for Apple HIG guidance on iOS screens — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components. NOT for scaffolding code (use ios-architect)."
 argument-hint: "[screen-or-component-name]"
+paths: "*.swift"
 ---
 
 # iOS Design Expert — Apple Human Interface Guidelines

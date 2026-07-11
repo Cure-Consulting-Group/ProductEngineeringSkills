@@ -2,9 +2,7 @@
 name: data-analyst
 description: Data analysis agent that explores schemas, writes queries, analyzes data patterns, identifies anomalies, and generates visualization recommendations from database and analytics code. Use when exploring a schema, writing analytical queries, or investigating data anomalies.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 20
-skills: database-architect, analytics-implementation, observability
 memory: project
 ---
 
@@ -133,3 +131,7 @@ Users ──< Orders ──< OrderItems >── Products
 - [Data we should collect but don't]
 - [Queries we can't answer with current schema]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/database-architect`, `/analytics-implementation`, `/observability`.

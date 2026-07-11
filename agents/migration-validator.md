@@ -2,10 +2,9 @@
 name: migration-validator
 description: Validates database migrations for correctness, rollback safety, naming conventions, and zero-downtime compatibility. Use before applying migrations to staging or production.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 12
-skills: database-architect, data-migration
 memory: project
+effort: high
 ---
 
 # Migration Validator Agent
@@ -89,3 +88,7 @@ For Firestore migrations:
 ### Recommendations
 - [specific migration improvements]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/database-architect`, `/data-migration`.

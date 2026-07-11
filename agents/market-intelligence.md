@@ -2,7 +2,6 @@
 name: market-intelligence
 description: Market intelligence agent for TAM/SAM/SOM analysis, industry trends, regulatory landscape, market timing, and investment thesis validation.
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch
-model: sonnet
 maxTurns: 15
 skills: market-research, go-to-market, investor-reporting
 memory: project

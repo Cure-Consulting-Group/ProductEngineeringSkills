@@ -2,7 +2,6 @@
 name: deployment-validator
 description: Pre-deployment checklist validator. Verifies environment variables, secrets management, feature flags, smoke tests, and rollback readiness before any deployment. Use before a deployment to validate env vars, secrets, feature flags, smoke tests, and rollback readiness.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 12
 skills: ci-cd-pipeline, infrastructure-scaffold
 memory: project

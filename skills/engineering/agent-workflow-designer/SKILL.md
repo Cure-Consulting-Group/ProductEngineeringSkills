@@ -1,7 +1,7 @@
 ---
 name: agent-workflow-designer
 description: "Choose the right agentic workflow pattern — chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer, or autonomous agent"
-when_to_use: "Use when deciding between agentic workflow patterns at the start of an LLM project, or when an existing agent is too expensive, too slow, or too unreliable and a workflow would do. NOT for designing the internals of an autonomous agent (use agent-designer). NOT for the AI feature scaffold itself (use ai-feature-builder). NOT for prompt versioning and eval pipelines (use llmops)."
+when_to_use: "Use when picking a workflow shape for an LLM project, or when an existing agent is too expensive, slow, or unreliable. NOT agent internals (agent-designer), feature scaffolds (ai-feature-builder), or evals (llmops)."
 argument-hint: "[task-or-system-name]"
 ---
 

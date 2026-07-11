@@ -102,3 +102,23 @@ This project uses the shared Cure skill library (private plugin).
 - Inventory:     run `/agents`, or see the library's docs/OVERVIEW.md
 ```
 ```
+
+## Skill-listing budget (token economy)
+
+Claude Code caps the per-session skill listing at roughly 1% of model context by
+default. With this library's 80 skills installed alongside a project's own
+skills, trigger text past the budget gets truncated — those skills stop being
+auto-discoverable (explicit `/name` invocation still works).
+
+If auto-discovery seems flaky in a skill-heavy project, raise the budget in the
+project's `.claude/settings.json`:
+
+```json
+{
+  "skillListingBudgetFraction": 0.02
+}
+```
+
+The library keeps its own trigger text tight (≤350 chars per skill, enforced by
+`scripts/audit-library.py`) so it consumes as little of the shared budget as
+possible.

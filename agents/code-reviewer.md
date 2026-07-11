@@ -2,10 +2,9 @@
 name: code-reviewer
 description: Security and quality code review agent that audits code against Cure Consulting Group standards. Use when reviewing a diff or pull request for security, quality, and adherence to Cure standards.
 tools: Read, Grep, Glob
-model: sonnet
 maxTurns: 15
-skills: security-review, testing-strategy, accessibility-audit
 memory: project
+effort: high
 ---
 
 # Code Reviewer Agent
@@ -88,3 +87,7 @@ Produce a structured review:
 ### Recommendations
 - Suggested improvements
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/security-review`, `/testing-strategy`, `/accessibility-audit`.

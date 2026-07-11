@@ -2,7 +2,6 @@
 name: ux-researcher
 description: Synthesizes UX research — analyzes UI code for usability issues, maps user flows for friction points, evaluates information architecture, and generates research plans.
 tools: Read, Grep, Glob
-model: sonnet
 maxTurns: 15
 skills: product-design, accessibility-audit, customer-onboarding
 memory: project

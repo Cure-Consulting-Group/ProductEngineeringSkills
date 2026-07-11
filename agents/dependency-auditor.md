@@ -2,7 +2,6 @@
 name: dependency-auditor
 description: Audits project dependencies for security vulnerabilities, outdated packages, license compliance, and supply chain risks. Use after installing or updating packages.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 10
 skills: security-review
 memory: project

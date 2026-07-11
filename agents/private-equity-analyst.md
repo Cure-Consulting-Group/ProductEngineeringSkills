@@ -2,7 +2,6 @@
 name: private-equity-analyst
 description: Private markets specialist focused on deal sourcing, commercial due diligence, and portfolio monitoring. Analyzes unit economics, builds LBO models, and drafts IC memos. Use when sourcing or diligencing a private deal, building an LBO, or drafting an IC memo.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 20
 skills: finops, dcf-modeling, comps-analysis
 memory: project

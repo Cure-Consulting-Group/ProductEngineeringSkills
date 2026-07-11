@@ -1,7 +1,7 @@
 ---
 name: rag-architect
-description: "Design production RAG pipelines — chunking, embedding model selection, vector store choice, hybrid retrieval, reranking, and eval — with explicit cost and latency budgets"
-when_to_use: "Use when designing or auditing a RAG pipeline (knowledge-base Q&A, agentic retrieval, hybrid search, multi-modal). NOT for general LLM feature work (use ai-feature-builder). NOT for full LLM operationalization, monitoring, and rollout (use llmops). NOT for ML training (out of scope)."
+description: "Design production RAG pipelines — chunking, embeddings, vector stores, hybrid retrieval, reranking, evals — with explicit cost and latency budgets"
+when_to_use: "Use when designing or auditing a RAG pipeline (KB Q&A, agentic retrieval, hybrid search, multi-modal). NOT general LLM features (ai-feature-builder), LLM ops (llmops), or ML training."
 argument-hint: "[pipeline-name]"
 ---
 

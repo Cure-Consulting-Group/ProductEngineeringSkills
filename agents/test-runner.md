@@ -2,7 +2,6 @@
 name: test-runner
 description: Validates test suite health, runs tests, checks coverage thresholds, and flags flaky tests. Use after writing new code or before commits.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
 skills: testing-strategy, e2e-testing
 memory: project

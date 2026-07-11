@@ -5,6 +5,8 @@ when_to_use: "Use before launch, after adding auth/payment/PII features, or when
 argument-hint: "[target-system]"
 allowed-tools: ["Read", "Grep", "Glob"]
 context: fork
+disallowed-tools: Write Edit
+effort: high
 ---
 
 # Security Review

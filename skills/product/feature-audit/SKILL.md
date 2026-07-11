@@ -5,6 +5,7 @@ when_to_use: "Use after finishing a feature, before marking a PR as ready, or wh
 argument-hint: "[feature-name]"
 allowed-tools: ["Read", "Grep", "Glob"]
 context: fork
+disallowed-tools: Write Edit
 ---
 
 # Feature Audit

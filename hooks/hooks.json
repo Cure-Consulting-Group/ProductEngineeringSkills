@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.5). 80 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles, 4 MCP servers, 2 LSP servers. Use /cure-product-engineering:<skill-name> to invoke. Run /cure-product-engineering:project-bootstrap to set up a new project.'"
+            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.5). 80 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles. Use /cure-product-engineering:<skill-name> to invoke; full inventory: docs/OVERVIEW.md in the plugin repo. New project? /cure-product-engineering:project-bootstrap.'"
           }
         ]
       },
@@ -27,15 +27,6 @@
             "command": "if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print(len(d))\" 2>/dev/null || echo '0'); if [ \"$OUTDATED\" -gt 0 ] 2>/dev/null; then echo \"Dependency check: $OUTDATED outdated packages. Consider running dependency-auditor agent.\"; fi; fi"
           }
         ]
-      },
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '\\nAvailable Agents (39):\\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, ci-debugger, release-coordinator, doc-generator, codebase-explainer, migration-validator, deployment-validator, dependency-auditor, api-validator, project-bootstrapper, qa-engineer, system-architect\\n  Product: product-analyst, ux-researcher, roadmap-strategist, competitive-intel\\n  Marketing: content-strategist, campaign-analyst, brand-guardian, growth-analyst, technical-content-strategist\\n  Business: financial-analyst, market-intelligence, investor-relations, contract-reviewer, ops-finance, investment-banker, equity-analyst, private-equity-analyst\\n  Data: data-analyst, metrics-dashboard, ab-test-analyst\\n  Security & Legal: accessibility-checker, firebase-security-auditor, legal-compliance, skill-security-auditor\\n\\nAvailable Personas (4): cure-tech-lead, cure-product-lead, cure-engagement-pm, cure-solo-consultant'"
-          }
-        ]
       }
     ],
     "PreCompact": [
@@ -44,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'CONTEXT RE-INJECTION AFTER COMPACTION:\\n\\nCure Consulting Group Standards (always apply):\\n- Clean Architecture: domain (pure logic) / data (DTOs + repos) / presentation (VMs + UI)\\n- Android: Kotlin + Compose + Hilt + MVI + Coroutines/Flow\\n- iOS: Swift + SwiftUI + MVVM + structured concurrency\\n- Web: Next.js App Router + TypeScript strict + Tailwind + Server Components by default\\n- Firebase: Firestore + Cloud Functions v2 (TypeScript) + security rules deny-by-default\\n- Python: 3.11+, type hints, pydantic, pytest, asyncio\\n- Go: 1.22+, interface-based, errgroup, table-driven tests\\n- Rust: 2021 edition, thiserror/anyhow, clippy pedantic, tokio\\n- SQL: parameterized queries, timestamptz, reversible migrations\\n- Docker: multi-stage, non-root, health checks, pinned images\\n- Terraform: remote state + locking, plan before apply, prevent_destroy on critical resources\\n- Testing: 80% coverage minimum on new code\\n- Security: validate all inputs, no hardcoded secrets, parameterized queries\\n\\nAvailable skills (80 total) \u2014 see docs/OVERVIEW.md for full domain-organized list. Highlights:\\n\\nEngineering (39): sdlc, ai-feature-builder, llmops, mcp-server-builder, rag-architect, agent-designer, agent-workflow-designer, api-architect, api-gateway, database-architect, firebase-architect, android-feature-scaffold, ios-architect, nextjs-feature-scaffold, stripe-integration, monorepo-navigator, git-worktree-manager, env-secrets-manager, performance-review, code-audit, e2e-testing, testing-strategy, design-system, micro-frontends, edge-computing, offline-first, i18n, notification-architect, ci-cd-pipeline, data-migration, feature-flags, growth-engineering, analytics-implementation, stitch-design, android-design-expert, ios-design-expert, web-design-expert, test-accounts, ai-security\\n\\nPlatform (10): project-bootstrap, infrastructure-scaffold, observability, incident-response, disaster-recovery, release-management, cure-infra-bootstrap, interview-system-designer, self-improving-memory, git-workflow\\n\\nProduct (10): product-manager, product-design, market-research, customer-onboarding, feature-audit, technology-radar, portfolio-registry, uat, product-strategy, product-ops\\n\\nBusiness (11): engineering-cost-model, saas-financial-model, burn-rate-tracker, finops, investor-reporting, fundraising-materials, proposal-generator, comps-analysis, dcf-modeling, merger-modeling, equity-research\\n\\nMarketing (5): go-to-market, product-marketing, seo-content-engine, content-related GTM, technical-blog-writer\\n\\nSecurity (4): security-review, accessibility-audit, compliance-architect, qsbs-compliance\\n\\nLegal (1): legal-doc-scaffold\\n\\nAgents (39):\\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, ci-debugger, release-coordinator, doc-generator, codebase-explainer, migration-validator, deployment-validator, dependency-auditor, api-validator, project-bootstrapper, qa-engineer, system-architect\\n  Product: product-analyst, ux-researcher, roadmap-strategist, competitive-intel\\n  Marketing: content-strategist, campaign-analyst, brand-guardian, growth-analyst, technical-content-strategist\\n  Business: financial-analyst, market-intelligence, investor-relations, contract-reviewer, ops-finance, investment-banker, equity-analyst, private-equity-analyst\\n  Data: data-analyst, metrics-dashboard, ab-test-analyst\\n  Security & Legal: accessibility-checker, firebase-security-auditor, legal-compliance, skill-security-auditor\\n\\nPersonas (4): cure-tech-lead, cure-product-lead, cure-engagement-pm, cure-solo-consultant\\n\\nRun /cure-product-engineering:<skill> to invoke any skill. Adopt a persona by referencing personas/<name>.md.'"
+            "command": "echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\\n- Clean Architecture: domain (pure logic) / data (DTOs + repos) / presentation (VMs + UI)\\n- Android: Kotlin + Compose + Hilt + MVI. iOS: SwiftUI + MVVM + structured concurrency. Web: Next.js App Router + TS strict + Tailwind + Server Components. Firebase: Functions v2 (TS) + deny-by-default rules. Python: 3.11+ typed + pytest. Go: 1.22+ errgroup + table-driven tests. Rust: thiserror/anyhow + clippy pedantic + tokio.\\n- SQL: parameterized, timestamptz, reversible migrations. Docker: multi-stage, non-root, pinned. Terraform: remote state + plan before apply.\\n- Testing: 80% coverage minimum on new code. Security: validate inputs, no hardcoded secrets, parameterized queries.\\n\\nPlugin: 80 skills, 39 agents, 4 personas — invoke via /cure-product-engineering:<skill>. Full inventory: docs/OVERVIEW.md in the plugin repo.'"
           }
         ]
       }
@@ -55,27 +46,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Context compacted. Cure Consulting Group plugin active \u2014 80 skills, 39 agents, 4 personas available. Use /cure-product-engineering:<skill-name> to invoke. Run cat docs/OVERVIEW.md in plugin dir for full inventory.'"
+            "command": "echo 'Context compacted. Cure Consulting Group plugin active — 80 skills, 39 agents, 4 personas. Use /cure-product-engineering:<skill-name> to invoke.'"
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "ConfigChange": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "skills",
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if [ -f \"$FILE\" ]; then echo \"Updated $FILE\"; fi"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "CMD=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('command',''))\" 2>/dev/null); echo \"Executed: $CMD\""
+            "command": "if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 || echo 'Skill files changed and the library audit now reports issues — run: python3 scripts/audit-library.py'; fi"
           }
         ]
       }
@@ -85,8 +67,9 @@
         "matcher": "Bash",
         "hooks": [
           {
-            "type": "command",
-            "command": "CMD=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('command',''))\" 2>/dev/null); echo \"Command failed: $CMD. Analyzing output...\""
+            "type": "prompt",
+            "prompt": "A Bash command failed. Tool input and error output: $ARGUMENTS\n\nClassify the failure and name the single most relevant specialized agent, choosing from: ci-debugger (build/test/CI failures), dependency-auditor (dependency or install errors), migration-validator (database/migration errors), deployment-validator (deploy/infra/config errors), or none (transient or trivial — e.g. typo, missing file, permission). Respond with ok: true and put the one-sentence classification plus agent suggestion (or 'no agent needed') in reason.",
+            "timeout": 30
           }
         ]
       }
@@ -97,7 +80,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PROMPT=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('prompt','').lower()[:500])\" 2>/dev/null); case \"$PROMPT\" in *'delete all'*|*'drop all'*|*'remove everything'*|*'wipe'*|*'nuke'*) echo '{\"warning\": \"Destructive operation detected in prompt. Proceeding with caution \u2014 will confirm before any irreversible actions.\"}' ;; esac; exit 0"
+            "command": "PROMPT=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('prompt','').lower()[:500])\" 2>/dev/null); case \"$PROMPT\" in *'delete all'*|*'drop all'*|*'remove everything'*|*'wipe'*|*'nuke'*) echo '{\"warning\": \"Destructive operation detected in prompt. Proceeding with caution — will confirm before any irreversible actions.\"}' ;; esac; exit 0"
           }
         ]
       }
@@ -109,6 +92,10 @@
           {
             "type": "command",
             "command": "FILE=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('file_path',''))\" 2>/dev/null); if [ -n \"$FILE\" ]; then case \"$FILE\" in *.env|*.env.*) echo 'BLOCKED: Do not modify .env files directly. Use environment variable management.' >&2; exit 2 ;; *-lock.json|*-lock.yaml|*.lock|*shrinkwrap*) echo 'BLOCKED: Lock files should only be modified by package managers, not manually.' >&2; exit 2 ;; */credentials*|*/secrets*|*serviceAccount*|*service-account*|*.pem|*id_rsa*|*id_ed25519*) echo 'BLOCKED: Credential and secret files must not be modified by AI. Manage these manually.' >&2; exit 2 ;; *.tfstate|*.tfstate.*) echo 'BLOCKED: Terraform state files must never be manually edited. Use terraform state commands.' >&2; exit 2 ;; esac; fi; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport sys, json, os, re\ntry:\n    d = json.loads(os.environ.get('CLAUDE_TOOL_INPUT') or '{}')\nexcept Exception:\n    sys.exit(0)\npath = d.get('file_path', '')\nif not re.search(r'(^|/)(skills|agents|personas)/', path):\n    sys.exit(0)\ncontent = d.get('content', '') + d.get('new_string', '')\npatterns = [\n    (r'curl[^\\n]*\\|\\s*(ba)?sh', 'pipes a remote download into a shell'),\n    (r'wget[^\\n]*\\|\\s*(ba)?sh', 'pipes a remote download into a shell'),\n    (r'base64\\s+(-d|--decode)[^\\n]*\\|\\s*(ba)?sh', 'executes base64-decoded code'),\n    (r'rm\\s+-rf\\s+(/|~|[$]HOME)', 'recursive delete of home or root'),\n    (r'(id_rsa|id_ed25519|\\.aws/credentials|serviceAccount.*\\.json)', 'references credential files'),\n    (r'(nc|ncat|curl|wget)[^\\n]*[$][(]\\s*(cat|env|printenv)', 'exfiltrates local data to the network'),\n]\nfor pat, why in patterns:\n    if re.search(pat, content):\n        print(f'BLOCKED: proposed skill/agent/persona content {why}. If intentional, get it reviewed by @skill-security-auditor and apply manually.', file=sys.stderr)\n        sys.exit(2)\nprint('Skill/agent/persona file change detected — run @skill-security-auditor before merging.')\n\""
           }
         ]
       },
@@ -122,35 +109,25 @@
         ]
       }
     ],
-    "Notification": [
+    "Stop": [
       {
         "matcher": "",
         "hooks": [
           {
-            "type": "command",
-            "command": "echo '{\"notification_logged\": true}'"
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "AGENT=$(echo $CLAUDE_TOOL_INPUT | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('name', d.get('agent_name', 'subagent')))\" 2>/dev/null); echo \"Hiring specialized expert: @$AGENT\""
+            "type": "prompt",
+            "prompt": "You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS\n\nDecide whether this turn is safe to end. Return ok: false ONLY if ALL of these hold: (1) product source code was edited this turn (not just docs, config, markdown, or test files), (2) there is no evidence tests, a build, or a verification command ran after the edits, (3) the user did not explicitly ask to skip verification or defer it, and (4) no earlier quality-gate block already happened this turn. When returning ok: false, the reason must name the specific files edited and the concrete verification to run. In every other case — including any ambiguity — return ok: true.",
+            "timeout": 30
           }
         ]
       }
     ],
     "SubagentStop": [
       {
-        "matcher": "",
+        "matcher": "refactor-assistant|project-bootstrapper|release-coordinator",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"Expert task complete. Final quality check checklist:\\n- Tests added? \\u2192 test-runner agent\\n- Lint/Types pass? \\u2192 ci-debugger agent\\n- PR ready? \\u2192 pr-reviewer agent\\n- API gaps \\u2192 api-validator agent\\n- No docs for new feature \\u2192 doc-generator agent\\n\\nIf everything looks good, respond: 'Session complete. All quality checks passed.'\""
+            "command": "echo \"Write-capable agent finished. Quality checklist:\\n- Tests added/passing? → test-runner agent\\n- Lint/types clean? → ci-debugger agent\\n- PR ready? → pr-reviewer agent\\n- New surface documented? → doc-generator agent\""
           }
         ]
       }

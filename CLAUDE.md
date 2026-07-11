@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 80 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 80 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
@@ -16,7 +16,7 @@ skills/{domain}/{name}/SKILL.md — 80 skills, organized by domain folder
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
 agents/*.md                    — 39 specialized subagents with tool/skill bindings
 personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant)
-hooks/hooks.json               — Multi-layer hooks (command, prompt, agent) across 12 event types
+hooks/hooks.json               — Multi-layer hooks (command + prompt) across 9 event types incl. Stop quality gate, ConfigChange audit, skill security guard
 rules/*.md                     — 11 path-specific coding standards
 output-styles/*/output-style.md — 9 custom output styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts)
 .mcp.json.example              — Opt-in MCP server template (GitHub, Sentry, Firestore, PostgreSQL); see docs/MCP-SETUP.md. NOT auto-loaded — needs per-project secrets.
@@ -51,6 +51,16 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 - When adding a new persona, create it in `personas/{name}.md` with frontmatter (`name`, `description`, `type: persona`). Personas reference only existing skills/agents — never invent names. Match Cure's voice: terse, opinionated, concrete with numbers, no marketing fluff.
 - A skill MAY ship `skills/{domain}/{name}/scripts/*.py` — Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`. See `docs/SCRIPTS_CONVENTION.md` for the full convention.
 - After adding/modifying skills, agents, or personas: run `python3 scripts/generate-overview.py` to regenerate `docs/OVERVIEW.md`.
+
+## Token Economy (Wave 2 conventions)
+
+The library's biggest token cost is fixed overhead multiplied across every session and agent spawn in every consuming project. Rules:
+
+- **Trigger text is budgeted.** Combined `description` + `when_to_use` per skill: target ≤350 chars (audit warns above 350, flags at 500). All 80 skills compete for the session skill-listing budget (~1% of model context by default); skill-heavy consuming projects can raise `skillListingBudgetFraction` — see `docs/CONSUMING-PROJECTS.md`.
+- **Agents preload at most ~300 lines of skills.** Anything more becomes an on-demand body reference ("invoke `/x` when needed"). The audit flags preloads >800 lines.
+- **Don't pin `model:` on agents without a reason.** Agents inherit the session model; a blanket pin silently downgrades them. Spend via `effort:` instead — `high` only where judgment lives (reviewers, auditors, validators).
+- **Heavy analysis skills fork.** Use `context: fork` so their exploration doesn't bloat the main conversation.
+- **Hooks stay quiet.** No echo-per-tool-call hooks; prompt-type hooks run on the harness's cheap default model with tight prompts.
 
 ## Versioning
 
