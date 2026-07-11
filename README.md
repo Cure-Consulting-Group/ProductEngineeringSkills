@@ -355,7 +355,7 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 
 ## Recurring Automation (Loops & Routines)
 
-The library ships a standard maintenance loop (self-provisioned to `.claude/loop.md` on first session start — run bare `/loop` to use it), Recurring Mode sections in the goal-shaped skills (finops, burn-rate-tracker, investor-reporting, security-review, and others), and copy-paste cloud-routine recipes in **[docs/AUTOMATION.md](docs/AUTOMATION.md)**. Mechanism selection and unattended-run guardrails: `/cure-product-engineering:engagement-automation`.
+The library ships a standard maintenance loop (self-provisioned to `.claude/loop.md` on first session start — run bare `/loop` to use it), Recurring Mode sections in the goal-shaped skills (finops, burn-rate-tracker, investor-reporting, security-review, and others), and copy-paste cloud-routine recipes in **[docs/AUTOMATION.md](docs/AUTOMATION.md)**. Library upkeep cadence: **[docs/MAINTENANCE.md](docs/MAINTENANCE.md)**. Mechanism selection and unattended-run guardrails: `/cure-product-engineering:engagement-automation`.
 
 ## Hooks (Multi-Layer Automated Enforcement)
 

@@ -51,6 +51,7 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 - When adding a new persona, create it in `personas/{name}.md` with frontmatter (`name`, `description`, `type: persona`). Personas reference only existing skills/agents — never invent names. Match Cure's voice: terse, opinionated, concrete with numbers, no marketing fluff.
 - A skill MAY ship `skills/{domain}/{name}/scripts/*.py` — Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`. See `docs/SCRIPTS_CONVENTION.md` for the full convention.
 - After adding/modifying skills, agents, or personas: run `python3 scripts/generate-overview.py` to regenerate `docs/OVERVIEW.md`.
+- Library upkeep follows `docs/MAINTENANCE.md`: monthly `/loop` + liveness check, quarterly platform re-evaluation as a new BACKLOG wave (research → verify → tickets → execute). Never bypass `scripts/release.sh`.
 
 ## Token Economy (Wave 2 conventions)
 
