@@ -10,8 +10,8 @@ A **Claude Code plugin** containing 81 production-grade skills (organized into 7
 
 ```
 .claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
-skills/{domain}/{name}/SKILL.md — 80 skills, organized by domain folder
-                                 Domains: engineering (39), platform (10), product (10),
+skills/{domain}/{name}/SKILL.md — 81 skills, organized by domain folder
+                                 Domains: engineering (39), platform (11), product (10),
                                  business (7), finance (4), marketing (5), security (4), legal (1)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
 agents/*.md                    — 39 specialized subagents with tool/skill bindings
