@@ -425,7 +425,6 @@ TECHNOLOGY RADAR — [COMPANY NAME]
 Last updated: [YYYY-MM-DD]
 Review cadence: Quarterly (next review: [YYYY-QX])
 Prepared by: [Name/Team]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SUMMARY
@@ -443,44 +442,36 @@ Ring movements this quarter:
   [~] [Tech] → Trial (promoted from Assess)
   [-] [Tech] → Hold (demoted from Adopt/Trial)
   [NEW] [Tech] added to [Ring]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ADOPT
 [Entries grouped by quadrant, using Step 4 format]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 TRIAL
 [Entries grouped by quadrant, using Step 4 format]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ASSESS
 [Entries grouped by quadrant, using Step 4 format]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 HOLD
 [Entries grouped by quadrant, using Step 4 format.
  Every Hold entry MUST include a migration plan.]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 DIVERGENCE REPORT
 [Output from Step 8]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 TECHNOLOGY DEBT
 [Output from Step 7 — Hold items still in production, prioritized]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 QUARTERLY REVIEW LOG
 [Date] — [Summary of changes made]
 [Date] — [Summary of changes made]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 DELIVERABLES GENERATED:
