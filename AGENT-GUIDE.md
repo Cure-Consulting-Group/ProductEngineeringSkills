@@ -24,7 +24,7 @@ Users need to view their plan, upgrade/downgrade, and cancel.
 What happens automatically:
 - Intent classifier suggests `android-feature-scaffold` skill
 - Code edits trigger hooks that suggest `code-reviewer`, `test-runner`
-- Stop hook validates tests, security review, docs
+- After write-capable agents finish, the SubagentStop hook surfaces a quality checklist (tests, lint, PR readiness, docs)
 
 To get more out of it, layer in specific agents:
 

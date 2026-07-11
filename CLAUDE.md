@@ -54,7 +54,7 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 
 ## Versioning
 
-Current version: **7.0.1**
+Current version: **7.1.5**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording
@@ -125,7 +125,7 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 |-------|---------|-------|
 | **accessibility-checker** | Automated WCAG 2.2 compliance checking | Read-only |
 | **firebase-security-auditor** | Firestore rules and Cloud Functions security audit | Read + Bash |
-| **skill-security-auditor** | Audit new SKILL.md, agent, and persona files for command injection, code execution, exfiltration, prompt injection, supply chain risks, privilege escalation, and secret leakage. Returns PASS/WARN/FAIL. Wired into PreToolUse hook. | Read-only |
+| **skill-security-auditor** | Audit new SKILL.md, agent, and persona files for command injection, code execution, exfiltration, prompt injection, supply chain risks, privilege escalation, and secret leakage. Returns PASS/WARN/FAIL. Invoke before merging changes under skills/, agents/, or personas/ (automatic hook wiring: BACKLOG T11). | Read-only |
 
 ## Personas (4)
 
