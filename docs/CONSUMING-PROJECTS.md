@@ -46,7 +46,28 @@ Agents auto-delegate based on the task, or list them with `/agents`.
 
 ## Step 4 — Update (the seamless part)
 
-When the library ships a new version:
+**Zero-command (recommended):** enable auto-update once and never run update
+commands again — Claude Code refreshes the cure catalog and updates the plugin
+at session start. Either toggle it in the UI (`/plugin` → Marketplaces → cure →
+Enable auto-update) or add this to the project's `.claude/settings.json`
+(included in the vendored settings.json since v7.4.3):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "cure": {
+      "source": { "source": "github", "repo": "Cure-Consulting-Group/ProductEngineeringSkills" },
+      "autoUpdate": true
+    }
+  }
+}
+```
+
+This also registers the marketplace itself, so a project carrying this settings
+block skips `/plugin marketplace add` — only the one-time
+`/plugin install cure-product-engineering@cure` remains.
+
+**Manual (if you prefer pinned-until-you-say-so):**
 
 ```
 /plugin marketplace update cure          # refresh the catalog
