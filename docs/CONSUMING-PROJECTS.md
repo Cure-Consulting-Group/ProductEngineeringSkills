@@ -56,6 +56,13 @@ When the library ships a new version:
 No re-vendoring, no file copying, no merge conflicts. Updates arrive only when
 the maintainers bump the version, so you never get surprised mid-task.
 
+On first session start after install, the plugin self-provisions two
+project-scoped files that plugins cannot ship natively: `.claude/loop.md`
+(the Cure maintenance loop — run bare `/loop`) and `.claude/workflows/`
+(`/cure-code-audit`, `/cure-release-check`, `/cure-migration-sweep`).
+Copy-if-missing only: your local edits are never overwritten, and nothing is
+written outside a project (requires `.claude/` or `.git` in the cwd).
+
 ---
 
 ## Pin a version (optional)
