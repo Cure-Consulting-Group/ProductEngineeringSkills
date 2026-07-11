@@ -74,3 +74,12 @@ Output a structured report:
 ### Recommendations
 - [specific suggestions]
 ```
+
+## Verification Contract (Cure standard)
+
+A change is "done" when the affected flow has been exercised end-to-end and the
+behavior observed — not when unit tests pass. Green tests on a broken flow is
+the classic false-done. Before reporting success: run the real entry point
+(app, endpoint, CLI, screen), drive the changed path with realistic input, and
+state what you observed. If the flow cannot be exercised, say so explicitly
+instead of substituting test results.

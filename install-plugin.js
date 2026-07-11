@@ -28,6 +28,7 @@ const FLAT_DIRS_INTO_DOT_CLAUDE = [
   "rules",
   "output-styles",
   "hooks",
+  "workflows",
 ];
 
 const RENAMED_DIRS = [

@@ -123,6 +123,14 @@ def score_skill(path):
     if fm.get("effort") and fm["effort"] not in VALID_EFFORT:
         issues.append(("HIGH", f"invalid effort `{fm['effort']}` (valid: {sorted(VALID_EFFORT)})")); score -= 1.0
 
+    # --- dynamic-injection safety: !`cmd` blocks auto-execute before Claude
+    # reads the skill, so they must be read-only and non-destructive.
+    for cmd in re.findall(r"!`([^`]+)`", body):
+        # fd redirects to /dev/null are read-only noise suppression, not writes
+        stripped = re.sub(r"\d*>+\s*/dev/null", "", cmd)
+        if re.search(r"\brm\b|\bmv\b|\bdd\b|>\s*\S|\btee\b|\bcurl\b|\bwget\b|git\s+(push|commit|reset|checkout)|\bnpm\s+(install|publish)\b|\bpip\s+install\b", stripped):
+            issues.append(("CRIT", f"injected command is not read-only: `{cmd[:60]}`")); score -= 2.0
+
     # --- Best practice: body length ---
     if body_lines > 500:
         over = body_lines - 500

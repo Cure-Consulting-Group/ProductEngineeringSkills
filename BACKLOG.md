@@ -1,6 +1,6 @@
 # BACKLOG
 
-Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, active) aligns the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks).
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks).
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
 
@@ -27,6 +27,20 @@ Captured 2026-07-11 from an evaluation against current Claude Code documentation
 - Plugin `monitors/monitors.json` (`name`, `command`, `description`, optional `when: "always" | "on-skill-invoke:<skill>"`) auto-starts monitors; each stdout line reaches Claude as a notification.
 - Plugin `bin/` contents join Bash PATH while the plugin is enabled — no manifest wiring.
 
+## Wave 2 — Resolution Status (2026-07-11)
+
+All 17 tickets shipped in a single session across four releases (v7.1.5 → v7.4.0). Deviations from plan:
+
+| Ticket | Deviation |
+|--------|-----------|
+| T9 | Inventory blobs deleted rather than generated — removal beat generation (the drift-prone content is gone; counts/version in remaining hook text stay synced by sync-metadata) |
+| T11 | Security guard shipped as a deterministic command hook (8-fixture test matrix) instead of an experimental agent hook — zero tokens, portable, blocking |
+| T12 | maxTurns and memory:project confirmed valid documented syntax — left untouched (first research pass was wrong); proactiveTriggering not documented — not adopted |
+| T14 | 9 skills, not 10 — `code-audit` never existed (phantom entry in the old hand-maintained hook inventory, proving T9's point) |
+| T18 | cure-release-check dry-run on this repo (4 agents) found a REAL blocker: the repo's own CI banned type:prompt hooks. Gate amended to constrained-allow (Stop/PostToolUseFailure only, timeout ≤30s) in validate.yml. Also fixed: npm files whitelist missing loop.md/workflows/bin/monitors; bootstrap package bumped to 0.3.0 |
+| T20 | 71 of 72 skills migrated; cure-infra-bootstrap + self-improving-memory kept prose deliberately (conditional, env-dependent gathering — wrong fit for unconditional injection) |
+| T24 | 10 worst trigger texts tightened (580→≤360); library total ~24.5k chars — full ≤10k unrealistic without gutting discovery quality, so the enforced policy is per-skill caps (audit warns >350) + skillListingBudgetFraction documented for consumers |
+
 ## Release plan
 
 | Release | Bump | Tickets | Theme |
@@ -42,7 +56,7 @@ T23 (release mechanics) runs as the closing checklist of every release. Total es
 
 ## T8 — Doc/impl truth reconciliation
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.1.5 (patch)
 
 **Scope:**
@@ -66,7 +80,7 @@ T23 (release mechanics) runs as the closing checklist of every release. Total es
 
 ## T9 — Hook diet: delete noise, scope checklists, generate inventory blocks
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.2.0
 
 **Scope:**
@@ -90,7 +104,7 @@ T23 (release mechanics) runs as the closing checklist of every release. Total es
 
 ## T10 — Stop-hook quality gate (prompt-type)
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.2.0
 **Depends on:** T9
 
@@ -114,7 +128,7 @@ Add a `Stop` hook of `type: "prompt"` (haiku, 30s timeout): if the turn edited p
 
 ## T11 — Wire skill-security-auditor and failure triage for real
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.2.0
 **Depends on:** T9
 
@@ -140,7 +154,7 @@ Add a `Stop` hook of `type: "prompt"` (haiku, 30s timeout): if the turn edited p
 
 ## T12 — Agent frontmatter modernization: effort tiers, worktree isolation, model policy
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.2.0
 
 **Scope (39 agents):**
@@ -167,7 +181,7 @@ Add a `Stop` hook of `type: "prompt"` (haiku, 30s timeout): if the turn edited p
 
 ## T13 — Skill frontmatter modernization: disallowed-tools, paths, effort
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.2.0
 
 **Scope:**
@@ -188,7 +202,7 @@ Add a `Stop` hook of `type: "prompt"` (haiku, 30s timeout): if the turn edited p
 
 ## T14 — "Recurring Mode" sections in 10 goal-shaped skills
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.3.0
 **Depends on:** T15 (cross-links the new skill)
 
@@ -212,7 +226,7 @@ finops, burn-rate-tracker, investor-reporting, technology-radar, performance-rev
 
 ## T15 — New skill: engagement-automation (platform)
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.3.0
 
 **Scope:**
@@ -231,7 +245,7 @@ Decision framework for harness-level automation: `/loop` fixed-interval vs self-
 
 ## T16 — Cure maintenance loop: loop.md template + vendoring
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.3.0
 
 **Scope:**
@@ -252,7 +266,7 @@ Decision framework for harness-level automation: `/loop` fixed-interval vs self-
 
 ## T17 — Automation recipes doc (cloud routines)
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.3.0
 
 **Scope:**
@@ -270,7 +284,7 @@ Decision framework for harness-level automation: `/loop` fixed-interval vs self-
 
 ## T18 — Ship named workflows via installer vendoring
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.4.0
 
 **Scope:**
@@ -295,7 +309,7 @@ New top-level `workflows/` directory with three orchestration scripts (each: `me
 
 ## T19 — AGENT-GUIDE.md rewrite for the Workflow era
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.4.0
 **Depends on:** T18
 
@@ -314,7 +328,7 @@ Replace the "list agents in your prompt" chaining patterns (pre-Workflow-tool er
 
 ## T20 — Dynamic context injection migration (72 skills)
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.4.0
 
 **Scope:**
@@ -336,7 +350,7 @@ Replace the "list agents in your prompt" chaining patterns (pre-Workflow-tool er
 
 ## T21 — Adopt monitors/ and bin/ plugin surfaces
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.4.0
 
 **Scope:**
@@ -356,7 +370,7 @@ Replace the "list agents in your prompt" chaining patterns (pre-Workflow-tool er
 
 ## T22 — Verification discipline in the QA surface
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.4.0
 
 **Scope:**
@@ -390,7 +404,7 @@ Runs at the end of each of v7.1.5 / v7.2.0 / v7.3.0 / v7.4.0 — not a standalon
 
 ## T24 — Context budget & token economy
 
-**Status:** Pending
+**Status:** ✅ Done (2026-07-11)
 **Release:** v7.2.0
 
 Measured 2026-07-11 (chars ≈ tokens × 4):

@@ -48,6 +48,10 @@
     "install-plugin.js",
     "verify-install.sh",
     "cross-platform/",
+    "workflows/",
+    "bin/",
+    "monitors/",
+    "bootstrap/templates/loop.md",
     "AGENT-GUIDE.md",
     "GEMINI.md"
   ],
