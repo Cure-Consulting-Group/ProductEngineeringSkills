@@ -18,6 +18,15 @@
             "command": "echo \"Git branch: $(git branch --show-current 2>/dev/null || echo 'not a git repo'). Uncommitted changes: $(git status --porcelain 2>/dev/null | wc -l | tr -d ' '). Last commit: $(git log --oneline -1 2>/dev/null || echo 'none').\""
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -n \"${CLAUDE_PLUGIN_ROOT:-}\" ] && { [ -d .claude ] || [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .claude/loop.md ] && [ -f \"$CLAUDE_PLUGIN_ROOT/bootstrap/templates/loop.md\" ]; then mkdir -p .claude && cp \"$CLAUDE_PLUGIN_ROOT/bootstrap/templates/loop.md\" .claude/loop.md && PROVISIONED=\".claude/loop.md (Cure maintenance loop — run bare /loop)\"; fi; if [ ! -d .claude/workflows ] && [ -d \"$CLAUDE_PLUGIN_ROOT/workflows\" ]; then mkdir -p .claude/workflows && cp \"$CLAUDE_PLUGIN_ROOT/workflows/\"*.js .claude/workflows/ 2>/dev/null && PROVISIONED=\"$PROVISIONED${PROVISIONED:+, }.claude/workflows (/cure-code-audit, /cure-release-check, /cure-migration-sweep)\"; fi; if [ -n \"$PROVISIONED\" ]; then echo \"Cure plugin provisioned: $PROVISIONED. Files are yours now — edit freely; existing files are never overwritten.\"; fi; fi; exit 0"
+          }
+        ]
       }
     ],
     "PreCompact": [
