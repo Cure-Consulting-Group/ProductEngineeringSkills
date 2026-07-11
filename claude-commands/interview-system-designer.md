@@ -4,10 +4,17 @@ Hiring is a system. Most engineering loops are not designed — they are accrete
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - Glob for: `INTERVIEW*.md`, `HIRING*.md`, `interview-loop*`, `rubric*` to find any existing materials
-- Run: `git log --oneline -5 2>/dev/null` for recent context
 - Note the client's stack so technical questions match the actual job (don't ask Rust questions for a TypeScript role)
 
 ## Step 1: Classify the Engagement

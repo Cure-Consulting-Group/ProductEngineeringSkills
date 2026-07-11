@@ -12,11 +12,18 @@ Cure default: pnpm workspaces + Turborepo for JS/TS. Nx if the team is already o
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather context silently:
-- `cat package.json 2>/dev/null` — detect workspaces, turbo, nx config
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - `ls -la` for `pnpm-workspace.yaml`, `nx.json`, `turbo.json`, `lerna.json`, `WORKSPACE`, `MODULE.bazel`
 - `cat pnpm-workspace.yaml 2>/dev/null && cat turbo.json 2>/dev/null && cat nx.json 2>/dev/null`
-- Count packages: `find . -name package.json -not -path "*/node_modules/*" | wc -l`
 - Check CI duration: scan `.github/workflows/*.yml` for cache and affected logic
 - Use this to skip redundant questions in Step 2
 
