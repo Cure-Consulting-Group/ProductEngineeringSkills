@@ -36,6 +36,12 @@ const RENAMED_DIRS = [
 
 const FILES_INTO_DOT_CLAUDE = ["settings.json"];
 
+// Files whose source path differs from their .claude/ destination name.
+// loop.md: the Cure standard maintenance loop — bare `/loop` picks it up.
+const RENAMED_FILES_INTO_DOT_CLAUDE = [
+  { src: "bootstrap/templates/loop.md", dest: "loop.md" },
+];
+
 // .mcp.json is intentionally NOT auto-copied/activated — MCP servers need
 // per-project credentials. The template ships as .mcp.json.example; see
 // docs/MCP-SETUP.md to opt in. .lsp.json is safe to auto-activate.
@@ -122,6 +128,20 @@ function main() {
     }
     fs.copyFileSync(src, dest);
     console.log(`[cure-skills] copy  ${file} → .claude/${file}`);
+    copied++;
+  }
+
+  for (const { src: srcRel, dest: destName } of RENAMED_FILES_INTO_DOT_CLAUDE) {
+    const src = path.join(packageRoot, srcRel);
+    const dest = path.join(claudeDir, destName);
+    if (!fs.existsSync(src)) continue;
+    if (fs.existsSync(dest) && !force) {
+      console.log(`[cure-skills] skip  .claude/${destName} (exists)`);
+      skipped++;
+      continue;
+    }
+    fs.copyFileSync(src, dest);
+    console.log(`[cure-skills] copy  ${srcRel} → .claude/${destName}`);
     copied++;
   }
 

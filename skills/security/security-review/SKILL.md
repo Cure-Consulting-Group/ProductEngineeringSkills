@@ -216,3 +216,13 @@ HIGH (fix within 1 sprint):
 MEDIUM (schedule for next quarter):
 1. [Issue] — [Risk] — [Fix]
 ```
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** weekly, plus on every PR via GitHub-triggered routine
+- **Session loop:** `/loop 1w /cure-product-engineering:security-review`
+- **Unattended:** cloud routine — Weekly repo sweep + PR-triggered review. The PR routine reads the diff only. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~150k tokens/run; cap at one run per weekly period.
+- **Guardrails:** read-only run; deliver findings as PR comments (PR trigger) or issues (weekly sweep); report on failure rather than retrying.

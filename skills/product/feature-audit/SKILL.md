@@ -176,3 +176,13 @@ NEXT ACTIONS CHECKLIST
 [ ] Address CROSS-PLATFORM issues before dual-platform release
 ═══════════════════════════════════════════════════════
 ```
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** monthly
+- **Session loop:** `/loop 4w /cure-product-engineering:feature-audit`
+- **Unattended:** cloud routine — Monthly audit of shipped-vs-used features against analytics. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~120k tokens/run; cap at one run per monthly period.
+- **Guardrails:** read-only run; deliver feature health report; flag dead/unshipped surface; report on failure rather than retrying.

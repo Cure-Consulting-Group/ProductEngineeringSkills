@@ -204,3 +204,13 @@ Before publishing every post:
 - [ ] LocalBusiness JSON-LD on website
 - [ ] Reviews strategy (ask satisfied clients)
 - [ ] Location pages if serving multiple cities
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** weekly
+- **Session loop:** `/loop 1w /cure-product-engineering:seo-content-engine`
+- **Unattended:** cloud routine — Weekly ranking check and brief generation for the active keyword set. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~80k tokens/run; cap at one run per weekly period.
+- **Guardrails:** read-only run; deliver content briefs + ranking deltas as a report file; report on failure rather than retrying.

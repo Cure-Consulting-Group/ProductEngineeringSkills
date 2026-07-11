@@ -434,7 +434,6 @@ Last updated: [YYYY-MM-DD]
 Review cadence: Quarterly (next review: [YYYY-QX])
 Prepared by: [Name/Team]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 SUMMARY
 ┌──────────┬───────┬────────────────────────────────────────────────────┐
 │ Ring     │ Count │ Key Changes This Quarter                          │
@@ -451,37 +450,29 @@ Ring movements this quarter:
   [-] [Tech] → Hold (demoted from Adopt/Trial)
   [NEW] [Tech] added to [Ring]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 ADOPT
 [Entries grouped by quadrant, using Step 4 format]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 TRIAL
 [Entries grouped by quadrant, using Step 4 format]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 ASSESS
 [Entries grouped by quadrant, using Step 4 format]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 HOLD
 [Entries grouped by quadrant, using Step 4 format.
  Every Hold entry MUST include a migration plan.]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 DIVERGENCE REPORT
 [Output from Step 8]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 TECHNOLOGY DEBT
 [Output from Step 7 — Hold items still in production, prioritized]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 QUARTERLY REVIEW LOG
 [Date] — [Summary of changes made]
 [Date] — [Summary of changes made]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 DELIVERABLES GENERATED:
   - [ ] TECHNOLOGY_RADAR.md created / updated
   - [ ] All entries have complete fields (ring, quadrant, products, rationale)
@@ -494,3 +485,12 @@ DELIVERABLES GENERATED:
 ```
 
 Cross-reference: `/sdlc` for ADRs and architecture decisions, `/infrastructure-scaffold` for platform choices, `/ci-cd-pipeline` for tooling decisions, `/database-architect` for data layer technologies, `/project-bootstrap` for new project technology selection.
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** quarterly
+- **Unattended:** cloud routine — Quarterly radar refresh: ring movements, new adoptions, Hold items still in production. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~150k tokens/run; cap at one run per quarterly period.
+- **Guardrails:** read-only run; deliver updated TECHNOLOGY_RADAR.md + divergence report; report on failure rather than retrying.
