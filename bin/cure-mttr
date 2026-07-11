@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Auto-generated wrapper — exposes a bundled Cure skill script on PATH while
+# the plugin is enabled. Stdlib Python only; supports --help / --json.
+exec python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/skills/platform/dora-metrics/scripts/mttr_calculator.py" "$@"

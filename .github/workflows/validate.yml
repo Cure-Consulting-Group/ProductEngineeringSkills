@@ -49,25 +49,37 @@ jobs:
       - name: Legacy claude-commands/ in sync with skills/
         run: python3 scripts/sync-legacy-commands.py --check
 
-      - name: No LLM-evaluating (type:prompt) hooks ship in the plugin
-        # type:prompt hooks run an LLM on every consumer action (prompt/edit/bash)
-        # and can block non-deterministically in EVERY project that installs the
-        # plugin. They are forbidden in the distributed hooks.json. Library-side
-        # auditing belongs in CI, not in a hook that fires on consumer app code.
+      - name: Workflow scripts parse (async-context syntax)
+        run: bash scripts/verify-workflows.sh
+
+      - name: type:prompt hooks only on low-frequency events, with timeouts
+        # Wave 2 (BACKLOG T10/T11) deliberately ships two LLM-evaluating hooks:
+        # the Stop quality gate and PostToolUseFailure triage. The original
+        # blanket ban protected consumers from an LLM call on EVERY action
+        # (prompt/edit/bash) — that intent is preserved as a constraint:
+        # prompt hooks are allowed ONLY on Stop and PostToolUseFailure (never
+        # on PreToolUse/PostToolUse/UserPromptSubmit hot paths), and every one
+        # must declare a timeout ≤ 30s so a slow LLM can never wedge a consumer.
         run: |
           python3 - <<'PY'
           import json, sys
+          ALLOWED_EVENTS = {"Stop", "PostToolUseFailure"}
           d = json.load(open("hooks/hooks.json"))
-          bad = [(ev, h.get("prompt","")[:60])
-                 for ev, groups in d.get("hooks", {}).items()
-                 for g in groups for h in g.get("hooks", [])
-                 if h.get("type") == "prompt"]
+          bad = []
+          for ev, groups in d.get("hooks", {}).items():
+              for g in groups:
+                  for h in g.get("hooks", []):
+                      if h.get("type") != "prompt":
+                          continue
+                      if ev not in ALLOWED_EVENTS:
+                          bad.append((ev, "prompt hook on hot-path event (allowed: Stop, PostToolUseFailure)"))
+                      elif not isinstance(h.get("timeout"), (int, float)) or h["timeout"] > 30:
+                          bad.append((ev, "prompt hook missing timeout ≤ 30"))
           if bad:
-              print("FORBIDDEN type:prompt hooks in hooks.json:")
-              for ev, pr in bad: print(f"  {ev}: {pr}...")
-              print("Remove them — LLM hooks block consumer work. Move auditing to CI.")
+              print("FORBIDDEN prompt-hook usage in hooks.json:")
+              for ev, why in bad: print(f"  {ev}: {why}")
               sys.exit(1)
-          print("No type:prompt hooks in plugin hooks.json. ✓")
+          print("Prompt hooks constrained to low-frequency events with timeouts. ✓")
           PY
 
       - name: docs/OVERVIEW.md is up to date

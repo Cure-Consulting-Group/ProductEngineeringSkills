@@ -2,10 +2,10 @@
 name: pr-reviewer
 description: Automated pull request reviewer that analyzes diffs for quality, security, performance, and adherence to Cure standards. Suggests improvements and flags blockers before merge.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 20
 skills: security-review, testing-strategy, feature-audit
 memory: project
+effort: high
 ---
 
 # PR Reviewer Agent

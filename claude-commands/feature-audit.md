@@ -4,12 +4,14 @@ Multi-phase audit that runs after every feature completion across Android, iOS, 
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
 
 ## Automated Scanning (Before Manual Review)
 
@@ -166,3 +168,13 @@ NEXT ACTIONS CHECKLIST
 [ ] Address CROSS-PLATFORM issues before dual-platform release
 ═══════════════════════════════════════════════════════
 ```
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** monthly
+- **Session loop:** `/loop 4w /cure-product-engineering:feature-audit`
+- **Unattended:** cloud routine — Monthly audit of shipped-vs-used features against analytics. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~120k tokens/run; cap at one run per monthly period.
+- **Guardrails:** read-only run; deliver feature health report; flag dead/unshipped surface; report on failure rather than retrying.

@@ -58,6 +58,9 @@ def build_rules(t):
         rules.append((rel, re.compile(r"\(v\d+\.\d+\.\d+\)"), f"(v{v})", "version (parenthetical)"))
         rules.append((rel, re.compile(r"\bv\d+\.\d+\.\d+\b(?=\s*[\)\.—,])"), f"v{v}", "version token"))
 
+    # --- Version: CLAUDE.md "Current version: **X.Y.Z**" line ---
+    rules.append(("CLAUDE.md", re.compile(r"(?<=Current version: \*\*)\d+\.\d+\.\d+(?=\*\*)"), v, "version (current-version line)"))
+
     # --- CONFIG files: count = total, safe to blanket-replace ---
     for rel in ["hooks/hooks.json", ".claude-plugin/marketplace.json",
                 ".claude-plugin/plugin.json", "package.json"]:

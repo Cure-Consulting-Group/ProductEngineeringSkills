@@ -2,9 +2,7 @@
 name: contract-reviewer
 description: Reviews contracts, SOWs, NDAs, and legal documents for risk, scope gaps, unfavorable terms, IP issues, and liability exposure. Flags items requiring legal counsel.
 tools: Read, Grep, Glob
-model: sonnet
 maxTurns: 15
-skills: legal-doc-scaffold, proposal-generator, client-handoff
 memory: project
 ---
 
@@ -137,3 +135,7 @@ Verify presence of standard protective clauses:
 ### ⚠️ Items Requiring Legal Counsel
 - [List of items that need actual lawyer review]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/legal-doc-scaffold`, `/proposal-generator`, `/client-handoff`.

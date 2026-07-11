@@ -7,11 +7,11 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.1.4 |
-| Skills | 80 |
+| Version | 7.4.0 |
+| Skills | 81 |
 | Agents | 39 |
 | Personas | 4 |
-| Hooks (entries) | 15 |
+| Hooks (entries) | 13 |
 | Rules | 11 |
 | Output Styles | 9 |
 | MCP Servers | 0 |
@@ -48,19 +48,19 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | api-gateway | Design API gateway and BFF layers — rate limiting, request transformation, auth middleware, GraphQL federation, and mobile-optimized backends | default |
 | client-communication | Generate client-facing artifacts — sprint demo scripts, stakeholder updates, risk escalation reports, and executive status summaries | default |
 | client-handoff | Generate client handoff packages — architecture docs, runbooks, credential transfers, maintenance SLAs, and knowledge transfer plans for consulting engagements | default |
-| cure-infra-bootstrap | Provision Cure's standardized Claude development infrastructure into any project (greenfield or existing). Idempotently scaffolds CLAUDE.md, STATE.md, .claude/{settings.json,skills,agents,rules,hooks}, .cursorrules, .gemini/config.yaml. Manifest-driven, version-pinned, conflict-aware. | Read, Bash |
+| cure-infra-bootstrap | Provision Cure's standardized Claude dev infrastructure into any project — idempotent, manifest-driven, version-pinned scaffold of CLAUDE.md, STATE.md, .claude/, .cursorrules, .gemini | Read, Bash |
 | data-migration | Plan and execute data migrations — ETL pipelines, zero-downtime cutover, validation, rollback strategies, and legacy system integration | default |
 | database-architect | Design database schemas, plan migrations, optimize queries, define indexing strategies for Firestore, PostgreSQL, and SQLite | default |
 | e2e-testing | Generate end-to-end test suites with page objects, CI integration, visual regression, and cross-platform test strategies | default |
-| env-secrets-manager | .env hygiene, secret leak detection, rotation playbooks, and migration to managed secret stores — read-only audits and recommendations across local, CI, and production environments | Read, Grep, Glob, Bash |
+| env-secrets-manager | .env hygiene, secret leak detection, rotation playbooks, and migration to managed secret stores — read-only audits | Read, Grep, Glob, Bash |
 | firebase-architect | Design Firestore schemas, security rules, Cloud Functions, and data layer architecture | default |
 | git-worktree-manager | Use git worktrees for parallel work — multiple client features, hotfixes, or PR reviews simultaneously without stash/branch-switch overhead | default |
 | i18n | Implement internationalization and localization — string extraction, RTL support, locale-aware formatting, translation workflows, and platform i18n patterns | default |
-| interview-system-designer | Design calibrated, fair, predictive engineering interview loops for client hires — from phone screen to debrief, with stage rubrics, question banks, and evaluation metrics | default |
+| interview-system-designer | Design calibrated, fair, predictive engineering interview loops — phone screen to debrief, with stage rubrics, question banks, and evaluation metrics | default |
 | ios-architect | Scaffold iOS features with Swift/SwiftUI, Clean Architecture, MVVM, and structured concurrency | default |
 | ios-design-expert | Expert iOS design guidance following Apple Human Interface Guidelines (HIG) — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components, and platform-native interactions | default |
 | llmops | Operationalize LLM features — prompt versioning, evaluation pipelines, cost optimization, guardrails, RAG monitoring, and model lifecycle management | default |
-| mcp-server-builder | Design and build MCP (Model Context Protocol) servers — the integration protocol Claude Code, Codex, and other agents use to call tools, expose resources, and consume prompts | default |
+| mcp-server-builder | Design and build MCP (Model Context Protocol) servers — the protocol agents use to call tools, expose resources, and consume prompts | default |
 | micro-frontends | Architect micro-frontend systems — module federation, monorepo management, shared dependencies, independent deployments, and cross-team coordination | default |
 | monorepo-navigator | Navigate, work in, and improve monorepos — pnpm workspaces, Turborepo, Nx, Lerna, Yarn workspaces, Bazel, or untangling a folder that thinks it's a monorepo | default |
 | nextjs-feature-scaffold | Scaffold Next.js features with App Router, Server/Client components, Tailwind, and data fetching patterns | default |
@@ -69,10 +69,10 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | performance-review | Define performance budgets, load testing plans, optimization strategies, and monitoring dashboards across mobile, web, and backend | default |
 | project-bootstrap | Bootstrap any project repo with CLAUDE.md and STATE.md — interviews the developer, inspects the codebase, and generates agent coordination files | default |
 | project-manager | Sprint execution and delivery management — sprint planning, RACI matrices, risk registers, retrospectives, and velocity tracking for engineering teams | default |
-| rag-architect | Design production RAG pipelines — chunking, embedding model selection, vector store choice, hybrid retrieval, reranking, and eval — with explicit cost and latency budgets | default |
+| rag-architect | Design production RAG pipelines — chunking, embeddings, vector stores, hybrid retrieval, reranking, evals — with explicit cost and latency budgets | default |
 | sdlc | Generate structured engineering documents — PRDs, ADRs, RFCs, Epics, User Stories, Task specs, and test specs from a feature description | default |
-| self-improving-memory | Curate Claude Code auto-memory (user / feedback / project / reference) for an engagement — bootstrap, audit, detect patterns, and run health checks on MEMORY.md | default |
-| stitch-design | AI-native UI design and screen generation via Stitch MCP — vibe design, mockup creation, screen generation, UI prototyping, design system management, DESIGN.md authoring, component export, screen-to-code handoff, design token sync, visual consistency audits, Stitch canvas manipulation, and high-fidelity wireframe production | default |
+| self-improving-memory | Curate Claude Code auto-memory (user/feedback/project/reference) — bootstrap, audit, pattern detection, and health checks on MEMORY.md | default |
+| stitch-design | AI-native UI design via Stitch MCP — screen generation, mockups, design systems, DESIGN.md authoring, token export, screen-to-code handoff, visual consistency audits | default |
 | stripe-integration | Integrate Stripe payments and subscriptions via Firebase Cloud Functions with webhook handling | default |
 | test-accounts | Generate test account strategies, seed data scripts, test user personas, and environment-scoped credentials for all platforms | default |
 | testing-strategy | Define the overall testing architecture — pyramid ratios, platform-specific frameworks (JUnit5/MockK, XCTest, Vitest/Playwright), coverage thresholds, and CI integration for a project or feature | default |
@@ -107,7 +107,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | technical-blog-writer | Crafts high-impact technical blog posts modeled after Netflix/Uber engineering blogs, translated for business owners. Use when you need to explain complex engineering feats using the 'Famous Actor' simple-explanation tone with clear visual concepts. | default |
 
 
-### Platform (10)
+### Platform (11)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
@@ -116,6 +116,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | disaster-recovery | Design disaster recovery and business continuity plans — RTO/RPO targets, backup strategies, failover architecture, and DR testing runbooks | default |
 | dora-metrics | Implement DORA and SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, and developer experience dashboards | default |
 | edge-computing | Architect edge computing solutions — edge functions, CDN strategies, cache invalidation, edge middleware, and global latency optimization | default |
+| engagement-automation | Choose and configure the right Claude Code recurring-execution mechanism — /loop, cloud routines, scheduled tasks, CI cron, or hooks — with Cure guardrails for unattended runs | default |
 | green-software | Apply sustainable software practices — carbon-aware computing, energy-efficient architecture, resource optimization, and sustainability reporting | default |
 | incident-response | Create incident runbooks, severity classification, on-call procedures, post-mortems, and escalation paths | default |
 | infrastructure-scaffold | Generate cloud infrastructure configs for Firebase, GCP, Vercel, and Docker with IaC templates and environment management | default |
@@ -145,7 +146,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- | --- |
 | accessibility-audit | Audit apps and websites for WCAG 2.2 compliance, screen reader support, and inclusive design across Android, iOS, and Web | Read, Grep, Glob |
 | compliance-architect | Architect compliance frameworks for HIPAA, COPPA, GDPR, CCPA, and PCI — consent flows, audit trails, data classification, and privacy-by-design | default |
-| qsbs-compliance | Track and enforce IRC §1202 QSBS qualification — gross asset test (<$50M), active business test (>80% qualified), C-Corp status, holding period tracking, and disqualifying event detection | Read, Grep, Glob |
+| qsbs-compliance | Track and enforce IRC §1202 QSBS qualification — gross asset test, active business test, C-Corp status, holding periods, disqualifying events | Read, Grep, Glob |
 | security-review | OWASP Top 10 security audit for codebases — scans auth flows, API endpoints, data storage, secrets handling, and dependency supply chain across .kt, .swift, .ts, .py, .go, .rs, and infrastructure files | Read, Grep, Glob |
 
 
@@ -247,21 +248,19 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.1.4). 80 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.4.0). 81 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
-| SessionStart | startup | command | echo '\nAvailable Agents (39):\n  Engineering: code-reviewer, test-runner, pr-reviewer, refactor-assistant, c… |
-| PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION:\n\nCure Consulting Group Standards (always apply):\n- Clean Arch… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 80 skills, 39 agents, 4 personas available. Us… |
-| PostToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
-| PostToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
-| PostToolUseFailure | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
+| PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 81 skills, 39 agents, 4 personas. Use /cure-pr… |
+| ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
+| PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | UserPromptSubmit |  | command | PROMPT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt',… |
 | PreToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
+| PreToolUse | Edit\|Write | command | python3 -c " |
 | PreToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
-| Notification |  | command | echo '{"notification_logged": true}' |
-| SubagentStart |  | command | AGENT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('name', d.… |
-| SubagentStop |  | command | echo "Expert task complete. Final quality check checklist:\n- Tests added? \u2192 test-runner agent\n- Lint/T… |
+| Stop |  | prompt | You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS |
+| SubagentStop | refactor-assistant\|project-bootstrapper\|release-coordinator | command | echo "Write-capable agent finished. Quality checklist:\n- Tests added/passing? → test-runner agent\n- Lint/ty… |
 
 
 ## 6. Rules

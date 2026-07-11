@@ -1,7 +1,7 @@
 ---
 name: mcp-server-builder
-description: "Design and build MCP (Model Context Protocol) servers — the integration protocol Claude Code, Codex, and other agents use to call tools, expose resources, and consume prompts"
-when_to_use: "Use when building, scaffolding, or migrating an MCP server (Python or TypeScript SDK), wrapping an existing REST API as MCP, or designing tool/resource schemas for agent consumption. NOT for consuming an existing MCP server (just wire it into .mcp.json). NOT for general API design (use api-architect)."
+description: "Design and build MCP (Model Context Protocol) servers — the protocol agents use to call tools, expose resources, and consume prompts"
+when_to_use: "Use when building or migrating an MCP server (Python/TypeScript SDK), wrapping a REST API as MCP, or designing tool schemas for agents. NOT for consuming an MCP server (.mcp.json) or general API design (api-architect)."
 argument-hint: "[server-name]"
 ---
 
@@ -11,11 +11,16 @@ Design and ship production MCP servers. Cure standard: tools are explicit, schem
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat pyproject.toml 2>/dev/null || cat requirements.txt 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ server/ mcp/ 2>/dev/null` to understand project structure
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - Grep for existing MCP usage: `@modelcontextprotocol|mcp\.server|FastMCP|stdio_server` to extend rather than duplicate
 - Read `.mcp.json` at repo root if present — see how this server will be consumed
 

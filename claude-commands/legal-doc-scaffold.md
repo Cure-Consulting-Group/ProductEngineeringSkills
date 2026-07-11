@@ -2,12 +2,14 @@
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
 
 > **IMPORTANT DISCLAIMER — READ BEFORE PROCEEDING:** These are starting-point scaffolds for reference and drafting purposes only. They do NOT constitute legal advice and do NOT create an attorney-client relationship. These documents have NOT been reviewed by a licensed attorney and may not be appropriate for your jurisdiction, industry, or specific situation. ALWAYS have every legal document reviewed and approved by a licensed attorney in your jurisdiction before publishing, signing, or relying on it in any business context. Failure to do so may result in unenforceable agreements, regulatory violations, or legal liability. The use of these scaffolds is entirely at your own risk.
 

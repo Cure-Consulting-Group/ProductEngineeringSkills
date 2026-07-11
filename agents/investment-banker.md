@@ -2,7 +2,6 @@
 name: investment-banker
 description: Specialized M&A and capital markets agent. Builds valuation models (Comps, DCF, LBO), drafts deal materials (CIMs, teasers), and analyzes pro-forma transaction impact. Use when building M&A valuation models (Comps/DCF/LBO) or drafting deal materials.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 20
 skills: comps-analysis, dcf-modeling, merger-modeling
 memory: project

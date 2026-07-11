@@ -2,10 +2,10 @@
 name: refactor-assistant
 description: Safe refactoring agent that restructures code while maintaining behavior. Runs tests before and after every change to ensure nothing breaks. Use when restructuring code that must preserve behavior, with tests run before and after each change.
 tools: Read, Grep, Glob, Bash, Edit, Write
-model: sonnet
 maxTurns: 25
 skills: testing-strategy, feature-audit
 memory: project
+isolation: worktree
 ---
 
 # Refactor Assistant Agent

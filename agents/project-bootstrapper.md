@@ -2,10 +2,10 @@
 name: project-bootstrapper
 description: Sets up new projects with correct architecture, configuration, and Cure Consulting Group standards. Use when starting a new project that needs correct architecture, configuration, and Cure standards.
 tools: Read, Grep, Glob, Bash, Edit, Write
-model: sonnet
 maxTurns: 25
 skills: sdlc, ci-cd-pipeline, testing-strategy
 memory: project
+isolation: worktree
 ---
 
 # Project Bootstrapper Agent

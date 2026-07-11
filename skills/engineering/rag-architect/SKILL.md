@@ -1,7 +1,7 @@
 ---
 name: rag-architect
-description: "Design production RAG pipelines — chunking, embedding model selection, vector store choice, hybrid retrieval, reranking, and eval — with explicit cost and latency budgets"
-when_to_use: "Use when designing or auditing a RAG pipeline (knowledge-base Q&A, agentic retrieval, hybrid search, multi-modal). NOT for general LLM feature work (use ai-feature-builder). NOT for full LLM operationalization, monitoring, and rollout (use llmops). NOT for ML training (out of scope)."
+description: "Design production RAG pipelines — chunking, embeddings, vector stores, hybrid retrieval, reranking, evals — with explicit cost and latency budgets"
+when_to_use: "Use when designing or auditing a RAG pipeline (KB Q&A, agentic retrieval, hybrid search, multi-modal). NOT general LLM features (ai-feature-builder), LLM ops (llmops), or ML training."
 argument-hint: "[pipeline-name]"
 ---
 
@@ -11,13 +11,17 @@ Design retrieval-augmented generation pipelines that survive contact with real c
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat pyproject.toml 2>/dev/null || cat requirements.txt 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ rag/ embeddings/ 2>/dev/null` to understand project structure
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - Grep for existing RAG code: `pgvector|pinecone|qdrant|weaviate|chroma|embeddings|openai\.embeddings` to extend rather than duplicate
-- Use this context to tailor all output to the actual project
 
 ## Step 1: Classify the RAG Type
 

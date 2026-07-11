@@ -1,7 +1,7 @@
 ---
 name: env-secrets-manager
-description: ".env hygiene, secret leak detection, rotation playbooks, and migration to managed secret stores — read-only audits and recommendations across local, CI, and production environments"
-when_to_use: "Use when designing .env schema for a new project, auditing an existing repo for secret leaks, responding to a leak incident, designing a rotation cadence, or migrating from .env files to a secret manager (Doppler / 1Password / AWS Secrets Manager / GCP Secret Manager / Vault). NOT for cloud-IAM design (use security-review). NOT for full infrastructure scaffolding (use infrastructure-scaffold)."
+description: ".env hygiene, secret leak detection, rotation playbooks, and migration to managed secret stores — read-only audits"
+when_to_use: "Use when designing .env schema, auditing for leaked secrets, responding to a leak, planning rotation, or migrating to a secret manager. NOT cloud-IAM design (security-review) or infra scaffolding (infrastructure-scaffold)."
 argument-hint: "[scope: greenfield | audit | leak-response | rotation | migrate]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash"]
 context: fork
@@ -13,10 +13,16 @@ Read-only skill for auditing and designing how a codebase handles environment va
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat pyproject.toml 2>/dev/null || cat go.mod 2>/dev/null || cat Cargo.toml 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - Glob for: `.env*`, `.envrc`, `*.env`, `secrets/**`, `**/serviceAccount*.json` to map current secret surface
 - Run: `git ls-files | grep -E '\.env($|\.[a-z]+$)' 2>/dev/null` to detect any committed env files (red flag)
 

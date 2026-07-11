@@ -1,14 +1,30 @@
 # Agent & Skill Usage Guide
 
-How to structure prompts to get maximum value from the 80 skills, 39 agents, and 4 personas in the Cure Consulting Group plugin.
+How to structure prompts to get maximum value from the 81 skills, 39 agents, 4 personas, and 3 workflows in the Cure Consulting Group plugin.
 
 ## How It Works
 
-You don't need to memorize agents or skills. The intent classifier hook and agent descriptions handle routing automatically. But knowing the patterns makes you significantly more effective.
+You don't need to memorize agents or skills. Agent descriptions and skill triggers handle routing automatically. But knowing the patterns makes you significantly more effective.
 
 - **Skills** = templates, frameworks, structured outputs (PRDs, ADRs, test plans, scaffolds)
 - **Agents** = execution against your actual code (review, test, diagnose, analyze)
-- **Hooks** = automatic reminders that suggest the right agent after every action
+- **Workflows** = deterministic multi-agent orchestration (fan-out, verify, synthesize) — vendored to `.claude/workflows/`
+- **Hooks** = enforcement at the moment of action (Stop-hook quality gate, skill security guard)
+
+## Orchestration Decision Ladder
+
+Multi-agent work has four rungs. Use the lowest rung that fits — every step up costs more tokens and coordination.
+
+1. **One agent** — a single well-scoped question or task. `@agent-code-reviewer` on a diff. Default here.
+2. **Parallel fan-out** — 2–4 *independent* analyses you'll synthesize yourself. Name the agents in one prompt (Pattern B below). Fine for one-off combinations.
+3. **Named workflow** — repeatable orchestration with verification built in. The plugin ships three:
+   - `/cure-code-audit` — security/architecture/performance/accessibility reviewers in parallel; every finding adversarially verified before it reaches you
+   - `/cure-release-check` — migration, deployment, dependency, and API validators in parallel; hard pass/fail gate
+   - `/cure-migration-sweep` — repo-wide mechanical migration: discover → transform per file → verify (requires `{pattern, instruction}` args)
+   Prefer a workflow over hand-chained agents when the shape repeats: it's deterministic, resumable, budget-capped, and monitorable via `/workflows`.
+4. **Recurring** — the same goal on a schedule. `/loop` in-session, cloud routines unattended. Mechanism choice and guardrails: `/engagement-automation`, recipes in `docs/AUTOMATION.md`.
+
+Hand-chaining five agents in a prompt (the old Pattern E) still works, but for repeatable sequences a workflow beats it: prompt-chained agents re-negotiate the plan every run, can't resume after interruption, and have no budget ceiling.
 
 ## Core Workflow Patterns
 
@@ -24,7 +40,7 @@ Users need to view their plan, upgrade/downgrade, and cancel.
 What happens automatically:
 - Intent classifier suggests `android-feature-scaffold` skill
 - Code edits trigger hooks that suggest `code-reviewer`, `test-runner`
-- Stop hook validates tests, security review, docs
+- After write-capable agents finish, the SubagentStop hook surfaces a quality checklist (tests, lint, PR readiness, docs)
 
 To get more out of it, layer in specific agents:
 
@@ -67,11 +83,11 @@ The PaymentRepository has grown to 400+ lines. Refactor it using
 
 ### 4. Pre-Release Validation
 
+The gate is a workflow — deterministic, all four validators in parallel:
+
 ```
-We're cutting v2.3.0 this week. Run the full release checklist:
-- @agent-release-coordinator for version bump and changelog
-- @agent-deployment-validator for pre-deploy checks
-- @agent-dependency-auditor for vulnerability scan
+Run /cure-release-check with base v2.2.0. If it passes, have
+@agent-release-coordinator do the version bump and changelog.
 ```
 
 ## Prompt Structures That Maximize Agent/Skill Usage

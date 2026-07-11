@@ -2,7 +2,6 @@
 name: accessibility-checker
 description: Automated WCAG 2.2 accessibility validation for UI changes. Checks semantic HTML, ARIA labels, color contrast, keyboard navigation, and screen reader compatibility.
 tools: Read, Grep, Glob
-model: sonnet
 maxTurns: 10
 skills: accessibility-audit, product-design
 memory: project

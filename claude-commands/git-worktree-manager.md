@@ -13,10 +13,18 @@ Cure default: long-running consulting engagements, three or more parallel branch
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather context silently:
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - `git worktree list` — what worktrees already exist
 - `git branch -a | head -20` — branch landscape
-- `cat package.json 2>/dev/null | jq -r .scripts.dev 2>/dev/null` — dev server command
 - `ls .env* 2>/dev/null` — env files in play
 - `cat .gitignore | grep -E "^\.env"` — what's gitignored
 - `lsof -iTCP -sTCP:LISTEN -P 2>/dev/null | grep -E "300[0-9]|800[0-9]"` — ports in use

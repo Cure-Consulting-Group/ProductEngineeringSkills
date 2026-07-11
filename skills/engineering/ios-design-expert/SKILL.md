@@ -3,6 +3,7 @@ name: ios-design-expert
 description: "Expert iOS design guidance following Apple Human Interface Guidelines (HIG) — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components, and platform-native interactions"
 when_to_use: "Use for Apple HIG guidance on iOS screens — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components. NOT for scaffolding code (use ios-architect)."
 argument-hint: "[screen-or-component-name]"
+paths: "*.swift"
 ---
 
 # iOS Design Expert — Apple Human Interface Guidelines
@@ -13,12 +14,14 @@ Deep expertise in Apple Human Interface Guidelines for iOS, iPadOS, watchOS, and
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
 
 ## Step 1: Classify the Request
 

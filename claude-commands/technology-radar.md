@@ -4,12 +4,14 @@ Generate and maintain a ThoughtWorks-style technology radar for multi-product po
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
 
 ## Step 1: Classify the Radar Task
 
@@ -425,9 +427,7 @@ TECHNOLOGY RADAR — [COMPANY NAME]
 Last updated: [YYYY-MM-DD]
 Review cadence: Quarterly (next review: [YYYY-QX])
 Prepared by: [Name/Team]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 SUMMARY
 ┌──────────┬───────┬────────────────────────────────────────────────────┐
 │ Ring     │ Count │ Key Changes This Quarter                          │
@@ -443,46 +443,30 @@ Ring movements this quarter:
   [~] [Tech] → Trial (promoted from Assess)
   [-] [Tech] → Hold (demoted from Adopt/Trial)
   [NEW] [Tech] added to [Ring]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 ADOPT
 [Entries grouped by quadrant, using Step 4 format]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 TRIAL
 [Entries grouped by quadrant, using Step 4 format]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 ASSESS
 [Entries grouped by quadrant, using Step 4 format]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 HOLD
 [Entries grouped by quadrant, using Step 4 format.
  Every Hold entry MUST include a migration plan.]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 DIVERGENCE REPORT
 [Output from Step 8]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 TECHNOLOGY DEBT
 [Output from Step 7 — Hold items still in production, prioritized]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 QUARTERLY REVIEW LOG
 [Date] — [Summary of changes made]
 [Date] — [Summary of changes made]
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 DELIVERABLES GENERATED:
   - [ ] TECHNOLOGY_RADAR.md created / updated
   - [ ] All entries have complete fields (ring, quadrant, products, rationale)
@@ -495,3 +479,12 @@ DELIVERABLES GENERATED:
 ```
 
 Cross-reference: `/sdlc` for ADRs and architecture decisions, `/infrastructure-scaffold` for platform choices, `/ci-cd-pipeline` for tooling decisions, `/database-architect` for data layer technologies, `/project-bootstrap` for new project technology selection.
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** quarterly
+- **Unattended:** cloud routine — Quarterly radar refresh: ring movements, new adoptions, Hold items still in production. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~150k tokens/run; cap at one run per quarterly period.
+- **Guardrails:** read-only run; deliver updated TECHNOLOGY_RADAR.md + divergence report; report on failure rather than retrying.

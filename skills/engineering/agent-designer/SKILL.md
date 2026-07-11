@@ -1,7 +1,7 @@
 ---
 name: agent-designer
 description: "Design single-agent and multi-agent systems — tool schemas, memory, termination, evals, cost, and failure modes"
-when_to_use: "Use when designing an LLM agent or multi-agent system: tool design, memory strategy, termination logic, observability, eval, cost. NOT for choosing whether to use an agent vs. a workflow (use agent-workflow-designer). NOT for building the underlying AI feature (use ai-feature-builder). NOT for operationalizing prompts and evals once built (use llmops)."
+when_to_use: "Use when designing an LLM agent or multi-agent system: tools, memory, termination, observability, cost. NOT agent-vs-workflow choice (agent-workflow-designer), feature builds (ai-feature-builder), or prompt ops (llmops)."
 argument-hint: "[agent-name-or-system]"
 ---
 
@@ -13,13 +13,17 @@ Companion skills: `/agent-workflow-designer` decides agent-vs-workflow up front.
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ agents/ 2>/dev/null` to understand project structure
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - Grep for existing agent/tool patterns: `tool_use|tool_choice|tools=|@tool|defineTool|function_call` to map current agent infrastructure
-- Use this context to tailor all output to the actual project
 
 ## Step 1: Classify the Agent Pattern
 

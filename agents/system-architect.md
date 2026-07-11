@@ -2,7 +2,6 @@
 name: system-architect
 description: System architecture agent that generates RFCs, reviews system design, evaluates architectural trade-offs, and creates architecture decision records for Cure Consulting Group projects.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 20
 skills: sdlc, api-architect, database-architect
 memory: project

@@ -2,7 +2,6 @@
 name: doc-generator
 description: Generates and maintains technical documentation from code — API docs, architecture decision records, changelogs, onboarding guides, and inline documentation. Use when generating or updating API docs, ADRs, changelogs, or onboarding guides from code.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
 skills: sdlc, api-architect
 memory: project

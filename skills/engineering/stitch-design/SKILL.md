@@ -1,6 +1,6 @@
 ---
 name: stitch-design
-description: "AI-native UI design and screen generation via Stitch MCP — vibe design, mockup creation, screen generation, UI prototyping, design system management, DESIGN.md authoring, component export, screen-to-code handoff, design token sync, visual consistency audits, Stitch canvas manipulation, and high-fidelity wireframe production"
+description: "AI-native UI design via Stitch MCP — screen generation, mockups, design systems, DESIGN.md authoring, token export, screen-to-code handoff, visual consistency audits"
 when_to_use: "Use when generating UI screens via Stitch MCP, creating mockups, exporting design tokens, or running visual consistency audits. Requires Stitch API key."
 argument-hint: "[screen-or-feature-description]"
   tools: [stitch-mcp]

@@ -97,3 +97,15 @@ This skill bundles the following stdlib-only scripts under `scripts/`:
 ```
 
 Keep it terse. The script's `--help` is the source of truth for arguments.
+
+## PATH exposure via bin/
+
+Every bundled script has a `bin/cure-*` wrapper at the plugin root (e.g.
+`bin/cure-runway` → `skills/business/burn-rate-tracker/scripts/runway_calculator.py`).
+While the plugin is enabled, Claude Code adds `bin/` to the Bash tool's PATH,
+so skills and agents invoke bare commands (`cure-runway --json …`) instead of
+long relative paths. Rules:
+
+- One wrapper per script, named `cure-<purpose>`, kebab-case.
+- Wrappers are two lines: shebang + `exec python3 "<resolved path>" "$@"`. No logic.
+- Adding a script means adding its wrapper; `verify-skill-scripts.sh` smoke-tests both.

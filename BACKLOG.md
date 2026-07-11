@@ -1,12 +1,464 @@
 # BACKLOG
 
-Internal improvement backlog. Captured 2026-04-29 from comparative evaluation against `alirezarezvani/claude-skills` (235 skills, 13K stars, 12-tool support).
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks).
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
 
 ---
 
-## Resolution Status (2026-04-29)
+# Wave 2 (2026-07-11) — Continuous-Execution Alignment
+
+Captured 2026-07-11 from an evaluation against current Claude Code documentation (code.claude.com/docs, verified July 2026). Theme: the library was built for request/response invocation — invoke a skill, get an artifact. Claude Code now has a continuous-execution layer (`/loop` with self-pacing, cloud routines, named workflows, background monitors, Stop-hook goal gates) that the library neither teaches nor exploits. Wave 2 closes that gap plus the correctness debt found during the evaluation.
+
+## Verified platform facts (do not re-research; verified against docs July 2026)
+
+- `maxTurns` and `memory: user|project|local` (plain string) are **valid documented subagent frontmatter** — our 39 agents need NO migration there.
+- `proactiveTriggering` is **not documented** — do not adopt; use hook matchers instead.
+- Subagent `effort: low|medium|high|xhigh|max` and `isolation: "worktree"` are documented.
+- Skill `paths:` (comma-separated string or YAML list of globs) limits when a skill activates.
+- Skill-scoped `hooks:` frontmatter is supported (same event→matcher→hooks nesting as settings).
+- Hook types: `command`, `prompt`, `agent` (experimental), `http`, `mcp_tool`. Prompt/agent hooks return `{"ok": bool, "reason": "..."}`; Stop hooks block via top-level `{"decision": "block", "reason": "..."}` or exit 2 + stderr.
+- Hook `if` argument filters (permission-rule syntax, e.g. `"if": "Bash(git *)"`) work ONLY on PreToolUse, PostToolUse, PostToolUseFailure, PermissionRequest, PermissionDenied.
+- `ConfigChange` event has a `skills` matcher (fires when skill files change mid-session).
+- Dynamic context injection in skills: inline `` !`command` `` and fenced ```` ```! ```` blocks execute before Claude reads the skill; bash default (`shell: powershell` to override); **works in plugin-shipped skills**. No Gemini equivalent.
+- `.claude/loop.md` (project) / `~/.claude/loop.md` (user) replaces the built-in `/loop` maintenance prompt; project wins; 25,000-byte cap.
+- Named workflows auto-load from `.claude/workflows/*.js` (closest dir wins in monorepos), invocable as `/workflow-name`, no registration. **Plugins cannot ship workflows** — our installer vendoring into `.claude/` is the only distribution path.
+- Since v2.1.196, `/loop` scheduled fires only run skills Claude may auto-invoke: `disable-model-invocation: true` makes a skill unloopable. Loopable-but-hidden pattern: `user-invocable: false`.
+- Plugin `monitors/monitors.json` (`name`, `command`, `description`, optional `when: "always" | "on-skill-invoke:<skill>"`) auto-starts monitors; each stdout line reaches Claude as a notification.
+- Plugin `bin/` contents join Bash PATH while the plugin is enabled — no manifest wiring.
+
+## Wave 2 — Resolution Status (2026-07-11)
+
+All 17 tickets shipped in a single session across four releases (v7.1.5 → v7.4.0). Deviations from plan:
+
+| Ticket | Deviation |
+|--------|-----------|
+| T9 | Inventory blobs deleted rather than generated — removal beat generation (the drift-prone content is gone; counts/version in remaining hook text stay synced by sync-metadata) |
+| T11 | Security guard shipped as a deterministic command hook (8-fixture test matrix) instead of an experimental agent hook — zero tokens, portable, blocking |
+| T12 | maxTurns and memory:project confirmed valid documented syntax — left untouched (first research pass was wrong); proactiveTriggering not documented — not adopted |
+| T14 | 9 skills, not 10 — `code-audit` never existed (phantom entry in the old hand-maintained hook inventory, proving T9's point) |
+| T18 | cure-release-check dry-run on this repo (4 agents) found a REAL blocker: the repo's own CI banned type:prompt hooks. Gate amended to constrained-allow (Stop/PostToolUseFailure only, timeout ≤30s) in validate.yml. Also fixed: npm files whitelist missing loop.md/workflows/bin/monitors; bootstrap package bumped to 0.3.0 |
+| T20 | 71 of 72 skills migrated; cure-infra-bootstrap + self-improving-memory kept prose deliberately (conditional, env-dependent gathering — wrong fit for unconditional injection) |
+| T24 | 10 worst trigger texts tightened (580→≤360); library total ~24.5k chars — full ≤10k unrealistic without gutting discovery quality, so the enforced policy is per-skill caps (audit warns >350) + skillListingBudgetFraction documented for consumers |
+
+## Release plan
+
+| Release | Bump | Tickets | Theme |
+|---------|------|---------|-------|
+| v7.1.5 | patch | T8 | Doc/impl truth reconciliation |
+| v7.2.0 | minor | T9–T13, T24 | Hooks + frontmatter modernization, context budget |
+| v7.3.0 | minor | T14–T17 | Continuous execution (loops, routines) |
+| v7.4.0 | minor | T18–T22 | Orchestration & distribution (workflows, injection, monitors) |
+
+T23 (release mechanics) runs as the closing checklist of every release. Total estimate: **14–18 dev-days**.
+
+---
+
+## T8 — Doc/impl truth reconciliation
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.1.5 (patch)
+
+**Scope:**
+1. `AGENT-GUIDE.md:27` claims "Stop hook validates tests, security review, docs" — no `Stop` hook exists in `hooks/hooks.json`. Reword to describe what actually fires today; T10 restores the claim truthfully.
+2. `CLAUDE.md` claims skill-security-auditor is "Wired into PreToolUse hook" — it isn't (PreToolUse entries are path/command blocklists only). Reword; T11 makes it real.
+3. `CLAUDE.md` says "Current version: **7.0.1**"; plugin.json says 7.1.4. Fix, and add the CLAUDE.md version line to `scripts/sync-metadata.py --write` scope so it cannot drift again.
+
+**Why:** The guide sells enforcement that doesn't exist. Consultants plan engagements around these claims.
+
+**Blast radius:** Low — two docs + one script.
+
+**Acceptance:**
+- [ ] AGENT-GUIDE.md makes no claim hooks/hooks.json doesn't implement
+- [ ] CLAUDE.md hook/agent wiring claims match hooks/hooks.json
+- [ ] `sync-metadata.py --write` syncs CLAUDE.md version from plugin.json; idempotent on re-run
+- [ ] `audit-library.py` green
+
+**Effort:** 1–2 hours.
+
+---
+
+## T9 — Hook diet: delete noise, scope checklists, generate inventory blocks
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.2.0
+
+**Scope:**
+1. Delete pure-noise hooks (context tax on every tool call in every consuming project): PostToolUse Bash "Executed: $CMD" echo, PostToolUse Edit/Write "Updated $FILE" echo, the Notification `{"notification_logged": true}` stub, and the PostToolUseFailure "Analyzing output..." echo (T11 replaces it with real triage).
+2. SubagentStop: the blanket 6-line quality checklist fires after **every** subagent, including read-only analysts where "PR ready?" is meaningless. Add agent-type matchers so only code-writing agents (refactor-assistant, project-bootstrapper, release-coordinator) trigger it.
+3. SessionStart (×4 entries) and PreCompact inventory blobs are hand-maintained duplicates of `docs/OVERVIEW.md` and have already drifted once. Generate both blocks via `sync-metadata.py --write` from the same source as OVERVIEW.md; add a CI drift check.
+
+**Why:** Hooks should be quiet by default and impossible to let rot.
+
+**Blast radius:** Medium — hooks.json ships to every consuming project on next install.
+
+**Acceptance:**
+- [ ] hooks.json valid JSON; noise hooks removed
+- [ ] SubagentStop checklist fires only for write-capable agent types
+- [ ] SessionStart/PreCompact blocks generated, byte-identical on regen, CI fails on drift
+- [ ] `audit-library.py` green
+
+**Effort:** 1 day.
+
+---
+
+## T10 — Stop-hook quality gate (prompt-type)
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.2.0
+**Depends on:** T9
+
+**Scope:**
+Add a `Stop` hook of `type: "prompt"` (haiku, 30s timeout): if the turn edited product code but shows no evidence of tests/verification being run, return `{"decision": "block", "reason": "<specific gap>"}` so Claude keeps working; otherwise pass. Guardrails: fail open on timeout/parse error; at most one block per turn (phrase the reason so a justified skip — docs-only change, user said skip tests — passes on re-check) to prevent block loops.
+
+**Why:** This is the "different goals" robustness ask made concrete — done means verified, enforced at the harness level. Also makes AGENT-GUIDE's (currently false) promise true.
+
+**Blast radius:** Medium — behavior change in every consuming project. Must fail open.
+
+**Acceptance:**
+- [ ] Stop prompt-hook in hooks/hooks.json using documented `{decision, reason}` contract
+- [ ] Blocks once with an actionable reason when code was edited with no test/verify evidence; passes clean turns and justified skips
+- [ ] Fails open on timeout/parse failure (verified by test)
+- [ ] Manually exercised in a sample consuming project (block path + pass path)
+- [ ] AGENT-GUIDE.md Stop-hook claim restored (closes the T8 reword)
+
+**Effort:** 1 day incl. testing.
+
+---
+
+## T11 — Wire skill-security-auditor and failure triage for real
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.2.0
+**Depends on:** T9
+
+**Scope:**
+1. `ConfigChange` hook, matcher `skills`: run a fast `audit-library.py` pass when skill files change mid-session.
+2. PreToolUse on `Write|Edit` scoped to `skills/**`, `agents/**`, `personas/**`: agent-type hook (experimental, 60s, `{ok, reason}`) running the skill-security-auditor checks. Verify on implementation whether the `if` permission-rule syntax supports `Write(skills/**)` path filtering; if not, fall back to a command hook that inspects `file_path` and exits 2 with reason.
+3. PostToolUseFailure on Bash: prompt-type hook (haiku) that classifies the failure and names the right agent (ci-debugger, dependency-auditor, …) — replaces the deleted echo with signal.
+
+**Why:** CLAUDE.md already promises this wiring; agent/prompt hooks now exist to deliver it.
+
+**Blast radius:** Medium. Agent hooks are experimental — keep the command-hook fallback in the ticket, not just the doc.
+
+**Acceptance:**
+- [ ] Editing a SKILL.md mid-session triggers the audit pass
+- [ ] A malicious-pattern fixture skill (curl-pipe-bash, secret exfil) is blocked with a reason
+- [ ] Bash failures produce one targeted agent suggestion, not boilerplate
+- [ ] All three hooks fail open
+- [ ] CLAUDE.md wiring claim now true (closes the T8 reword)
+
+**Effort:** 1–1.5 days.
+
+---
+
+## T12 — Agent frontmatter modernization: effort tiers, worktree isolation, model policy
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.2.0
+
+**Scope (39 agents):**
+1. **Verified no-ops — do not touch:** `maxTurns` and `memory: project` are valid documented syntax. `proactiveTriggering` is undocumented — do not adopt.
+2. **Model policy:** remove the blanket `model: sonnet` pin (all 39 agents) so agents inherit the session model by default; keep explicit pins only where a cheap model is deliberately right. Ticket includes a per-agent decision table.
+3. **Effort tiers:** `effort: high` for judgment-heavy agents (code-reviewer, pr-reviewer, firebase-security-auditor, skill-security-auditor, migration-validator); `effort: low` for mechanical reporters.
+4. **Isolation:** `isolation: "worktree"` on write-capable agents that may run concurrently (refactor-assistant, project-bootstrapper, release-coordinator).
+5. **Preload policy (systemic, not just the audit-flagged agent):** 14 of 39 agents preload >800 lines of full skill bodies per spawn via `skills:` (worst: financial-analyst 1,420 lines, investor-relations 1,206, ops-finance 1,188). Adopt a policy: preload at most one short skill (~300 lines); everything else becomes an on-demand reference in the agent body ("invoke /x when needed").
+6. Extend `audit-library.py` rubric: validate `effort`/`isolation` values, flag blanket model pins, flag preloads over the policy cap.
+
+**Why:** A universal sonnet pin silently downgrades every agent below the session model now that the Claude 5 family is out; effort tiers are the documented way to spend where judgment lives.
+
+**Blast radius:** Medium-high — all 39 agent files; model-selection behavior changes downstream.
+
+**Acceptance:**
+- [ ] Decision table applied to all 39 agents
+- [ ] financial-analyst preload trimmed; audit preload finding gone
+- [ ] audit-library rubric extended and green
+- [ ] OVERVIEW.md regenerated; 3 agents spot-checked by spawning them
+
+**Effort:** 1.5–2 days.
+
+---
+
+## T13 — Skill frontmatter modernization: disallowed-tools, paths, effort
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.2.0
+
+**Scope:**
+1. The 3 audit-flagged sandbox offenders (feature-audit, accessibility-audit, security-review): add `disallowed-tools: Write Edit` (keep `allowed-tools` for no-prompt reads — the two fields compose). Sweep the other 8 `allowed-tools` skills for the same read-only intent.
+2. `paths:` adoption — **only** for file-triggered review/audit skills (e.g. accessibility-audit → web file globs). Do NOT add to scaffold skills; they run before matching files exist. Per-skill decision list in the ticket. A wrong glob silently hides a skill — acceptance includes a reachability check.
+3. `effort: high` on heavy analysis skills (security-review, code-audit, performance-review).
+
+**Blast radius:** Medium — activation behavior changes.
+
+**Acceptance:**
+- [ ] Audit sandbox findings: 0
+- [ ] Every `paths:` skill verified still reachable in a fresh project (manual matrix)
+- [ ] Gemini + legacy claude-commands regenerated
+
+**Effort:** 1 day.
+
+---
+
+## T14 — "Recurring Mode" sections in 10 goal-shaped skills
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.3.0
+**Depends on:** T15 (cross-links the new skill)
+
+**Scope:**
+finops, burn-rate-tracker, investor-reporting, technology-radar, performance-review, code-audit, accessibility-audit, security-review, feature-audit, seo-content-engine. Each gets a `## Recurring Mode` section: `/loop` vs cloud-routine choice, recommended cadence, exact invocation (e.g. `/loop 1w /cure-product-engineering:burn-rate-tracker`), stop condition, token budget, unattended guardrails (read-only; never sends anything external).
+
+**Constraint:** these skills must stay model-invocable — since v2.1.196 scheduled fires skip skills Claude can't auto-invoke. Never add `disable-model-invocation` here; `user-invocable: false` is the loopable-but-hidden pattern. Add this as a CLAUDE.md development rule.
+
+**Why:** A third of the business/quality library is naturally recurring goals sold as one-shot templates. "Put this engagement on autopilot" should be a documented move.
+
+**Blast radius:** Low — additive sections + Gemini parity.
+
+**Acceptance:**
+- [ ] 10 skills updated, bodies stay under limits
+- [ ] CLAUDE.md rule added re: `disable-model-invocation` × `/loop`
+- [ ] Gemini parity regenerated
+
+**Effort:** 1–1.5 days.
+
+---
+
+## T15 — New skill: engagement-automation (platform)
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.3.0
+
+**Scope:**
+Decision framework for harness-level automation: `/loop` fixed-interval vs self-paced vs cloud routine (cron / API / GitHub triggers) vs desktop scheduled task vs CI cron vs hook. Covers: 7-day loop expiry, jitter, per-routine token caps and daily run limits, resumability, the never-unattended list (deploys, migrations, anything write-capable against prod), and monitoring for silent failures. Standard 3-step format. One cross-link paragraph added to agent-workflow-designer distinguishing product-AI workflow patterns (its territory) from Claude Code harness orchestration (this skill's).
+
+**Blast radius:** Low — additive. 80 → 81 skills; counts regenerate via T23.
+
+**Acceptance:**
+- [ ] SKILL.md passes audit ≥ 9.5
+- [ ] Cross-link paragraph in agent-workflow-designer
+- [ ] Gemini version; OVERVIEW/CLAUDE.md counts synced
+
+**Effort:** 1 day.
+
+---
+
+## T16 — Cure maintenance loop: loop.md template + vendoring
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.3.0
+
+**Scope:**
+`bootstrap/templates/loop.md.ejs` — the Cure-standard maintenance loop: outdated deps (CVE severity first), lint/type drift, TODO/FIXME decay, coverage regression vs the 80% floor, doc staleness. Must stay ≤ 25,000 bytes (documented cap). `install-plugin.js` vendors it to `.claude/loop.md` (respect exists-skip + `CURE_SKILLS_FORCE`). Project-level loop.md overrides `~/.claude/loop.md` — document that.
+
+**Why:** Bare `/loop` in every consuming project becomes "run Cure's maintenance standard" for free.
+
+**Blast radius:** Low-medium — installer change; bootstrap suite (106 tests) must stay green.
+
+**Acceptance:**
+- [ ] Template renders; vendored on fresh install, skipped when present
+- [ ] Bare `/loop` in a sample project picks it up
+- [ ] Bootstrap test suite green
+
+**Effort:** 0.5 day.
+
+---
+
+## T17 — Automation recipes doc (cloud routines)
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.3.0
+
+**Scope:**
+`docs/AUTOMATION.md` — copy-paste recipes: weekly dependency-audit routine, monthly investor-report draft, GitHub-webhook PR-review routine, API-triggered incident triage. Each names trigger type, token budget, and guardrails. Cover the sharp edges: routines run on Anthropic infra without local permission prompts (always set per-routine token limits + daily caps), interactively-authenticated MCP servers are absent headless, secrets never in routine prompts.
+
+**Blast radius:** Low — docs only.
+
+**Acceptance:**
+- [ ] Doc exists, linked from README and the engagement-automation skill
+- [ ] Every recipe has trigger, budget, guardrails
+
+**Effort:** 0.5 day.
+
+---
+
+## T18 — Ship named workflows via installer vendoring
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.4.0
+
+**Scope:**
+New top-level `workflows/` directory with three orchestration scripts (each: `meta` block, JSON-schema agent outputs, budget guards, `log()` on any coverage cap):
+- `cure-code-audit.js` — fan out reviewers per dimension (security / architecture / perf / a11y), adversarially verify each finding, synthesize. Existing audit skills supply the stage prompts.
+- `cure-release-check.js` — migration-validator + deployment-validator + dependency-auditor + api-validator in parallel, gate on all green.
+- `cure-migration-sweep.js` — discover call sites → transform each with worktree isolation → verify.
+
+`install-plugin.js`: map `workflows/` → `.claude/workflows/` (near one-line via the existing FLAT_DIRS mechanism). Plugins cannot ship workflows natively (verified) — vendoring is our distribution path, and a genuine differentiator. Once vendored they're invocable as `/cure-code-audit` etc.
+
+**Blast radius:** Medium — a new execution surface in every consuming project; workflows spawn many agents, so every script carries conservative defaults and budget guards.
+
+**Acceptance:**
+- [ ] `node --check` passes on all three
+- [ ] Each workflow dry-run against this repo or a fixture
+- [ ] Installer vendors, skips-if-exists, honors FORCE
+- [ ] Documented in AGENT-GUIDE (T19)
+
+**Effort:** 2–3 days (testing dominates).
+
+---
+
+## T19 — AGENT-GUIDE.md rewrite for the Workflow era
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.4.0
+**Depends on:** T18
+
+**Scope:**
+Replace the "list agents in your prompt" chaining patterns (pre-Workflow-tool era, now the worse option: non-deterministic, no resume, no budget control) with the current decision ladder: single agent → parallel Agent fan-out → named workflow (`/cure-code-audit`) → ultracode. Cover `/workflows` monitoring, resume semantics, budget directives, and one paragraph on agent teams.
+
+**Blast radius:** Low — doc.
+
+**Acceptance:**
+- [ ] No pattern in the guide contradicts hooks.json or the shipped workflows
+- [ ] Examples runnable as written
+
+**Effort:** 0.5–1 day.
+
+---
+
+## T20 — Dynamic context injection migration (72 skills)
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.4.0
+
+**Scope:**
+72 of 80 skills carry a prose "Pre-Processing (Auto-Context)" block instructing Claude to run `cat package.json` etc. Replace with dynamic injection — e.g. `` - Stack: !`cat package.json 2>/dev/null | head -40` `` — which executes before Claude reads the skill: deterministic, and saves a round of tool calls per invocation × 72 skills. `shared/pre-processing.md` becomes the canonical injected block. Constraints: injected commands auto-execute, so they must be fast, read-only, and exit 0 on any repo including an empty one. Gemini has no injection equivalent — `generate-gemini-skills.sh` must keep the prose form (divergence handled in the generator, never by hand).
+
+**Phasing:** pilot 5 high-traffic skills → measure context size/latency → scripted sweep (stdlib Python) + hand review of each skill's domain-specific extensions.
+
+**Blast radius:** HIGH — 72 files, auto-executing commands, cross-generator divergence. Biggest ticket of the wave.
+
+**Acceptance:**
+- [ ] Pilot measured and reviewed before sweep
+- [ ] Every injected command is read-only and exits 0 on an empty repo (new audit-library check enforces this)
+- [ ] Gemini regen keeps prose; legacy commands synced
+- [ ] audit-library + verify-skill-scripts green
+
+**Effort:** 2–3 days.
+
+---
+
+## T21 — Adopt monitors/ and bin/ plugin surfaces
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.4.0
+
+**Scope:**
+1. `bin/`: wrap the bundled stdlib Python scripts as PATH commands (`cure-dora-metrics`, `cure-cost-model`, …) — presence in `bin/` is sufficient, no manifest wiring. Update `docs/SCRIPTS_CONVENTION.md`; skills reference bare command names.
+2. `monitors/monitors.json`: ship only `when: "on-skill-invoke:<skill>"`-scoped monitors (e.g. incident-response tails app logs when invoked). NO `"always"` monitors — auto-start noise in projects that lack the watched files.
+
+**Blast radius:** Low-medium — additive; a bad monitor command means noisy notifications.
+
+**Acceptance:**
+- [ ] bin commands runnable by bare name in a consuming project
+- [ ] monitors.json valid; every entry `when`-scoped
+- [ ] SCRIPTS_CONVENTION.md updated
+
+**Effort:** 1 day.
+
+---
+
+## T22 — Verification discipline in the QA surface
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.4.0
+
+**Scope:**
+qa-engineer + test-runner agents, testing-strategy + e2e-testing skills: add the verify contract — a "done" claim requires exercising the affected flow end-to-end and observing behavior, not just green unit tests. Align wording with Claude Code's bundled `/verify`. Pairs with T10: the Stop gate checks; this teaches.
+
+**Blast radius:** Low.
+
+**Acceptance:**
+- [ ] 2 agents + 2 skills updated with consistent wording
+- [ ] Gemini parity
+
+**Effort:** 0.5 day.
+
+---
+
+## T23 — Release mechanics (closing checklist, per release)
+
+Runs at the end of each of v7.1.5 / v7.2.0 / v7.3.0 / v7.4.0 — not a standalone ticket:
+
+- [ ] `audit-library.py` green, no score regressions
+- [ ] `sync-metadata.py --write` (now covers CLAUDE.md version + generated hook blocks)
+- [ ] `generate-overview.py`
+- [ ] `generate-gemini-skills.sh`
+- [ ] `sync-legacy-commands.py`
+- [ ] `verify-skill-scripts.sh`
+- [ ] plugin.json bump; CI manifest validation; bootstrap suite green
+
+**Effort:** ~1 hour per release.
+
+---
+
+## T24 — Context budget & token economy
+
+**Status:** ✅ Done (2026-07-11)
+**Release:** v7.2.0
+
+Measured 2026-07-11 (chars ≈ tokens × 4):
+
+| Surface | Measured | Cost model |
+|---------|----------|-----------|
+| Skill listing (`description` + `when_to_use`, 80 skills) | 25,893 chars (~6.5k tokens) | Every session, every consuming project |
+| Default listing budget | ~1% of context (≈2k tokens / 8k chars on a 200k model) | — |
+| Agent skill preloads | 14 of 39 agents inject >800 lines/spawn | Every agent spawn (→ T12) |
+| PreCompact re-injection blob | ~3,686 chars | Every compaction |
+| SessionStart echoes | ~1,797 chars | Every session |
+| CLAUDE.md | ~13.7k chars (~3.4k tokens) | Every session in this repo |
+| Skill bodies | only 2 of 80 over the 500-line rule (505 each) | On invocation — healthy |
+
+**Scope:**
+1. **Listing overflow (the headline):** 25.9k chars vs a ~8k-char default budget means roughly two-thirds of the skill listing is at risk of truncation — auto-discovery silently fails for whichever skills fall past the cut. First, verify truncation empirically in a fresh session (which skills are actually visible?). Then attack from both ends: (a) tighten `description`/`when_to_use` toward a ~250-char average with an audit-library max-length check (the 5 worst are 490–580 chars each); (b) T13's `paths:` scoping removes file-specific skills from irrelevant sessions; (c) `user-invocable: false` + model-invocable stays for niche skills; (d) as a last resort, document `skillListingBudgetFraction` in CONSUMING-PROJECTS.md for skill-heavy setups.
+2. **PreCompact blob:** slim the ~3.7k-char re-injection to standards-only (~1k chars) + a pointer to `docs/OVERVIEW.md`; the full inventory list is redundant with the skill listing itself. (Generation mechanics land in T9; the size target lands here.)
+3. **Trim the 2 skills over 500 lines** (technology-radar, client-handoff — 505 each) into sibling reference files per progressive disclosure.
+4. **Token-economy conventions section in CLAUDE.md:** `context: fork` for heavy analysis skills (17 use it today — sweep for more candidates), preload policy (T12), effort tiers = output-token budget, haiku for prompt-type hooks, description length cap.
+
+**Why:** The library's biggest token line-item isn't verbosity — it's fixed overhead multiplied across every session and every spawn in every consuming project. And the listing overflow isn't just cost: it silently disables auto-discovery, which is a capability regression.
+
+**Blast radius:** Medium — description rewrites across many skills change auto-discovery behavior (for the better, but verify).
+
+**Acceptance:**
+- [ ] Truncation verified empirically before and after; all 80 skills visible in a fresh session's listing afterward (or consciously scoped out via `paths`/`user-invocable`)
+- [ ] Listing total ≤ ~10k chars or every over-budget skill deliberately scoped
+- [ ] audit-library check: combined `description` + `when_to_use` ≤ 350 chars warns, ≥ 500 fails
+- [ ] PreCompact payload ≤ ~1k chars
+- [ ] 0 skills over 500 lines
+- [ ] CLAUDE.md token-economy conventions section added
+
+**Effort:** 1–1.5 days (description rewrites dominate).
+
+---
+
+## Wave 2 order of execution
+
+1. **T8** → ship v7.1.5 same day.
+2. **T9** first (T10, T11 build on the cleaned hooks file); **T12, T13, T24** parallelizable — do T24's truncation measurement before T13's `paths:` decisions so both attack the listing budget coherently → ship v7.2.0.
+3. **T15** before **T14** (sections cross-link the new skill); **T16, T17** anytime → ship v7.3.0.
+4. **T18** before **T19** (guide documents shipped workflows); **T20** pilot early, sweep last; **T21, T22** anytime → ship v7.4.0.
+
+## Wave 2 risks
+
+- **Agent-type hooks are experimental** — T11 keeps command-hook fallbacks as first-class, not a footnote.
+- **`paths` can silently hide a skill** — T13 acceptance requires a reachability matrix.
+- **Injected commands auto-execute** — T20 adds an audit-library check: read-only, exit 0 on empty repo.
+- **Workflows spend real tokens** — every shipped script has budget guards and conservative defaults.
+- **Platform floor:** features verified against Claude Code v2.1.196+ docs (July 2026). State the minimum version in README; unknown frontmatter is ignored harmlessly on older clients, but `paths`/skill-hooks behavior should be spot-checked on rollout.
+
+---
+
+## Wave 1 — Resolution Status (2026-04-29)
 
 All initial tickets resolved in a single batch session.
 
@@ -243,7 +695,7 @@ Generator: `scripts/generate-overview.py` — reads frontmatter from each file, 
 
 ---
 
-## Order of execution (suggested)
+## Wave 1 order of execution (historical)
 
 1. **T2** (personas) — small, additive, fills real gap
 2. **T6** (self-improving memory) — small, additive

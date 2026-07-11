@@ -2,7 +2,6 @@
 name: metrics-dashboard
 description: Designs KPI dashboards with metric definitions, alert thresholds, SLO/SLI targets, and visualization specs for engineering, product, and business stakeholders.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
 skills: observability, analytics-implementation
 memory: project

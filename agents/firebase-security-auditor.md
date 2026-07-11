@@ -2,10 +2,9 @@
 name: firebase-security-auditor
 description: Audits Firestore security rules for overly permissive access, missing validations, and data model mismatches. Use after modifying security rules or Firestore schema.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 10
-skills: firebase-architect, security-review, compliance-architect
 memory: project
+effort: high
 ---
 
 # Firebase Security Auditor Agent
@@ -100,3 +99,7 @@ If Cloud Storage rules exist:
 ### Recommendations
 1. [prioritized fixes]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/firebase-architect`, `/security-review`, `/compliance-architect`.

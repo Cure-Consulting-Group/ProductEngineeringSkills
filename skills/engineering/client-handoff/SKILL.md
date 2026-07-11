@@ -12,12 +12,14 @@ Structured handoff framework for consulting engagements at Cure Consulting Group
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
 
 ## Step 1: Classify the Handoff Type
 
@@ -425,24 +427,13 @@ CHANGE REQUEST PROCESS:
 ```
 BILLING OPTIONS
 
-Option A: Monthly Retainer
-  - [X] hours per month included
-  - Unused hours do not roll over
-  - Overage billed at $[RATE]/hour
-  - P0 incidents covered outside retainer hours at no additional cost
-  - Monthly usage report provided
-
-Option B: Time and Materials
-  - Billed at $[RATE]/hour
-  - Minimum 1-hour increment per incident
-  - P0 escalation premium: 1.5x rate outside business hours
-  - Weekly timesheet provided for approval
-  - Net 30 payment terms
-
-Option C: Hybrid
-  - [X] hours retainer for routine maintenance
-  - T&M for incidents exceeding retainer
-  - Quarterly review to adjust retainer size
+Option A — Monthly Retainer: [X] hrs/month included, no rollover; overage at
+  $[RATE]/hr; P0 incidents covered outside retainer hours at no extra cost;
+  monthly usage report provided.
+Option B — Time & Materials: $[RATE]/hr, 1-hr minimum per incident; P0 premium
+  1.5x outside business hours; weekly timesheet for approval; Net 30 terms.
+Option C — Hybrid: [X]-hr retainer for routine maintenance plus T&M for
+  incidents beyond it; quarterly review to adjust retainer size.
 ```
 
 ## Step 8: Sign-Off Checklist

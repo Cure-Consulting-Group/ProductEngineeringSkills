@@ -2,9 +2,7 @@
 name: campaign-analyst
 description: Analyzes marketing campaign performance — attribution, conversion funnels, A/B test results, CAC/LTV, channel ROI, and campaign optimization recommendations. Use when analyzing campaign performance, attribution, conversion funnels, or channel ROI.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
-skills: analytics-implementation, growth-engineering, product-marketing
 memory: project
 ---
 
@@ -109,3 +107,7 @@ Define the measurement framework:
 |--------|--------|--------|----------|
 | [Action] | [S/M/L] | [H/M/L] | [P0-P3] |
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/analytics-implementation`, `/growth-engineering`, `/product-marketing`.

@@ -2,10 +2,10 @@
 name: skill-security-auditor
 description: Static security audit for skill, agent, and persona files before they enter the repo. Scans for command injection, code execution, exfiltration, prompt injection, supply chain, privilege escalation, and secret leakage. Read-only.
 tools: Read, Grep, Glob
-model: sonnet
 maxTurns: 10
 skills: security-review
 memory: project
+effort: high
 ---
 
 # Skill Security Auditor Agent

@@ -10,12 +10,14 @@ allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
 
 Model burn rates, runway scenarios, and cash flow projections for multi-product venture studios. Built for Cure Consulting Group's portfolio: Vendly (LATAM merchant OS), Autograph (AI medical scribe), The Initiated (women's basketball recruiting), Antigravity (AI agent orchestration), TwntyHoops (basketball media/events). Every dollar should be traceable to a product, and every product should have a path to sustainability.
 
@@ -428,3 +430,13 @@ RELATED SKILLS:
   - /fundraising-materials — if the recommendation is to raise capital
   - /portfolio-registry — portfolio-level product tracking
 ```
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** weekly
+- **Session loop:** `/loop 1w /cure-product-engineering:burn-rate-tracker`
+- **Unattended:** cloud routine — Weekly burn/runway refresh from the latest actuals; alert if runway crosses a scenario threshold. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~60k tokens/run; cap at one run per weekly period.
+- **Guardrails:** read-only run; deliver runway summary appended to the finance report; report on failure rather than retrying.

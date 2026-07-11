@@ -1,6 +1,6 @@
 {
   "name": "@cure-consulting-group/claude-bootstrap",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Bootstraps Cure's Claude development infrastructure into any project. Idempotent, manifest-driven, version-pinned. Provisions CLAUDE.md, STATE.md, .claude/{settings,skills,agents,rules,hooks}, .cursorrules, .gemini/. Includes drift detection (doctor) and multi-project inventory.",
   "type": "module",
   "exports": {

@@ -30,7 +30,8 @@ PERSONAS_DIR = ROOT / "personas"
 SKILL_FIELDS = {
     "name", "description", "when_to_use", "argument-hint", "arguments",
     "disable-model-invocation", "user-invocable", "allowed-tools",
-    "disallowed-tools", "model", "context",
+    "disallowed-tools", "model", "context", "paths", "effort", "shell",
+    "agent", "hooks",
 }
 # Tolerated-but-non-functional skill fields (no penalty beyond a note)
 SKILL_FIELDS_INERT = {"version", "compatibility"}
@@ -41,6 +42,16 @@ AGENT_FIELDS = {
     "effort", "color", "isolation",
 }
 VALID_MODELS = {"sonnet", "opus", "haiku", "fable", "inherit"}
+VALID_EFFORT = {"low", "medium", "high", "xhigh", "max"}
+VALID_ISOLATION = {"worktree"}
+# Context-budget policy (Wave 2 T24): the combined description + when_to_use
+# of every skill competes for the session skill-listing budget (~1% of model
+# context by default). Keep individual trigger text tight.
+DESC_COMBINED_WARN = 350
+DESC_COMBINED_FAIL = 500
+# Preload policy (Wave 2 T12): agents should preload at most ~300 lines of
+# skill bodies; everything else belongs in the body as an on-demand reference.
+PRELOAD_POLICY_LINES = 300
 NAME_RE = re.compile(r"^[a-z0-9-]+$")
 FIRST_PERSON_RE = re.compile(r"\b(I can|I will|I'll|you can use this|let me)\b", re.I)
 TIME_SENSITIVE_RE = re.compile(
@@ -103,6 +114,22 @@ def score_skill(path):
     combined = len(desc) + len(when)
     if combined > 1536:
         issues.append(("HIGH", f"desc+when_to_use {combined} >1536 (trigger text truncated)")); score -= 1.5
+    elif combined >= DESC_COMBINED_FAIL:
+        issues.append(("MED", f"desc+when_to_use {combined} chars ≥{DESC_COMBINED_FAIL} (listing-budget policy: tighten)")); score -= 0.5
+    elif combined > DESC_COMBINED_WARN:
+        issues.append(("LOW", f"desc+when_to_use {combined} chars >{DESC_COMBINED_WARN} (listing-budget policy: consider tightening)")); score -= 0.1
+
+    # --- effort value validity ---
+    if fm.get("effort") and fm["effort"] not in VALID_EFFORT:
+        issues.append(("HIGH", f"invalid effort `{fm['effort']}` (valid: {sorted(VALID_EFFORT)})")); score -= 1.0
+
+    # --- dynamic-injection safety: !`cmd` blocks auto-execute before Claude
+    # reads the skill, so they must be read-only and non-destructive.
+    for cmd in re.findall(r"!`([^`]+)`", body):
+        # fd redirects to /dev/null are read-only noise suppression, not writes
+        stripped = re.sub(r"\d*>+\s*/dev/null", "", cmd)
+        if re.search(r"\brm\b|\bmv\b|\bdd\b|>\s*\S|\btee\b|\bcurl\b|\bwget\b|git\s+(push|commit|reset|checkout)|\bnpm\s+(install|publish)\b|\bpip\s+install\b", stripped):
+            issues.append(("CRIT", f"injected command is not read-only: `{cmd[:60]}`")); score -= 2.0
 
     # --- Best practice: body length ---
     if body_lines > 500:
@@ -190,6 +217,11 @@ def score_agent(path, skill_idx):
     if model and model not in VALID_MODELS and not model.startswith("claude-"):
         issues.append(("MED", f"model='{model}' not a valid value")); score -= 1
 
+    if fm.get("effort") and fm["effort"] not in VALID_EFFORT:
+        issues.append(("HIGH", f"invalid effort `{fm['effort']}` (valid: {sorted(VALID_EFFORT)})")); score -= 1.0
+    if fm.get("isolation") and fm["isolation"] not in VALID_ISOLATION:
+        issues.append(("HIGH", f"invalid isolation `{fm['isolation']}` (valid: {sorted(VALID_ISOLATION)})")); score -= 1.0
+
     if "tools" not in fm:
         issues.append(("LOW", "no `tools` (inherits ALL tools — consider least privilege)")); score -= 0.5
 
@@ -204,6 +236,8 @@ def score_agent(path, skill_idx):
                 preload_lines += skill_idx[r]
         if preload_lines > 1500:
             issues.append(("HIGH", f"preloads ~{preload_lines} lines into context every run (right-size with disable-model-invocation or fewer skills)")); score -= 1.0
+        elif preload_lines > 800:
+            issues.append(("MED", f"preloads ~{preload_lines} lines every run (policy: ≤~{PRELOAD_POLICY_LINES}; move to on-demand body references)")); score -= 0.5
         elif len(refs) >= 4:
             issues.append(("MED", f"preloads {len(refs)} full skills (~{preload_lines} lines) every run")); score -= 0.5
 

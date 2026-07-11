@@ -2,7 +2,6 @@
 name: test-runner
 description: Validates test suite health, runs tests, checks coverage thresholds, and flags flaky tests. Use after writing new code or before commits.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
 skills: testing-strategy, e2e-testing
 memory: project
@@ -75,3 +74,12 @@ Output a structured report:
 ### Recommendations
 - [specific suggestions]
 ```
+
+## Verification Contract (Cure standard)
+
+A change is "done" when the affected flow has been exercised end-to-end and the
+behavior observed — not when unit tests pass. Green tests on a broken flow is
+the classic false-done. Before reporting success: run the real entry point
+(app, endpoint, CLI, screen), drive the changed path with realistic input, and
+state what you observed. If the flow cannot be exercised, say so explicitly
+instead of substituting test results.

@@ -2,9 +2,7 @@
 name: brand-guardian
 description: Enforces brand consistency across the product — validates voice/tone, visual identity, naming conventions, microcopy, and style guide adherence in UI code and content. Use when reviewing UI copy, microcopy, naming, or visual identity for brand and style-guide consistency.
 tools: Read, Grep, Glob
-model: sonnet
 maxTurns: 15
-skills: product-design, design-system, product-marketing
 memory: project
 ---
 
@@ -119,3 +117,7 @@ If multi-platform, verify:
 2. [Second highest]
 3. [Third highest]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/product-design`, `/design-system`, `/product-marketing`.

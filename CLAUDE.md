@@ -4,19 +4,19 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 80 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks with agent auto-triggering (command + prompt + agent), MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 81 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
 ```
 .claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
-skills/{domain}/{name}/SKILL.md — 80 skills, organized by domain folder
-                                 Domains: engineering (39), platform (10), product (10),
+skills/{domain}/{name}/SKILL.md — 81 skills, organized by domain folder
+                                 Domains: engineering (39), platform (11), product (10),
                                  business (7), finance (4), marketing (5), security (4), legal (1)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
 agents/*.md                    — 39 specialized subagents with tool/skill bindings
 personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant)
-hooks/hooks.json               — Multi-layer hooks (command, prompt, agent) across 12 event types
+hooks/hooks.json               — Multi-layer hooks (command + prompt) across 9 event types incl. Stop quality gate, ConfigChange audit, skill security guard
 rules/*.md                     — 11 path-specific coding standards
 output-styles/*/output-style.md — 9 custom output styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts)
 .mcp.json.example              — Opt-in MCP server template (GitHub, Sentry, Firestore, PostgreSQL); see docs/MCP-SETUP.md. NOT auto-loaded — needs per-project secrets.
@@ -41,7 +41,7 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 - When adding a new skill, create it in `skills/{domain}/{name}/SKILL.md` with proper YAML frontmatter. Domain is one of: engineering, platform, product, business, finance, marketing, security, legal. If unsure, run `python3 scripts/generate-overview.py` after — it categorizes by name patterns and will surface the inferred domain.
 - Every skill must have: `name`, `description`, and `argument-hint` in frontmatter. Fold the trigger ("Use when…") into `description` itself (or `when_to_use`) — it drives auto-discovery. Keep `description` + `when_to_use` combined under 1,536 chars (the skill-listing truncates past that). Skill `name` must be lowercase/hyphens, ≤64 chars, and **must not contain "claude" or "anthropic"** (reserved words — the harness rejects them).
 - To make a skill genuinely read-only, set `disallowed-tools` (e.g. `Write Edit Bash`). NOTE: `allowed-tools` does **not** restrict anything — it only grants no-prompt permission for the listed tools; every other tool stays callable. Do not rely on `allowed-tools` as a sandbox.
-- Destructive or sensitive skills should set `disable-model-invocation: true`
+- Destructive or sensitive skills should set `disable-model-invocation: true`. NOTE: this also makes a skill un-loopable — `/loop` scheduled fires only run skills Claude may auto-invoke (v2.1.196+). Never add it to a skill with a Recurring Mode section; to hide a loopable skill from the `/` menu use `user-invocable: false` instead.
 - Keep SKILL.md bodies under 500 lines; push long reference material into sibling files (one level deep) per progressive disclosure.
 - Do NOT add a `version:` field to skills — it is not read by the harness. Library version lives only in `.claude-plugin/plugin.json`.
 - After any change to skills/agents/personas, run `python3 scripts/audit-library.py` (must stay green) and `python3 scripts/sync-metadata.py --write` (keeps all docs/counts in sync).
@@ -52,9 +52,19 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 - A skill MAY ship `skills/{domain}/{name}/scripts/*.py` — Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`. See `docs/SCRIPTS_CONVENTION.md` for the full convention.
 - After adding/modifying skills, agents, or personas: run `python3 scripts/generate-overview.py` to regenerate `docs/OVERVIEW.md`.
 
+## Token Economy (Wave 2 conventions)
+
+The library's biggest token cost is fixed overhead multiplied across every session and agent spawn in every consuming project. Rules:
+
+- **Trigger text is budgeted.** Combined `description` + `when_to_use` per skill: target ≤350 chars (audit warns above 350, flags at 500). All 80 skills compete for the session skill-listing budget (~1% of model context by default); skill-heavy consuming projects can raise `skillListingBudgetFraction` — see `docs/CONSUMING-PROJECTS.md`.
+- **Agents preload at most ~300 lines of skills.** Anything more becomes an on-demand body reference ("invoke `/x` when needed"). The audit flags preloads >800 lines.
+- **Don't pin `model:` on agents without a reason.** Agents inherit the session model; a blanket pin silently downgrades them. Spend via `effort:` instead — `high` only where judgment lives (reviewers, auditors, validators).
+- **Heavy analysis skills fork.** Use `context: fork` so their exploration doesn't bloat the main conversation.
+- **Hooks stay quiet.** No echo-per-tool-call hooks; prompt-type hooks run on the harness's cheap default model with tight prompts.
+
 ## Versioning
 
-Current version: **7.0.1**
+Current version: **7.4.0**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording
@@ -125,7 +135,7 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 |-------|---------|-------|
 | **accessibility-checker** | Automated WCAG 2.2 compliance checking | Read-only |
 | **firebase-security-auditor** | Firestore rules and Cloud Functions security audit | Read + Bash |
-| **skill-security-auditor** | Audit new SKILL.md, agent, and persona files for command injection, code execution, exfiltration, prompt injection, supply chain risks, privilege escalation, and secret leakage. Returns PASS/WARN/FAIL. Wired into PreToolUse hook. | Read-only |
+| **skill-security-auditor** | Audit new SKILL.md, agent, and persona files for command injection, code execution, exfiltration, prompt injection, supply chain risks, privilege escalation, and secret leakage. Returns PASS/WARN/FAIL. Invoke before merging changes under skills/, agents/, or personas/ (automatic hook wiring: BACKLOG T11). | Read-only |
 
 ## Personas (4)
 

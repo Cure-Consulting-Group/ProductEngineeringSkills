@@ -2,9 +2,7 @@
 name: ci-debugger
 description: Diagnoses failed CI/CD pipeline runs by analyzing logs, identifying root causes, and suggesting targeted fixes. Supports GitHub Actions, Firebase Deploy, Fastlane, and Docker builds. Use when a CI/CD run fails and you need root-cause analysis and a targeted fix.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 15
-skills: ci-cd-pipeline, testing-strategy, infrastructure-scaffold
 memory: project
 ---
 
@@ -106,3 +104,7 @@ Provide:
 ### Prevention
 - [How to prevent this class of failure going forward]
 ```
+
+## Skills (invoke on demand)
+
+Do not assume these are preloaded. Invoke the relevant skill when the task needs its framework: `/ci-cd-pipeline`, `/testing-strategy`, `/infrastructure-scaffold`.

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "incident-error-logs",
+    "command": "sh -c 'tail -q -n 20 -F logs/error.log logs/app.log firebase-debug.log 2>/dev/null || true'",
+    "description": "Streams application error logs to Claude during incident response. Silent when the project has no matching log files.",
+    "when": "on-skill-invoke:incident-response"
+  },
+  {
+    "name": "e2e-test-output",
+    "command": "sh -c 'tail -q -n 20 -F test-results/output.log playwright-report/results.log 2>/dev/null || true'",
+    "description": "Streams end-to-end test runner output during e2e test sessions. Silent when no test-output files exist.",
+    "when": "on-skill-invoke:e2e-testing"
+  }
+]

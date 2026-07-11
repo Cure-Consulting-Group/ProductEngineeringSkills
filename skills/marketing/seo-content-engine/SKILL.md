@@ -11,12 +11,14 @@ Technical SEO, content strategy, and search optimization for web apps, marketing
 
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
-- Use this context to tailor all output to the actual project
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
 
 ## Step 1: Classify the SEO Need
 
@@ -204,3 +206,13 @@ Before publishing every post:
 - [ ] LocalBusiness JSON-LD on website
 - [ ] Reviews strategy (ask satisfied clients)
 - [ ] Location pages if serving multiple cities
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** weekly
+- **Session loop:** `/loop 1w /cure-product-engineering:seo-content-engine`
+- **Unattended:** cloud routine — Weekly ranking check and brief generation for the active keyword set. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~80k tokens/run; cap at one run per weekly period.
+- **Guardrails:** read-only run; deliver content briefs + ranking deltas as a report file; report on failure rather than retrying.

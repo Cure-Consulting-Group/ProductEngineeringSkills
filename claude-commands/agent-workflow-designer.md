@@ -4,15 +4,21 @@ Pick the right shape before you build. Most production AI failures come from pic
 
 Built from Anthropic's "Building Effective Agents" framework (docs.anthropic.com). Companion skills: `/agent-designer` for designing the internals of an autonomous agent once you've decided one is needed; `/ai-feature-builder` for the broader feature scaffold; `/llmops` for prompt versioning, evals, and cost guardrails on whatever you ship.
 
+**Scope boundary:** this skill designs AI workflows *inside a product you're building*. If the question is how to automate Claude Code itself — recurring loops, scheduled cloud routines, hooks, CI cron — that's harness orchestration: use `/engagement-automation` instead.
+
 ## Pre-Processing (Auto-Context)
 
-Before starting, gather project context silently:
-- Read `PORTFOLIO.md` if it exists in the project root or parent directories for product/team context
-- Run: `cat package.json 2>/dev/null || cat build.gradle.kts 2>/dev/null || cat Podfile 2>/dev/null` to detect stack
-- Run: `git log --oneline -5 2>/dev/null` for recent changes
-- Run: `ls src/ app/ lib/ functions/ 2>/dev/null` to understand project structure
+Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+
+- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+
+Use this context to tailor all output to the actual project.
+
+Additionally gather (domain-specific):
 - Grep for existing LLM patterns: `chain|router|orchestrator|evaluator|tool_use|@chain|RunnableSequence` to detect current shape
-- Use this context to tailor all output to the actual project
 
 ## Step 1: Classify the Pattern Fit
 

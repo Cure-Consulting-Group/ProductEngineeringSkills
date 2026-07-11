@@ -80,7 +80,7 @@ ProductEngineeringSkills/
 │   ├── accessibility-checker.md # WCAG 2.2 automated compliance
 │   └── firebase-security-auditor.md # Firestore rules and Functions audit
 ├── hooks/                    # Multi-layer automated enforcement
-│   └── hooks.json            # Command + Prompt + Agent hooks (12 event types)
+│   └── hooks.json            # Command + Prompt hooks (9 event types)
 ├── rules/                    # 11 path-specific coding standards
 │   ├── android.md             # Loads for *.kt files
 │   ├── ios.md                 # Loads for *.swift files
@@ -353,16 +353,20 @@ Import the `.skill` files from `gemini skills/` into your Gemini workspace. Each
 | **web-design-expert** | Responsive design, CSS architecture, design tokens, container queries, accessibility-first, Tailwind | Yes |
 | **stitch-design** | AI-native UI design via Stitch MCP — vibe design, mockups, screen generation, design tokens, component export | Yes |
 
-## Hooks (Multi-Layer Automated Enforcement + Agent Auto-Triggering)
+## Recurring Automation (Loops & Routines)
 
-The plugin includes three types of hooks across **12 event types**: `SessionStart`, `PreCompact`, `PostCompact`, `PostToolUse`, `PostToolUseFailure`, `UserPromptSubmit`, `PreToolUse`, `Notification`, `SubagentStart`, `SubagentStop`, `TaskCompleted`, `Stop`.
+The library ships a standard maintenance loop (vendored to `.claude/loop.md` — run bare `/loop` to use it), Recurring Mode sections in the goal-shaped skills (finops, burn-rate-tracker, investor-reporting, security-review, and others), and copy-paste cloud-routine recipes in **[docs/AUTOMATION.md](docs/AUTOMATION.md)**. Mechanism selection and unattended-run guardrails: `/cure-product-engineering:engagement-automation`.
+
+## Hooks (Multi-Layer Automated Enforcement)
+
+The plugin ships command and prompt hooks across **9 event types**: `SessionStart`, `PreCompact`, `PostCompact`, `ConfigChange`, `PostToolUseFailure`, `UserPromptSubmit`, `PreToolUse`, `Stop`, `SubagentStop`. Highlights: a Stop-hook quality gate (blocks "done" without verification), a PreToolUse static security guard on skill/agent/persona files, and a ConfigChange audit trigger when skill files change mid-session.
 
 **New in v4.0**: Hooks now suggest and auto-trigger agents based on context. Every code edit, test run, deployment, and PR action recommends the most relevant agent(s).
 
 ### Command Hooks (Deterministic)
 | Hook | Event | What It Does | Agent Integration |
 |------|-------|--------------|-------------------|
-| **Welcome + Agent roster** | SessionStart | Confirms plugin loaded, lists all 39 agents and 4 personas by domain | Displays full agent inventory |
+| **Welcome** | SessionStart | Confirms plugin loaded with counts; full inventory stays in docs/OVERVIEW.md | Points to inventory |
 | **Git status** | SessionStart | Reports current branch, uncommitted changes, last commit | — |
 | **Dependency check** | SessionStart | Detects outdated packages | Suggests dependency-auditor |
 | **Code edit advisor** | PostToolUse (Edit/Write) | Context-aware suggestions based on file type (.kt, .swift, .ts, .sql, .tf, etc.) | Suggests code-reviewer, test-runner, brand-guardian, migration-validator |

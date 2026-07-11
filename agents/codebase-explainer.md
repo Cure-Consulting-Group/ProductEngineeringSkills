@@ -2,7 +2,6 @@
 name: codebase-explainer
 description: Onboarding agent that answers questions about the codebase, explains architecture, traces data flows, and helps new developers understand how things work. Use when onboarding to an unfamiliar codebase or asking how the architecture or a data flow works.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 maxTurns: 20
 skills: sdlc, testing-strategy
 memory: project
