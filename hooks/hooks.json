@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.2.0). 80 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles. Use /cure-product-engineering:<skill-name> to invoke; full inventory: docs/OVERVIEW.md in the plugin repo. New project? /cure-product-engineering:project-bootstrap.'"
+            "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.3.0). 81 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles. Use /cure-product-engineering:<skill-name> to invoke; full inventory: docs/OVERVIEW.md in the plugin repo. New project? /cure-product-engineering:project-bootstrap.'"
           }
         ]
       },
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\\n- Clean Architecture: domain (pure logic) / data (DTOs + repos) / presentation (VMs + UI)\\n- Android: Kotlin + Compose + Hilt + MVI. iOS: SwiftUI + MVVM + structured concurrency. Web: Next.js App Router + TS strict + Tailwind + Server Components. Firebase: Functions v2 (TS) + deny-by-default rules. Python: 3.11+ typed + pytest. Go: 1.22+ errgroup + table-driven tests. Rust: thiserror/anyhow + clippy pedantic + tokio.\\n- SQL: parameterized, timestamptz, reversible migrations. Docker: multi-stage, non-root, pinned. Terraform: remote state + plan before apply.\\n- Testing: 80% coverage minimum on new code. Security: validate inputs, no hardcoded secrets, parameterized queries.\\n\\nPlugin: 80 skills, 39 agents, 4 personas — invoke via /cure-product-engineering:<skill>. Full inventory: docs/OVERVIEW.md in the plugin repo.'"
+            "command": "echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\\n- Clean Architecture: domain (pure logic) / data (DTOs + repos) / presentation (VMs + UI)\\n- Android: Kotlin + Compose + Hilt + MVI. iOS: SwiftUI + MVVM + structured concurrency. Web: Next.js App Router + TS strict + Tailwind + Server Components. Firebase: Functions v2 (TS) + deny-by-default rules. Python: 3.11+ typed + pytest. Go: 1.22+ errgroup + table-driven tests. Rust: thiserror/anyhow + clippy pedantic + tokio.\\n- SQL: parameterized, timestamptz, reversible migrations. Docker: multi-stage, non-root, pinned. Terraform: remote state + plan before apply.\\n- Testing: 80% coverage minimum on new code. Security: validate inputs, no hardcoded secrets, parameterized queries.\\n\\nPlugin: 81 skills, 39 agents, 4 personas — invoke via /cure-product-engineering:<skill>. Full inventory: docs/OVERVIEW.md in the plugin repo.'"
           }
         ]
       }
@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Context compacted. Cure Consulting Group plugin active — 80 skills, 39 agents, 4 personas. Use /cure-product-engineering:<skill-name> to invoke.'"
+            "command": "echo 'Context compacted. Cure Consulting Group plugin active — 81 skills, 39 agents, 4 personas. Use /cure-product-engineering:<skill-name> to invoke.'"
           }
         ]
       }

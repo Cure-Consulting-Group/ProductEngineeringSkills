@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 80 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 81 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
@@ -64,7 +64,7 @@ The library's biggest token cost is fixed overhead multiplied across every sessi
 
 ## Versioning
 
-Current version: **7.2.0**
+Current version: **7.3.0**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording

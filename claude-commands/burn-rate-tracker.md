@@ -420,3 +420,13 @@ RELATED SKILLS:
   - /fundraising-materials — if the recommendation is to raise capital
   - /portfolio-registry — portfolio-level product tracking
 ```
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** weekly
+- **Session loop:** `/loop 1w /cure-product-engineering:burn-rate-tracker`
+- **Unattended:** cloud routine — Weekly burn/runway refresh from the latest actuals; alert if runway crosses a scenario threshold. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~60k tokens/run; cap at one run per weekly period.
+- **Guardrails:** read-only run; deliver runway summary appended to the finance report; report on failure rather than retrying.

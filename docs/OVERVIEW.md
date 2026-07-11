@@ -7,8 +7,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.2.0 |
-| Skills | 80 |
+| Version | 7.3.0 |
+| Skills | 81 |
 | Agents | 39 |
 | Personas | 4 |
 | Hooks (entries) | 13 |
@@ -107,7 +107,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | technical-blog-writer | Crafts high-impact technical blog posts modeled after Netflix/Uber engineering blogs, translated for business owners. Use when you need to explain complex engineering feats using the 'Famous Actor' simple-explanation tone with clear visual concepts. | default |
 
 
-### Platform (10)
+### Platform (11)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
@@ -116,6 +116,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | disaster-recovery | Design disaster recovery and business continuity plans — RTO/RPO targets, backup strategies, failover architecture, and DR testing runbooks | default |
 | dora-metrics | Implement DORA and SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, and developer experience dashboards | default |
 | edge-computing | Architect edge computing solutions — edge functions, CDN strategies, cache invalidation, edge middleware, and global latency optimization | default |
+| engagement-automation | Choose and configure the right Claude Code recurring-execution mechanism — /loop, cloud routines, scheduled tasks, CI cron, or hooks — with Cure guardrails for unattended runs | default |
 | green-software | Apply sustainable software practices — carbon-aware computing, energy-efficient architecture, resource optimization, and sustainability reporting | default |
 | incident-response | Create incident runbooks, severity classification, on-call procedures, post-mortems, and escalation paths | default |
 | infrastructure-scaffold | Generate cloud infrastructure configs for Firebase, GCP, Vercel, and Docker with IaC templates and environment management | default |
@@ -247,11 +248,11 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.2.0). 80 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.3.0). 81 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null \| python3 -c "import sys,json; d=json… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 80 skills, 39 agents, 4 personas. Use /cure-pr… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 81 skills, 39 agents, 4 personas. Use /cure-pr… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | UserPromptSubmit |  | command | PROMPT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt',… |

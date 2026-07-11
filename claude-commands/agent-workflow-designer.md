@@ -4,6 +4,8 @@ Pick the right shape before you build. Most production AI failures come from pic
 
 Built from Anthropic's "Building Effective Agents" framework (docs.anthropic.com). Companion skills: `/agent-designer` for designing the internals of an autonomous agent once you've decided one is needed; `/ai-feature-builder` for the broader feature scaffold; `/llmops` for prompt versioning, evals, and cost guardrails on whatever you ship.
 
+**Scope boundary:** this skill designs AI workflows *inside a product you're building*. If the question is how to automate Claude Code itself — recurring loops, scheduled cloud routines, hooks, CI cron — that's harness orchestration: use `/engagement-automation` instead.
+
 ## Pre-Processing (Auto-Context)
 
 Before starting, gather project context silently:

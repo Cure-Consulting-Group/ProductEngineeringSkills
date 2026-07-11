@@ -444,3 +444,13 @@ Related skills for investor reporting workflows:
 - `/analytics-implementation` — Event tracking to feed KPI dashboards
 - `/security-review` — Security posture for data room
 - `/legal-doc-scaffold` — Legal docs for data room compliance section
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** monthly
+- **Session loop:** `/loop 4w /cure-product-engineering:investor-reporting`
+- **Unattended:** cloud routine — Monthly draft of the investor update from repo/metrics state. Draft only: never auto-send. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~120k tokens/run; cap at one run per monthly period.
+- **Guardrails:** read-only run; deliver draft update as a report file — a human always reviews before anything is sent; report on failure rather than retrying.

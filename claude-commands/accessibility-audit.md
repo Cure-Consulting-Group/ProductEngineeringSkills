@@ -399,3 +399,13 @@ NEXT ACTIONS CHECKLIST
 [ ] Add accessibility checks to CI pipeline if not already present
 ═══════════════════════════════════════════════════════════════
 ```
+
+## Recurring Mode
+
+This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+
+- **Cadence:** weekly or per release
+- **Session loop:** `/loop 1w /cure-product-engineering:accessibility-audit`
+- **Unattended:** cloud routine — Weekly WCAG 2.2 sweep of changed screens; full sweep per release. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Budget:** ~100k tokens/run; cap at one run per weekly period.
+- **Guardrails:** read-only run; deliver WCAG violations as issues, deduplicated against open ones; report on failure rather than retrying.
