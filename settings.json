@@ -38,5 +38,14 @@
       "Edit(*id_ed25519*)",
       "Write(*id_ed25519*)"
     ]
+  },
+  "extraKnownMarketplaces": {
+    "cure": {
+      "source": {
+        "source": "github",
+        "repo": "Cure-Consulting-Group/ProductEngineeringSkills"
+      },
+      "autoUpdate": true
+    }
   }
 }
