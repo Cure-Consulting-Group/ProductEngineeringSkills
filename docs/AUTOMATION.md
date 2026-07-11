@@ -17,6 +17,9 @@ recipe book.
    scope them as if the least careful person on the team wrote the prompt.
 5. Interactively-authenticated MCP servers are absent in headless runs. Don't
    build a routine around one.
+6. Every iteration terminates — non-blocking is non-negotiable. No watch mode,
+   no dev servers, no interactive prompts, hard timeouts on slow checks. A
+   blocked iteration doesn't fail loudly; it silently kills the automation.
 
 ---
 

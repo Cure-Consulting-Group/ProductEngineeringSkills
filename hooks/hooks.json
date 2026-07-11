@@ -18,15 +18,6 @@
             "command": "echo \"Git branch: $(git branch --show-current 2>/dev/null || echo 'not a git repo'). Uncommitted changes: $(git status --porcelain 2>/dev/null | wc -l | tr -d ' '). Last commit: $(git log --oneline -1 2>/dev/null || echo 'none').\""
           }
         ]
-      },
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ -f package.json ]; then OUTDATED=$(npm outdated --json 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print(len(d))\" 2>/dev/null || echo '0'); if [ \"$OUTDATED\" -gt 0 ] 2>/dev/null; then echo \"Dependency check: $OUTDATED outdated packages. Consider running dependency-auditor agent.\"; fi; fi"
-          }
-        ]
       }
     ],
     "PreCompact": [
@@ -115,7 +106,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS\n\nDecide whether this turn is safe to end. Return ok: false ONLY if ALL of these hold: (1) product source code was edited this turn (not just docs, config, markdown, or test files), (2) there is no evidence tests, a build, or a verification command ran after the edits, (3) the user did not explicitly ask to skip verification or defer it, and (4) no earlier quality-gate block already happened this turn. When returning ok: false, the reason must name the specific files edited and the concrete verification to run. In every other case — including any ambiguity — return ok: true.",
+            "prompt": "You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS\n\nDecide whether this turn is safe to end. NEVER block automated runs: if this turn is a /loop iteration, a scheduled or maintenance run, a cloud routine, or any turn not driven by a direct user request, return ok: true immediately — blocking an unattended iteration wedges the loop. Otherwise return ok: false ONLY if ALL of these hold: (1) product source code was edited this turn (not just docs, config, markdown, or test files), (2) there is no evidence tests, a build, or a verification command ran after the edits, (3) the user did not explicitly ask to skip verification or defer it, and (4) no quality-gate block has already happened anywhere in this conversation turn — if a prior block or previously delivered blocking reason is visible, return ok: true even if the gap remains, and note the remaining gap in reason instead of blocking again. When returning ok: false, the reason must name the specific files edited and the concrete verification to run. In every other case — including any ambiguity — return ok: true.",
             "timeout": 30
           }
         ]

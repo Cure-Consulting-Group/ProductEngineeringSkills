@@ -82,6 +82,31 @@ jobs:
           print("Prompt hooks constrained to low-frequency events with timeouts. ✓")
           PY
 
+      - name: No blocking I/O in session-lifecycle hooks
+        # SessionStart/PreCompact/PostCompact hooks run synchronously in every
+        # consuming project — including every /loop iteration's session. A
+        # network call there (npm outdated, curl) blocks the session for the
+        # tool's own timeout. This bit us once; never again.
+        run: |
+          python3 - <<'PY'
+          import json, re, sys
+          LIFECYCLE = {"SessionStart", "PreCompact", "PostCompact"}
+          NET = re.compile(r"\b(npm (outdated|audit|install|ci)|npx |pip |curl |wget |gh |git (fetch|pull|push))\b")
+          d = json.load(open("hooks/hooks.json"))
+          bad = []
+          for ev, groups in d.get("hooks", {}).items():
+              if ev not in LIFECYCLE: continue
+              for g in groups:
+                  for h in g.get("hooks", []):
+                      m = NET.search(h.get("command", ""))
+                      if m: bad.append((ev, m.group(0)))
+          if bad:
+              print("FORBIDDEN network/blocking command in session-lifecycle hook:")
+              for ev, cmd in bad: print(f"  {ev}: {cmd}")
+              sys.exit(1)
+          print("Session-lifecycle hooks are local-only and non-blocking. ✓")
+          PY
+
       - name: docs/OVERVIEW.md is up to date
         run: |
           python3 scripts/generate-overview.py

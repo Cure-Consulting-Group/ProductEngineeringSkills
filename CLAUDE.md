@@ -60,7 +60,7 @@ The library's biggest token cost is fixed overhead multiplied across every sessi
 - **Agents preload at most ~300 lines of skills.** Anything more becomes an on-demand body reference ("invoke `/x` when needed"). The audit flags preloads >800 lines.
 - **Don't pin `model:` on agents without a reason.** Agents inherit the session model; a blanket pin silently downgrades them. Spend via `effort:` instead — `high` only where judgment lives (reviewers, auditors, validators).
 - **Heavy analysis skills fork.** Use `context: fork` so their exploration doesn't bloat the main conversation.
-- **Hooks stay quiet.** No echo-per-tool-call hooks; prompt-type hooks run on the harness's cheap default model with tight prompts.
+- **Hooks stay quiet and non-blocking.** No echo-per-tool-call hooks; no network I/O in SessionStart hooks (a slow registry blocks every session and every loop iteration in every consuming project); prompt-type hooks only on Stop/PostToolUseFailure with timeout ≤30s and fail-open (CI-enforced). The Stop gate never blocks automated runs (/loop iterations, routines) and never blocks twice in one turn.
 
 ## Versioning
 
