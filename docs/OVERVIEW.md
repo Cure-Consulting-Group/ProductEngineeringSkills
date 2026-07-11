@@ -7,7 +7,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.4.3 |
+| Version | 7.4.4 |
 | Skills | 81 |
 | Agents | 39 |
 | Personas | 4 |
@@ -248,7 +248,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.4.3). 81 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.4.4). 81 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
