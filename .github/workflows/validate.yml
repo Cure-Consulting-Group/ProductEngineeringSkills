@@ -4,18 +4,11 @@ name: Validate library
 # agent, or doc can drift out of spec or out of sync before it ships.
 
 on:
+  # No path filter on pull_request: `validate` is a required status check
+  # (branch ruleset on main), and a required check that path-filtering skips
+  # leaves the PR stuck on "Expected — waiting" and blocks auto-merge.
+  # The job is stdlib-only and runs in seconds, so it runs on every PR.
   pull_request:
-    paths:
-      - "skills/**"
-      - "agents/**"
-      - "personas/**"
-      - "hooks/**"
-      - "rules/**"
-      - ".claude-plugin/**"
-      - "marketplace.json"
-      - "CLAUDE.md"
-      - "README.md"
-      - "scripts/**"
   push:
     branches: [main]
   workflow_dispatch:
