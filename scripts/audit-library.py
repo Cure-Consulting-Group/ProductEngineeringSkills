@@ -261,6 +261,22 @@ def collect():
     return [score_skill(p) for p in skills], [score_agent(p, idx) for p in agents]
 
 
+def manifest_unlisted_domains():
+    """Domains whose skills the plugin loader would silently skip.
+
+    The Claude Code plugin loader only scans one level deep (<name>/SKILL.md),
+    so every skills/<domain> directory must be listed in the plugin.json
+    `skills` array or none of its skills register in consuming projects.
+    """
+    manifest = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    declared = manifest.get("skills", [])
+    if isinstance(declared, str):
+        declared = [declared]
+    declared = {Path(p).name for p in declared}
+    domains = {p.relative_to(SKILLS_DIR).parts[0] for p in SKILLS_DIR.rglob("SKILL.md")}
+    return sorted(domains - declared)
+
+
 def grade(score):
     if score >= 9: return "A"
     if score >= 8: return "B"
@@ -317,6 +333,12 @@ def main():
         print()
 
     fail = False
+    unlisted = manifest_unlisted_domains()
+    if unlisted:
+        print(f"FAIL: skills/{{{','.join(unlisted)}}} not in plugin.json `skills` array — "
+              f"the plugin loader scans one level deep, so these domains will not load "
+              f"in consuming projects", file=sys.stderr)
+        fail = True
     if args.fail_under is not None and mean < args.fail_under:
         print(f"FAIL: library mean {mean} < {args.fail_under}", file=sys.stderr); fail = True
     if args.min_item is not None:
