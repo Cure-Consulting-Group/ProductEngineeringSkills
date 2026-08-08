@@ -7,8 +7,6 @@ name: Nightly drift check
 # single tracking issue instead of failing silently.
 
 on:
-  schedule:
-    - cron: "17 8 * * *" # 08:17 UTC daily
   workflow_dispatch: {}
 
 permissions:
