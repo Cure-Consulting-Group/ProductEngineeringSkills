@@ -26,6 +26,13 @@ cannot ship a half-synced or below-bar release.
 3. **Opportunistic tightening.** Fix a few of whatever the audit flags as LOW
    (currently trigger-text length advisories). Never let LOWs accumulate into
    a wave of their own.
+4. **Fleet census (T31).** `python3 scripts/fleet-census.py --projects-dir
+   ~/Documents/Cure-Consulting-Group` — drift, version lag, or double-install
+   in any consuming project is a finding, not a shrug. Vendored stragglers get
+   `scripts/migrate-to-plugin.sh` once the canary release has soaked.
+5. **Canary promotion.** If a release has soaked ≥5 working days on the
+   `next` channel (statledger) with no eval regression and no telemetry
+   anomaly, promote it: canary manifest back to `stable`, announce fleet-wide.
 
 ## Quarterly — the meta-loop (~1 day, the one that matters)
 
