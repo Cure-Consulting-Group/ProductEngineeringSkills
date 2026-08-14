@@ -1,22 +1,9 @@
 # Eval Results (generated — do not edit)
 
-Latest sweep: `2026-08-14-1424` mode=`skill`
+Latest sweep: `2026-08-14-1704` mode=`model`
 
-| key (task\|backend\|arm) | pass rate | n |
-|---|---|---|
-| t07-hotfix-worktree|claude|off | 0% | 1 |
-| t07-hotfix-worktree|claude|on | 0% | 1 |
-| t11-finops-review|claude|off | 100% | 1 |
-| t11-finops-review|claude|on | 100% | 1 |
-| t14-dockerfile|claude|off | 100% | 1 |
-| t14-dockerfile|claude|on | 100% | 1 |
-| t16-substitution-integrity|claude|off | 100% | 1 |
-| t16-substitution-integrity|claude|on | 100% | 1 |
+| key (task\|backend\|arm) | pass rate | n | 95% CI | flaky |
+|---|---|---|---|---|
+| t01-fix-dangling-gather|mock|on | 0% | 2 | [0, 0.658] |  |
 
-## Skill on/off deltas
-
-| skill | Δ pass rate |
-|---|---|
-| git-worktree-manager | +0% |
-| finops | +0% |
-| infrastructure-scaffold | +0% |
+_Deltas require n≥3 per arm; single-rep results are directional only (t07, 2026-08-14)._

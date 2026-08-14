@@ -118,6 +118,16 @@ def run_arm(task, backend, skills_on, dry):
             "files_written": n_files}
 
 
+def wilson(p, n, z=1.96):
+    """Wilson score interval — honest about small n, never leaves [0,1]."""
+    if n == 0:
+        return (0.0, 1.0)
+    denom = 1 + z * z / n
+    center = (p + z * z / (2 * n)) / denom
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / denom
+    return (round(max(0, center - half), 3), round(min(1, center + half), 3))
+
+
 def summarize(runs):
     out = {}
     for r in runs:
@@ -125,8 +135,15 @@ def summarize(runs):
             continue
         key = (r["task"], r["backend"], r["skill"])
         out.setdefault(key, []).append(r["pass"])
-    return {f"{t}|{b}|{'on' if s else 'off'}": {"pass_rate": sum(v) / len(v), "n": len(v)}
-            for (t, b, s), v in out.items()}
+    result = {}
+    for (t, b, s), v in out.items():
+        p, n = sum(v) / len(v), len(v)
+        result[f"{t}|{b}|{'on' if s else 'off'}"] = {
+            "pass_rate": p, "n": n, "ci95": wilson(p, n),
+            # flaky = mixed outcomes across reps: neither trustworthy pass nor clean fail
+            "flaky": 0 < p < 1,
+        }
+    return result
 
 
 def write_results(mode, runs, summary):
@@ -151,12 +168,15 @@ def skill_deltas(results):
     by_task = {}
     for k, v in results["summary"].items():
         task, backend, arm = k.split("|")
-        by_task.setdefault(task, {})[arm] = v["pass_rate"]
+        d = by_task.setdefault(task, {})
+        d[arm] = v["pass_rate"]
+        d["n_min"] = min(d.get("n_min", 999), v.get("n", 0))
     idx = json.loads(INDEX.read_text())["skill_to_tasks"]
     deltas = {}
     for skill, tids in idx.items():
         pairs = [(by_task[t]["on"], by_task[t]["off"]) for t in tids
-                 if t in by_task and "on" in by_task[t] and "off" in by_task[t]]
+                 if t in by_task and "on" in by_task[t] and "off" in by_task[t]
+                 and by_task[t].get("n_min", 3) >= 3]
         if pairs:
             deltas[skill] = round(sum(on - off for on, off in pairs) / len(pairs), 3)
     return deltas
@@ -169,9 +189,11 @@ def regen_results_md():
         md.append("_No results yet. Run `python3 scripts/run-evals.py --mode skill`._")
     else:
         md += [f"Latest sweep: `{res['stamp']}` mode=`{res['mode']}`", "",
-               "| key (task\\|backend\\|arm) | pass rate | n |", "|---|---|---|"]
+               "| key (task\\|backend\\|arm) | pass rate | n | 95% CI | flaky |", "|---|---|---|---|---|"]
         for k, v in sorted(res["summary"].items()):
-            md.append(f"| {k} | {v['pass_rate']:.0%} | {v['n']} |")
+            ci = v.get("ci95", ("—", "—"))
+            md.append(f"| {k} | {v['pass_rate']:.0%} | {v['n']} | [{ci[0]}, {ci[1]}] | {'⚠️' if v.get('flaky') else ''} |")
+        md += ["", "_Deltas require n≥3 per arm; single-rep results are directional only (t07, 2026-08-14)._"]
         d = skill_deltas(res)
         if d:
             md += ["", "## Skill on/off deltas", "", "| skill | Δ pass rate |", "|---|---|"]
