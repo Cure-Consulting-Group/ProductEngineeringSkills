@@ -26,6 +26,25 @@ cannot ship a half-synced or below-bar release.
 3. **Opportunistic tightening.** Fix a few of whatever the audit flags as LOW
    (currently trigger-text length advisories). Never let LOWs accumulate into
    a wave of their own.
+4. **Fleet census (T31).** `python3 scripts/fleet-census.py --projects-dir
+   ~/Documents/Cure-Consulting-Group` — drift, version lag, or double-install
+   in any consuming project is a finding, not a shrug. Vendored stragglers get
+   `scripts/migrate-to-plugin.sh` once the canary release has soaked.
+5. **Canary promotion.** If a release has soaked ≥5 working days on the
+   `next` channel (statledger) with no eval regression and no telemetry
+   anomaly, promote it: canary manifest back to `stable`, announce fleet-wide.
+6. **Scorecard refresh.** `python3 scripts/generate-scorecard.py` — commit the
+   updated SCORECARD.md. Any layer stuck at "no data" for two months is itself
+   a finding.
+
+### Quarterly prune mandate (T35 — a mandate, not a suggestion)
+
+At every quarterly re-eval, run `python3 scripts/usage-report.py`. Any library
+skill with **zero invocations across the fleet for 2 consecutive quarters** is
+auto-filed as a deprecation candidate in the next wave. Keeping it requires a
+written why in the ticket. A smaller, fully-measured library beats 81 skills
+that are 40% dark matter — every unused skill pays listing-budget rent in every
+session of every consuming project.
 
 ## Quarterly — the meta-loop (~1 day, the one that matters)
 

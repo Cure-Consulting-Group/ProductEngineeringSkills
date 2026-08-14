@@ -1,0 +1,10 @@
+{
+  "id": "t07-hotfix-worktree",
+  "title": "Produce a hotfix worktree runbook",
+  "source": "git-worktree-manager skill, hotfix scenario",
+  "skills": [
+    "git-worktree-manager"
+  ],
+  "prompt": "I'm mid-feature on branch feat/big-refactor with a dirty tree, and a production bug needs an immediate hotfix off main. Write HOTFIX.md with the exact git commands to handle this WITHOUT stashing or switching my current branch, then clean up after the fix ships.",
+  "fixtures": {}
+}

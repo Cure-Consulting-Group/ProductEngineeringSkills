@@ -1,0 +1,10 @@
+{
+  "id": "t08-test-strategy",
+  "title": "Define a test pyramid with thresholds",
+  "source": "testing-strategy skill",
+  "skills": [
+    "testing-strategy"
+  ],
+  "prompt": "Create TESTING.md for a Next.js 14 + Firebase app: test pyramid with explicit ratios, frameworks per layer (unit/integration/e2e), and numeric coverage thresholds.",
+  "fixtures": {}
+}

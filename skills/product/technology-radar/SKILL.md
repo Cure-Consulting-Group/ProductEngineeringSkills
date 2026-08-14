@@ -495,4 +495,4 @@ This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-aut
 - **Cadence:** quarterly
 - **Unattended:** cloud routine — Quarterly radar refresh: ring movements, new adoptions, Hold items still in production. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~150k tokens/run; cap at one run per quarterly period.
-- **Guardrails:** read-only run; deliver updated TECHNOLOGY_RADAR.md + divergence report; report on failure rather than retrying.
+- **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver updated TECHNOLOGY_RADAR.md + divergence report; report on failure rather than retrying.

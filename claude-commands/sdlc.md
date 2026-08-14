@@ -12,6 +12,10 @@ Project context, gathered before the skill runs. Values are injected inline belo
 Use this context to tailor all output to the actual project.
 
 Additionally gather (domain-specific):
+- `ls docs/adr docs/rfc docs/prd 2>/dev/null` — existing SDLC artifacts to stay consistent with (numbering, format)
+- `find docs -name "*.md" -newer .git/HEAD 2>/dev/null | head -5` — recently touched docs (active spec work)
+- `ls .github/ISSUE_TEMPLATE 2>/dev/null` — issue/story conventions already in force
+
 Full-cycle software development lifecycle artifact generation for technical product teams. Generates production-grade, opinionated SDLC artifacts aligned with Clean Architecture, SOLID principles, and modern mobile/backend engineering standards.
 
 ## Core Principle: Artifact Traceability Chain

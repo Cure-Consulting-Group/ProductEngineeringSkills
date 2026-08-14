@@ -1,0 +1,12 @@
+{
+  "id": "t14-dockerfile",
+  "title": "Write a hardened multi-stage Dockerfile",
+  "source": "rules/docker.md standards",
+  "skills": [
+    "infrastructure-scaffold"
+  ],
+  "prompt": "Create a Dockerfile for a Node 20 Express API: multi-stage build, non-root runtime user, production-only deps in the final image.",
+  "fixtures": {
+    "package.json": "{\n  \"name\": \"api\", \"main\": \"server.js\", \"dependencies\": {\"express\": \"^4\"}\n}\n"
+  }
+}

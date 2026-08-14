@@ -1,0 +1,12 @@
+{
+  "id": "t15-release-notes",
+  "title": "Cut semver release notes from commits",
+  "source": "release-management skill; release-coordinator agent",
+  "skills": [
+    "release-management"
+  ],
+  "prompt": "Given git log output in COMMITS.txt, decide the correct semver bump from v2.3.1 and write CHANGELOG.md for the release: version heading, grouped sections (features/fixes), breaking changes called out.",
+  "fixtures": {
+    "COMMITS.txt": "feat!: drop support for legacy /v0 endpoints\nfeat: add player photo uploads\nfix: box score double-count on overtime\nchore: bump deps\n"
+  }
+}

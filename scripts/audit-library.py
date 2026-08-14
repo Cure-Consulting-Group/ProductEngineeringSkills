@@ -163,6 +163,28 @@ def score_skill(path):
     if TIME_SENSITIVE_RE.search(body):
         issues.append(("LOW", "time-sensitive phrasing in body")); score -= 0.25
 
+    # --- guardrail honesty (T36): a skill that CLAIMS to be read-only must
+    # enforce it via disallowed-tools. Prose is not a control. Advisory
+    # recurring-mode guardrails (labeled "advisory") are exempt by design.
+    claims_readonly = bool(re.search(r"read.only", desc, re.I)) or \
+        bool(re.search(r"^Read-only skill", body, re.M))
+    if claims_readonly and "disallowed-tools" not in fm:
+        issues.append(("HIGH", "claims read-only but no disallowed-tools — prose is not a control (T36)")); score -= 1.5
+
+    # --- prose coherence (T34): a list-introducing gather header must be
+    # followed by at least one bullet. Catches the T20-migration corruption
+    # class where "Additionally gather (domain-specific):" was left dangling
+    # and spliced straight into unrelated body prose.
+    body_lines_list = body.splitlines()
+    for i, line in enumerate(body_lines_list):
+        if re.match(r"^(Additionally gather|Before starting.*gather).*:\s*$", line.strip()):
+            j = i + 1
+            while j < len(body_lines_list) and not body_lines_list[j].strip():
+                j += 1
+            nxt = body_lines_list[j].strip() if j < len(body_lines_list) else ""
+            if not re.match(r"^([-*]|\d+\.|`)", nxt):
+                issues.append(("HIGH", f"dangling gather header at body line {i+1}: no bullet list follows (prose splice)")); score -= 1.5
+
     # --- nested references (deeper than one level) heuristic ---
     md_links = re.findall(r"\[[^\]]+\]\(([^)]+\.md)\)", body)
     # Not penalized automatically (needs graph walk) — reported as info.
@@ -254,11 +276,48 @@ def score_agent(path, skill_idx):
     }
 
 
+def eval_deltas():
+    """T30 calibration: measured on/off pass-rate delta per skill, from the
+    newest skill-mode eval results. Empty dict if no eval data exists yet."""
+    results_dir = ROOT / "evals" / "results"
+    files = sorted(results_dir.glob("*-skill.json")) if results_dir.exists() else []
+    if not files:
+        return {}
+    res = json.loads(files[-1].read_text())
+    by_task = {}
+    for k, v in res.get("summary", {}).items():
+        task, _backend, arm = k.split("|")
+        by_task.setdefault(task, {})[arm] = v["pass_rate"]
+    idx_path = ROOT / "evals" / "index.json"
+    if not idx_path.exists():
+        return {}
+    idx = json.loads(idx_path.read_text())["skill_to_tasks"]
+    deltas = {}
+    for skill, tids in idx.items():
+        pairs = [(by_task[t]["on"], by_task[t]["off"]) for t in tids
+                 if t in by_task and "on" in by_task[t] and "off" in by_task[t]]
+        if pairs:
+            deltas[skill] = sum(on - off for on, off in pairs) / len(pairs)
+    return deltas
+
+
 def collect():
     skills = sorted(SKILLS_DIR.rglob("SKILL.md"))
     agents = sorted(AGENTS_DIR.glob("*.md"))
     idx = real_skill_index()
-    return [score_skill(p) for p in skills], [score_agent(p, idx) for p in agents]
+    scored = [score_skill(p) for p in skills]
+    # T30 calibration: conformance alone cannot exceed B when the skill has
+    # eval coverage and its measured on/off delta is <= 0 — a skill that does
+    # not demonstrably help is not an A skill, however clean its frontmatter.
+    deltas = eval_deltas()
+    for it in scored:
+        d = deltas.get(it["name"])
+        if d is not None:
+            it["eval_delta"] = round(d, 3)
+            if d <= 0 and it["score"] > 8.0:
+                it["issues"].append(("HIGH", f"eval-calibrated: measured on/off delta {d:+.0%} <= 0 — score capped at 8.0"))
+                it["score"] = 8.0
+    return scored, [score_agent(p, idx) for p in agents]
 
 
 def manifest_unlisted_domains():

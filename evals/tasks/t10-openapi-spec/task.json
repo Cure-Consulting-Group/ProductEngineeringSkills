@@ -1,0 +1,10 @@
+{
+  "id": "t10-openapi-spec",
+  "title": "Design a versioned OpenAPI spec",
+  "source": "api-architect skill; api-specification output style",
+  "skills": [
+    "api-architect"
+  ],
+  "prompt": "Create openapi.yaml (OpenAPI 3.x) for a roster service: GET /v1/teams/{teamId}/players (paginated list) and POST /v1/teams/{teamId}/players. Bearer JWT auth, error responses included.",
+  "fixtures": {}
+}

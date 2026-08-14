@@ -1,0 +1,12 @@
+{
+  "id": "t11-finops-review",
+  "title": "Right-size overprovisioned Cloud Functions",
+  "source": "finops skill \u2014 the post-T34-repair skill under test",
+  "skills": [
+    "finops"
+  ],
+  "prompt": "Review functions/index.js and write COSTS.md: identify overprovisioned settings driving cost, and give concrete corrected values with rationale.",
+  "fixtures": {
+    "functions/index.js": "const {onRequest} = require('firebase-functions/v2/https');\nexports.ping = onRequest({memory: '8GiB', minInstances: 25, timeoutSeconds: 540}, (req,res)=>res.send('pong'));\n"
+  }
+}

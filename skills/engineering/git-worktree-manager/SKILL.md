@@ -1,7 +1,7 @@
 ---
 name: git-worktree-manager
 description: "Use git worktrees for parallel work — multiple client features, hotfixes, or PR reviews simultaneously without stash/branch-switch overhead"
-when_to_use: "Use when juggling parallel features, reviewing a PR while a long-running branch is checked out, running multiple test environments side by side, or a hotfix lands while you're mid-feature. NOT for simple sequential branch work — `git switch` is fine."
+when_to_use: "Use when juggling parallel features, reviewing a PR while a long-running branch is checked out, running multiple test environments side by side, or a hotfix lands while you're mid-feature. NOT for simple sequential branch work — `git switch` is fine. NOT the multi-session operating model (use parallel-agent-orchestration)."
 argument-hint: "[task-or-branch-name]"
 ---
 

@@ -455,4 +455,4 @@ This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-aut
 - **Session loop:** `/loop 4w /cure-product-engineering:investor-reporting`
 - **Unattended:** cloud routine — Monthly draft of the investor update from repo/metrics state. Draft only: never auto-send. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~120k tokens/run; cap at one run per monthly period.
-- **Guardrails:** read-only run; deliver draft update as a report file — a human always reviews before anything is sent; report on failure rather than retrying.
+- **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver draft update as a report file — a human always reviews before anything is sent; report on failure rather than retrying.

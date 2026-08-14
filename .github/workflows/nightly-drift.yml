@@ -45,6 +45,7 @@ jobs:
           run "Oversized skill bodies"            python3 scripts/split-oversized-skills.py --check
           run "Metadata in sync"                  python3 scripts/sync-metadata.py --check
           run "Legacy commands in sync"           python3 scripts/sync-legacy-commands.py --check
+          run "Doc claims (dead references)"      python3 scripts/check-doc-claims.py
           python3 scripts/generate-overview.py >/dev/null
           if ! git diff --quiet -- docs/OVERVIEW.md; then
             fail=1

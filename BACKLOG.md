@@ -1,8 +1,415 @@
 # BACKLOG
 
-Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks).
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime.
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
+
+---
+
+# Wave 3 (2026-08-13) — Evidence, Fleet Health, and Parallel Operations
+
+**Execution status (2026-08-14, branch `feat/wave-3`):** T34, T30, T31, T35, T36, T32 built and committed. Deviations:
+
+| Ticket | Status | Deviation |
+|---|---|---|
+| T34 | ✅ Done | Root cause refined: the gather bullets never existed pre-T20 (header inserted with nothing under it) — authored them rather than restored |
+| T30 | ✅ Done | 15 tasks/13 skills; live-verified (t01 real claude run PASS, 23.4s). CI runs harness self-test only (no authenticated CLI on runners); real Ring-0 runs locally via release.sh vs last tag. Rubric judge deferred until deterministic gates prove insufficient |
+| T31 | ✅ Done | Census found 10 vendored projects (not 6), 79/79 files drifted in each. Manifests written across 17 projects. Vendored-tree removal blocked by permission classifier (correctly — high blast radius): packaged as `scripts/migrate-to-plugin.sh` for human execution, statledger first |
+| T35 | ✅ Done | Hook verified fail-open with malformed input. First SCORECARD.md honest: effectiveness "no data", fleet 10 drifted |
+| T36 | ✅ Done | 14 prose-only flags triaged: 1 enforced (env-secrets-manager — was allowed-tools-as-sandbox), 6 labeled advisory (per-mode restriction inexpressible), 7 false positives cleared. Register: docs/GUARDRAILS.md |
+| T32 | ✅ Done | Skill ships at 105 lines / 338-char trigger |
+| T33 | ⏳ Deferred | Depends on T25 (Wave 2.5 exporter) — unbuilt. Runs with Wave 2.5 |
+
+Captured 2026-08-13 from two evaluations: (a) a self-assessment of the library against Anthropic's published Agent Skills / context-engineering guidance, and (b) a census of six consuming projects (Level5, initiated-recruiting, statledger, Finality, DistrictZero, NationalLacrosseTourApp). Theme: **the library measures conformance, not effectiveness, and the fleet has drifted.** Every quality signal today is a proxy (frontmatter validity, char budgets, line counts); nothing measures whether a skill improves output, and the consuming projects prove the gap.
+
+## Verified fleet facts (censused 2026-08-13; do not re-research)
+
+- **Vendored copies, not plugin installs.** 5 of 6 censused projects carry a full vendored copy of the library in `.claude/` (80 skills + 39 agents each). Their CLAUDE.md files *also* instruct installing the plugin from the marketplace — a double-load / double-listing risk if anyone follows both paths.
+- **No manifest anywhere.** Zero projects have a `cure-manifest.json` or any version pin, despite `cure-infra-bootstrap` describing itself as "manifest-driven, version-pinned." Drift is currently unmeasurable by construction.
+- **Drift is real.** Sampled `sdlc/SKILL.md` in Level5, statledger, and Finality: all three differ from the library copy (~20 diff lines each). Vendored trees are stale at unknown versions.
+- **Local innovation is stranded.** statledger grew 7 project-local skills (`app-review-3-1-1`, `ci-workflow-guard`, `claude-bootstrap`, `ledger-invariants`, `prod-deploy-hooptrace`, `seed-and-sim`, `story-adr-discipline`). None have been reviewed for upstreaming; some (`story-adr-discipline`, `ci-workflow-guard`) look generalizable.
+- **One project consumes nothing.** NationalLacrosseTourApp has only `loop.md` + workflows — no skills, no agents, no CLAUDE.md wiring to the library.
+- **Multi-runtime is aspirational, not real.** initiated-recruiting's `.agents/skills/` is **empty**; its `AGENTS.md` is project auth notes, not a skill surface. Codex (which reads `AGENTS.md`) is now a stated runtime target but appears nowhere in Wave 2.5. Antigravity remains covered by T25–T29.
+- **Prose corruption invisible to the audit.** `skills/engineering/sdlc` and `skills/engineering/finops` have truncated Pre-Processing blocks ("Additionally gather (domain-specific):" followed by unrelated prose — the T20 injection migration clobbered the bullet lists). They score 9.9 and 10.0 in `audit-library.py`. `EVALUATION.md` (referenced from README.md and GEMINI.md) still claims "24 commands, no hooks exist" — false since March 2026.
+
+## Release plan
+
+| Release | Bump | Tickets | Theme |
+|---------|------|---------|-------|
+| v7.5.1 | patch | T34 | Fix corrupted skills, retire stale docs, prose-drift lint |
+| v7.6.0 | minor | T30, T31, T35, T36 | Eval harness, fleet manifest + drift CI + canary channel, usage telemetry + scorecard, guardrail enforcement |
+| v7.7.0 | minor | T32, T33 | Parallel-agent orchestration skill, Codex runtime + selection guide |
+
+Dependencies: T33's selection guide consumes T30's benchmark data; T33's Codex export builds on T25's exporter (Wave 2.5 ships first). T34 has no dependencies — ship immediately. Total estimate: **9–12 dev-days** across three releases.
+
+**Definition of done for the wave (the "sound" bar):** every skill either has measured effectiveness (T30) or a dated deprecation candidate flag (T35); every consuming project on a manifested, current version (T31); every safety-relevant guardrail enforced by the harness or explicitly labeled advisory (T36); no prose anywhere load-bearing without a lint (T34). Conformance score stays; it stops being the headline number.
+
+---
+
+## T30 — Eval harness: golden task suite for skills AND models
+
+**Status:** Open
+**Release:** v7.6.0 (minor)
+
+**Scope:**
+1. New `evals/` tree: `evals/tasks/{task-id}/` with `task.md` (prompt + fixture repo ref), `expected.md` (acceptance oracle), `score.sh` (deterministic gates: build/test/grep checks, exit 0/1).
+2. Seed 15–25 golden tasks drawn from **closed BACKLOG tickets and real consuming-project commits** (Level5, statledger, initiated-recruiting have the richest history) — not synthetic puzzles. Each task must exercise at least one library skill.
+3. `scripts/run-evals.sh`: runs each task N times (default 3) via headless CLI (`claude -p`; `codex exec` and Gemini CLI as optional backends) in throwaway worktrees; collects pass/fail, diff hygiene (lines changed vs. necessary, unrequested-edit count), wall-clock, and token cost where reported.
+4. LLM-judge rubric scoring for non-deterministic dimensions — **judge model must be a different family than the candidate** (self-preference bias).
+5. Two run modes from the same suite: `--mode skill` (skill on vs. skill off, same model — measures whether the skill earns its context) and `--mode model` (same task, different backend — the model benchmark).
+6. Results land in `evals/results/{date}.json` + a generated `evals/RESULTS.md` scoreboard, committed. Quarterly re-run is added to `docs/MAINTENANCE.md` cadence.
+7. API-key note: subscription seats don't grant benchmark API quota; the harness drives the CLIs we already pay for. Document a small pay-as-you-go budget as the upgrade path for controlled temperature/seeds.
+8. **Incremental mode (Ring 0):** `run-evals.sh --changed <ref>` maps a diff to affected skills (via the golden-task → skill index) and runs only their tasks, 1 rep. Wire into `validate.yml` as a PR gate: on/off delta may not regress vs. the last committed results. Quarterly sweep stays the full-suite mode.
+9. **Audit calibration:** eval outcomes feed back into `audit-library.py` — a skill whose measured on/off delta is ≤0 cannot score above 8.0 regardless of conformance. Kills the saturated-metric problem: the 9.99 headline is retired in favor of the eval-weighted score once ≥half the library has coverage.
+
+**Why:** The library's 9.99/10 audit score measures spec conformance; two silently corrupted skills scoring 9.9/10.0 prove it cannot see quality. Skill-on/skill-off deltas are the only honest answer to "are the skills working," and the same harness answers "which runtime should we use" (T33) for free.
+
+**Blast radius:** Low-medium — additive `evals/` tree; no skill-body changes. Eval runs cost real tokens: cap at N=3 runs × ~25 tasks per quarterly sweep and run mechanical tasks on cheaper models.
+
+**Acceptance:**
+- [ ] ≥15 golden tasks, each traceable to a real ticket/commit, each exercising ≥1 skill
+- [ ] `run-evals.sh --mode skill` produces per-skill on/off deltas; `--mode model` produces a per-backend matrix
+- [ ] Judge model family ≠ candidate family, enforced in the script
+- [ ] `evals/RESULTS.md` scoreboard generated; MAINTENANCE.md gains the quarterly sweep
+- [ ] A deliberately broken skill (e.g. pre-fix `sdlc`) shows a measurable delta vs. its fixed version — harness sanity check
+- [ ] `--changed` mode runs in validate.yml on a PR touching a covered skill, and blocks on regression
+- [ ] Calibration rule live in audit-library.py once coverage ≥50%; documented in the audit header
+- [ ] `audit-library.py` green
+
+**Effort:** 2.5–3 days (largest single ticket; task curation is most of it).
+
+---
+
+## T31 — Fleet manifest + drift CI for consuming projects
+
+**Status:** Open
+**Release:** v7.6.0 (minor)
+
+**Scope:**
+1. Make `cure-infra-bootstrap`'s "manifest-driven, version-pinned" claim true: define `.claude/cure-manifest.json` (library version, install mode `plugin|vendored|hybrid`, **channel `stable|next`**, install date, local-skill allowlist) and have bootstrap write it.
+2. `scripts/fleet-census.py` (stdlib, `--help`/`--json`): given a directory of project checkouts, reports per-project install mode, manifest version vs. library HEAD, vendored-file drift (hash compare), local skills not in the library, and double-install risk (vendored copy + plugin instructions in CLAUDE.md).
+3. Remediation pass over the six censused projects: pick **one** install mode per project (recommend: plugin install + manifest; delete vendored trees), migrate, write manifests. NationalLacrosseTourApp gets a standard bootstrap.
+4. Upstream-harvest review of statledger's 7 local skills: generalize what belongs in the library (candidates: `story-adr-discipline`, `ci-workflow-guard`), record keep-local verdicts in that project's manifest allowlist.
+5. Wire `fleet-census.py` into `nightly-drift.yml` (or a weekly sibling) for repos the runner can reach; drift opens/refreshes the tracking issue.
+6. **Canary ring:** statledger (most active, most divergent) runs `channel: next`. New releases sit on `next` ≥5 working days before promotion to `stable`; promotion is a manual call informed by T35 telemetry + any T30 regression from real use. Rollback = flip the manifest pin; census confirms. Release flow documented in docs/MAINTENANCE.md: merge → release.sh → next → soak → promote → fleet converges.
+
+**Why:** Five projects run stale, unversioned forks of the library while their docs point at the plugin. Every library improvement since their vendor date silently never reached them — the compounding value of the library is being thrown away at the last mile.
+
+**Blast radius:** Medium-high — touches six repos outside this one; deleting vendored trees changes what those sessions load. Migrate one project first (statledger, the most divergent), verify, then roll out.
+
+**Acceptance:**
+- [ ] Manifest schema documented in docs/CONSUMING-PROJECTS.md; bootstrap writes it
+- [ ] `fleet-census.py` correctly reports all six projects' current (pre-fix) state
+- [ ] All six projects on a single declared install mode with manifests; zero double-install
+- [ ] statledger local skills dispositioned: upstreamed or allowlisted, none silently forked
+- [ ] Drift check scheduled; drift produces an issue, not silence
+- [ ] statledger on `channel: next`; one release soaked and promoted through the ring end-to-end; rollback drill executed once
+
+**Effort:** 2–2.5 days.
+
+---
+
+## T32 — `parallel-agent-orchestration` skill: the multi-instance operating model
+
+**Status:** Open
+**Release:** v7.7.0 (minor)
+
+**Scope:**
+1. New skill `skills/engineering/parallel-agent-orchestration/SKILL.md`: how Cure runs N simultaneous Claude Code instances on one project. Covers: worktree-per-ticket (one ticket = one worktree = one branch = one session), decomposition along module boundaries (not ticket numbers) to keep merge conflicts sub-quadratic, shared rate-limit budgeting (parallelism buys wall-clock, not capacity — N sessions share one account budget), model/effort tiering (mechanical branches on cheap models, judgment work serial on Opus), and mutual exclusion on destructive ops (migrations, deploys, releases are single-owner; a lockfile convention).
+2. Blast-radius → autonomy mapping as a table: low = unattended, medium = attended diff review, high = never parallel, never unattended (extends AUTOMATION.md rule 1 to interactive work).
+3. Cross-references `git-worktree-manager` (mechanics) rather than duplicating it; this skill owns the *operating model*.
+4. Routing hygiene: `when_to_use` gets NOT-clauses vs. `git-worktree-manager` (single-operator worktree mechanics) and `engagement-automation` (recurring/unattended).
+
+**Why:** The question "can we spin up the same project in different instances on different branches" is now standard Cure practice with zero written doctrine. The mechanics exist in `git-worktree-manager`; the judgment layer (what parallelizes safely, who owns the merge, how the token budget splits) exists only in one consultant's head.
+
+**Blast radius:** Low — one additive skill.
+
+**Acceptance:**
+- [ ] Skill passes audit; combined desc+when_to_use ≤350 chars; body ≤500 lines with sibling reference file if needed
+- [ ] NOT-clause routing vs. git-worktree-manager and engagement-automation in both directions
+- [ ] Blast-radius/autonomy table present; destructive-op mutual exclusion convention documented
+- [ ] `sync-metadata.py --write` + `generate-overview.py` run; Wave 2.5 exporter picks it up automatically
+
+**Effort:** 1 day.
+
+---
+
+## T33 — Codex as a third runtime + evidence-based runtime selection guide
+
+**Status:** Open
+**Release:** v7.7.0 (minor)
+**Depends on:** T25 (exporter), T30 (benchmark data)
+
+**Scope:**
+1. Extend `scripts/export-agent-skills.py` with an `--codex` target: generate a per-project `AGENTS.md` **section** (Codex's discovery surface) that indexes the exported skills with one-line descriptions and "read `dist/agent-skills/<name>/SKILL.md` when…" pointers. Must **append/manage a marked block**, never overwrite — initiated-recruiting's AGENTS.md already carries hand-written project content.
+2. Verify current Codex skill-discovery behavior before building (docs move fast; do not assume AGENTS.md is still the only surface).
+3. Fix the empty-shell installs: initiated-recruiting's `.agents/skills/` is empty and Level5's `.gemini/` is unverified — T26's installer run against both, confirmed working end-to-end in each runtime.
+4. New `docs/RUNTIME-SELECTION.md`: when a consultant reaches for Claude Code vs. Codex vs. Antigravity/Gemini — driven by T30's `--mode model` matrix, not vibes. Includes the credit-exhaustion fallback path (the original Wave 2.5 motivation) and what each runtime silently drops (hooks, tool restrictions, forking — extends T28's gap doc).
+5. Feeds `technology-radar`: model/runtime choices become Adopt/Trial/Assess/Hold entries with benchmark citations.
+
+**Why:** "We extended our skills for codex and antigravity" is currently half-true — Antigravity has a real export path (Wave 2.5); Codex has an empty directory and a repurposed AGENTS.md. And with three runtimes, "which one for this task" needs data behind it or every consultant decides differently.
+
+**Blast radius:** Medium — touches consuming projects' AGENTS.md files (marked-block discipline is the safety mechanism).
+
+**Acceptance:**
+- [ ] `export-agent-skills.py --codex` emits a managed AGENTS.md block; re-run idempotent; hand-written content untouched
+- [ ] initiated-recruiting: Codex discovers and activates ≥1 exported skill end-to-end (documented transcript)
+- [ ] Level5: Gemini/Antigravity install verified working, not just present
+- [ ] RUNTIME-SELECTION.md cites T30 result data for every recommendation
+- [ ] T28 gap doc updated with the Codex column
+
+**Effort:** 1.5–2 days.
+
+---
+
+## T34 — Prose-coherence repair + narrative drift detection
+
+**Status:** Open
+**Release:** v7.5.1 (patch) — no dependencies, ship first
+
+**Scope:**
+1. Fix the two corrupted skills: restore the domain-specific "Additionally gather" bullet lists in `skills/engineering/sdlc/SKILL.md` and `skills/engineering/finops/SKILL.md` (T20 migration clobbered them; reconstruct from git history pre-T20).
+2. Sweep all 72 Pre-Processing skills for the same corruption class (header present, bullets missing/truncated, mid-sentence splices) — the census found 2, but the check was crude.
+3. Add a structural-coherence lint to `audit-library.py`: every "Additionally gather" / "Pre-Processing" header must be followed by ≥1 bullet; section headers may not be followed immediately by body prose from a different section (heuristic: sentence-fragment detection after list-introducing colons).
+4. Retire or regenerate `EVALUATION.md`: it asserts pre-March-2026 state ("24 commands, no hooks") and is linked from README.md and GEMINI.md. Either delete + scrub references, or replace with a pointer to OVERVIEW.md + this backlog. Recommend delete — OVERVIEW.md is the living inventory.
+5. Extend `nightly-drift.yml` with a doc-claims check: grep known-falsifiable claims (counts, "no X exists") in prose docs against filesystem truth — the same pattern `sync-metadata.py` already uses for counts, applied to README/GEMINI/EVALUATION references.
+
+**Why:** Two skills shipped corrupted for a month while scoring 9.9 and 10.0 — the audit reads frontmatter and counts lines but never reads prose. And the repo's own front-door docs cite an evaluation that is three major versions stale. Cheap fixes, disproportionate credibility.
+
+**Blast radius:** Low — two skill-body repairs, one doc deletion, additive lint rules.
+
+**Acceptance:**
+- [ ] sdlc + finops Pre-Processing blocks restored and coherent; any additional corrupted skills found in the sweep fixed
+- [ ] New lint rule catches the pre-fix versions of both files (regression-test the linter against them)
+- [ ] EVALUATION.md dispositioned; zero dangling references
+- [ ] nightly-drift catches a seeded false doc claim in a dry run
+- [ ] `audit-library.py` green; library mean unchanged or better
+
+**Effort:** 0.5–1 day.
+
+---
+
+## T35 — Skill usage telemetry: find the 20% that carries 80%
+
+**Status:** Open
+**Release:** v7.6.0 (minor)
+
+**Scope:**
+1. Lightweight invocation logging via the existing hook layer: a PostToolUse/Skill-invocation hook appends `{timestamp, skill, project}` to a local JSONL (`~/.cure/telemetry/skill-usage.jsonl`). **Constraints are non-negotiable:** append-only local file, no network I/O, fires in <50ms, fail-open, exempt from nothing-blocks-automation rules.
+2. `scripts/usage-report.py` (stdlib): per-skill invocation counts, per-project breakdown, never-invoked list, trailing-90-day trend.
+3. Feed the quarterly re-eval with a **prune mandate**, not a suggestion: any skill with zero invocations across the fleet for 2 consecutive quarters is auto-filed as a deprecation candidate in the next wave; keeping it requires a written why. Target shape: a smaller, fully-measured library beats 81 skills that are 40% dark matter — breadth is only justified when used.
+4. Generated `SCORECARD.md` at repo root: one line per metrics layer (conformance / effectiveness / usage / fleet / outcome) with its current number and trend, regenerated by the nightly job alongside the drift check. The scorecard is the headline quality number; the audit score becomes one row in it.
+5. Explicit non-goal: no phone-home, no aggregation service, no per-client data. Single-consultant local files, manually shared if ever needed.
+
+**Why:** 81 skills and zero data on which ones fire. Maintenance hours, listing budget, and eval coverage are all allocated blind. The chaos-engineering skill self-flags "verify the team is ready" — nobody can currently answer whether it has ever run.
+
+**Blast radius:** Low — one quiet hook + one script. Hook must pass the Token Economy rules (quiet, non-blocking) or it gets reverted.
+
+**Acceptance:**
+- [ ] Hook logs invocations locally with zero measurable session latency; CI check confirms no network I/O
+- [ ] `usage-report.py --json` produces counts, never-invoked list, per-project split
+- [ ] MAINTENANCE.md quarterly cadence consumes the report; prune mandate (2 quarters dark → auto-filed deprecation candidate) documented and applied
+- [ ] `SCORECARD.md` generated nightly with all five layers; audit score demoted to one row
+- [ ] Works in consuming projects via the plugin, not just this repo
+
+**Effort:** 1–1.5 days.
+
+---
+
+## T36 — Guardrail enforcement inventory: prose → mechanism
+
+**Status:** Open
+**Release:** v7.6.0 (minor)
+
+**Scope:**
+1. Inventory every guardrail currently expressed as prose across the library: skill-body warnings ("read-only", "confirm before", "never in production"), agent prompt constraints, AUTOMATION.md rules, and the Wave 2.5 exported READ-ONLY/DESTRUCTIVE blocks.
+2. Classify each: **(a) enforceable now** → move to the mechanism (`disallowed-tools`, `disable-model-invocation`, settings.json deny rules, PreToolUse hooks); **(b) enforceable partially** → mechanism + prose; **(c) prose-only by nature** → keep, but label explicitly `<!-- advisory: not enforced -->` so nobody mistakes it for a control.
+3. Add an audit rule: a skill whose body claims a restriction its frontmatter doesn't enforce gets flagged (e.g. "read-only" prose without `disallowed-tools`).
+4. Regulated-project overlay: Level5 is medical-scribe software (HIPAA-adjacent today, HIPAA-real the moment PHI flows). Document in docs/CONSUMING-PROJECTS.md which guardrail classes are mandatory-mechanism for regulated projects, and verify Level5's install passes. Same treatment pre-listed for any project taking payments (stripe-integration consumers).
+5. Non-Claude runtimes stay prose-only (no enforcement surface exists — verified in Wave 2.5). The gap is documented per T28; RUNTIME-SELECTION.md (T33) inherits it as a selection criterion for sensitive work: **regulated-project work stays on Claude Code where controls are real.**
+
+**Why:** Prose is currently the primary safety control in most of the library — acceptable for a solo consultancy until it isn't: Level5 exists, Stripe skills exist, and a control that's only text is a belief. Cheapest of the soundness tickets, largest reduction in real risk.
+
+**Blast radius:** Medium — frontmatter/settings changes across many skills can change permission-prompt behavior in consuming projects. Roll through the canary ring like any release.
+
+**Acceptance:**
+- [ ] Inventory doc committed (docs/ or the audit's --json output): every prose guardrail classified a/b/c
+- [ ] All class-(a) guardrails moved to mechanisms; zero skills claiming restrictions their frontmatter doesn't enforce
+- [ ] Audit rule catches a seeded prose/frontmatter mismatch
+- [ ] Class-(c) guardrails labeled advisory; count reported in SCORECARD.md fleet row
+- [ ] Level5 verified against the regulated-project overlay; result recorded in its manifest
+- [ ] RUNTIME-SELECTION.md (T33) references the runtime-enforcement gap
+
+**Effort:** 1–1.5 days.
+
+---
+
+# Wave 2.5 (2026-07-13) — Dual-Runtime Distribution (Gemini CLI + Antigravity)
+
+Captured 2026-07-13. Theme: consultants sometimes exhaust Claude credits mid-engagement and fall back to Gemini CLI or Antigravity. Both tools now natively read the Agent Skills open standard (the same SKILL.md format this library uses), so the 81 skills can become a second distribution target generated from the same source tree — replacing the homegrown `gemini skills/*.skill` ZIP pipeline, which predates native support and nothing consumes. This is an interim wave; deferred parity items (personas→Antigravity rules, broader agent re-expression) roll into the Wave 3 quarterly re-evaluation due October 2026.
+
+**Non-goals:** porting hooks, output styles, the Stop gate, or the full 39-agent roster. Those are Claude Code plugin constructs; T28 documents the gap instead of pretending to close it.
+
+## Verified platform facts (do not re-research; verified against geminicli.com/docs, antigravity.google/docs, and Google Cloud community posts, July 2026)
+
+- **Universal workspace location:** `<workspace>/.agents/skills/<skill-dir>/` is read by Gemini CLI AND all three Antigravity variants (IDE, CLI, AGY). This is the one path that serves everything at project level.
+- **Global locations diverge:** Gemini CLI reads `~/.gemini/skills/` (alias `~/.agents/skills/`); the only global path all Antigravity variants recognize is `~/.gemini/config/skills/`.
+- Gemini CLI discovery tiers (precedence order): built-in → extension-bundled → user → workspace; the `.agents/skills/` alias wins within each tier.
+- Gemini CLI skill lifecycle mirrors Claude: name+description injected into the system prompt at session start; `activate_skill` loads the body on demand. `gemini skills install|uninstall` (default user scope, `--scope workspace`), `/skills enable|disable` in-session.
+- Gemini CLI **extensions can bundle skills** (plus context files and MCP config) — `gemini extensions install <git-url>` works from a private repo; this is the plugin-parity distribution channel.
+- Documented skill frontmatter on both platforms: `name`, `description` only. Claude-only fields (`argument-hint`, `disallowed-tools`, `disable-model-invocation`, `user-invocable`, `context: fork`, `paths`, `hooks`) are **silently ignored** — no error, no enforcement.
+- **No tool-restriction or read-only mechanism exists** for Gemini/Antigravity skills. Activation actually widens access (skill dir joins allowed read paths). Guardrails must be expressed as prose in the skill body.
+- **No dynamic context injection equivalent.** Our `` !`command` `` / ```` ```! ```` blocks (71 skills post-T20) render as literal text there — the exporter must rewrite them into explicit "run this command first" instructions.
+- Bundled `scripts/` directories are supported by both platforms (Antigravity docs explicitly encourage script delegation) — the zero-pip stdlib convention (T3) transfers as-is.
+- Skill directories sit flat under the skills root on both platforms — our `skills/{domain}/{name}/` nesting must be flattened on export.
+
+## Release plan
+
+| Release | Bump | Tickets | Theme |
+|---------|------|---------|-------|
+| v7.5.0 | minor | T25–T29 | Dual-runtime export, install, extension, parity docs, CI |
+
+T23 release mechanics apply as the closing checklist. Total estimate: **3–4 dev-days**.
+
+---
+
+## T25 — Standard-format exporter; retire the `.skill` ZIP pipeline
+
+**Status:** Open
+**Release:** v7.5.0 (minor)
+
+**Scope:**
+1. New `scripts/export-agent-skills.py` (Python stdlib only, `--help` + `--json`, per SCRIPTS_CONVENTION) that walks `skills/{domain}/{name}/SKILL.md` and emits `dist/agent-skills/{name}/` (flat, one dir per skill: SKILL.md + `scripts/` copied verbatim).
+2. Frontmatter translation: keep `name` + `description` (fold `when_to_use` into description); strip all Claude-only fields.
+3. Guardrail translation to prose: skills with `disallowed-tools` get a leading **"READ-ONLY SKILL"** block ("do not edit files or run mutating commands; produce analysis only"); skills with `disable-model-invocation: true` get a **"DESTRUCTIVE — explicit user confirmation required before each mutating step"** block. Default policy (decided 2026-07-13): destructive skills ARE exported with the prose warning, not excluded — Gemini is a fallback for the same work, and a missing skill costs more than a softer guardrail. T28 can override per-skill.
+4. Injection translation: rewrite inline `` !`command` `` and fenced ```` ```! ```` blocks into a "Gather context first — run:" instruction step preserving the command verbatim. Must handle all 71 migrated skills without manual edits.
+5. Flattening safety: fail the export on any duplicate skill name across domains.
+6. Delete `gemini skills/` (81 `.skill` ZIPs) and `generate-gemini-skills.sh`; scrub references (GEMINI.md, CLAUDE.md, README if present).
+
+**Why:** The ZIP pipeline targets a format nothing reads; both Google tools consume plain SKILL.md dirs. Without injection/guardrail translation the exported skills are broken (literal `` !`command` `` noise) or unsafe (guardrails silently dropped).
+
+**Blast radius:** Medium — deletes a top-level directory and a script; adds `dist/` output. No Claude-side behavior changes.
+
+**Acceptance:**
+- [ ] `python3 scripts/export-agent-skills.py` produces 81 flat skill dirs in `dist/agent-skills/`; idempotent on re-run
+- [ ] Zero literal `` !`command` `` or ```` ```! ```` blocks in exported bodies (grep-clean)
+- [ ] Every source skill with `disallowed-tools` → exported READ-ONLY block; every `disable-model-invocation` → DESTRUCTIVE block
+- [ ] Exported frontmatter contains only `name` + `description`
+- [ ] Duplicate-name check fails loudly
+- [ ] `gemini skills/` and `generate-gemini-skills.sh` gone; no dangling references
+- [ ] `audit-library.py` green
+
+**Effort:** 1–1.5 days.
+
+---
+
+## T26 — Install story: `.agents/skills/` + global scopes, auto-update integration
+
+**Status:** Open
+**Release:** v7.5.0 (minor)
+
+**Scope:**
+1. New `install-agent-skills.sh` (or a `setup.sh` subcommand): installs `dist/agent-skills/*` into a target. Modes: `--workspace <path>` → `<path>/.agents/skills/` (universal: Gemini CLI + all Antigravity variants); `--global` → both `~/.gemini/skills/` (Gemini CLI) and `~/.gemini/config/skills/` (Antigravity universal global).
+2. Symlink by default (so `auto-update.sh` pulls propagate automatically); `--copy` flag for machines where the repo checkout isn't stable.
+3. `auto-update.sh` re-runs the exporter after pulling so installed symlinks always point at fresh output.
+4. Uninstall flag that removes only what we installed.
+
+**Why:** One flattened export + one install command serves both runtimes at both scopes; symlinks keep the existing auto-update flow as the single freshness mechanism.
+
+**Blast radius:** Low — new script + one hook into auto-update.sh.
+
+**Acceptance:**
+- [ ] Workspace install → skills discoverable in Gemini CLI (`/skills` lists them) from `.agents/skills/`
+- [ ] Global install writes both global paths
+- [ ] `auto-update.sh` regenerates `dist/` post-pull
+- [ ] Uninstall leaves foreign skills untouched
+- [ ] Scripts pass `scripts/verify-skill-scripts.sh` conventions where applicable
+
+**Effort:** 0.5 day.
+
+---
+
+## T27 — Gemini CLI extension packaging
+
+**Status:** Open
+**Release:** v7.5.0 (minor)
+
+**Scope:**
+1. `gemini-extension/` with `gemini-extension.json` bundling the exported skills plus a trimmed GEMINI.md context file (Cure standards summary — the analog of the plugin's CLAUDE.md surface).
+2. Installable via `gemini extensions install <private-git-url>` — verify against the internal-only constraint (private repo access, no marketplace).
+3. Exporter (T25) also refreshes the extension's bundled skill copies, so there is still exactly one source of truth.
+4. Document the choice consumers face: extension install (Gemini CLI only, versioned, one command) vs `.agents/skills/` install (works in Antigravity too). Recommendation: workspace `.agents/skills/` for engagement repos; extension for consultants' personal machines.
+
+**Why:** Extensions are the true plugin analog on the Gemini side — versioned, one-command, bundles context. But they don't reach Antigravity, so this complements rather than replaces T26.
+
+**Blast radius:** Low — additive directory.
+
+**Acceptance:**
+- [ ] `gemini extensions install` from the private repo succeeds; bundled skills discoverable in a fresh session
+- [ ] Extension skill copies are generated, never hand-edited (CI-checked in T29)
+- [ ] Consumer guidance written (which install path when)
+
+**Effort:** 0.5–1 day.
+
+---
+
+## T28 — Parity triage + runtime-parity matrix
+
+**Status:** Open
+**Release:** v7.5.0 (minor)
+
+**Scope:**
+1. Per-skill export triage pass over all 81: confirm the T25 default (export destructive skills with prose warning) or override to exclude, recorded as an explicit exclusion list the exporter reads. Expected exclusions are rare (skills meaningless off-Claude, e.g. anything whose body is purely Claude-harness mechanics like Recurring Mode /loop wiring — trim those sections on export instead where the skill is otherwise useful).
+2. `docs/RUNTIME-PARITY.md`: matrix of what each runtime gets — skills (all three), bundled scripts (all three), agents/personas/hooks/Stop gate/output styles/rules/workflows/monitors (Claude only), plus the guardrail downgrade note. Written for a consultant switching mid-engagement: "what you lose when you leave Claude."
+3. Decide and document which (if any) of the top agents get re-expressed as exported skills now; default answer is none in this wave — record the shortlist as a Wave 3 candidate instead.
+
+**Why:** Switching runtimes mid-engagement with silent capability loss is worse than a documented, deliberate downgrade. The exclusion list makes safety decisions reviewable instead of buried in exporter code.
+
+**Blast radius:** Low — docs + an exporter config file.
+
+**Acceptance:**
+- [ ] Every skill has an explicit disposition (export / export-trimmed / excluded+reason)
+- [ ] RUNTIME-PARITY.md covers all nine Claude-only surfaces and the guardrail downgrade
+- [ ] Wave 3 candidate list for agent re-expression recorded in BACKLOG
+
+**Effort:** 1 day.
+
+---
+
+## T29 — CI freshness, metadata sync, docs update
+
+**Status:** Open
+**Release:** v7.5.0 (minor)
+
+**Scope:**
+1. `validate.yml`: fail if `skills/**` changed but `dist/agent-skills/` (and T27 extension copies) weren't regenerated (regenerate-and-diff check, same pattern as overview freshness).
+2. `audit-library.py`: assert export invariants (frontmatter shape, no injection blocks, guardrail blocks present, exclusion list entries all have reasons).
+3. `sync-metadata.py --write`: include exported-skill count and extension version references.
+4. Docs: CLAUDE.md dev rule "Create both Claude and Gemini versions … regenerated via generate-gemini-skills.sh" replaced with the exporter step; GEMINI.md distribution section rewritten; `docs/CONSUMING-PROJECTS.md` gains a dual-runtime install section; `docs/MAINTENANCE.md` adds export freshness to the monthly cadence.
+
+**Why:** Wave 2's lesson (T9/T14): hand-maintained parallel artifacts drift into fiction. The export must be CI-enforced generated output from day one.
+
+**Blast radius:** Low-medium — touches CI, two scripts, four docs.
+
+**Acceptance:**
+- [ ] CI red on stale export, green after regeneration
+- [ ] `audit-library.py` and `sync-metadata.py --write` green and idempotent
+- [ ] No doc still references `.skill` ZIPs or generate-gemini-skills.sh
+- [ ] T23 closing checklist run for v7.5.0
+
+**Effort:** 0.5 day.
+
+---
+
+## Wave 2.5 order of execution
+
+T25 → T26 → T27 → T28 → T29. T28's triage reviews T25's default output, so the exporter ships first with the decided default (export destructive skills with prose warnings); T28 refines via the exclusion list. Single release (v7.5.0).
+
+## Wave 2.5 risks
+
+- **Antigravity docs churn** — the product is young; discovery paths were verified July 2026 but variant-specific paths beyond `.agents/skills/` and `~/.gemini/config/skills/` are inconsistent. Mitigation: install only to the two universal paths.
+- **Prose guardrails are advisory** — a Gemini agent can ignore a READ-ONLY block in a way Claude's `disallowed-tools` cannot be ignored. RUNTIME-PARITY.md must state this bluntly; T28 exclusion list is the escape hatch for anything where advisory isn't enough.
+- **Description budget mismatch** — Gemini injects all skill descriptions into the system prompt like Claude does, but its budget behavior is undocumented. Our ≤350-char trigger policy (T24) likely transfers fine; watch for truncation reports.
 
 ---
 

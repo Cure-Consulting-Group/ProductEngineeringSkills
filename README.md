@@ -113,7 +113,6 @@ ProductEngineeringSkills/
 ├── GEMINI.md                  # Project instructions (Gemini CLI)
 ├── AGENT-GUIDE.md             # How to structure prompts for agents & skills
 ├── setup.sh                  # Setup script for Antigravity & other projects
-├── EVALUATION.md              # Full evaluation document
 └── README.md
 ```
 

@@ -111,6 +111,38 @@ local edits). To refresh: `CURE_SKILLS_FORCE=1 npm rebuild` — **review the dif
 before committing**. Prefer the marketplace path unless you specifically need
 in-tree files. See [DISTRIBUTION.md](DISTRIBUTION.md) for the full comparison.
 
+## Manifest + release rings (T31)
+
+Every consuming project declares its install in `.claude/cure-manifest.json`:
+
+```json
+{
+  "library": "cure-product-engineering",
+  "version": "7.4.4",
+  "mode": "plugin",           // plugin | vendored | hybrid | none
+  "channel": "stable",        // stable | next  (next = canary ring)
+  "installed": "2026-08-14",
+  "local_skills": ["ledger-invariants"]   // project-owned; never drift-flagged
+}
+```
+
+- **`mode: plugin` is the fleet standard.** Vendored copies drift silently (the
+  2026-08-14 census found 10 projects with 100% of vendored files stale) and
+  double-load against the installed plugin. Migrate with
+  `scripts/migrate-to-plugin.sh <project-path> [channel]` — removes only
+  library-named vendored files, keeps local skills, git shows every deletion.
+- **`channel: next` = canary ring.** One active project (currently statledger)
+  runs `next`; new releases soak there ≥5 working days before being promoted.
+  Promotion is a human call informed by telemetry + eval results. Rollback:
+  flip the manifest pin and reinstall the tagged version.
+- **Census:** `python3 scripts/fleet-census.py --projects-dir <dir-of-checkouts>`
+  reports mode, version lag, drift, local skills, and double-install risk per
+  project; exit 1 on problems. Runs weekly via the library maintenance loop
+  (CI runners can't reach local checkouts — this is a local check by design).
+- **Local skills are the innovation channel, not drift.** Anything in
+  `local_skills` is project-owned; at each quarterly re-eval, review them for
+  upstreaming into the library.
+
 ---
 
 ## Paste into the project's CLAUDE.md

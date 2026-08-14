@@ -1,0 +1,10 @@
+{
+  "id": "t03-safe-migration",
+  "title": "Write a zero-downtime SQL migration",
+  "source": "rules/sql.md; migration-validator agent standards",
+  "skills": [
+    "database-architect"
+  ],
+  "prompt": "Write migrations/001_add_email_verified.sql for Postgres: add an email_verified boolean column (default false) to a users table with 10M rows, plus an index on it. Must be safe to run on production with zero downtime.",
+  "fixtures": {}
+}

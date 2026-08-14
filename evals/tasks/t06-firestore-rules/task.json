@@ -1,0 +1,10 @@
+{
+  "id": "t06-firestore-rules",
+  "title": "Write deny-by-default Firestore rules",
+  "source": "firebase-architect skill; firebase-security-auditor standards",
+  "skills": [
+    "firebase-architect"
+  ],
+  "prompt": "Create firestore.rules for a 'users' collection: each authenticated user can read and write only their own document (doc id = their uid). Everything else denied. Deny-by-default.",
+  "fixtures": {}
+}
