@@ -11,7 +11,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Skills | 82 |
 | Agents | 39 |
 | Personas | 4 |
-| Hooks (entries) | 14 |
+| Hooks (entries) | 17 |
 | Rules | 11 |
 | Output Styles | 9 |
 | MCP Servers | 0 |
@@ -250,18 +250,21 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
 | SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.5.1). 82 skills (domain-organized), 39… |
+| SessionStart | startup | command | python3 -c " |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
 | PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 82 skills, 39 agents, 4 personas. Use /cure-pr… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
+| PostToolUseFailure |  | command | python3 -c " |
 | UserPromptSubmit |  | command | PROMPT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt',… |
 | PreToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
 | PreToolUse | Edit\|Write | command | python3 -c " |
 | PreToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
 | PreToolUse | Skill | command | python3 -c " |
 | Stop |  | prompt | You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS |
+| Stop |  | command | python3 -c " |
 | SubagentStop | refactor-assistant\|project-bootstrapper\|release-coordinator | command | echo "Write-capable agent finished. Quality checklist:\n- Tests added/passing? → test-runner agent\n- Lint/ty… |
 
 
