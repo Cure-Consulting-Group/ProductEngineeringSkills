@@ -77,6 +77,11 @@ Re-run the Wave 2 process against the then-current platform:
 
 ## Trigger-based (no schedule)
 
+- **Postmortem mandate**: any canary BLOCKER/hard-stop, release rollback, or
+  defect reaching ≥2 projects → blameless postmortem in `docs/postmortems/`
+  within one week (format + rules in its README). Recurring failure classes
+  across postmortems become quarterly-wave tickets.
+
 - **Consultant friction reports** from consuming projects → BACKLOG tickets
   immediately. This is the highest-signal input; the wave format is the
   container for anything bigger than a patch.

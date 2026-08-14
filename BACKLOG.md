@@ -20,6 +20,10 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 | T32 | ✅ Done | Skill ships at 105 lines / 338-char trigger |
 | T37 | ✅ Done | Canary F-1 (blocker, found in soak iter 3–4): harness substitutes bare $0–$9 in skill bodies with invocation args, corrupting currency/shell content in 17 skills (246 occurrences). Fixed by escaping \$N library-wide; audit lint + live eval fixture t16 added; behavior empirically mapped ($N substitutes, \$N/${...}/$$/$UPPER safe). Ships v7.5.1 |
 | T33 | ⏳ Deferred | Depends on T25 (Wave 2.5 exporter) — unbuilt. Runs with Wave 2.5 |
+| T38 | ✅ Done | Session observability v1: cold-event loggers (session_start/stop, tool_failure) + session-report.py. Hot-path tracing deliberately excluded per Token Economy; OTel-style spans need harness support |
+| T39 | ✅ Done | Eval statistics: Wilson 95% CIs, flaky labels (mixed reps), min-n≥3 guard on deltas AND audit calibration (t07 lesson mechanized) |
+| T40 | ✅ Done | Blameless postmortem convention (docs/postmortems/) + founding postmortem (advertised-version-vs-served-bits) + nightly-drift unreleased-content check (closes that postmortem's residual #1) |
+| T41 | 📋 Scoped | Separated ownership — see ticket below |
 
 Captured 2026-08-13 from two evaluations: (a) a self-assessment of the library against Anthropic's published Agent Skills / context-engineering guidance, and (b) a census of six consuming projects (Level5, initiated-recruiting, statledger, Finality, DistrictZero, NationalLacrosseTourApp). Theme: **the library measures conformance, not effectiveness, and the fleet has drifted.** Every quality signal today is a proxy (frontmatter validity, char budgets, line counts); nothing measures whether a skill improves output, and the consuming projects prove the gap.
 
@@ -242,6 +246,37 @@ Dependencies: T33's selection guide consumes T30's benchmark data; T33's Codex e
 - [ ] RUNTIME-SELECTION.md (T33) references the runtime-enforcement gap
 
 **Effort:** 1–1.5 days.
+
+---
+
+## T41 — Separated ownership: author ≠ reviewer ≠ approver, enforced in the release path
+
+**Status:** Scoped (2026-08-14) — not started
+**Release:** next minor after fleet promotion (don't stack process changes into a soaking release)
+
+**Problem:** Bus factor 1 means one mind authors, reviews, and approves every change. Big-company ownership separation (OWNERS files, required reviewers) isn't available — but *role* separation is: independent agent contexts with different instructions and no shared conversation state are the honest single-operator equivalent. Today adversarial review happens by habit, not mechanism; the one day it's skipped is the day it mattered (F-1 shipped through 7 releases of habit-based review).
+
+**Scope:**
+1. **Mandatory review gate in `release.sh`** (between quality gate and version bump): spawn two independent read-only reviewers via headless CLI against the diff since last tag — `code-reviewer` (correctness/quality) and `skill-security-auditor` (injection/exfiltration/guardrails). Fresh contexts, no access to the authoring conversation.
+2. **Structured verdicts**: each returns PASS/WARN/FAIL + findings (JSON via the eval harness's schema pattern). Any FAIL blocks the release. WARNs print and proceed.
+3. **Override exists and is loud**: `--skip-review "reason"` — the reason is stamped into the release commit message and the scorecard. No silent bypass. (An override that can't be exercised in an emergency just gets the whole gate deleted the first time it's in the way.)
+4. **Role doctrine in MAINTENANCE.md**: author-agent ≠ reviewer-agent ≠ approver-human. The human never authors and approves the same change without the reviewer gate between them; agent review comments are addressed or explicitly waived, never ignored.
+5. **Reviewer effectiveness is itself measured**: seed one known-bad diff (e.g. pre-fix F-1 content, an unescaped secret) and assert the gate FAILs on it — same proven-guard discipline as T34/T37 lints. A review gate that has never failed on a bad diff is decoration.
+6. **Cost control**: reviewers run on the changed-files diff only, effort high, single pass each; expected +3–8 min per release on top of Ring 0.
+
+**Explicit non-goals:** human second-reviewer (doesn't exist at Cure's size); PR-time enforcement in CI (runners lack authenticated CLIs — same constraint as Ring 0, same local-gate answer); reviewing every commit (the release boundary is the blast-radius chokepoint).
+
+**Blast radius:** Medium — touches release.sh (the one never-bypass path). A broken gate blocks all releases; hence acceptance includes the failure-mode drill.
+
+**Acceptance:**
+- [ ] release.sh runs both reviewers on diff-since-last-tag; FAIL blocks, WARN proceeds loudly
+- [ ] Seeded known-bad diff drill: gate FAILs on it (regression-tested, committed as a fixture)
+- [ ] `--skip-review` stamps its reason into the release commit + SCORECARD.md
+- [ ] Reviewer runtime ≤10 min on a typical release diff; runs offline-tolerant (CLI absent → loud skip with reason, not silent pass)
+- [ ] MAINTENANCE.md role doctrine; postmortem trigger extended: any skipped-review release that later yields a defect → automatic postmortem
+- [ ] Dry-run on this repo before shipping (Wave 2 discipline)
+
+**Effort:** ~1 day.
 
 ---
 

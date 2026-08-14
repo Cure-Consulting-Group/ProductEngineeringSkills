@@ -297,6 +297,8 @@ def eval_deltas():
     by_task = {}
     for k, v in res.get("summary", {}).items():
         task, _backend, arm = k.split("|")
+        if v.get("n", 0) < 3:
+            continue  # T39: single-rep results never drive calibration (t07 lesson)
         by_task.setdefault(task, {})[arm] = v["pass_rate"]
     idx_path = ROOT / "evals" / "index.json"
     if not idx_path.exists():

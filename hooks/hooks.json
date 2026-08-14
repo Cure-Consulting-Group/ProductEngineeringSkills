@@ -7,6 +7,11 @@
           {
             "type": "command",
             "command": "echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.5.1). 82 skills (domain-organized), 39 agents, 4 personas, 11 rules, 9 output styles. Use /cure-product-engineering:<skill-name> to invoke; full inventory: docs/OVERVIEW.md in the plugin repo. New project? /cure-product-engineering:project-bootstrap.'"
+          },
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "python3 -c \"\nimport json, os, sys, time\ntry:\n    base = os.path.expanduser('~/.cure/telemetry')\n    os.makedirs(base, exist_ok=True)\n    with open(os.path.join(base, 'sessions.jsonl'), 'a') as f:\n        f.write(json.dumps({'ts': time.strftime('%Y-%m-%dT%H:%M:%S'), 'event': 'session_start', 'project': os.path.basename(os.getcwd()), 'detail': ''}) + chr(10))\nexcept Exception:\n    pass\nsys.exit(0)\" 2>/dev/null; exit 0"
           }
         ]
       },
@@ -72,6 +77,15 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "python3 -c \"\nimport json, os, sys, time\ntry:\n    base = os.path.expanduser('~/.cure/telemetry')\n    os.makedirs(base, exist_ok=True)\n    with open(os.path.join(base, 'sessions.jsonl'), 'a') as f:\n        f.write(json.dumps({'ts': time.strftime('%Y-%m-%dT%H:%M:%S'), 'event': 'tool_failure', 'project': os.path.basename(os.getcwd()), 'detail': os.environ.get('CLAUDE_TOOL_NAME', 'unknown')}) + chr(10))\nexcept Exception:\n    pass\nsys.exit(0)\" 2>/dev/null; exit 0"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -127,6 +141,15 @@
             "type": "prompt",
             "prompt": "You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS\n\nDecide whether this turn is safe to end. NEVER block automated runs: if this turn is a /loop iteration, a scheduled or maintenance run, a cloud routine, or any turn not driven by a direct user request, return ok: true immediately \u2014 blocking an unattended iteration wedges the loop. Otherwise return ok: false ONLY if ALL of these hold: (1) product source code was edited this turn (not just docs, config, markdown, or test files), (2) there is no evidence tests, a build, or a verification command ran after the edits, (3) the user did not explicitly ask to skip verification or defer it, and (4) no quality-gate block has already happened anywhere in this conversation turn \u2014 if a prior block or previously delivered blocking reason is visible, return ok: true even if the gap remains, and note the remaining gap in reason instead of blocking again. When returning ok: false, the reason must name the specific files edited and the concrete verification to run. In every other case \u2014 including any ambiguity \u2014 return ok: true.",
             "timeout": 30
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "python3 -c \"\nimport json, os, sys, time\ntry:\n    base = os.path.expanduser('~/.cure/telemetry')\n    os.makedirs(base, exist_ok=True)\n    with open(os.path.join(base, 'sessions.jsonl'), 'a') as f:\n        f.write(json.dumps({'ts': time.strftime('%Y-%m-%dT%H:%M:%S'), 'event': 'session_stop', 'project': os.path.basename(os.getcwd()), 'detail': ''}) + chr(10))\nexcept Exception:\n    pass\nsys.exit(0)\" 2>/dev/null; exit 0"
           }
         ]
       }
