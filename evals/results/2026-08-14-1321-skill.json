@@ -1,0 +1,164 @@
+{
+  "mode": "skill",
+  "stamp": "2026-08-14-1321",
+  "summary": {
+    "t01-fix-dangling-gather|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t01-fix-dangling-gather|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t02-adr-generation|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t02-adr-generation|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t05-secret-leak-audit|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t05-secret-leak-audit|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t07-hotfix-worktree|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1
+    },
+    "t07-hotfix-worktree|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t11-finops-review|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t11-finops-review|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t12-story-breakdown|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t12-story-breakdown|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    }
+  },
+  "runs": [
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 22.3,
+      "files_written": 1
+    },
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 27.1,
+      "files_written": 1
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 77.5,
+      "files_written": 1
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 66.0,
+      "files_written": 1
+    },
+    {
+      "task": "t05-secret-leak-audit",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 65.9,
+      "files_written": 3
+    },
+    {
+      "task": "t05-secret-leak-audit",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 45.9,
+      "files_written": 3
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "agent_exit_ok": true,
+      "seconds": 72.5,
+      "files_written": 1
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 51.0,
+      "files_written": 1
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 185.9,
+      "files_written": 2
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 89.7,
+      "files_written": 2
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 122.5,
+      "files_written": 1
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 66.5,
+      "files_written": 1
+    }
+  ]
+}
