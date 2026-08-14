@@ -7,17 +7,20 @@ name: Nightly drift check
 # single tracking issue instead of failing silently.
 
 on:
-  schedule:
-    - cron: "17 8 * * *" # 08:17 UTC daily
   workflow_dispatch: {}
 
 permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   drift:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

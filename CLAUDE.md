@@ -39,6 +39,7 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 ## Development Rules
 
 - When adding a new skill, create it in `skills/{domain}/{name}/SKILL.md` with proper YAML frontmatter. Domain is one of: engineering, platform, product, business, finance, marketing, security, legal. If unsure, run `python3 scripts/generate-overview.py` after — it categorizes by name patterns and will surface the inferred domain.
+- Domain folders are an authoring convention only — the Claude Code plugin loader scans one level deep (`<dir>/<name>/SKILL.md`), so every `skills/{domain}` directory MUST be listed in the `skills` array in `.claude-plugin/plugin.json` or none of its skills load in consuming projects. When you create a new domain folder, add it to that array in the same commit (`audit-library.py` fails if you forget). `claude-commands/` is deliberately NOT mapped as the plugin `commands` dir — the skills already register `/cure-product-engineering:<name>`, and mapping the stubs too would register 81 duplicate names; it exists only for the npm/legacy vendoring path.
 - Every skill must have: `name`, `description`, and `argument-hint` in frontmatter. Fold the trigger ("Use when…") into `description` itself (or `when_to_use`) — it drives auto-discovery. Keep `description` + `when_to_use` combined under 1,536 chars (the skill-listing truncates past that). Skill `name` must be lowercase/hyphens, ≤64 chars, and **must not contain "claude" or "anthropic"** (reserved words — the harness rejects them).
 - To make a skill genuinely read-only, set `disallowed-tools` (e.g. `Write Edit Bash`). NOTE: `allowed-tools` does **not** restrict anything — it only grants no-prompt permission for the listed tools; every other tool stays callable. Do not rely on `allowed-tools` as a sandbox.
 - Destructive or sensitive skills should set `disable-model-invocation: true`. NOTE: this also makes a skill un-loopable — `/loop` scheduled fires only run skills Claude may auto-invoke (v2.1.196+). Never add it to a skill with a Recurring Mode section; to hide a loopable skill from the `/` menu use `user-invocable: false` instead.
@@ -65,7 +66,7 @@ The library's biggest token cost is fixed overhead multiplied across every sessi
 
 ## Versioning
 
-Current version: **7.4.4**
+Current version: **7.4.5**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording
