@@ -163,6 +163,14 @@ def score_skill(path):
     if TIME_SENSITIVE_RE.search(body):
         issues.append(("LOW", "time-sensitive phrasing in body")); score -= 0.25
 
+    # --- guardrail honesty (T36): a skill that CLAIMS to be read-only must
+    # enforce it via disallowed-tools. Prose is not a control. Advisory
+    # recurring-mode guardrails (labeled "advisory") are exempt by design.
+    claims_readonly = bool(re.search(r"read.only", desc, re.I)) or \
+        bool(re.search(r"^Read-only skill", body, re.M))
+    if claims_readonly and "disallowed-tools" not in fm:
+        issues.append(("HIGH", "claims read-only but no disallowed-tools — prose is not a control (T36)")); score -= 1.5
+
     # --- prose coherence (T34): a list-introducing gather header must be
     # followed by at least one bullet. Catches the T20-migration corruption
     # class where "Additionally gather (domain-specific):" was left dangling

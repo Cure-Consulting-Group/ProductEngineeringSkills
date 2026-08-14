@@ -4,6 +4,7 @@ description: ".env hygiene, secret leak detection, rotation playbooks, and migra
 when_to_use: "Use when designing .env schema, auditing for leaked secrets, responding to a leak, planning rotation, or migrating to a secret manager. NOT cloud-IAM design (security-review) or infra scaffolding (infrastructure-scaffold)."
 argument-hint: "[scope: greenfield | audit | leak-response | rotation | migrate]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash"]
+disallowed-tools: Write Edit
 context: fork
 ---
 

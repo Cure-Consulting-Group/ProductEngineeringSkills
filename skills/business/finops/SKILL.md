@@ -430,4 +430,4 @@ This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-aut
 - **Session loop:** `/loop 1w /cure-product-engineering:finops`
 - **Unattended:** cloud routine — Weekly cloud-cost delta review: flag anomalies vs last run, right-sizing candidates, budget-alert drift. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~100k tokens/run; cap at one run per weekly period.
-- **Guardrails:** read-only run; deliver cost report as a report file or issue; report on failure rather than retrying.
+- **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver cost report as a report file or issue; report on failure rather than retrying.
