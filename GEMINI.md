@@ -67,7 +67,6 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 - `README.md`: General overview and installation.
 - `CLAUDE.md`: Claude-specific instructions (mirror of this file).
 - `AGENT-GUIDE.md`: Comprehensive guide for agent/skill prompting patterns.
-- `EVALUATION.md`: Full project evaluation metrics.
 - `docs/OVERVIEW.md`: Auto-generated overview of all skills/agents/personas.
 - `docs/SCRIPTS_CONVENTION.md`: Convention for bundled Python scripts in skills.
 - `BACKLOG.md`: Internal improvement backlog (not for distribution).

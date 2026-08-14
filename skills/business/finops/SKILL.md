@@ -19,6 +19,11 @@ Project context, gathered before the skill runs. Values are injected inline belo
 Use this context to tailor all output to the actual project.
 
 Additionally gather (domain-specific):
+- `cat .firebaserc firebase.json 2>/dev/null | head -30` — Firebase projects and services in play
+- `ls functions/ 2>/dev/null && grep -m5 -rE "memory|minInstances|maxInstances" functions/src 2>/dev/null` — Cloud Functions sizing (the usual cost driver)
+- `ls *.tf terraform/ 2>/dev/null` — IaC surface for committed-use / right-sizing changes
+- `grep -m5 -riE "openai|anthropic|sendgrid|twilio|stripe" package.json 2>/dev/null` — metered third-party APIs on the bill
+
 Cloud financial operations framework for Firebase and GCP projects. Use when setting up cost visibility, optimizing spend, establishing budgets, or building a cost-aware engineering culture. Every dollar spent on infrastructure should be traceable to a feature or user segment.
 
 ## Step 1: Classify the FinOps Need

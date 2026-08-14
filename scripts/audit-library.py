@@ -163,6 +163,20 @@ def score_skill(path):
     if TIME_SENSITIVE_RE.search(body):
         issues.append(("LOW", "time-sensitive phrasing in body")); score -= 0.25
 
+    # --- prose coherence (T34): a list-introducing gather header must be
+    # followed by at least one bullet. Catches the T20-migration corruption
+    # class where "Additionally gather (domain-specific):" was left dangling
+    # and spliced straight into unrelated body prose.
+    body_lines_list = body.splitlines()
+    for i, line in enumerate(body_lines_list):
+        if re.match(r"^(Additionally gather|Before starting.*gather).*:\s*$", line.strip()):
+            j = i + 1
+            while j < len(body_lines_list) and not body_lines_list[j].strip():
+                j += 1
+            nxt = body_lines_list[j].strip() if j < len(body_lines_list) else ""
+            if not re.match(r"^([-*]|\d+\.|`)", nxt):
+                issues.append(("HIGH", f"dangling gather header at body line {i+1}: no bullet list follows (prose splice)")); score -= 1.5
+
     # --- nested references (deeper than one level) heuristic ---
     md_links = re.findall(r"\[[^\]]+\]\(([^)]+\.md)\)", body)
     # Not penalized automatically (needs graph walk) — reported as info.
