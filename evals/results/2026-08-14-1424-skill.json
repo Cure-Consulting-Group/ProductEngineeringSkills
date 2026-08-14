@@ -1,0 +1,112 @@
+{
+  "mode": "skill",
+  "stamp": "2026-08-14-1424",
+  "summary": {
+    "t07-hotfix-worktree|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1
+    },
+    "t07-hotfix-worktree|claude|off": {
+      "pass_rate": 0.0,
+      "n": 1
+    },
+    "t11-finops-review|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t11-finops-review|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t14-dockerfile|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t14-dockerfile|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t16-substitution-integrity|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    },
+    "t16-substitution-integrity|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1
+    }
+  },
+  "runs": [
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "agent_exit_ok": true,
+      "seconds": 61.0,
+      "files_written": 1
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "agent_exit_ok": true,
+      "seconds": 47.4,
+      "files_written": 1
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 142.0,
+      "files_written": 2
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 132.9,
+      "files_written": 2
+    },
+    {
+      "task": "t14-dockerfile",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 75.1,
+      "files_written": 3
+    },
+    {
+      "task": "t14-dockerfile",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 31.6,
+      "files_written": 3
+    },
+    {
+      "task": "t16-substitution-integrity",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 13.9,
+      "files_written": 1
+    },
+    {
+      "task": "t16-substitution-integrity",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 18.1,
+      "files_written": 1
+    }
+  ]
+}
