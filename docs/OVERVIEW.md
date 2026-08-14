@@ -8,10 +8,10 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- |
 | Plugin | cure-product-engineering |
 | Version | 7.4.4 |
-| Skills | 81 |
+| Skills | 82 |
 | Agents | 39 |
 | Personas | 4 |
-| Hooks (entries) | 13 |
+| Hooks (entries) | 14 |
 | Rules | 11 |
 | Output Styles | 9 |
 | MCP Servers | 0 |
@@ -34,7 +34,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | saas-financial-model | Model unit economics, MRR/ARR projections, pricing tiers, runway, and break-even analysis | Read, Grep, Glob, WebSearch |
 
 
-### Engineering (39)
+### Engineering (40)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
@@ -66,6 +66,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | nextjs-feature-scaffold | Scaffold Next.js features with App Router, Server/Client components, Tailwind, and data fetching patterns | default |
 | notification-architect | Design notification systems — push (FCM/APNs), in-app messaging, email transactional flows, preference management, and delivery optimization | default |
 | offline-first | Architect offline-first mobile apps — local storage, sync strategies, conflict resolution, optimistic UI, and background sync patterns | default |
+| parallel-agent-orchestration | Run N simultaneous agent sessions on one repo safely — worktree-per-ticket, module-boundary decomposition, rate-limit budgeting, model tiering, single-owner destructive ops | default |
 | performance-review | Define performance budgets, load testing plans, optimization strategies, and monitoring dashboards across mobile, web, and backend | default |
 | project-bootstrap | Bootstrap any project repo with CLAUDE.md and STATE.md — interviews the developer, inspects the codebase, and generates agent coordination files | default |
 | project-manager | Sprint execution and delivery management — sprint planning, RACI matrices, risk registers, retrospectives, and velocity tracking for engineering teams | default |
@@ -248,17 +249,18 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.4.4). 81 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.4.4). 82 skills (domain-organized), 39… |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 81 skills, 39 agents, 4 personas. Use /cure-pr… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 82 skills, 39 agents, 4 personas. Use /cure-pr… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | UserPromptSubmit |  | command | PROMPT=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt',… |
 | PreToolUse | Edit\|Write | command | FILE=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path'… |
 | PreToolUse | Edit\|Write | command | python3 -c " |
 | PreToolUse | Bash | command | CMD=$(echo $CLAUDE_TOOL_INPUT \| python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''… |
+| PreToolUse | Skill | command | python3 -c " |
 | Stop |  | prompt | You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS |
 | SubagentStop | refactor-assistant\|project-bootstrapper\|release-coordinator | command | echo "Write-capable agent finished. Quality checklist:\n- Tests added/passing? → test-runner agent\n- Lint/ty… |
 
