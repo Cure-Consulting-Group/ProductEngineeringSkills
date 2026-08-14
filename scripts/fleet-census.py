@@ -36,6 +36,22 @@ LIB_VERSION = PLUGIN["version"]
 
 SKIP_DIRS = {"ProductEngineeringSkills", "docs", "tools"}
 
+PLUGIN_CACHE = Path.home() / ".claude" / "plugins" / "cache" / "cure" / "cure-product-engineering"
+
+
+def installed_plugin_version():
+    """Highest version present in the local plugin cache — the version Claude
+    Code actually SERVES. None if the plugin isn't installed on this machine."""
+    if not PLUGIN_CACHE.exists():
+        return None
+    def key(v):
+        try:
+            return tuple(int(x) for x in v.split("."))
+        except ValueError:
+            return (0,)
+    versions = [d.name for d in PLUGIN_CACHE.iterdir() if d.is_dir()]
+    return max(versions, key=key) if versions else None
+
 
 def library_skills():
     return {p.parent.name: p for p in (ROOT / "skills").rglob("SKILL.md")}
@@ -92,9 +108,15 @@ def write_manifest(proj, mode, channel, lib):
     if vend_dir.exists():
         local = sorted(d.name for d in vend_dir.iterdir()
                        if (d / "SKILL.md").exists() and d.name not in lib)
+    # Record FACT, not intent: the version is what the plugin cache actually
+    # serves, never the library checkout's HEAD. A manifest that records
+    # aspiration poisons every canary run that trusts it (learned 2026-08-14:
+    # first canary hard-stopped on exactly this mismatch).
+    installed_v = installed_plugin_version()
     manifest = {
         "library": "cure-product-engineering",
-        "version": LIB_VERSION,
+        "version": installed_v or LIB_VERSION,
+        "version_source": "plugin-cache" if installed_v else "library-checkout (UNVERIFIED — plugin not in cache)",
         "mode": mode,
         "channel": channel,
         "installed": date.today().isoformat(),
@@ -133,7 +155,8 @@ def main():
         print(json.dumps({"library_version": LIB_VERSION, "projects": rows,
                           "problems": len(problems)}, indent=2))
     else:
-        print(f"library v{LIB_VERSION}\n")
+        inst = installed_plugin_version()
+        print(f"library checkout v{LIB_VERSION} | plugin cache serves v{inst or 'NOT INSTALLED'}\n")
         print(f"{'project':<28}{'mode':<10}{'chan':<7}{'manifest':<10}{'vendored':<10}{'drift':<7}{'local':<7}{'2x-install'}")
         for r in rows:
             print(f"{r['project']:<28}{r['mode']:<10}{r['channel']:<7}"
