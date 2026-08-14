@@ -30,7 +30,8 @@
       "t10-openapi-spec"
     ],
     "finops": [
-      "t11-finops-review"
+      "t11-finops-review",
+      "t16-substitution-integrity"
     ],
     "accessibility-audit": [
       "t13-a11y-fixture"

@@ -165,7 +165,7 @@ Three categories. Get this wrong and you commit secrets, or worse, run prod agai
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORKTREE_DIR="$1"
+WORKTREE_DIR="\$1"
 MAIN_REPO="$(git rev-parse --show-toplevel)"
 PORT_OFFSET="${2:-10}"
 
@@ -230,7 +230,7 @@ Worktrees that outlive their branches become bit-rot landmines. Stale `node_modu
 git worktree list
 
 # Find worktrees whose branches are merged into main
-for wt in $(git worktree list --porcelain | awk '/^worktree / {print $2}' | tail -n +2); do
+for wt in $(git worktree list --porcelain | awk '/^worktree / {print \$2}' | tail -n +2); do
   branch=$(git -C "$wt" branch --show-current 2>/dev/null)
   if [ -n "$branch" ] && git merge-base --is-ancestor "$branch" origin/main 2>/dev/null; then
     echo "Mergeable/merged: $wt ($branch)"
@@ -238,7 +238,7 @@ for wt in $(git worktree list --porcelain | awk '/^worktree / {print $2}' | tail
 done
 
 # Find worktrees with no commits in 30+ days
-for wt in $(git worktree list --porcelain | awk '/^worktree / {print $2}'); do
+for wt in $(git worktree list --porcelain | awk '/^worktree / {print \$2}'); do
   last=$(git -C "$wt" log -1 --format=%ct HEAD 2>/dev/null)
   if [ -n "$last" ] && [ $(( ($(date +%s) - last) / 86400 )) -gt 30 ]; then
     echo "Stale (>30d): $wt"
@@ -277,8 +277,8 @@ git branch -D pr-1234
 # Add to .zshrc / .bashrc
 # Quick worktree creation with bootstrap
 wt() {
-  local name="$1"
-  local branch="${2:-$1}"
+  local name="\$1"
+  local branch="${2:-\$1}"
   local repo_root=$(git rev-parse --show-toplevel)
   local repo_name=$(basename "$repo_root")
   local target="$(dirname "$repo_root")/${repo_name}-${name}"
@@ -292,7 +292,7 @@ wt() {
 
 # Quick switch
 wtcd() {
-  local target=$(git worktree list --porcelain | awk '/^worktree / {print $2}' | fzf)
+  local target=$(git worktree list --porcelain | awk '/^worktree / {print \$2}' | fzf)
   cd "$target"
 }
 
@@ -303,7 +303,7 @@ wtls() {
 
 # Quick remove
 wtrm() {
-  local target=$(git worktree list --porcelain | awk '/^worktree / {print $2}' | tail -n +2 | fzf)
+  local target=$(git worktree list --porcelain | awk '/^worktree / {print \$2}' | tail -n +2 | fzf)
   git worktree remove "$target"
 }
 ```

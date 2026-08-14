@@ -136,24 +136,24 @@ Free tier covers:
   Hosting: 10GB stored, 360MB/day transfer
 
 Typical monthly cost by scale:
-  0-1K users:     $0-25/month (free tier covers most)
-  1K-10K users:   $25-150/month
-  10K-50K users:  $150-500/month
-  50K-100K users: $500-2,000/month
-  100K+ users:    $2,000+/month (optimize reads, use caching)
+  0-1K users:     \$0-25/month (free tier covers most)
+  1K-10K users:   \$25-150/month
+  10K-50K users:  \$150-500/month
+  50K-100K users: \$500-2,000/month
+  100K+ users:    \$2,000+/month (optimize reads, use caching)
 ```
 
 ### Third-Party Services
 ```
-Stripe:          2.9% + $0.30 per transaction (no monthly fee)
-SendGrid/Resend: $0-20/month (up to 100 emails/day free)
-OpenAI API:      $0.50-15 per 1M tokens (model dependent)
-Gemini API:      $0-7 per 1M tokens (model dependent)
-Vercel:          $0-20/month (hobby/pro), usage-based beyond
-Algolia/Search:  $0-50/month (up to 10K records free)
-Sentry:          $0-26/month (error monitoring)
-Analytics:       $0 (Firebase Analytics), $0-25/month (Mixpanel/PostHog)
-Domain + DNS:    $12-20/year
+Stripe:          2.9% + \$0.30 per transaction (no monthly fee)
+SendGrid/Resend: \$0-20/month (up to 100 emails/day free)
+OpenAI API:      \$0.50-15 per 1M tokens (model dependent)
+Gemini API:      \$0-7 per 1M tokens (model dependent)
+Vercel:          \$0-20/month (hobby/pro), usage-based beyond
+Algolia/Search:  \$0-50/month (up to 10K records free)
+Sentry:          \$0-26/month (error monitoring)
+Analytics:       \$0 (Firebase Analytics), \$0-25/month (Mixpanel/PostHog)
+Domain + DNS:    \$12-20/year
 ```
 
 ## Step 5: Project Cost Templates
@@ -162,26 +162,26 @@ Domain + DNS:    $12-20/year
 ```
 Typical scope: 5-8 screens, auth, core feature, payments
 Hours: 200-400 hours
-At $150/hr: $30,000-60,000
-At $200/hr: $40,000-80,000
+At \$150/hr: \$30,000-60,000
+At \$200/hr: \$40,000-80,000
 Timeline: 6-10 weeks
 
-Infrastructure (year 1): $300-2,000
-Third-party services (year 1): $500-3,000
-Total year 1: $31,000-85,000
+Infrastructure (year 1): \$300-2,000
+Third-party services (year 1): \$500-3,000
+Total year 1: \$31,000-85,000
 ```
 
 ### Full Product (mobile + web + backend)
 ```
 Typical scope: 15-25 screens per platform, admin dashboard, API
 Hours: 800-1,500 hours
-At $150/hr: $120,000-225,000
-At $200/hr: $160,000-300,000
+At \$150/hr: \$120,000-225,000
+At \$200/hr: \$160,000-300,000
 Timeline: 4-8 months
 
-Infrastructure (year 1): $1,200-12,000
-Third-party services (year 1): $2,000-10,000
-Total year 1: $125,000-322,000
+Infrastructure (year 1): \$1,200-12,000
+Third-party services (year 1): \$2,000-10,000
+Total year 1: \$125,000-322,000
 ```
 
 ### Maintenance (ongoing after launch)
@@ -192,8 +192,8 @@ Feature additions:         scope per feature
 Infrastructure monitoring: 2-5 hours/month
 
 Monthly maintenance cost:
-  At $150/hr: $2,250-4,500/month
-  At $200/hr: $3,000-6,000/month
+  At \$150/hr: \$2,250-4,500/month
+  At \$200/hr: \$3,000-6,000/month
   Or retainer: flat monthly fee (typically 15-20% of build cost annually)
 ```
 

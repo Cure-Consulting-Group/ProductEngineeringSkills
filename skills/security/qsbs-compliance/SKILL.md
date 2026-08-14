@@ -9,7 +9,7 @@ context: fork
 
 # QSBS Compliance Tracker
 
-IRC §1202 Qualified Small Business Stock compliance monitoring. QSBS allows up to $10M (or 10× basis) in capital gains exclusion per shareholder — but qualification is fragile. A single disqualifying event can void the entire exclusion retroactively.
+IRC §1202 Qualified Small Business Stock compliance monitoring. QSBS allows up to \$10M (or 10× basis) in capital gains exclusion per shareholder — but qualification is fragile. A single disqualifying event can void the entire exclusion retroactively.
 
 This skill does NOT constitute tax advice. All output requires CPA/tax attorney review.
 
@@ -50,12 +50,12 @@ Run each test. ALL must pass simultaneously and continuously.
 - SAFE conversions count if resulting stock is newly issued
 - **Check**: Review cap table for secondary transfers, stock purchase agreements
 
-### Test 3: Gross Asset Test (<$50M)
-- Aggregate gross assets must not exceed $50M at any time from incorporation through immediately after the stock issuance
+### Test 3: Gross Asset Test (<\$50M)
+- Aggregate gross assets must not exceed \$50M at any time from incorporation through immediately after the stock issuance
 - Gross assets = cash + adjusted basis of all property (NOT fair market value)
 - Includes assets of subsidiaries (>50% owned)
 - **Check**: Balance sheet at each issuance date, adjusted basis records
-- **Disqualifier**: Exceeding $50M at any point after incorporation and before/during issuance permanently disqualifies that issuance
+- **Disqualifier**: Exceeding \$50M at any point after incorporation and before/during issuance permanently disqualifies that issuance
 
 ### Test 4: Active Business Test (>80% Qualified)
 - At least 80% of assets (by value) must be used in the active conduct of one or more qualified trades or businesses
@@ -89,7 +89,7 @@ Scan for these red flags. Any one can void QSBS:
 |-------|-----------|--------|
 | S-Corp election filed | **CRITICAL** | Blocks all future QSBS issuance |
 | LLC conversion | **CRITICAL** | Voids qualification structure entirely |
-| Gross assets exceed $50M | **CRITICAL** | Disqualifies all issuances after threshold crossed |
+| Gross assets exceed \$50M | **CRITICAL** | Disqualifies all issuances after threshold crossed |
 | Stock buyback >5% within window | **HIGH** | May disqualify specific issuances |
 | Revenue mix shifts to >20% consulting | **HIGH** | Active business test at risk |
 | Merger or acquisition | **HIGH** | Depends on structure — stock-for-stock may preserve, asset sale may not |
@@ -116,7 +116,7 @@ Generate this artifact for each entity:
 |------|--------|--------|
 | C-Corp Status | PASS/FAIL | [current entity type, any elections] |
 | Original Issuance | PASS/FAIL | [secondary transfers found?] |
-| Gross Asset Test (<$50M) | PASS/FAIL | Current: $[X]M. Headroom: $[50-X]M |
+| Gross Asset Test (<\$50M) | PASS/FAIL | Current: $[X]M. Headroom: $[50-X]M |
 | Active Business (>80%) | PASS/FAIL | Qualified: [X]%, Non-qualified: [Y]% |
 | Holding Period (5yr) | TRACKING | [table of shareholders with dates] |
 | Redemption Window | PASS/FAIL | [recent redemptions within 2yr/1yr] |

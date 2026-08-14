@@ -78,7 +78,7 @@ TL;DR (3 bullets max)
 
 HIGHLIGHTS
   List 3-5 wins. Each must be specific and measurable:
-    Good:  "Vendly processed $47K GMV in March, up 32% MoM"
+    Good:  "Vendly processed \$47K GMV in March, up 32% MoM"
     Bad:   "Vendly is growing nicely"
     Good:  "Signed LOI with Baptist Health for Autograph pilot — 12 providers"
     Bad:   "Autograph had a good month for partnerships"
@@ -212,7 +212,7 @@ The most important financial exercise for an early-stage studio. Know exactly wh
 │ Pause TwntyHoops            │ -$X,XXX burn  │ +X months     │
 │ Vendly hits 50 merchants    │ +$X,XXX rev   │ +X months     │
 │ Autograph closes enterprise │ +$XX,XXX rev  │ +X months     │
-│ Raise $250K bridge          │ +$250K cash   │ +X months     │
+│ Raise \$250K bridge          │ +\$250K cash   │ +X months     │
 │ Cut marketing 50%           │ -$X,XXX burn  │ +X months     │
 │ Move to cheaper infra       │ -$X,XXX burn  │ +X months     │
 └─────────────────────────────┴───────────────┴───────────────┘
@@ -372,7 +372,7 @@ AUTOGRAPH — AI MEDICAL SCRIBE (SaaS / Healthcare)
 │ Churn (monthly)      │ Providers lost / providers at start of month  │ < 3%      │
 │ NRR                  │ (Start MRR + expansion - churn) / Start MRR  │ > 110%    │
 │ HIPAA Incidents      │ Security/privacy incidents in period          │ 0         │
-│ AI Cost/Scribe       │ LLM API cost per scribe generated             │ < $0.50   │
+│ AI Cost/Scribe       │ LLM API cost per scribe generated             │ < \$0.50   │
 └──────────────────────┴──────────────────────────────────────────────┴───────────┘
 
 THE INITIATED — WOMEN'S BASKETBALL RECRUITING PLATFORM

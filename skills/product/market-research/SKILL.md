@@ -116,4 +116,4 @@ Generate using Write:
 - Every competitor pricing claim should be verified
 - ICP willingness-to-pay grounded in evidence
 - If data is unavailable, state the assumption explicitly and flag for validation
-- No generic claims: "the market is large" → "$4.2B in 2024, growing at 18% CAGR (source)"
+- No generic claims: "the market is large" → "\$4.2B in 2024, growing at 18% CAGR (source)"

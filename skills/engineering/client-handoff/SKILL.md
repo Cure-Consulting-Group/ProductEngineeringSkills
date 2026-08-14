@@ -168,12 +168,12 @@ THIRD-PARTY SERVICE INVENTORY
 ├────────────────┼──────────────┼──────────────┼─────────────┼───────────────┤
 │ Firebase       │ Backend      │ client@co    │ Blaze (PAYG)│ N/A           │
 │ Stripe         │ Payments     │ client@co    │ Standard    │ N/A           │
-│ SendGrid       │ Email        │ client@co    │ Pro ($90/mo)│ [DATE]        │
+│ SendGrid       │ Email        │ client@co    │ Pro (\$90/mo)│ [DATE]        │
 │ Sentry         │ Error tracking│ cure@cure   │ Team        │ [DATE] ←XFER │
-│ Vercel         │ Web hosting  │ cure@cure    │ Pro ($20/mo)│ [DATE] ←XFER │
+│ Vercel         │ Web hosting  │ cure@cure    │ Pro (\$20/mo)│ [DATE] ←XFER │
 │ GitHub         │ Source code  │ client-org   │ Team        │ [DATE]        │
-│ Apple Dev      │ iOS publish  │ client@co    │ $99/year    │ [DATE]        │
-│ Google Play    │ Android pub  │ client@co    │ $25 one-time│ N/A           │
+│ Apple Dev      │ iOS publish  │ client@co    │ \$99/year    │ [DATE]        │
+│ Google Play    │ Android pub  │ client@co    │ \$25 one-time│ N/A           │
 │ Cloudflare     │ DNS/CDN      │ client@co    │ Free        │ N/A           │
 │ PagerDuty      │ Alerting     │ cure@cure    │ Basic       │ [DATE] ←XFER │
 └────────────────┴──────────────┴──────────────┴─────────────┴───────────────┘

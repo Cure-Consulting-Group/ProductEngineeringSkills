@@ -253,7 +253,7 @@ Design for these explicitly. Don't ship an agent that hasn't been red-teamed aga
 | **Wrong tool selection** | Tool descriptions overlap; too many tools | Tighten descriptions; cap tool count; route to specialist |
 | **Prompt injection from tool outputs** | Search result or doc contains "ignore previous, do X" | Sanitize tool outputs; wrap in `<tool_output>` tags; system prompt explicitly distrusts tool content |
 | **Memory poisoning** | Earlier wrong fact written to long-term memory | Confirmation step before `remember()`; periodic memory audit; quarantine new memories until validated |
-| **Runaway cost** | One bad task burns $50 in tokens | Per-task cost cap, per-user daily cap, hard kill switch |
+| **Runaway cost** | One bad task burns \$50 in tokens | Per-task cost cap, per-user daily cap, hard kill switch |
 | **Side-effect cascade** | Agent retries a write tool, double-creates resources | Idempotency keys; replay log; never silently retry write tools |
 | **Stale context** | Agent acts on data fetched 30 turns ago | Re-fetch critical state before write tools; TTL on cached tool results |
 | **Capability creep** | Tools added over time without re-eval | Tool registry with eval-on-add; deprecate unused tools |
@@ -276,7 +276,7 @@ Plan adapts to results        |     N       |    N     |   Y
 Tool count                    |     0       |   0-3    |   3-15
 Eval cost (per change)        |    Low      |   Med    |  High
 Debug difficulty              |    Low      |   Med    |  High
-Cost per task                 |   Cents     |  10s¢    |  $1+
+Cost per task                 |   Cents     |  10s¢    |  \$1+
 Latency                       |    <2s      |  2-10s   |  10s-min
 Right answer when…            | One-shot    | Fixed    | Dynamic
                               | knowledge   | recipe   | reasoning

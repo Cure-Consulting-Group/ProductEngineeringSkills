@@ -1,0 +1,21 @@
+{
+  "mode": "model",
+  "stamp": "2026-08-14-1413",
+  "summary": {
+    "t16-substitution-integrity|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1
+    }
+  },
+  "runs": [
+    {
+      "task": "t16-substitution-integrity",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 25.3,
+      "files_written": 1
+    }
+  ]
+}

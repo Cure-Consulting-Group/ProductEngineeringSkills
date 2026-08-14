@@ -426,11 +426,11 @@ Cost Control Checklist:
 
 Estimated Costs (small-medium project):
   Firebase Hosting        — free tier covers most projects
-  Cloud Functions         — $0.40/million invocations + compute time
-  Firestore               — $0.06/100K reads, $0.18/100K writes
-  Cloud Storage           — $0.020/GB/month (Standard)
-  Cloud Run               — $0 when idle, ~$30-50/month at moderate traffic
-  Secret Manager          — $0.06/10K access operations
+  Cloud Functions         — \$0.40/million invocations + compute time
+  Firestore               — \$0.06/100K reads, \$0.18/100K writes
+  Cloud Storage           — \$0.020/GB/month (Standard)
+  Cloud Run               — \$0 when idle, ~\$30-50/month at moderate traffic
+  Secret Manager          — \$0.06/10K access operations
 ```
 
 ## Code Generation (Required)

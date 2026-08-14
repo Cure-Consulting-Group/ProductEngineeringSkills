@@ -432,7 +432,7 @@ Metric              Edge        Origin      Impact
 TTFB (same region)  20-50ms     100-300ms   2-6x faster
 TTFB (cross-cont.)  50-100ms    300-800ms   3-8x faster
 Throughput           CDN limit   Server cap  10-100x higher
-Cost per request     ~$0.00001  ~$0.0001    10x cheaper
+Cost per request     ~\$0.00001  ~\$0.0001    10x cheaper
 Cold start           < 5ms      50-500ms    10-100x faster
 Max execution        30s        300s        Origin for long tasks
 Node.js APIs         No         Yes         Origin for fs, streams
