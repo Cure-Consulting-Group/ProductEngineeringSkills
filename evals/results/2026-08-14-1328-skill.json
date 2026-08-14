@@ -1,0 +1,70 @@
+{
+  "mode": "skill",
+  "stamp": "2026-08-14-1328",
+  "summary": {
+    "t07-hotfix-worktree|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3
+    },
+    "t07-hotfix-worktree|claude|off": {
+      "pass_rate": 0.3333333333333333,
+      "n": 3
+    }
+  },
+  "runs": [
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 76.1,
+      "files_written": 1
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 66.5,
+      "files_written": 1
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 76.3,
+      "files_written": 1
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 48.9,
+      "files_written": 1
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "agent_exit_ok": true,
+      "seconds": 55.2,
+      "files_written": 1
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "agent_exit_ok": true,
+      "seconds": 47.4,
+      "files_written": 1
+    }
+  ]
+}
