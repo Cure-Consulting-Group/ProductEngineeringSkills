@@ -8,6 +8,18 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 
 # Wave 3 (2026-08-13) — Evidence, Fleet Health, and Parallel Operations
 
+**Execution status (2026-08-14, branch `feat/wave-3`):** T34, T30, T31, T35, T36, T32 built and committed. Deviations:
+
+| Ticket | Status | Deviation |
+|---|---|---|
+| T34 | ✅ Done | Root cause refined: the gather bullets never existed pre-T20 (header inserted with nothing under it) — authored them rather than restored |
+| T30 | ✅ Done | 15 tasks/13 skills; live-verified (t01 real claude run PASS, 23.4s). CI runs harness self-test only (no authenticated CLI on runners); real Ring-0 runs locally via release.sh vs last tag. Rubric judge deferred until deterministic gates prove insufficient |
+| T31 | ✅ Done | Census found 10 vendored projects (not 6), 79/79 files drifted in each. Manifests written across 17 projects. Vendored-tree removal blocked by permission classifier (correctly — high blast radius): packaged as `scripts/migrate-to-plugin.sh` for human execution, statledger first |
+| T35 | ✅ Done | Hook verified fail-open with malformed input. First SCORECARD.md honest: effectiveness "no data", fleet 10 drifted |
+| T36 | ✅ Done | 14 prose-only flags triaged: 1 enforced (env-secrets-manager — was allowed-tools-as-sandbox), 6 labeled advisory (per-mode restriction inexpressible), 7 false positives cleared. Register: docs/GUARDRAILS.md |
+| T32 | ✅ Done | Skill ships at 105 lines / 338-char trigger |
+| T33 | ⏳ Deferred | Depends on T25 (Wave 2.5 exporter) — unbuilt. Runs with Wave 2.5 |
+
 Captured 2026-08-13 from two evaluations: (a) a self-assessment of the library against Anthropic's published Agent Skills / context-engineering guidance, and (b) a census of six consuming projects (Level5, initiated-recruiting, statledger, Finality, DistrictZero, NationalLacrosseTourApp). Theme: **the library measures conformance, not effectiveness, and the fleet has drifted.** Every quality signal today is a proxy (frontmatter validity, char budgets, line counts); nothing measures whether a skill improves output, and the consuming projects prove the gap.
 
 ## Verified fleet facts (censused 2026-08-13; do not re-research)
