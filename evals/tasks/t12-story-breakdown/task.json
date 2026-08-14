@@ -1,0 +1,10 @@
+{
+  "id": "t12-story-breakdown",
+  "title": "Break a feature into pointed stories",
+  "source": "sdlc skill Step 5; statledger backlog practice",
+  "skills": [
+    "sdlc"
+  ],
+  "prompt": "Create docs/epics/live-box-score.md: break 'live box score for an in-progress basketball game' into an epic with 4-8 user stories, each with Fibonacci points and Given/When/Then acceptance criteria.",
+  "fixtures": {}
+}

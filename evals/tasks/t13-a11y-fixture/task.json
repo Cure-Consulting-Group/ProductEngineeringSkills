@@ -1,0 +1,12 @@
+{
+  "id": "t13-a11y-fixture",
+  "title": "Flag accessibility defects in HTML",
+  "source": "accessibility-audit skill (WCAG 2.2)",
+  "skills": [
+    "accessibility-audit"
+  ],
+  "prompt": "Audit index.html against WCAG 2.2 and write A11Y.md listing each violation with the criterion it breaks and the fix.",
+  "fixtures": {
+    "index.html": "<html><body><img src=logo.png><form><input type=text placeholder=Email><button><i class=icon-go></i></button></form><div onclick=go() style=\"color:#9a9a9a;background:#fff\">Continue</div></body></html>\n"
+  }
+}

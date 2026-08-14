@@ -52,6 +52,25 @@ jobs:
       - name: Workflow scripts parse (async-context syntax)
         run: bash scripts/verify-workflows.sh
 
+      - name: Doc claims (no dead references in prose docs)
+        run: python3 scripts/check-doc-claims.py
+
+      - name: Eval harness self-test (mock backend — no tokens spent)
+        # CI has no authenticated agent CLI, so the REAL Ring-0 gate
+        # (run-evals.py --changed origin/main) runs locally via release.sh.
+        # This step keeps the harness itself and the task index from rotting.
+        run: |
+          python3 scripts/run-evals.py --dry-run --tasks t01-fix-dangling-gather >/dev/null
+          python3 - <<'EOF'
+          import json, pathlib
+          idx = json.loads(pathlib.Path("evals/index.json").read_text())["skill_to_tasks"]
+          tasks = {p.name for p in pathlib.Path("evals/tasks").iterdir() if (p/"task.json").exists()}
+          mapped = {t for ts in idx.values() for t in ts}
+          assert mapped == tasks, f"index/tasks mismatch: {mapped ^ tasks}"
+          for s in idx: assert list(pathlib.Path("skills").glob(f"*/{s}")), f"index references missing skill {s}"
+          print(f"eval index OK: {len(tasks)} tasks, {len(idx)} skills")
+          EOF
+
       - name: type:prompt hooks only on low-frequency events, with timeouts
         # Wave 2 (BACKLOG T10/T11) deliberately ships two LLM-evaluating hooks:
         # the Stop quality gate and PostToolUseFailure triage. The original

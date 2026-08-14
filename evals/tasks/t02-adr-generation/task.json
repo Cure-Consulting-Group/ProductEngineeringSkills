@@ -1,0 +1,10 @@
+{
+  "id": "t02-adr-generation",
+  "title": "Generate an ADR with required sections",
+  "source": "statledger docs/adr practice; sdlc skill Step 4",
+  "skills": [
+    "sdlc"
+  ],
+  "prompt": "Create docs/adr/001-firestore-vs-postgres.md: an Architecture Decision Record choosing Firestore over Postgres for a real-time basketball stats app. Use standard ADR structure.",
+  "fixtures": {}
+}

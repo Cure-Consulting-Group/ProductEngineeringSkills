@@ -1,0 +1,12 @@
+{
+  "id": "t04-ci-workflow",
+  "title": "Author a GitHub Actions test workflow",
+  "source": "ci-cd-pipeline skill; rules/cicd.md",
+  "skills": [
+    "ci-cd-pipeline"
+  ],
+  "prompt": "Create .github/workflows/test.yml: run npm test on every pull request for a Node 20 project, with dependency caching. Follow GitHub Actions security best practices.",
+  "fixtures": {
+    "package.json": "{\n  \"name\": \"fixture\",\n  \"scripts\": {\"test\": \"node --test\"}\n}\n"
+  }
+}

@@ -40,7 +40,16 @@ echo "Release: v$CUR -> v$NEXT  (level: $LEVEL)"
 echo "==> Quality gate"
 python3 scripts/audit-library.py --fail-under 9.0 --min-item 7.0 >/dev/null
 python3 scripts/fix-library.py --check >/dev/null
-echo "    audit + compliance OK"
+python3 scripts/check-doc-claims.py >/dev/null
+echo "    audit + compliance + doc-claims OK"
+
+# Ring 0 (T30): eval-gate any skills changed since the last tag. Runs the
+# real agent CLI locally (CI can't). Skips cleanly when nothing covered changed.
+LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+if [ -n "$LAST_TAG" ]; then
+  echo "==> Ring 0 eval gate (changed skills vs $LAST_TAG)"
+  python3 scripts/run-evals.py --changed "$LAST_TAG" || { echo "Ring 0 eval regression — fix before releasing"; exit 1; }
+fi
 
 if [ "$DRY" = "1" ]; then
   echo "Would bump $PLUGIN, sync metadata, regenerate OVERVIEW + Gemini, commit, and print tag command."

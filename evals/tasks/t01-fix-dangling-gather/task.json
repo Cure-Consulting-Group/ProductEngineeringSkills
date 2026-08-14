@@ -1,0 +1,12 @@
+{
+  "id": "t01-fix-dangling-gather",
+  "title": "Repair a corrupted skill Pre-Processing block",
+  "source": "T34 / commit 845c62a \u2014 real defect shipped for a month",
+  "skills": [
+    "sdlc"
+  ],
+  "prompt": "The file BROKEN_SKILL.md has a 'Additionally gather (domain-specific):' header with no bullet list under it \u2014 body prose was spliced in by a bad migration. Repair it: add 2-4 appropriate domain-specific context-gathering bullets after the header, keeping all existing content intact.",
+  "fixtures": {
+    "BROKEN_SKILL.md": "# SDLC Artifact Generator\n\n## Pre-Processing (Auto-Context)\n\n- Portfolio: check PORTFOLIO.md\n\nUse this context to tailor all output.\n\nAdditionally gather (domain-specific):\nFull-cycle software development lifecycle artifact generation for technical product teams.\n\n## Step 1\nDetermine what the user needs.\n"
+  }
+}

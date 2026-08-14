@@ -1,0 +1,10 @@
+{
+  "id": "t09-runbook",
+  "title": "Write an incident runbook with escalation",
+  "source": "incident-response skill; runbook output style",
+  "skills": [
+    "incident-response"
+  ],
+  "prompt": "Create RUNBOOK.md for 'Firestore reads spiking 10x and burning budget': numbered diagnostic steps with exact commands, a mitigation decision tree, and an escalation path with time thresholds.",
+  "fixtures": {}
+}

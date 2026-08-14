@@ -1,0 +1,45 @@
+{
+  "skill_to_tasks": {
+    "sdlc": [
+      "t01-fix-dangling-gather",
+      "t02-adr-generation",
+      "t12-story-breakdown"
+    ],
+    "database-architect": [
+      "t03-safe-migration"
+    ],
+    "ci-cd-pipeline": [
+      "t04-ci-workflow"
+    ],
+    "env-secrets-manager": [
+      "t05-secret-leak-audit"
+    ],
+    "firebase-architect": [
+      "t06-firestore-rules"
+    ],
+    "git-worktree-manager": [
+      "t07-hotfix-worktree"
+    ],
+    "testing-strategy": [
+      "t08-test-strategy"
+    ],
+    "incident-response": [
+      "t09-runbook"
+    ],
+    "api-architect": [
+      "t10-openapi-spec"
+    ],
+    "finops": [
+      "t11-finops-review"
+    ],
+    "accessibility-audit": [
+      "t13-a11y-fixture"
+    ],
+    "infrastructure-scaffold": [
+      "t14-dockerfile"
+    ],
+    "release-management": [
+      "t15-release-notes"
+    ]
+  }
+}
