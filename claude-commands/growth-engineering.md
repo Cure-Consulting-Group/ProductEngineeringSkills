@@ -177,7 +177,7 @@ Invite flow design:
 
 Reward structures:
   Two-sided rewards outperform one-sided 2-3x:
-    "Give $10, get $10" > "Get $10 for each referral"
+    "Give \$10, get \$10" > "Get \$10 for each referral"
 
   Reward types (in order of effectiveness):
     1. Product value: extra storage, premium features, extended trial

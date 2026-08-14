@@ -41,11 +41,11 @@ Report compliance posture before detailed framework analysis.
 
 | Regulation | Trigger | Key Requirements | Penalty Range |
 |-----------|---------|-----------------|---------------|
-| HIPAA | Health data (PHI) for US persons | BAA chain, access controls, encryption, audit logs, breach notification within 60 days | $100–$50,000 per violation, up to $1.5M/year per category |
-| COPPA | Users under 13 (US) | Verifiable parental consent, data minimization, no behavioral advertising, deletion on request | $50,120 per violation (FTC) |
+| HIPAA | Health data (PHI) for US persons | BAA chain, access controls, encryption, audit logs, breach notification within 60 days | \$100–\$50,000 per violation, up to \$1.5M/year per category |
+| COPPA | Users under 13 (US) | Verifiable parental consent, data minimization, no behavioral advertising, deletion on request | \$50,120 per violation (FTC) |
 | GDPR | EU/EEA residents' personal data | Lawful basis, DPO, DPIA, 72-hour breach notification, right to erasure, data portability | Up to 4% of global annual revenue or 20M EUR |
-| CCPA/CPRA | California residents' personal information | Right to know, delete, opt-out of sale, no discrimination, 45-day response window | $2,500 per violation, $7,500 per intentional violation |
-| PCI DSS | Credit card processing/storage | Network segmentation, encryption, access control, vulnerability management, quarterly scans | $5,000–$100,000/month from payment brands |
+| CCPA/CPRA | California residents' personal information | Right to know, delete, opt-out of sale, no discrimination, 45-day response window | \$2,500 per violation, \$7,500 per intentional violation |
+| PCI DSS | Credit card processing/storage | Network segmentation, encryption, access control, vulnerability management, quarterly scans | \$5,000–\$100,000/month from payment brands |
 | SOC 2 | B2B SaaS / enterprise customers | Trust Service Criteria (security, availability, confidentiality, processing integrity, privacy) | No direct penalty — loss of enterprise deals |
 | Multi-Regulation | Multiple of above | Union of all applicable requirements; strictest standard wins on conflicts | Compounding risk |
 

@@ -105,7 +105,7 @@ Pricing framework:
 
 | Tier | Monthly | Annual (discount) | Target Segment | Margin |
 |------|---------|-------------------|----------------|--------|
-| Free | $0 | - | Lead generation, product-led growth | Negative |
+| Free | \$0 | - | Lead generation, product-led growth | Negative |
 | Starter | $X | $X×10 (17% off) | Solo/small teams, price-sensitive | 60%+ |
 | Pro | $Y | $Y×10 (17% off) | Growing teams, power users | 70%+ |
 | Enterprise | Custom | Annual only | Large orgs, compliance needs | 80%+ |
@@ -152,10 +152,10 @@ Break-even point:
   = number of customers needed to cover all costs
 
 Example:
-  Fixed costs:     $15,000/month (team + tools)
-  ARPU:            $49/month
-  Variable cost:   $5/customer/month (infra + Stripe fees)
-  Break-even:      $15,000 / ($49 - $5) = 341 customers
+  Fixed costs:     \$15,000/month (team + tools)
+  ARPU:            \$49/month
+  Variable cost:   \$5/customer/month (infra + Stripe fees)
+  Break-even:      \$15,000 / (\$49 - \$5) = 341 customers
 ```
 
 ## Step 7: Runway Calculation
@@ -168,10 +168,10 @@ Monthly burn rate:
   = Total monthly expenses - Total monthly revenue
 
 Example:
-  Cash: $200,000
-  Monthly expenses: $25,000
-  Monthly revenue: $8,000
-  Burn rate: $17,000
+  Cash: \$200,000
+  Monthly expenses: \$25,000
+  Monthly revenue: \$8,000
+  Burn rate: \$17,000
   Runway: 11.8 months
 
 Rules of thumb:
@@ -254,7 +254,7 @@ For comparison against industry norms:
 
 | Metric | Seed | Series A | Series B+ |
 |--------|------|----------|-----------|
-| MRR | $10-50K | $100-500K | $1M+ |
+| MRR | \$10-50K | \$100-500K | \$1M+ |
 | Growth (MoM) | 15-20% | 10-15% | 5-10% |
 | Churn (monthly) | 5-7% | 3-5% | 1-3% |
 | LTV:CAC | 2-3x | 3-5x | 5x+ |

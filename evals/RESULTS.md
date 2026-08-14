@@ -1,14 +1,7 @@
 # Eval Results (generated — do not edit)
 
-Latest sweep: `2026-08-14-1328` mode=`skill`
+Latest sweep: `2026-08-14-1413` mode=`model`
 
 | key (task\|backend\|arm) | pass rate | n |
 |---|---|---|
-| t07-hotfix-worktree|claude|off | 33% | 3 |
-| t07-hotfix-worktree|claude|on | 100% | 3 |
-
-## Skill on/off deltas
-
-| skill | Δ pass rate |
-|---|---|
-| git-worktree-manager | +67% |
+| t16-substitution-integrity|claude|on | 100% | 1 |

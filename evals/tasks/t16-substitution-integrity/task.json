@@ -1,0 +1,12 @@
+{
+  "id": "t16-substitution-integrity",
+  "title": "Skill-body dollar signs survive argument substitution",
+  "source": "statledger canary F-1 (2026-08-14) \u2014 loader substituted $N with invocation args, corrupting currency and shell content in 17 skills",
+  "skills": [
+    "finops"
+  ],
+  "prompt": "/subst-fixture alpha beta gamma",
+  "fixtures": {
+    ".claude/skills/subst-fixture/SKILL.md": "---\nname: subst-fixture\ndescription: \"Delivery-integrity fixture \u2014 asserts literal dollars survive skill loading\"\nargument-hint: \"[words]\"\n---\n\nWrite a file named DELIVERED.txt whose entire content is EXACTLY the following three lines, character-for-character:\n\nPRICE=\\$0.15\nSHELL=\\$1\nCAP=\\$2,000\n"
+  }
+}

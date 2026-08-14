@@ -163,6 +163,16 @@ def score_skill(path):
     if TIME_SENSITIVE_RE.search(body):
         issues.append(("LOW", "time-sensitive phrasing in body")); score -= 0.25
 
+    # --- argument-substitution safety (T37): the harness substitutes bare
+    # $0-$9 (and $ARGUMENTS) in skill bodies with the user's invocation args.
+    # Literal dollars (currency, shell snippets) MUST be escaped \$N or they
+    # are silently corrupted at load ($0.15 -> "<first-arg>.15"). Found live
+    # by the statledger canary, 2026-08-14 (F-1, blocker).
+    for m in re.finditer(r"(?<![\\$])\$(?=[0-9])", body):
+        ln = body[:m.start()].count("\n") + 1
+        issues.append(("HIGH", f"unescaped $N at body line {ln} — harness substitutes invocation args; escape as \\$ (T37)")); score -= 1.5
+        break  # one flag per file is enough
+
     # --- guardrail honesty (T36): a skill that CLAIMS to be read-only must
     # enforce it via disallowed-tools. Prose is not a control. Advisory
     # recurring-mode guardrails (labeled "advisory") are exempt by design.

@@ -18,6 +18,7 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 | T35 | ✅ Done | Hook verified fail-open with malformed input. First SCORECARD.md honest: effectiveness "no data", fleet 10 drifted |
 | T36 | ✅ Done | 14 prose-only flags triaged: 1 enforced (env-secrets-manager — was allowed-tools-as-sandbox), 6 labeled advisory (per-mode restriction inexpressible), 7 false positives cleared. Register: docs/GUARDRAILS.md |
 | T32 | ✅ Done | Skill ships at 105 lines / 338-char trigger |
+| T37 | ✅ Done | Canary F-1 (blocker, found in soak iter 3–4): harness substitutes bare $0–$9 in skill bodies with invocation args, corrupting currency/shell content in 17 skills (246 occurrences). Fixed by escaping \$N library-wide; audit lint + live eval fixture t16 added; behavior empirically mapped ($N substitutes, \$N/${...}/$$/$UPPER safe). Ships v7.5.1 |
 | T33 | ⏳ Deferred | Depends on T25 (Wave 2.5 exporter) — unbuilt. Runs with Wave 2.5 |
 
 Captured 2026-08-13 from two evaluations: (a) a self-assessment of the library against Anthropic's published Agent Skills / context-engineering guidance, and (b) a census of six consuming projects (Level5, initiated-recruiting, statledger, Finality, DistrictZero, NationalLacrosseTourApp). Theme: **the library measures conformance, not effectiveness, and the fleet has drifted.** Every quality signal today is a proxy (frontmatter validity, char budgets, line counts); nothing measures whether a skill improves output, and the consuming projects prove the gap.

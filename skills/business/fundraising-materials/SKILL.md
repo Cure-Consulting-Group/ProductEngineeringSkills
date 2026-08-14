@@ -64,7 +64,7 @@ SLIDE 2 — PROBLEM
   Vendly: "LATAM merchants lose 12% of revenue to fragmented payment infrastructure"
   Autograph: "Physicians spend 2+ hours daily on documentation instead of patients"
   The Initiated: "Women's basketball recruits have zero data-driven tools for college selection"
-  Antigravity: "Enterprises spend $2M+/year on manual agent orchestration that fails at scale"
+  Antigravity: "Enterprises spend \$2M+/year on manual agent orchestration that fails at scale"
   TwntyHoops: "Basketball culture content is fragmented — no single platform owns the space"
 
 SLIDE 3 — SOLUTION
@@ -77,17 +77,17 @@ SLIDE 4 — MARKET SIZE
   TAM → SAM → SOM with cited sources
   Bottom-up calculation preferred over top-down
   Show the wedge: what you capture first, then expand into
-  Rule: if your TAM is under $1B, reframe the market. If over $100B, you're too broad.
+  Rule: if your TAM is under \$1B, reframe the market. If over \$100B, you're too broad.
 
   LATAM additions (Vendly):
-    - Latin America digital payments TAM ($500B+ and growing 25% YoY)
+    - Latin America digital payments TAM (\$500B+ and growing 25% YoY)
     - Merchant OS opportunity within payment infrastructure
     - Country-specific entry strategy (Mexico first? Brazil? Colombia?)
     - Regulatory landscape (Banco de Mexico, PIX, local payment rails)
 
   Healthcare additions (Autograph):
-    - Healthcare IT TAM ($300B+)
-    - Clinical documentation sub-market ($5B+)
+    - Healthcare IT TAM (\$300B+)
+    - Clinical documentation sub-market (\$5B+)
     - Regulatory pathway: FDA status (if applicable), HIPAA, BAA chain
     - Reimbursement impact: how documentation quality affects revenue cycle
 
@@ -161,13 +161,13 @@ SLIDE 12 — THE ASK
   Milestones this capital unlocks (next fundraise trigger)
 
   Example:
-    Raising: $2M Seed (SAFE, $10M cap)
+    Raising: \$2M Seed (SAFE, \$10M cap)
     Use of funds:
       50% — Engineering (hire 3 engineers, ship v2)
       25% — Go-to-market (first sales hire, initial marketing)
       15% — Operations (legal, compliance, infrastructure)
       10% — Buffer (always have buffer)
-    Milestones: $50K MRR, 500 active merchants, Series A ready in 18 months
+    Milestones: \$50K MRR, 500 active merchants, Series A ready in 18 months
 
 OPTIONAL SLIDES (use 1-2 max):
   - Product roadmap (next 6-12 months, not longer)
@@ -207,7 +207,7 @@ TL;DR (3 bullets maximum)
   - [One ask — make it actionable]
 
 HIGHLIGHTS
-  1. [Win with metric] — e.g., "Hit $12K MRR, up 34% MoM"
+  1. [Win with metric] — e.g., "Hit \$12K MRR, up 34% MoM"
   2. [Win with context] — e.g., "Signed first enterprise pilot with [Hospital Name]"
   3. [Win with milestone] — e.g., "Shipped v2.0 with AI scribe, 95% accuracy in testing"
 
@@ -329,9 +329,9 @@ PRE-MONEY / POST-MONEY CALCULATION
   Investor ownership = Investment / Post-money
 
   Example:
-    Raising $2M on $10M pre-money
-    Post-money = $12M
-    Investor ownership = $2M / $12M = 16.67%
+    Raising \$2M on \$10M pre-money
+    Post-money = \$12M
+    Investor ownership = \$2M / \$12M = 16.67%
 
 SAFE CONVERSION
   SAFEs convert at the LOWER of:
@@ -339,11 +339,11 @@ SAFE CONVERSION
     2. Discount rate applied to priced round price
 
   Example:
-    SAFE: $500K at $8M cap
-    Priced round: $2M at $12M pre-money ($14M post)
-    Price per share at round: $14M / 10M shares = $1.40
-    Price per share at cap: $8M / 10M shares = $0.80 ← lower, this applies
-    SAFE converts to: $500K / $0.80 = 625,000 shares
+    SAFE: \$500K at \$8M cap
+    Priced round: \$2M at \$12M pre-money (\$14M post)
+    Price per share at round: \$14M / 10M shares = \$1.40
+    Price per share at cap: \$8M / 10M shares = \$0.80 ← lower, this applies
+    SAFE converts to: \$500K / \$0.80 = 625,000 shares
 
 DILUTION MODELING
   For each scenario, model:
@@ -374,10 +374,10 @@ WATERFALL ANALYSIS
   Model returns at different exit values:
   | Exit Value | Preferred Return | Common Shares | Founder Payout | Investor Payout |
   |------------|-----------------|---------------|----------------|-----------------|
-  | $10M | $X | $X | $X | $X |
-  | $25M | $X | $X | $X | $X |
-  | $50M | $X | $X | $X | $X |
-  | $100M | $X | $X | $X | $X |
+  | \$10M | $X | $X | $X | $X |
+  | \$25M | $X | $X | $X | $X |
+  | \$50M | $X | $X | $X | $X |
+  | \$100M | $X | $X | $X | $X |
 
   Key terms that affect waterfall:
     - Liquidation preference (1x non-participating is standard — reject >1x or participating)

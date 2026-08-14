@@ -59,19 +59,19 @@ MODEL ROUTING FRAMEWORK
 Tier 1 — Small/Fast (for simple tasks):
   Models: Claude Haiku, GPT-4o-mini, Gemini Flash
   Use for: Classification, extraction, formatting, short Q&A
-  Cost: ~$0.25/M input, ~$1/M output tokens
+  Cost: ~\$0.25/M input, ~\$1/M output tokens
   Latency: <500ms typical
 
 Tier 2 — Standard (for most tasks):
   Models: Claude Sonnet, GPT-4o, Gemini Pro
   Use for: Content generation, summarization, analysis, RAG synthesis
-  Cost: ~$3/M input, ~$15/M output tokens
+  Cost: ~\$3/M input, ~\$15/M output tokens
   Latency: 1-3s typical
 
 Tier 3 — Large/Powerful (for complex tasks):
   Models: Claude Opus, o1, Gemini Ultra
   Use for: Complex reasoning, code generation, multi-step analysis
-  Cost: ~$15/M input, ~$75/M output tokens
+  Cost: ~\$15/M input, ~\$75/M output tokens
   Latency: 5-30s typical
 
 Router Implementation:
@@ -207,7 +207,7 @@ Dashboard Panels:
 Alerts:
   - Daily spend >120% of average → Slack notification
   - Daily spend >200% of average → page on-call
-  - Single user >$50/day in LLM costs → investigate (possible abuse or bug)
+  - Single user >\$50/day in LLM costs → investigate (possible abuse or bug)
   - Cache hit rate drops below 30% → investigate (cache invalidation issue?)
   - Average cost per request increases >50% → check model routing
 ```

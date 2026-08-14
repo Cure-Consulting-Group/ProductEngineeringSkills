@@ -129,8 +129,8 @@ If your workload is predictable, commit for savings:
 
 Resource              On-Demand      1-Year CUD    3-Year CUD
 ──────────────────────────────────────────────────────────────
-Cloud Run CPU         $0.00002400    -17%          -40%
-Cloud Run Memory      $0.00000250    -17%          -40%
+Cloud Run CPU         \$0.00002400    -17%          -40%
+Cloud Run Memory      \$0.00000250    -17%          -40%
 Compute Engine        varies         -37%          -55%
 Cloud SQL             varies         -25%          -52%
 
@@ -181,12 +181,12 @@ Route by complexity to minimize cost:
 
 Tier        Model              Cost/1M tokens   Use For
 ──────────────────────────────────────────────────────────────────
-Fast        GPT-4o-mini        $0.15 input      Classification, extraction, simple Q&A
-            Claude Haiku       $0.25 input      Validation, formatting, summarization
-Standard    GPT-4o             $2.50 input      Most features, content generation
-            Claude Sonnet      $3.00 input      Code generation, analysis
-Premium     GPT-4              $30.00 input     Complex reasoning (rarely needed)
-            Claude Opus        $15.00 input     Critical decisions, legal/financial
+Fast        GPT-4o-mini        \$0.15 input      Classification, extraction, simple Q&A
+            Claude Haiku       \$0.25 input      Validation, formatting, summarization
+Standard    GPT-4o             \$2.50 input      Most features, content generation
+            Claude Sonnet      \$3.00 input      Code generation, analysis
+Premium     GPT-4              \$30.00 input     Complex reasoning (rarely needed)
+            Claude Opus        \$15.00 input     Critical decisions, legal/financial
 
 Implementation:
   1. Classify request complexity at the edge (use fast tier model)
@@ -278,10 +278,10 @@ Custom anomaly detection (Cloud Function):
 ```
 Environment      Monthly Cap    Enforcement
 ──────────────────────────────────────────────────────────────────
-Development      $50            Auto-shutdown resources at cap
-Staging          $200           Alert at 80%, review at 100%
-Production       $2,000+        Alert tiers (50/80/100/120%)
-Shared services  $100           Alert at 80%
+Development      \$50            Auto-shutdown resources at cap
+Staging          \$200           Alert at 80%, review at 100%
+Production       \$2,000+        Alert tiers (50/80/100/120%)
+Shared services  \$100           Alert at 80%
 
 Enforcement:
   - Dev environments: Cloud Scheduler job to shut down nightly
@@ -297,7 +297,7 @@ gcloud scheduler jobs create http dev-shutdown \
 
 ### Approval Workflow for Cost Increases
 ```
-Any change that increases monthly cost by >$100 requires:
+Any change that increases monthly cost by >\$100 requires:
   1. Cost estimate in the PR description
   2. Approval from engineering lead
   3. Updated budget if needed
@@ -318,11 +318,11 @@ Track cost-per-feature monthly:
 
 Feature              Monthly Cost    Users     Cost/User    Trend
 ──────────────────────────────────────────────────────────────────
-Authentication       $12             10,000    $0.001       Stable
-Chat (AI-powered)    $340            2,000     $0.170       Growing
-Image uploads        $85             5,000     $0.017       Stable
-Search               $45             8,000     $0.006       Stable
-Notifications        $20             10,000    $0.002       Stable
+Authentication       \$12             10,000    \$0.001       Stable
+Chat (AI-powered)    \$340            2,000     \$0.170       Growing
+Image uploads        \$85             5,000     \$0.017       Stable
+Search               \$45             8,000     \$0.006       Stable
+Notifications        \$20             10,000    \$0.002       Stable
 
 Use this to:
   - Identify features that cost more than they're worth

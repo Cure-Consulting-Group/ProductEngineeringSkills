@@ -71,8 +71,8 @@ Always store chunk metadata: `source_id`, `doc_id`, `parent_id`, `position`, `cr
 
 | Model | Dim | Cost | When |
 |-------|-----|------|------|
-| **OpenAI text-embedding-3-small** | 1536 (truncatable) | ~$0.02/M tokens | Default. Cheap, strong English, dimensionality reduction supported. |
-| **OpenAI text-embedding-3-large** | 3072 (truncatable) | ~$0.13/M tokens | When you've tuned everything else and need a recall bump |
+| **OpenAI text-embedding-3-small** | 1536 (truncatable) | ~\$0.02/M tokens | Default. Cheap, strong English, dimensionality reduction supported. |
+| **OpenAI text-embedding-3-large** | 3072 (truncatable) | ~\$0.13/M tokens | When you've tuned everything else and need a recall bump |
 | **Voyage voyage-3 / voyage-large** | 1024–1536 | mid | Best-in-class for English RAG (per public benchmarks); strong code variant |
 | **Cohere embed-v3** | 1024 | mid | Multilingual, supports input-type hints (query vs document) |
 | **BGE / E5 / nomic-embed (self-host)** | 384–1024 | infra cost only | Privacy-constrained corpora, high volume, predictable cost |
@@ -122,7 +122,7 @@ BM25 alone misses paraphrase. Vector alone misses exact identifiers, codes, name
 ### Reranking
 
 Almost always worth it past baseline:
-- **Cohere Rerank v3**: managed, good English, ~$2/1k searches
+- **Cohere Rerank v3**: managed, good English, ~\$2/1k searches
 - **bge-reranker-v2-m3**: self-host, multilingual, free at infra cost
 - **cross-encoder/ms-marco-MiniLM-L-12-v2**: small, fast, classic baseline
 
@@ -222,12 +222,12 @@ Cure standard: re-run eval set weekly in production against the live index. If R
 ### Cost Model (Per Query, Estimate Before Building)
 
 ```
-embed_query:    1 call × small model     ~$0.00002
-vector_search:  1 query                   ~$0.00010 (managed) / $0 (self-host)
-rerank:         1 call × 50 candidates    ~$0.002 (Cohere)
-LLM_answer:     ~2K input + 500 output    $0.005-0.030 depending on model
+embed_query:    1 call × small model     ~\$0.00002
+vector_search:  1 query                   ~\$0.00010 (managed) / \$0 (self-host)
+rerank:         1 call × 50 candidates    ~\$0.002 (Cohere)
+LLM_answer:     ~2K input + 500 output    \$0.005-0.030 depending on model
 
-per-query total: typically $0.01–0.04
+per-query total: typically \$0.01–0.04
 break-even self-host vs managed: ~30K queries/day
 ```
 

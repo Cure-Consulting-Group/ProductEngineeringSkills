@@ -57,7 +57,7 @@ Category              Examples                                    Driver
 ──────────────────────────────────────────────────────────────────────────────
 Cloud infrastructure  Firebase, GCP, AWS, Vercel                   Users/requests
 AI API costs          OpenAI, Anthropic, Google AI                 Tokens/requests
-Payment processing    Stripe fees (2.9% + $0.30)                   Transaction volume
+Payment processing    Stripe fees (2.9% + \$0.30)                   Transaction volume
 Marketing             Ads, content, events, sponsorships           Campaign decisions
 Contractors           Design, specialized engineering, legal        Project-based
 Travel                Conferences, client meetings, recruiting     As needed
@@ -103,12 +103,12 @@ PER-PRODUCT BURN
   Example:
   | Product | Direct Costs | Shared Allocation | Overhead Allocation | Total Burn | Revenue | Net Burn |
   |---------|-------------|-------------------|--------------------:|------------|---------|----------|
-  | Vendly | $8,000 | $3,000 | $1,500 | $12,500 | $4,000 | $8,500 |
-  | Autograph | $12,000 | $4,000 | $1,500 | $17,500 | $2,000 | $15,500 |
-  | The Initiated | $5,000 | $2,000 | $1,500 | $8,500 | $500 | $8,000 |
-  | Antigravity | $15,000 | $5,000 | $1,500 | $21,500 | $1,000 | $20,500 |
-  | TwntyHoops | $4,000 | $1,500 | $1,500 | $7,000 | $3,000 | $4,000 |
-  | TOTAL | $44,000 | $15,500 | $7,500 | $67,000 | $10,500 | $56,500 |
+  | Vendly | \$8,000 | \$3,000 | \$1,500 | \$12,500 | \$4,000 | \$8,500 |
+  | Autograph | \$12,000 | \$4,000 | \$1,500 | \$17,500 | \$2,000 | \$15,500 |
+  | The Initiated | \$5,000 | \$2,000 | \$1,500 | \$8,500 | \$500 | \$8,000 |
+  | Antigravity | \$15,000 | \$5,000 | \$1,500 | \$21,500 | \$1,000 | \$20,500 |
+  | TwntyHoops | \$4,000 | \$1,500 | \$1,500 | \$7,000 | \$3,000 | \$4,000 |
+  | TOTAL | \$44,000 | \$15,500 | \$7,500 | \$67,000 | \$10,500 | \$56,500 |
 
 BURN RATE TREND
   Track month-over-month:
@@ -141,7 +141,7 @@ OPTIMISTIC (don't count on this)
   Assumption: a key bet pays off (new customer segment, viral growth, enterprise deal)
 
 ZERO REVENUE (survival mode)
-  Revenue: $0 (all customers churn or product fails)
+  Revenue: \$0 (all customers churn or product fails)
   Costs: current level (before any cuts)
   Assumption: how long can we survive with zero income?
 
@@ -151,7 +151,7 @@ SCENARIO TABLE
 | Conservative | $X | $X | $X | X |
 | Base Case | $X | $X | $X | X |
 | Optimistic | $X | $X | $X | X |
-| Zero Revenue | $X | $0 | $X | X |
+| Zero Revenue | $X | \$0 | $X | X |
 
 SCENARIO PROJECTIONS (12-month)
 For each scenario, project month-by-month:
@@ -180,17 +180,17 @@ PER-PRODUCT BREAK-EVEN
   Example:
   | Product | Monthly Cost (allocated) | Current Revenue | Gap | Break-Even Customers |
   |---------|------------------------|-----------------|-----|---------------------|
-  | Vendly | $12,500 | $4,000 | -$8,500 | 250 merchants @ $50 |
-  | Autograph | $17,500 | $2,000 | -$15,500 | 35 clinics @ $500 |
-  | The Initiated | $8,500 | $500 | -$8,000 | 160 recruits @ $53 |
-  | Antigravity | $21,500 | $1,000 | -$20,500 | 22 enterprises @ $1,000 |
-  | TwntyHoops | $7,000 | $3,000 | -$4,000 | varies (ads + events) |
+  | Vendly | \$12,500 | \$4,000 | -\$8,500 | 250 merchants @ \$50 |
+  | Autograph | \$17,500 | \$2,000 | -\$15,500 | 35 clinics @ \$500 |
+  | The Initiated | \$8,500 | \$500 | -\$8,000 | 160 recruits @ \$53 |
+  | Antigravity | \$21,500 | \$1,000 | -\$20,500 | 22 enterprises @ \$1,000 |
+  | TwntyHoops | \$7,000 | \$3,000 | -\$4,000 | varies (ads + events) |
 
 PORTFOLIO BREAK-EVEN
-  Total monthly cost: $67,000
-  Total monthly revenue: $10,500
-  Gap: $56,500
-  Portfolio break-even: need $67,000/month total revenue across all products
+  Total monthly cost: \$67,000
+  Total monthly revenue: \$10,500
+  Gap: \$56,500
+  Portfolio break-even: need \$67,000/month total revenue across all products
 
 TIME TO BREAK-EVEN (at current growth rates)
   Calculate for each scenario:
@@ -204,7 +204,7 @@ SENSITIVITY ANALYSIS
 
   | Change | Break-Even Impact |
   |--------|------------------|
-  | Add 1 engineer ($12K/mo) | +X months to break-even |
+  | Add 1 engineer (\$12K/mo) | +X months to break-even |
   | Cut 1 engineer | -X months to break-even |
   | Double marketing spend | +X months (if CAC payback > 6 months) |
   | 50% revenue acceleration | -X months to break-even |
@@ -221,44 +221,44 @@ TIER 1 — EASY WINS (implement this week, minimal disruption)
 
   Action                               Estimated Monthly Savings
   ──────────────────────────────────────────────────────────────
-  Audit and cancel unused SaaS         $200-1,000
-  Downgrade dev/staging environments   $100-500
-  Remove unused cloud resources        $100-500
-  Switch to annual billing (savings)   $100-300
-  Optimize AI model routing            $200-2,000
+  Audit and cancel unused SaaS         \$200-1,000
+  Downgrade dev/staging environments   \$100-500
+  Remove unused cloud resources        \$100-500
+  Switch to annual billing (savings)   \$100-300
+  Optimize AI model routing            \$200-2,000
     (use Haiku/4o-mini for simple tasks instead of Opus/GPT-4)
-  Enable Firebase offline caching      $50-200 (reduced reads)
-  Delete unused Cloud Functions         $50-100
+  Enable Firebase offline caching      \$50-200 (reduced reads)
+  Delete unused Cloud Functions         \$50-100
 
-  Total Tier 1 potential: $800-4,600/month
+  Total Tier 1 potential: \$800-4,600/month
 
 TIER 2 — MODERATE EFFORT (implement this month, some process change)
 
   Action                               Estimated Monthly Savings
   ──────────────────────────────────────────────────────────────
-  Implement AI response caching        $500-3,000
-  Right-size Cloud Function memory     $200-1,000
-  Reduce marketing spend to            $1,000-5,000
+  Implement AI response caching        \$500-3,000
+  Right-size Cloud Function memory     \$200-1,000
+  Reduce marketing spend to            \$1,000-5,000
     highest-ROI channels only
-  Renegotiate vendor contracts         $200-1,000
-  Move from per-seat to team plans     $100-500
-  Consolidate monitoring/observability  $100-300
-  Reduce CI/CD build minutes           $50-200
+  Renegotiate vendor contracts         \$200-1,000
+  Move from per-seat to team plans     \$100-500
+  Consolidate monitoring/observability  \$100-300
+  Reduce CI/CD build minutes           \$50-200
 
-  Total Tier 2 potential: $2,150-11,000/month
+  Total Tier 2 potential: \$2,150-11,000/month
 
 TIER 3 — HARD DECISIONS (implement if runway < 6 months)
 
   Action                               Estimated Monthly Savings
   ──────────────────────────────────────────────────────────────
-  Reduce headcount (last resort)       $8,000-15,000 per person
-  Pause hiring for open roles          $10,000-15,000 per role
-  Sunset underperforming product       $5,000-20,000
-  Reduce founder compensation          $2,000-10,000
-  Close office / go fully remote       $2,000-5,000
-  Defer contractor work                $3,000-10,000
+  Reduce headcount (last resort)       \$8,000-15,000 per person
+  Pause hiring for open roles          \$10,000-15,000 per role
+  Sunset underperforming product       \$5,000-20,000
+  Reduce founder compensation          \$2,000-10,000
+  Close office / go fully remote       \$2,000-5,000
+  Defer contractor work                \$3,000-10,000
 
-  Total Tier 3 potential: $30,000-75,000/month
+  Total Tier 3 potential: \$30,000-75,000/month
 
 NEVER CUT:
   - Security and compliance tooling (breach costs >> tool costs)
