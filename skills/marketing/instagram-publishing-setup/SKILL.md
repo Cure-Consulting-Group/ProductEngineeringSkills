@@ -176,7 +176,7 @@ Needs **only the token** — no app secret. Run weekly so several failures are s
 |---|---|
 | `scripts/verify_publishing_setup.py` | Read-only end-to-end check of one brand's setup: secret readable, token valid, account type publishable, publishing quota reachable, bucket private. Never publishes and never prints the token. `--json` for CI. |
 
-The checker holds itself to the rule above: the token reaches `curl` through a config file on **stdin**, never argv, so it stays out of `ps` on shared and CI machines. Hold anything you build to the same line.
+The checker holds itself to the rule above: the token reaches `curl` through a config file on **stdin**, never argv, so it stays out of `ps` on shared and CI machines. Error text is redacted before it is printed, because the refresh endpoint carries the token in its query string and an API that echoes the request back would otherwise put it in your CI log. Hold anything you build to the same line.
 
 ```bash
 python3 scripts/verify_publishing_setup.py --project <GCP_PROJECT> \

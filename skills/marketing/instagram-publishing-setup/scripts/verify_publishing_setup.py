@@ -46,7 +46,20 @@ def curl_quote(value):
     return '"%s"' % value.replace("\\", "\\\\").replace('"', '\\"')
 
 
-def get_json(url, token=None):
+def redact(text, secret):
+    """Strip a secret out of text before it can reach stdout or a log.
+
+    Error text is built from the response body, and the refresh endpoint
+    carries the token in its query string — so an API that echoes the request
+    back would otherwise print the token. Redact before truncating, or a
+    partial token survives at the cut.
+    """
+    if secret and text:
+        return text.replace(secret, "***REDACTED***")
+    return text
+
+
+def get_json(url, token=None, secret_value=None):
     """GET a URL with curl and parse JSON. Returns (data, error_text).
 
     curl rather than urllib: it uses the system trust store, so this keeps
@@ -55,7 +68,10 @@ def get_json(url, token=None):
     The URL and any token go to curl through a config file on stdin, never
     argv: a token in a command argument is readable by any user via `ps`,
     which is the exposure this skill tells you to avoid everywhere else.
+
+    Error text is redacted, so a returned message is always safe to print.
     """
+    secret_value = secret_value or token
     if not shutil.which("curl"):
         return None, "curl not found on PATH"
     config = [
@@ -74,9 +90,10 @@ def get_json(url, token=None):
     try:
         data = json.loads(body)
     except ValueError:
-        return None, "HTTP %s — response was not JSON: %s" % (code, body[:200])
+        safe = redact(body, secret_value)
+        return None, "HTTP %s — response was not JSON: %s" % (code, safe[:200])
     if code and not code.startswith("2"):
-        return None, "HTTP %s %s" % (code, body[:300])
+        return None, "HTTP %s %s" % (code, redact(body, secret_value)[:300])
     return data, None
 
 
@@ -85,9 +102,8 @@ def check_token(project, secret):
                      "--secret", secret, "--project", project])
     if rc != 0 or not token:
         raise CheckFailed(
-            "could not read secret '%s' in project '%s'" % (secret, project),
-            )
-    return token, "secret '%s' readable (%d chars, value not shown)" % (secret, len(token))
+            "could not read secret '%s' in project '%s'" % (secret, project))
+    return token
 
 
 def check_account(token):
@@ -119,7 +135,7 @@ def check_refresh(token):
     """Opt-in: consumes a refresh and returns a NEW token, invalidating the clock."""
     url = REFRESH_URL + "?" + urllib.parse.urlencode(
         {"grant_type": "ig_refresh_token", "access_token": token})
-    data, err = get_json(url)
+    data, err = get_json(url, secret_value=token)
     secs = (data or {}).get("expires_in", 0)
     try:
         secs = int(secs)
@@ -172,8 +188,9 @@ def main():
         results.append({"check": name, "status": "pass" if ok else "fail", "detail": detail})
 
     try:
-        token, detail = check_token(args.project, args.secret)
-        record("token_stored", True, detail)
+        token = check_token(args.project, args.secret)
+        record("token_stored", True, "secret '%s' readable (%d chars, value not shown)"
+               % (args.secret, len(token)))
 
         me, detail = check_account(token)
         record("account", True, detail)
