@@ -8,7 +8,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- |
 | Plugin | cure-product-engineering |
 | Version | 7.6.0 |
-| Skills | 82 |
+| Skills | 88 |
 | Agents | 39 |
 | Personas | 4 |
 | Hooks (entries) | 17 |
@@ -21,17 +21,22 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 ## 2. Skills
 
 
-### Business (7)
+### Business (12)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
+| bid-decision | Make a disciplined go/no-go call on a solicitation — kill criteria, weighted scorecard, win probability, and pursuit economics | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 | burn-rate-tracker | Model burn rates, runway scenarios, break-even analysis, and cash flow projections for multi-product venture studios | Read, Grep, Glob, WebSearch |
+| capture-management | Build and qualify a public-sector pipeline — opportunity sourcing, target profile, pre-RFP positioning, teaming, past performance | Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch |
 | engineering-cost-model | Engineering cost estimation — developer hours, infrastructure spend (Firebase/GCP/AWS), build-vs-buy analysis, and project budgeting for internal planning | Read, Grep, Glob, WebSearch |
 | finops | Optimize cloud costs — budget alerts, resource right-sizing, usage analysis, FinOps practices, and cost allocation for Firebase and GCP | default |
 | fundraising-materials | Generate pitch decks, investor updates, data room checklists, cap table scenarios, and fundraising pipeline management for venture-backed startups | Read, Grep, Glob, WebSearch |
 | investor-reporting | Generate investor updates, board decks, portfolio financial reports, cap table scenarios, runway modeling, and fundraising pipeline tracking | default |
 | proposal-generator | Generate consulting proposals and SOWs — project scoping, milestone-based pricing, deliverable definitions, and engagement structure | default |
+| public-sector-contracting | Navigate government contract terms — liability, IP, termination for convenience, non-appropriation, insurance, exceptions strategy | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
+| rfp-evaluation | Evaluate an RFP/RFQ/ITB — extract every requirement, build the compliance matrix, map the scoring rubric to effort, track addenda | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 | saas-financial-model | Model unit economics, MRR/ARR projections, pricing tiers, runway, and break-even analysis | Read, Grep, Glob, WebSearch |
+| technical-estimation | Build defensible software estimates with explicit uncertainty — decomposition, PERT, reference-class forecasting, risk contingency | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 
 
 ### Engineering (40)
@@ -97,12 +102,13 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | legal-doc-scaffold | Generate Terms of Service, Privacy Policy, SOW, and NDA scaffolds with attorney disclaimer | default |
 
 
-### Marketing (5)
+### Marketing (6)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
 | go-to-market | Pre-launch planning — positioning, channel strategy, pricing, launch timeline, and distribution playbooks for new products or major feature releases | default |
 | growth-engineering | Build growth systems — activation funnels, referral programs, lifecycle automation, cohort analysis, and product-led growth patterns | default |
+| instagram-publishing-setup | Connect a brand's Instagram to programmatic publishing — Meta app, permissions, tester role, long-lived token, media hosting, and the scheduler Meta doesn't provide | default |
 | product-marketing | Product voice and content marketing expert — generates platform-native content packages across Instagram, YouTube, LinkedIn, and X/Twitter for portfolio brands | default |
 | seo-content-engine | Technical SEO and content strategy for web properties — meta tags, Open Graph, JSON-LD structured data, sitemap generation, keyword research, and content calendars | default |
 | technical-blog-writer | Crafts high-impact technical blog posts modeled after Netflix/Uber engineering blogs, translated for business owners. Use when you need to explain complex engineering feats using the 'Famous Actor' simple-explanation tone with clear visual concepts. | default |
@@ -249,12 +255,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.6.0). 82 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.6.0). 88 skills (domain-organized), 39… |
 | SessionStart | startup | command | python3 -c " |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 82 skills, 39 agents, 4 personas. Use /cure-pr… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 88 skills, 39 agents, 4 personas. Use /cure-pr… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | PostToolUseFailure |  | command | python3 -c " |

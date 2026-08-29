@@ -1,7 +1,7 @@
 ---
 name: engineering-cost-model
 description: "Engineering cost estimation — developer hours, infrastructure spend (Firebase/GCP/AWS), build-vs-buy analysis, and project budgeting for internal planning"
-when_to_use: "Use when estimating 'how much will this cost', 'how long will this take', or evaluating build-vs-buy. NOT for client-facing SOWs (use proposal-generator). NOT for SaaS unit economics (use saas-financial-model). NOT for cloud cost optimization (use finops)."
+when_to_use: "Use when estimating 'how much will this cost', 'how long will this take', or evaluating build-vs-buy. NOT for client-facing SOWs (use proposal-generator). NOT for bid-committed estimates needing uncertainty ranges (use technical-estimation). NOT for SaaS unit economics (use saas-financial-model). NOT for cloud cost optimization (use finops)."
 argument-hint: "[project-name]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]
 ---
