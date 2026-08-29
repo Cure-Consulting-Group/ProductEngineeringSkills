@@ -1,0 +1,6 @@
+# Python bytecode — regenerated on every run, never source
+__pycache__/
+*.py[cod]
+
+# OS cruft
+.DS_Store
