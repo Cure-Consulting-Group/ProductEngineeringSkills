@@ -97,12 +97,13 @@ def get_json(url, token=None, secret_value=None):
     return data, None
 
 
-def check_token(project, secret):
+def check_token(project, secret_name):
+    """Read the token out of Secret Manager. secret_name is the entry's NAME."""
     rc, token = run(["gcloud", "secrets", "versions", "access", "latest",
-                     "--secret", secret, "--project", project])
+                     "--secret", secret_name, "--project", project])
     if rc != 0 or not token:
         raise CheckFailed(
-            "could not read secret '%s' in project '%s'" % (secret, project))
+            "could not read secret '%s' in project '%s'" % (secret_name, project))
     return token
 
 
@@ -172,8 +173,9 @@ def main():
         description="Read-only verification of a brand's Instagram publishing setup. "
                     "Never publishes; never prints the token.")
     ap.add_argument("--project", required=True, help="GCP project holding the token secret")
-    ap.add_argument("--secret", default="IG_ACCESS_TOKEN",
-                    help="Secret Manager secret name (default: IG_ACCESS_TOKEN)")
+    ap.add_argument("--secret", default="IG_ACCESS_TOKEN", dest="secret_name",
+                    help="Secret Manager entry name (default: IG_ACCESS_TOKEN). "
+                         "This is the name of the entry, never the token itself.")
     ap.add_argument("--bucket", help="Media bucket to check for private access (optional)")
     ap.add_argument("--check-refresh", action="store_true",
                     help="Also verify token lifetime. WARNING: this CONSUMES a refresh and "
@@ -188,9 +190,9 @@ def main():
         results.append({"check": name, "status": "pass" if ok else "fail", "detail": detail})
 
     try:
-        token = check_token(args.project, args.secret)
+        token = check_token(args.project, args.secret_name)
         record("token_stored", True, "secret '%s' readable (%d chars, value not shown)"
-               % (args.secret, len(token)))
+               % (args.secret_name, len(token)))
 
         me, detail = check_account(token)
         record("account", True, detail)
