@@ -105,8 +105,27 @@ jobs:
           git commit -m "chore: sync package.json version to ${{ steps.version.outputs.version }}"
           git push
 
+      # A push to main without a version bump must not touch the existing
+      # release: the tag stays at the old commit while the body would be
+      # regenerated from current main, so it would advertise content the
+      # release does not contain. See
+      # docs/postmortems/2026-08-14-advertised-version-vs-served-bits.md (F-3).
+      - name: Check whether this version is already released
+        id: relcheck
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release v${{ steps.version.outputs.version }} already exists — leaving it untouched."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create GitHub Release
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: |
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+          && steps.relcheck.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
