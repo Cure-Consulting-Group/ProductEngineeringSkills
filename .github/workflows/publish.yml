@@ -123,9 +123,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: |
-          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-          && steps.relcheck.outputs.exists == 'false'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && steps.relcheck.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
