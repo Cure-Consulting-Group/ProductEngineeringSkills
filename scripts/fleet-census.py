@@ -37,6 +37,7 @@ LIB_VERSION = PLUGIN["version"]
 SKIP_DIRS = {"ProductEngineeringSkills", "docs", "tools"}
 
 PLUGIN_CACHE = Path.home() / ".claude" / "plugins" / "cache" / "cure" / "cure-product-engineering"
+FLEET_CACHE = Path.home() / ".cure" / "telemetry" / "fleet-last.json"
 
 
 def installed_plugin_version():
@@ -151,6 +152,18 @@ def main():
 
     problems = [r for r in rows if r["drifted_count"] or r["double_install"]
                 or (r["manifest"] and r["manifest_version"] != LIB_VERSION)]
+
+    # SCORECARD's Fleet row reads this cache. Nothing wrote it, so the row was
+    # frozen at whatever ran last (v7.4.4, 2026-08-14) and silently survived
+    # every census since — a metric that cannot move is worse than "no data".
+    try:
+        FLEET_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        FLEET_CACHE.write_text(json.dumps(
+            {"library_version": LIB_VERSION, "projects": rows,
+             "problems": len(problems)}, indent=2) + "\n")
+    except OSError:
+        pass  # never fail a census over its own cache
+
     if args.json:
         print(json.dumps({"library_version": LIB_VERSION, "projects": rows,
                           "problems": len(problems)}, indent=2))
