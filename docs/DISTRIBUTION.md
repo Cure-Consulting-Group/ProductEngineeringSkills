@@ -37,6 +37,26 @@ churn in consuming projects, no clobbered customizations.
 **Why this is the default:** single source of truth (this repo), atomic version
 pinning, and updates are a command instead of a copy-and-merge.
 
+### Second plugin in the same marketplace: `cure-tri-lane` (opt-in)
+
+The marketplace also lists `cure-tri-lane` (source `./tri-lane`), the
+multi-vendor orchestration flow: Claude architect, Codex lanes via `codex exec`,
+Antigravity lane via `agy`, fresh-context advisor. It is a separate plugin with
+its own `tri-lane/.claude-plugin/plugin.json` and version, so installing or
+updating it never touches `cure-product-engineering`, and machines without it
+behave exactly as before.
+
+```
+/plugin install cure-tri-lane@cure        # per machine, user scope; covers every project
+```
+
+Requirements (checked at run time by `tri-lane/skills/tri-lane/scripts/lane-preflight.py`,
+never at install time): `codex` logged in with a ChatGPT plan, `agy` signed in
+with a Google AI plan, `gtimeout`. See `tri-lane/README.md`. The library's audit
+and sync scripts deliberately ignore `tri-lane/`; its version is bumped by hand
+in its own manifest, and its lane models are pinned only in
+`tri-lane/skills/tri-lane/lanes.md`.
+
 ---
 
 ## Path 2 — Vendoring (opt-in: offline or checked-in skills)

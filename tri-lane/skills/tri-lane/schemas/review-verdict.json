@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tri-Lane review verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "summary", "findings", "missing_information"],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["ship", "fix-first", "rethink"]
+    },
+    "summary": {
+      "type": "string",
+      "description": "One or two sentences. The single risk that decides the verdict, or why the change is sound."
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "file", "claim", "evidence"],
+        "properties": {
+          "severity": {"type": "string", "enum": ["P0", "P1", "P2", "P3"]},
+          "file": {"type": "string", "description": "Repo-relative path"},
+          "line": {"type": "integer", "minimum": 1},
+          "claim": {"type": "string", "description": "What is wrong, in one sentence"},
+          "evidence": {"type": "string", "description": "The exact code, rule, or command output that supports the claim. Not reasoning alone."},
+          "fix": {"type": "string", "description": "The specific change that resolves it"}
+        }
+      }
+    },
+    "missing_information": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Precisely what the reviewer needed and did not have. Empty if nothing."
+    }
+  }
+}
