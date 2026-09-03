@@ -37,6 +37,22 @@
         "testing",
         "infrastructure"
       ]
+    },
+    {
+      "name": "cure-tri-lane",
+      "source": "./tri-lane",
+      "description": "Opt-in multi-vendor orchestration: Claude architect, Codex implementation and correctness lanes (codex exec), Antigravity system-review lane (agy) in read-only worktrees, and a fresh-context advisor. Uses existing ChatGPT and Google logins; independent of cure-product-engineering.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "orchestration",
+        "codex",
+        "antigravity",
+        "cross-vendor-review",
+        "worktrees"
+      ]
     }
   ]
 }
