@@ -49,6 +49,20 @@ def check_codex() -> dict:
     out["logged_in"] = rc == 0 and "logged in" in txt.lower()
     if not out["logged_in"]:
         out["reasons"].append("codex not logged in: run `codex login`")
+    # weekly limit percentage: Codex writes rate_limits into every session log's token_count events
+    try:
+        latest = None
+        for f in sorted((Path.home() / ".codex" / "sessions").rglob("*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)[:5]:
+            for line in f.read_text(errors="ignore").splitlines():
+                if '"token_count"' in line and '"rate_limits"' in line:
+                    latest = line
+            if latest:
+                break
+        if latest:
+            prim = (json.loads(latest).get("payload") or {}).get("rate_limits", {}).get("primary") or {}
+            out["weekly_used_percent"] = prim.get("used_percent")
+    except Exception:
+        out["weekly_used_percent"] = None
     cfg = Path.home() / ".codex" / "config.toml"
     if cfg.exists():
         text = cfg.read_text(errors="ignore")
