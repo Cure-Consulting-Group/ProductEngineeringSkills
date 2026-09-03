@@ -1,28 +1,47 @@
 #!/usr/bin/env python3
-"""lane-report: turn a lane's worktree into the report contract, with the empty-diff rule enforced.
+"""lane-report: turn a lane's worktree into the report contract, with the safety rules enforced in code.
 
-Reads the worktree, computes the diff stat, re-runs the VERIFY command(s) itself,
-and prints the report. This is the guarantee layer: an empty diff is `refused`
-no matter what the lane's final message says.
+What it enforces, in order:
+  1. Empty diff  -> STATUS refused, no matter what the lane's final message says.
+  2. FILES scope -> if --files is given and the lane touched anything outside it, or touched
+                    executable config (package.json, Makefile, conftest.py, CI, ...), VERIFY is NOT run
+                    and STATUS is partial. Lane-written code must never execute before a human-grade
+                    read of the diff decides it is safe.
+  3. VERIFY      -> re-run by this script inside `codex sandbox` (workspace-write: no network, writes
+                    confined to the worktree). Pass --unsandboxed-verify only when the architect has
+                    already read the diff and accepts the risk.
 
-Exit codes: 0 complete, 2 partial (verify failed), 3 refused (empty diff),
-4 timeout/unavailable passed via --status-hint. Python stdlib only.
+Exit codes: 0 complete, 2 partial, 3 refused, 4 timeout/unavailable (via --status-hint).
+Python stdlib only.
 
 Examples:
   python3 lane-report.py --worktree ../wt/task --lane "gpt-5.6-luna @ high" \
-      --verify "npm test" --final /tmp/lane-final.txt --objective "Add rules tests"
+      --files src/rosterService.ts --files src/__tests__/rosterService.test.ts \
+      --verify "npm test" --final /tmp/lane-final.txt --objective "Add roster service tests"
   python3 lane-report.py --worktree ../wt/task --lane "gpt-5.6-sol @ max" --status-hint timeout --json
 """
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+# Paths whose modification by a lane means VERIFY must not run automatically.
+EXEC_CONFIG = (
+    "package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Makefile", "justfile",
+    "pyproject.toml", "setup.py", "setup.cfg", "conftest.py", "pytest.ini", "tox.ini", "noxfile.py",
+    "jest.config", "vitest.config", "playwright.config", "vite.config", "webpack.config", "rollup.config",
+    "babel.config", ".babelrc", "tsconfig", "gradle", "build.gradle", "settings.gradle", "Podfile",
+    "Package.swift", "Cargo.toml", "go.mod", "Dockerfile", "docker-compose", ".husky/", ".github/",
+    ".gitlab-ci", ".circleci/", "scripts/", "bin/", ".claude/", ".agents/", ".codex/", "AGENTS.md",
+    "CLAUDE.md", "GEMINI.md", ".env", "firebase.json", ".firebaserc",
+)
 
-def sh(cmd: str | list[str], cwd: str, timeout: int, shell: bool = False) -> tuple[int, str]:
+
+def sh(cmd, cwd: str, timeout: int, shell: bool = False) -> tuple[int, str]:
     try:
         p = subprocess.run(cmd, cwd=cwd, shell=shell, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL)
         return p.returncode, (p.stdout or "") + (p.stderr or "")
@@ -37,13 +56,49 @@ def tail(text: str, n: int) -> str:
     return "\n".join(lines[-n:])
 
 
+def is_exec_config(path: str) -> bool:
+    p = path.lower()
+    base = p.rsplit("/", 1)[-1]
+    for e in EXEC_CONFIG:
+        el = e.lower()
+        if el.endswith("/"):
+            if p.startswith(el) or ("/" + el) in p:
+                return True
+        elif base == el or base.startswith(el + ".") or base.startswith(el) and el.endswith("config"):
+            return True
+    return False
+
+
+def in_scope(path: str, allowed: list[str]) -> bool:
+    for f in allowed:
+        f = f.strip().rstrip("/")
+        if path == f or path.startswith(f + "/"):
+            return True
+    return False
+
+
+def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool) -> tuple[int, str, str]:
+    """Returns (exit, output, how)."""
+    if not unsandboxed and shutil.which("codex"):
+        # cwd is the worktree; codex sandbox treats cwd as the writable workspace. (-C would require --permission-profile.)
+        argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "--", "sh", "-c", cmd]
+        rc, out = sh(argv, wt, timeout)
+        return rc, out, "codex sandbox workspace-write"
+    if not unsandboxed:
+        return 126, "codex binary not found; refusing to run VERIFY unsandboxed (pass --unsandboxed-verify to override)", "not run"
+    rc, out = sh(cmd, wt, timeout, shell=True)
+    return rc, out, "UNSANDBOXED (architect accepted the risk)"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--worktree", required=True, help="path the lane ran against")
     ap.add_argument("--lane", required=True, help='as executed, e.g. "gpt-5.6-luna @ high" or "gemini-3.8-flash-high"')
     ap.add_argument("--objective", default="", help="one-line objective from the spec")
+    ap.add_argument("--files", action="append", default=[], help="paths the spec allows the lane to touch (repeatable; dirs allowed)")
     ap.add_argument("--verify", action="append", default=[], help="VERIFY command to re-run (repeatable)")
     ap.add_argument("--verify-timeout", type=int, default=600, help="seconds per verify command (default 600)")
+    ap.add_argument("--unsandboxed-verify", action="store_true", help="run VERIFY outside codex sandbox; only after the diff has been read")
     ap.add_argument("--final", help="file holding the lane's final message")
     ap.add_argument("--status-hint", choices=["timeout", "unavailable"], help="override when the wrapper already knows the lane failed")
     ap.add_argument("--tail", type=int, default=40, help="lines of verify output to keep (default 40)")
@@ -51,31 +106,54 @@ def main() -> int:
     args = ap.parse_args()
 
     wt = str(Path(args.worktree).resolve())
-    rc, stat = sh(["git", "diff", "--stat", "HEAD"], wt, 60)
-    rc2, porcelain = sh(["git", "status", "--porcelain"], wt, 60)
+    rc_top, top = sh(["git", "rev-parse", "--show-toplevel"], wt, 30)
+    if rc_top != 0:
+        print(f"lane-report: {wt} is not a git worktree", file=sys.stderr)
+        return 4
+    rc_main, main_dir = sh(["git", "rev-parse", "--git-common-dir"], wt, 30)
+    common = str(Path(wt, main_dir.strip()).resolve()) if rc_main == 0 else ""
+    if common and str(Path(common).parent) == wt:
+        print(f"lane-report: refusing: {wt} is the main checkout, not a lane worktree", file=sys.stderr)
+        return 4
+
+    _, stat = sh(["git", "diff", "--stat", "HEAD"], wt, 60)
+    _, porcelain = sh(["git", "status", "--porcelain"], wt, 60)
+    _, names = sh(["git", "diff", "--name-only", "HEAD"], wt, 60)
+    untracked = [l[3:] for l in porcelain.splitlines() if l.startswith("??")]
+    touched = sorted({l.strip() for l in names.splitlines() if l.strip()} | set(untracked))
     changed = bool(porcelain.strip())
+
     lane_said = ""
     if args.final and Path(args.final).exists():
         lane_said = tail(Path(args.final).read_text(errors="ignore"), 3).strip()
 
     gaps: list[str] = []
     verified: list[dict] = []
+    out_of_scope = [p for p in touched if args.files and not in_scope(p, args.files)]
+    exec_cfg = [p for p in touched if is_exec_config(p)]
+
     if args.status_hint:
         status = args.status_hint
         gaps.append(f"wrapper reported {status}")
     elif not changed:
         status = "refused"
         gaps.append("empty diff with clean exit: treat as refusal, not success; check AGENTS.md pins and the spec preamble")
+    elif out_of_scope or exec_cfg:
+        status = "partial"
+        if out_of_scope:
+            gaps.append(f"VERIFY not run: lane touched files outside FILES: {out_of_scope}")
+        if exec_cfg:
+            gaps.append(f"VERIFY not run: lane touched executable config: {exec_cfg}. Read the diff; if safe, re-run with --files widened or --unsandboxed-verify")
     else:
         status = "complete"
-        for cmd in args.verify:
-            vrc, out = sh(cmd, wt, args.verify_timeout, shell=True)
-            verified.append({"command": cmd, "exit": vrc, "output_tail": tail(out, args.tail)})
-            if vrc != 0:
-                status = "partial"
         if not args.verify:
             gaps.append("no VERIFY command supplied; the report carries no evidence")
             status = "partial"
+        for cmd in args.verify:
+            vrc, out, how = run_verify(cmd, wt, args.verify_timeout, args.unsandboxed_verify)
+            verified.append({"command": cmd, "exit": vrc, "how": how, "output_tail": tail(out, args.tail)})
+            if vrc != 0:
+                status = "partial"
     if lane_said and changed and ("no changes" in lane_said.lower() or "did not modify" in lane_said.lower()):
         gaps.append("lane's final message disagrees with the diff")
 
@@ -84,7 +162,9 @@ def main() -> int:
         "STATUS": status,
         "OBJECTIVE": args.objective,
         "CHANGES": stat.strip() or "(none)",
-        "UNTRACKED": [l[3:] for l in porcelain.splitlines() if l.startswith("??")],
+        "TOUCHED": touched,
+        "OUT_OF_SCOPE": out_of_scope,
+        "EXEC_CONFIG_TOUCHED": exec_cfg,
         "VERIFIED": verified,
         "LANE_SAID": lane_said or "(no final message captured)",
         "GAPS": gaps,
@@ -97,13 +177,17 @@ def main() -> int:
         print(f"OBJECTIVE  {report['OBJECTIVE']}")
         print("CHANGES")
         print("  " + report["CHANGES"].replace("\n", "\n  "))
-        if report["UNTRACKED"]:
-            print("  untracked: " + ", ".join(report["UNTRACKED"]))
+        if untracked:
+            print("  untracked: " + ", ".join(untracked))
+        if out_of_scope:
+            print("  OUT OF SCOPE: " + ", ".join(out_of_scope))
+        if exec_cfg:
+            print("  EXEC CONFIG TOUCHED: " + ", ".join(exec_cfg))
         print("VERIFIED")
         if not verified:
             print("  (not run)")
         for v in verified:
-            print(f"  $ {v['command']}  -> exit {v['exit']}")
+            print(f"  $ {v['command']}  -> exit {v['exit']}  [{v['how']}]")
             print("  " + v["output_tail"].replace("\n", "\n  "))
         print(f"LANE SAID  {report['LANE_SAID']}")
         print("GAPS       " + ("; ".join(gaps) if gaps else "none"))

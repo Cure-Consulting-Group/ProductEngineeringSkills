@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 """PreToolUse guard for cure-tri-lane.
 
-Reads the Bash tool input (stdin JSON, falling back to $CLAUDE_TOOL_INPUT) and
-refuses lane invocations that would run without an explicit sandbox:
+Reads the Bash tool input (stdin JSON, falling back to $CLAUDE_TOOL_INPUT), splits the
+command into shell segments (including newlines), tokenises each with shlex, and refuses
+lane invocations that would run without an explicit sandbox:
 
-  codex exec ...            without -s / --sandbox      (review subcommand is exempt: read-only by design)
-  codex ... --dangerously-bypass-approvals-and-sandbox
-  agy -p / --print / --prompt without --sandbox
-  agy ... --mode accept-edits
-  agy ... --dangerously-skip-permissions
+  codex ... exec|e ...        without -s / --sandbox        (review subcommand exempt from the -s requirement)
+  codex ...                   with --dangerously-bypass-approvals-and-sandbox, --yolo, or danger-full-access
+  agy -p|--print|--prompt ... unless BOTH --mode plan AND --sandbox are present
+  agy ...                     with -y, --yolo, --approval-mode, --dangerously-skip-permissions, --mode accept-edits
 
-Exit 2 blocks the call and the message on stderr reaches Claude. Anything
-unexpected exits 0 so the hook can never break a session. Stdlib only.
+Read-only agy slash commands (/usage, /credits, /quota, /model, /models, /skills, /help) are exempt.
+
+Exit 2 blocks the call; the stderr message reaches Claude. Any unexpected error is
+written to stderr and exits 0 so the hook can never break a session. Stdlib only.
 """
 import json
 import os
 import re
+import shlex
 import sys
+
+WRAPPERS = {"gtimeout", "timeout", "env", "nice", "caffeinate", "command", "exec", "time"}
+CODEX_BYPASS = {"--dangerously-bypass-approvals-and-sandbox", "--yolo"}
+AGY_BYPASS = {"-y", "--yolo", "--dangerously-skip-permissions"}
+AGY_READONLY_SLASH = {"/usage", "/credits", "/quota", "/model", "/models", "/skills", "/help"}
 
 
 def load_command() -> str:
@@ -44,12 +52,15 @@ def refuse(msg: str) -> int:
     return 2
 
 
-WRAPPERS = {"gtimeout", "timeout", "env", "nice", "caffeinate", "command", "exec"}
+def tokens(seg: str) -> list:
+    try:
+        return shlex.split(seg, comments=True)
+    except ValueError:
+        return seg.split()
 
 
-def lead_command(seg: str) -> str:
-    """Return the program a shell segment actually runs, skipping VAR=.. prefixes and timeout/env wrappers."""
-    toks = seg.strip().split()
+def program_and_args(toks: list):
+    """Skip VAR=.. prefixes and timeout/env wrappers; return (basename, remaining args)."""
     i = 0
     while i < len(toks):
         t = toks[i]
@@ -59,47 +70,92 @@ def lead_command(seg: str) -> str:
         base = t.rsplit("/", 1)[-1]
         if base in WRAPPERS:
             i += 1
-            # skip wrapper options and a numeric duration (timeout 600 / gtimeout -k 5 600)
-            while i < len(toks) and (toks[i].startswith("-") or re.match(r"^\d+[smhd]?$", toks[i])):
+            while i < len(toks) and (toks[i].startswith("-") or re.match(r"^\d+(\.\d+)?[smhd]?$", toks[i])):
                 i += 1
             continue
-        return base
-    return ""
+        return base, toks[i + 1:]
+    return "", []
+
+
+def flag_value(args: list, flag: str):
+    for i, t in enumerate(args):
+        if t == flag and i + 1 < len(args):
+            return args[i + 1]
+        if t.startswith(flag + "="):
+            return t.split("=", 1)[1]
+    return None
+
+
+def check_codex(args: list):
+    if any(t in CODEX_BYPASS for t in args):
+        return "codex may not bypass approvals and sandbox. Use -s workspace-write or -s read-only."
+    if any("danger-full-access" in t for t in args):
+        return "codex lanes may not use danger-full-access."
+    # subcommand = first non-flag token, skipping values of root-level options that take an argument
+    sub = ""
+    skip = False
+    for t in args:
+        if skip:
+            skip = False
+            continue
+        if t in ("-c", "--config", "-m", "--model", "-C", "--cd", "-p", "--profile", "--add-dir", "-i", "--image"):
+            skip = True
+            continue
+        if t.startswith("-"):
+            continue
+        sub = t
+        break
+    if sub in ("exec", "e"):
+        is_review = "review" in args[: args.index(sub) + 3] if sub in args else False
+        if not is_review:
+            if flag_value(args, "-s") is None and flag_value(args, "--sandbox") is None:
+                return "codex exec needs an explicit sandbox: add -s workspace-write (implementer) or -s read-only (analysis). The user config defaults to danger-full-access."
+    return None
+
+
+def check_agy(args: list):
+    if any(t in AGY_BYPASS for t in args):
+        return "agy may not auto-approve in a lane (-y, --yolo, --dangerously-skip-permissions)."
+    if any(t == "--approval-mode" or t.startswith("--approval-mode=") for t in args):
+        return "agy --approval-mode is not allowed in a lane."
+    mode = flag_value(args, "--mode")
+    if mode == "accept-edits":
+        return "the Antigravity lane is read-only: use --mode plan --sandbox in a read-only worktree."
+    is_print = any(t in ("-p", "--print", "--prompt") or t.startswith(("-p=", "--print=", "--prompt=")) for t in args)
+    if not is_print:
+        return None
+    prompt = flag_value(args, "-p") or flag_value(args, "--print") or flag_value(args, "--prompt") or ""
+    if prompt.strip().split(" ")[0] in AGY_READONLY_SLASH:
+        return None
+    if mode != "plan":
+        return "headless agy must pass --mode plan (plan mode plus --sandbox; plan alone reverted a live tree on 2026-09-02)."
+    if not any(t == "--sandbox" or t == "--sandbox=true" for t in args):
+        return "headless agy needs --sandbox."
+    return None
 
 
 def main() -> int:
     cmd = load_command()
     if not cmd:
         return 0
-    # Split on shell separators so each pipeline segment is judged on its own flags.
-    segments = re.split(r"\s*(?:&&|\|\||;|\|)\s*", cmd)
-    for seg in segments:
-        s = " " + seg.strip() + " "
-        lead = lead_command(seg)
-        if lead == "codex":
-            if "--dangerously-bypass-approvals-and-sandbox" in s:
-                return refuse("codex may not bypass approvals and sandbox. Use -s workspace-write or -s read-only.")
-            is_exec = re.search(r"\bcodex\s+(exec|e)\b", s) is not None
-            is_review = re.search(r"\bcodex\s+(exec\s+)?review\b", s) is not None
-            if is_exec and not is_review:
-                if not re.search(r"\s(-s|--sandbox)(\s|=)", s):
-                    return refuse("codex exec needs an explicit sandbox: add -s workspace-write (implementer) or -s read-only (analysis). The user config defaults to danger-full-access.")
-                if "danger-full-access" in s:
-                    return refuse("codex exec may not use danger-full-access in a lane.")
-        if lead == "agy":
-            if "--dangerously-skip-permissions" in s:
-                return refuse("agy may not skip permissions in a lane.")
-            if re.search(r"--mode(\s+|=)accept-edits", s):
-                return refuse("the Antigravity lane is read-only: use --mode plan --sandbox in a read-only worktree.")
-            is_print = re.search(r"\s(-p|--print|--prompt)(\s|=)", s) is not None
-            is_slash_only = re.search(r"\s(-p|--print|--prompt)\s+[\"']?/(usage|credits|quota|model|models|skills|help)\b", s) is not None
-            if is_print and not is_slash_only and "--sandbox" not in s:
-                return refuse("headless agy needs --sandbox (plan mode alone does not prevent writes; it reverted a live tree on 2026-09-02).")
+    for seg in re.split(r"\s*(?:&&|\|\||;|\||\n)\s*", cmd):
+        if not seg.strip():
+            continue
+        prog, args = program_and_args(tokens(seg))
+        if prog == "codex":
+            msg = check_codex(args)
+            if msg:
+                return refuse(msg)
+        elif prog == "agy":
+            msg = check_agy(args)
+            if msg:
+                return refuse(msg)
     return 0
 
 
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except Exception:
+    except Exception as e:  # fail open, but loudly
+        sys.stderr.write(f"cure-tri-lane guard: internal error, allowing command: {e}\n")
         sys.exit(0)

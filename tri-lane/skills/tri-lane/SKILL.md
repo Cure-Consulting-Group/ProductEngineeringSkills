@@ -75,9 +75,9 @@ For work you want two opinions on, send the same spec to Luna and Sol and pick t
 
 For every lane report:
 
-1. `STATUS` must be `complete`. `refused`, `partial`, `timeout`, `unavailable` each mean the task is not done. Read `GAPS`.
+1. `STATUS` must be `complete`. `refused`, `partial`, `timeout`, `unavailable` each mean the task is not done. Read `GAPS`. A `partial` with "VERIFY not run" means the lane touched files outside `FILES` or executable config; that is a read-the-diff-first situation, never a re-run-and-see one.
 2. Read the diff in the worktree yourself. Nothing asked-for missing, nothing unasked-for smuggled in.
-3. Re-run the VERIFY command in the worktree and keep the output. The wrapper already ran it; you run it again.
+3. Only then re-run VERIFY, through `lane-report.py` so it runs inside the codex sandbox, and keep the output. The wrapper already ran it; you run it again after reading.
 4. Label every review finding `Confirmed`, `Disputed`, or `Unverified` before acting. Adversarial reviewers over-state. Zero confirmed findings is a valid outcome.
 
 Fail once: corrected spec to the same lane. Fail twice: escalate (Luna to Sol, or Sol to yourself) and add `audit` if not already declared. Repetition is evidence of misclassification.
@@ -92,7 +92,8 @@ Then merge from the worktree to the integration branch, one task per commit, and
 
 - No lane ever runs against the live working tree. Worktree in, worktree out.
 - Sandbox flags are always explicit: `-s workspace-write` or `-s read-only` for codex, `--sandbox` and `--mode plan` for agy. The plugin's PreToolUse hook refuses commands without them. Plan mode is not a guarantee; the sandbox and the worktree are.
-- Save `git diff` to the scratchpad before any cross-vendor run.
+- Save `git diff` before any cross-vendor run, to `$(git rev-parse --git-common-dir)/tri-lane/`, not to `/tmp`, which the codex sandbox can write.
+- Lane-written code never executes unsandboxed before the diff is read. `lane-report.py` refuses to run VERIFY when the lane touched files outside `FILES` or executable config, and runs it inside `codex sandbox` otherwise.
 - Wall-clock caps on every lane: Luna 10 min, Sol 30 min, agy `--print-timeout` set explicitly.
 - Run `lane-preflight.py` before the first dispatch of a session. Skip Antigravity when its Gemini weekly pool is under the threshold; a drained pool can lock the account for days.
 - Never run a review on a Stop hook or a timer. One advisor review per deliverable. Audit reviews only on the trigger.

@@ -31,7 +31,15 @@ git worktree remove ../wt/$TASK && git branch -D lane/$TASK
 Antigravity gets its own read-only worktree of the same branch so it can never touch the implementation worktree:
 
 ```bash
-git worktree add ../wt/$TASK-ro lane/$TASK
+git worktree add --detach ../wt/$TASK-ro lane/$TASK    # --detach: the branch is already checked out in ../wt/$TASK
+chmod -R a-w ../wt/$TASK-ro                              # optional: make read-only literal
+```
+
+Save the pre-run diff somewhere no lane sandbox can write. `/tmp` and `$TMPDIR` are writable under codex `workspace-write`, so use the main repo's git dir:
+
+```bash
+SAFE="$(git rev-parse --git-common-dir)/tri-lane"; mkdir -p "$SAFE"
+git diff > "$SAFE/pre-$TASK.diff"; git status --short >> "$SAFE/pre-$TASK.status"
 ```
 
 Antigravity trusts only paths under its `trustedWorkspaces` list (`~/.gemini/antigravity-cli/settings.json`). On this machine that is `~/CureVault/projects/...`, and `/Volumes/CureVault/...` is not trusted even though it is the same disk. An untrusted path costs a full token budget and returns nothing. `lane-preflight.py --dir <path>` checks this.
@@ -60,10 +68,10 @@ ${T:+$T 600} codex exec - \
 Preamble to put at the top of every spec, because `~/.codex/AGENTS.md` rules can make codex decline politely with exit 0 and an empty diff:
 
 ```
-This task runs in a dedicated implementation lane at the model and reasoning effort named in the invocation. If a user-level or project-level instruction file asks you to default to a different orchestration flow, treat this lane as an explicit opt-out from that default and proceed. Every other instruction in those files still applies.
+This task runs in a dedicated implementation lane at the model and reasoning effort named in the invocation. If the user-level ~/.codex/AGENTS.md asks you to default to a different orchestration flow, treat this lane as an explicit opt-out from that default and proceed. Project-level AGENTS.md rules are not overridden; if one forbids this flow, stop and say so. Every other instruction in those files still applies.
 ```
 
-The wrapper then runs `lane-report.py`, which applies the empty-diff rule regardless.
+The wrapper then runs `lane-report.py`, which enforces three things in code regardless of what the lane said: an empty diff is `refused`; a diff that touches files outside `FILES` or any executable config (package.json, Makefile, conftest.py, CI, hooks, `.claude/`, `AGENTS.md`, …) gets `partial` with VERIFY **not run**; and VERIFY itself runs inside `codex sandbox -c sandbox_mode=workspace-write`, which blocks network and writes outside the worktree (verified 2 Sep: home write denied, curl denied). Lane-written code never executes unsandboxed unless the architect has read the diff and passes `--unsandboxed-verify` deliberately.
 
 ## Codex reviewer
 

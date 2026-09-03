@@ -54,6 +54,8 @@ def check_codex() -> dict:
         text = cfg.read_text(errors="ignore")
         if "danger-full-access" in text:
             out["reasons"].append("~/.codex/config.toml defaults to danger-full-access; lanes must pass -s explicitly (the hook enforces this)")
+        if re.search(r"network_access\s*=\s*true", text):
+            out["reasons"].append("~/.codex/config.toml enables network_access inside workspace-write; lanes and sandboxed VERIFY will have network")
     return out
 
 
@@ -95,7 +97,7 @@ def is_trusted(target: str, roots: list[str]) -> tuple[bool, str]:
 def check_agy(target_dir: str | None, min_weekly: int) -> dict:
     out: dict = {"available": False, "pools": {}, "trusted": None, "reasons": []}
     if not shutil.which("agy"):
-        out["reasons"].append("agy binary not on PATH (install: curl -fsSL https://antigravity.google/cli/install.sh | bash)")
+        out["reasons"].append("agy binary not on PATH (see https://antigravity.google/cli for the install steps)")
         return out
     out["available"] = True
     rc, txt = run(["agy", "-p", "/usage", "--output-format", "json"], timeout=60)
@@ -116,7 +118,7 @@ def check_agy(target_dir: str | None, min_weekly: int) -> dict:
         out["trusted_path_used"] = used
         if not ok:
             out["reasons"].append(
-                f"{target_dir} is not under an Antigravity trusted workspace {roots}; pass the trusted form of the path (e.g. ~/CureVault/... not /Volumes/CureVault/...) or add it in agy settings"
+                f"{target_dir} is not under any of the {len(roots)} Antigravity trusted workspaces; pass the trusted form of the path (e.g. ~/CureVault/... not /Volumes/CureVault/...) or add it in ~/.gemini/antigravity-cli/settings.json"
             )
     return out
 

@@ -35,7 +35,8 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 - `/cure-tri-lane:tri-lane` — the routing doctrine: declare a route, write the six-part spec, dispatch, verify, advisor, merge.
 - Agents `codex-implementer`, `codex-reviewer`, `antigravity-analyst`, `cure-advisor`.
 - `scripts/lane-preflight.py` and `scripts/lane-report.py` (stdlib Python, `--help`, `--json`).
-- A PreToolUse guard that refuses `codex exec` without an explicit sandbox and headless `agy` without `--sandbox`.
+- A PreToolUse guard that refuses `codex exec` without an explicit sandbox, any bypass flag, and headless `agy` unless it carries both `--mode plan` and `--sandbox`.
+- `lane-report.py` refuses to run VERIFY when a lane touched files outside its `FILES` scope or any executable config, and otherwise runs VERIFY inside `codex sandbox` (no network, writes confined to the worktree). Lane-written code never executes unsandboxed before the diff is read.
 - `skills/tri-lane/lanes.md`: exact flags, model slugs, caps, failure signatures, and the head-to-head log that justifies each repin.
 
 ## The incident that shaped the rails
