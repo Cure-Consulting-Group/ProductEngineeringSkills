@@ -38,6 +38,7 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 - A PreToolUse guard that refuses `codex exec` without an explicit sandbox, any bypass flag, and headless `agy` unless it carries both `--mode plan` and `--sandbox`.
 - `lane-report.py` refuses to run VERIFY when a lane touched files outside its `FILES` scope or any executable config, and otherwise runs VERIFY inside `codex sandbox` (no network, writes confined to the worktree). Lane-written code never executes unsandboxed before the diff is read.
 - `skills/tri-lane/lanes.md`: exact flags, model slugs, caps, failure signatures, and the head-to-head log that justifies each repin.
+- Benchmark harness (`BENCHMARK.md`): `lane-log.py start|end|update|list` records one line per task with Claude, Codex, and Antigravity usage read from their logs plus quota-pool deltas; `usage-window.py` sums Claude and Codex usage between two timestamps for any arm, including the manual flow; `benchmark-report.py` compares arms and applies the pre-registered decision rule.
 
 ## The incident that shaped the rails
 

@@ -105,6 +105,15 @@ Then merge from the worktree to the integration branch, one task per commit, and
 - On routine days run the session on Opus 5; switch to Fable 5.1 for hard, long-horizon work. Fable is capped at half of a Max weekly allowance.
 - Antigravity has a ~14.5k-token floor per call. One large read beats ten small ones.
 
+## Benchmark mode
+
+When the user is benchmarking (see `BENCHMARK.md` in the plugin root), every task is bracketed by two commands, and you run them, not the user:
+
+- Before the first tool call: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-log.py" start --task <id> --arm tri-lane --kind <impl|security|infra|debug|refactor>`
+- After merge or abandonment: `lane-log.py end --task <id> --route <route> --lane "<model> @ <rung>" --status <status> --advisor <verdict> --rework <n> --codex-events <file> --agy-json <file> --finding codex:C:D:U --finding agy:C:D:U --finding advisor:C:D:U`
+
+Keep the events and JSON files the lanes produce; `end` reads them. The Confirmed / Disputed / Unverified counts are your labels from Step 4. Report the one-line summary `end` prints. Never estimate tokens; the script reads the logs.
+
 ## Maintenance
 
 Lane models change. Every model generation, re-run the head-to-head in `lanes.md` on a real diff, repin in `lanes.md` only, and delete any rule above that the log does not justify.
