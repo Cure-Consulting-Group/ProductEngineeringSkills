@@ -158,11 +158,27 @@ def main() -> int:
     ap.add_argument("--dir", help="worktree or repo path the lane will run against")
     ap.add_argument("--lanes", default="codex,agy", help="comma list of lanes to check: codex, agy (default both)")
     ap.add_argument("--min-gemini-weekly", type=int, default=15, help="skip agy below this weekly percent remaining (default 15)")
+    ap.add_argument("--min-repo-free-gb", type=float, default=1.0, help="refuse to dispatch when the repo volume has less free space than this (default 1 GB)")
     ap.add_argument("--json", action="store_true", help="JSON output (always on; flag kept for convention)")
     args = ap.parse_args()
 
     lanes = {l.strip() for l in args.lanes.split(",") if l.strip()}
     result: dict = {"status": "ok", "reasons": []}
+
+    # disk: lanes stall when /tmp or the repo volume fills (observed 2026-09-03)
+    def free_gb(path: str):
+        try:
+            st = os.statvfs(path)
+            return round(st.f_bavail * st.f_frsize / 1e9, 2)
+        except Exception:
+            return None
+    repo_dir = args.dir or os.getcwd()
+    result["disk"] = {"repo_volume_free_gb": free_gb(repo_dir), "tmp_free_gb": free_gb(os.environ.get("TMPDIR") or "/tmp"), "home_free_gb": free_gb(str(Path.home()))}
+    if result["disk"]["repo_volume_free_gb"] is not None and result["disk"]["repo_volume_free_gb"] < args.min_repo_free_gb:
+        result["status"] = "unavailable"
+        result["reasons"].append(f"repo volume has {result['disk']['repo_volume_free_gb']} GB free (< {args.min_repo_free_gb}); lanes write there")
+    if result["disk"]["tmp_free_gb"] is not None and result["disk"]["tmp_free_gb"] < 2:
+        result["reasons"].append(f"system/tmp volume has {result['disk']['tmp_free_gb']} GB free; Claude Code's own scratch and Bash output live there. Free it, and keep TMPDIR exported to the run dir")
     t = shutil.which("gtimeout") or shutil.which("timeout")
     result["timeout_bin"] = t
     if not t:

@@ -24,10 +24,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+TMP_DIRNAME = ".tri-lane-tmp"  # per-worktree scratch for sandboxed VERIFY; never counted as a lane change
 
 # Paths whose modification by a lane means VERIFY must not run automatically.
 EXEC_CONFIG = (
@@ -81,9 +84,19 @@ def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool) -> tuple[int,
     """Returns (exit, output, how)."""
     if not unsandboxed and shutil.which("codex"):
         # cwd is the worktree; codex sandbox treats cwd as the writable workspace. (-C would require --permission-profile.)
-        argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "--", "sh", "-c", cmd]
-        rc, out = sh(argv, wt, timeout)
-        return rc, out, "codex sandbox workspace-write"
+        # /tmp is excluded from the sandbox; TMPDIR points inside the worktree so test runners still have scratch space
+        # on the project volume (the system volume filled and stalled lanes on 2026-09-03).
+        tmp = Path(wt) / TMP_DIRNAME
+        tmp.mkdir(exist_ok=True)
+        env = dict(os.environ, TMPDIR=str(tmp))
+        argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "--", "sh", "-c", cmd]
+        try:
+            p = subprocess.run(argv, cwd=wt, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL, env=env)
+            rc, out = p.returncode, (p.stdout or "") + (p.stderr or "")
+        except subprocess.TimeoutExpired:
+            rc, out = 124, f"timeout after {timeout}s"
+        shutil.rmtree(tmp, ignore_errors=True)
+        return rc, out, "codex sandbox workspace-write, /tmp excluded"
     if not unsandboxed:
         return 126, "codex binary not found; refusing to run VERIFY unsandboxed (pass --unsandboxed-verify to override)", "not run"
     rc, out = sh(cmd, wt, timeout, shell=True)
@@ -128,9 +141,9 @@ def main() -> int:
     _, stat = sh(["git", "diff", "--stat", ref], wt, 60)
     _, porcelain = sh(["git", "status", "--porcelain"], wt, 60)
     _, names = sh(["git", "diff", "--name-only", ref], wt, 60)
-    untracked = [l[3:] for l in porcelain.splitlines() if l.startswith("??")]
-    touched = sorted({l.strip() for l in names.splitlines() if l.strip()} | set(untracked))
-    changed = bool(porcelain.strip()) or bool(names.strip())
+    untracked = [l[3:] for l in porcelain.splitlines() if l.startswith("??") and not l[3:].startswith(TMP_DIRNAME)]
+    touched = sorted({l.strip() for l in names.splitlines() if l.strip() and not l.strip().startswith(TMP_DIRNAME)} | set(untracked))
+    changed = bool(touched)
 
     lane_said = ""
     if args.final and Path(args.final).exists():

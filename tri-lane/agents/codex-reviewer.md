@@ -26,7 +26,7 @@ Flags and measured timings are in `${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/lanes.m
 
 1. Preflight: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-preflight.py" --lanes codex`. Non-zero exit → `STATUS: unavailable` with reasons.
 2. Save the diff first, outside any sandbox-writable path: `SAFE="$(git rev-parse --git-common-dir)/tri-lane"; mkdir -p "$SAFE"; git diff > "$SAFE/pre-review-$(date +%s).diff"`.
-3. Run: `${T:+$T 900} codex exec review <scope> -C "$DIR" -c model_reasoning_effort=<rung> -o "$OUT"`.
+3. Run, with output and temp inside the repo, never `/tmp`: `RUN="$(git rev-parse --git-common-dir)/tri-lane/run/<slug>"; mkdir -p "$RUN/tmp"; export TMPDIR="$RUN/tmp"; OUT="$RUN/review-$(date +%s).md"` then `${T:+$T 900} codex exec review <scope> -C "$(realpath "$DIR")" -c model_reasoning_effort=<rung> -o "$OUT"`.
 4. Confirm the tree is unchanged: `git status --porcelain` before and after must match. If it does not, report it as a P0 in your reply and stop.
 5. Reply with:
 

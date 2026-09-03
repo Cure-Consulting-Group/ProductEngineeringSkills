@@ -44,6 +44,10 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Nothing under /tmp
+
+Every lane writes only inside the repo: `$(git rev-parse --git-common-dir)/tri-lane/run/<task>/` holds the spec, events, final message, and a `tmp/` that `TMPDIR` is exported to. The Codex sandbox runs with `/tmp` excluded. A full system volume stalled every lane on 3 Sep 2026; preflight now refuses to dispatch on low disk. Claude Code's own scratchpad and Bash output still live under `/private/tmp`, which the plugin cannot move, so keep the system volume above a few GB.
+
 ## Model pins and re-testing
 
 Lane models are named in one place, `skills/tri-lane/lanes.md`. When a model generation changes, re-run the head-to-head on a real diff, log the result there, and repin. Do not pin models in agent frontmatter for lanes; the wrapper agents are Sonnet because they only run commands.

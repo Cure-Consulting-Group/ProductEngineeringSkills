@@ -27,7 +27,7 @@ Flags, model slugs, quota commands, and failure signatures are in `${CLAUDE_PLUG
 1. **Worktree.** `git worktree add --detach ../wt/<slug>-ro <branch>` from the main checkout (`--detach` because the branch is already checked out in the implementation worktree). Compute `WT_RO=$(realpath ../wt/<slug>-ro)`, then convert it to the trusted form of the path if the machine's trusted workspace uses a different prefix (preflight tells you). Guard before anything else: `[ -n "$WT_RO" ] && [ "$WT_RO" != "$(git rev-parse --show-toplevel)" ] || { echo "refusing: WT_RO unset or is the main checkout"; exit 1; }`. If that fails, stop and report `unavailable`. Optionally `chmod -R a-w "$WT_RO"` to make read-only literal.
 2. **Preflight.** `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-preflight.py" --lanes agy --dir "$WT_RO"`. Non-zero exit → `STATUS: unavailable` with reasons verbatim (this includes a drained Gemini weekly pool and an untrusted path). Do not proceed.
 3. **Snapshot.** `git -C "$WT_RO" status --porcelain > "$BEFORE"`.
-4. **Brief file.** `SPEC=$(mktemp -t agy-brief.XXXXXX)`. First line: "You are reviewing the repository at $WT_RO. Do not modify any file. Answer only with the JSON schema provided." Then the architect's brief.
+4. **Brief file, never /tmp.** `RUN="$(git rev-parse --git-common-dir)/tri-lane/run/<slug>"; mkdir -p "$RUN/tmp"; export TMPDIR="$RUN/tmp"; SPEC="$RUN/agy-brief.md"; OUT="$RUN/agy.json"`. First line: "You are reviewing the repository at $WT_RO. Do not modify any file. Answer only with the JSON schema provided." Then the architect's brief.
 5. **Run.** `agy -p "$(cat "$SPEC")" --add-dir "$WT_RO" --model <slug> --effort <rung> --mode plan --sandbox --json-schema "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/schemas/review-verdict.json" --output-format json --print-timeout 15m > "$OUT"`.
 6. **Check the tree.** `git -C "${WT_RO:?}" status --porcelain` must equal `$BEFORE`. If not, `git -C "${WT_RO:?}" checkout -- . && git -C "${WT_RO:?}" clean -fd`, and report a P0 "lane modified files" in your reply. The `:?` form aborts on an empty variable so this can never run against the current directory.
 7. **Reply** with:
@@ -37,6 +37,7 @@ LANE       <slug> @ <rung>
 STATUS     complete | timeout | unavailable
 VERDICT    (the JSON `response` verbatim)
 USAGE      input / output / thinking / cache_read tokens, duration_seconds (from the JSON)
+FILE       $OUT   (the architect passes this as --agy-json to lane-log.py end)
 POOL       Gemini weekly % and five-hour % from preflight
 TREE       unchanged | CHANGED (details)
 ```

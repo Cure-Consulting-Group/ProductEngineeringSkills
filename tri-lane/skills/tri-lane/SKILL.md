@@ -93,6 +93,7 @@ Then merge from the worktree to the integration branch, one task per commit, and
 - No lane ever runs against the live working tree. Worktree in, worktree out.
 - Sandbox flags are always explicit: `-s workspace-write` or `-s read-only` for codex, `--sandbox` and `--mode plan` for agy. The plugin's PreToolUse hook refuses commands without them. Plan mode is not a guarantee; the sandbox and the worktree are.
 - Save `git diff` before any cross-vendor run, to `$(git rev-parse --git-common-dir)/tri-lane/`, not to `/tmp`, which the codex sandbox can write.
+- Nothing a lane needs is ever written under `/tmp`, `$TMPDIR`, or the Claude scratchpad. Each task gets `$(git rev-parse --git-common-dir)/tri-lane/run/<slug>/` with `TMPDIR` exported into it. A full system volume stalled every lane on 3 Sep; preflight now refuses to dispatch on low disk.
 - Lane-written code never executes unsandboxed before the diff is read. `lane-report.py` refuses to run VERIFY when the lane touched files outside `FILES` or executable config, and runs it inside `codex sandbox` otherwise.
 - Wall-clock caps on every lane: Luna 10 min, Sol 30 min, agy `--print-timeout` set explicitly.
 - Run `lane-preflight.py` before the first dispatch of a session. Skip Antigravity when its Gemini weekly pool is under the threshold; a drained pool can lock the account for days.
