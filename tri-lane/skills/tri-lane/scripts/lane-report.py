@@ -100,7 +100,8 @@ def main() -> int:
     ap.add_argument("--verify-timeout", type=int, default=600, help="seconds per verify command (default 600)")
     ap.add_argument("--unsandboxed-verify", action="store_true", help="run VERIFY outside codex sandbox; only after the diff has been read")
     ap.add_argument("--final", help="file holding the lane's final message")
-    ap.add_argument("--status-hint", choices=["timeout", "unavailable"], help="override when the wrapper already knows the lane failed")
+    ap.add_argument("--base", help="ref the lane branched from (e.g. main, dev, or a SHA). Diff is measured against it, so committed lane work counts. Default HEAD = uncommitted only")
+    ap.add_argument("--status-hint", choices=["timeout", "unavailable"], help="the wrapper already knows the lane hit its cap or was unavailable. A timeout with a non-empty diff is still evaluated; the overrun is recorded in GAPS")
     ap.add_argument("--tail", type=int, default=40, help="lines of verify output to keep (default 40)")
     ap.add_argument("--json", action="store_true", help="emit JSON instead of the text contract")
     args = ap.parse_args()
@@ -116,23 +117,30 @@ def main() -> int:
         print(f"lane-report: refusing: {wt} is the main checkout, not a lane worktree", file=sys.stderr)
         return 4
 
-    _, stat = sh(["git", "diff", "--stat", "HEAD"], wt, 60)
+    ref = "HEAD"
+    gaps: list[str] = []
+    if args.base:
+        rc_b, _ = sh(["git", "rev-parse", "--verify", "--quiet", args.base + "^{commit}"], wt, 30)
+        if rc_b == 0:
+            ref = args.base
+        else:
+            gaps.append(f"--base {args.base} is not a commit in this worktree; measuring uncommitted changes only")
+    _, stat = sh(["git", "diff", "--stat", ref], wt, 60)
     _, porcelain = sh(["git", "status", "--porcelain"], wt, 60)
-    _, names = sh(["git", "diff", "--name-only", "HEAD"], wt, 60)
+    _, names = sh(["git", "diff", "--name-only", ref], wt, 60)
     untracked = [l[3:] for l in porcelain.splitlines() if l.startswith("??")]
     touched = sorted({l.strip() for l in names.splitlines() if l.strip()} | set(untracked))
-    changed = bool(porcelain.strip())
+    changed = bool(porcelain.strip()) or bool(names.strip())
 
     lane_said = ""
     if args.final and Path(args.final).exists():
         lane_said = tail(Path(args.final).read_text(errors="ignore"), 3).strip()
 
-    gaps: list[str] = []
     verified: list[dict] = []
     out_of_scope = [p for p in touched if args.files and not in_scope(p, args.files)]
     exec_cfg = [p for p in touched if is_exec_config(p)]
 
-    if args.status_hint:
+    if args.status_hint == "unavailable" or (args.status_hint == "timeout" and not changed):
         status = args.status_hint
         gaps.append(f"wrapper reported {status}")
     elif not changed:
@@ -146,6 +154,8 @@ def main() -> int:
             gaps.append(f"VERIFY not run: lane touched executable config: {exec_cfg}. Read the diff; if safe, re-run with --files widened or --unsandboxed-verify")
     else:
         status = "complete"
+        if args.status_hint == "timeout":
+            gaps.append("lane hit its wall-clock cap; the diff it left was evaluated anyway. Check LANE SAID for whether it considered itself finished")
         if not args.verify:
             gaps.append("no VERIFY command supplied; the report carries no evidence")
             status = "partial"
@@ -160,6 +170,7 @@ def main() -> int:
     report = {
         "LANE": args.lane,
         "STATUS": status,
+        "BASE": ref,
         "OBJECTIVE": args.objective,
         "CHANGES": stat.strip() or "(none)",
         "TOUCHED": touched,
@@ -175,7 +186,7 @@ def main() -> int:
         print(f"LANE       {report['LANE']}")
         print(f"STATUS     {report['STATUS']}")
         print(f"OBJECTIVE  {report['OBJECTIVE']}")
-        print("CHANGES")
+        print(f"CHANGES    (vs {ref})")
         print("  " + report["CHANGES"].replace("\n", "\n  "))
         if untracked:
             print("  untracked: " + ", ".join(untracked))

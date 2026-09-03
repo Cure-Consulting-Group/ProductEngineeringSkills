@@ -1,7 +1,7 @@
 {
   "name": "cure-tri-lane",
   "description": "Opt-in multi-vendor orchestration for Cure engagements: a Claude architect delegates spec-determined implementation to Codex (GPT-5.6 Luna/Sol via codex exec), routes system and security review to Antigravity (Gemini 3.8 Flash via agy) in read-only worktrees, and gets a fresh-context advisor verdict before anything ships. Uses your existing ChatGPT and Google logins; stores no credentials. Independent of cure-product-engineering.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "skills": [
     "./skills"
   ],

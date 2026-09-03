@@ -36,8 +36,24 @@ def run(cmd: list[str], timeout: int = 30) -> tuple[int, str]:
         return 124, "timeout"
 
 
-def check_codex() -> dict:
+def codex_trusted_projects() -> list[str]:
+    cfg = Path.home() / ".codex" / "config.toml"
+    if not cfg.exists():
+        return []
+    return re.findall(r'\[projects\."([^"]+)"\]\s*\n\s*trust_level\s*=\s*"trusted"', cfg.read_text(errors="ignore"))
+
+
+def check_codex(target_dir: str | None = None) -> dict:
     out: dict = {"available": False, "logged_in": False, "version": None, "reasons": []}
+    if target_dir:
+        roots = codex_trusted_projects()
+        ok, used = is_trusted(target_dir, roots)
+        out["trusted"] = ok
+        out["trusted_path_used"] = used
+        if roots and not ok:
+            out["reasons"].append(
+                f"{target_dir} is not under any of the {len(roots)} Codex trusted projects; codex trusts the physical path form (e.g. /Volumes/CureVault/...), Antigravity the symlink form (~/CureVault/...). Pass -C with the physical path, or trust it via `codex` once interactively"
+            )
     if not shutil.which("codex"):
         out["reasons"].append("codex binary not on PATH (install: https://learn.chatgpt.com/docs)")
         return out
@@ -153,7 +169,7 @@ def main() -> int:
         result["reasons"].append("no gtimeout/timeout binary; codex lanes run uncapped (brew install coreutils)")
 
     if "codex" in lanes:
-        result["codex"] = check_codex()
+        result["codex"] = check_codex(args.dir)
         if not (result["codex"]["available"] and result["codex"]["logged_in"]):
             result["status"] = "unavailable"
         result["reasons"] += [f"codex: {r}" for r in result["codex"]["reasons"]]

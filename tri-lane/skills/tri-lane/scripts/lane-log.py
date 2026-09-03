@@ -158,8 +158,13 @@ def cmd_end(a) -> int:
     log = log_path(a.log)
     sp = start_path(log, a.task)
     if not sp.exists():
-        print(f"no open start record for task {a.task}; run `lane-log.py start --task {a.task}` first", file=sys.stderr)
-        return 1
+        if not a.started_at:
+            print(f"no open start record for task {a.task}; run `lane-log.py start --task {a.task}` first, or pass --started-at ISO to backfill from logs", file=sys.stderr)
+            return 1
+        rc, head = sh(["git", "rev-parse", "--short", "HEAD"])
+        rec = {"task": a.task, "arm": a.arm or "tri-lane", "kind": a.kind or "", "started_at": a.started_at, "project": str(Path.cwd().resolve()),
+               "head": head.strip(), "notes": "backfilled: no pools_before snapshot", "pools_before": {}}
+        sp.write_text(json.dumps(rec))
     rec = json.loads(sp.read_text())
     ended = now_iso()
     started = rec["started_at"]
@@ -280,6 +285,9 @@ def main() -> int:
 
     e = sub.add_parser("end", help="close a task and append the benchmark line")
     e.add_argument("--task", required=True)
+    e.add_argument("--started-at", help="backfill: ISO timestamp the task began (when `start` was not run). Pools_before will be empty")
+    e.add_argument("--arm", choices=["manual", "tri-lane", "advisor-only"], help="only with --started-at")
+    e.add_argument("--kind", help="only with --started-at")
     e.add_argument("--route", default="", help="solo | delegate | audit | full | manual")
     e.add_argument("--lane", default="", help='as executed, e.g. "gpt-5.6-luna @ high"')
     e.add_argument("--status", default="", help="complete | partial | refused | timeout | unavailable")
