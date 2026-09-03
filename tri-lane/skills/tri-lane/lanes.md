@@ -131,6 +131,9 @@ Rules: empty diff + exit 0 is `refused`; "the lane said it works" is not evidenc
 | agy: files changed despite `--mode plan` | `always-proceed` settings | Read-only worktree and `--sandbox`; never a live tree |
 | agy: `IneligibleTierError` from `gemini` | Gemini CLI is dead for consumer plans since 18 Jun 2026 | Use `agy`; do not install `gemini` as a lane |
 | Either lane: long silence | No wall-clock cap | `gtimeout` for codex, `--print-timeout` for agy; report `timeout` |
+| codex: "not a trusted directory" or refuses to run in the worktree | Codex trusts the **physical** path (`/Volumes/CureVault/...`); Antigravity trusts the **symlink** path (`~/CureVault/...`) | Give codex `-C "$(realpath "$WT")"` and agy `--add-dir` the `~/CureVault` form. `lane-preflight.py --dir` checks both lists (Vendly, 3 Sep) |
+| Report says `refused` but the lane clearly worked | Lane committed its work; the report was measuring uncommitted changes against HEAD | Pass `--base <ref the lane branched from>` to `lane-report.py`; it then measures everything since the base (Vendly, 3 Sep) |
+| Sol exits 124 with a complete, green diff | 30-minute cap hit on a large spec | Run `lane-report.py --status-hint timeout` anyway: a non-empty diff is evaluated (scope, VERIFY) and the overrun lands in GAPS. Consider `xhigh` instead of `max`, or split the spec, before raising the cap (Vendly, 3 Sep: 1,175-line diff) |
 
 ## Head-to-head log
 
