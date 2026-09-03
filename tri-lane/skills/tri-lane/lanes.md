@@ -44,21 +44,34 @@ git diff > "$SAFE/pre-$TASK.diff"; git status --short >> "$SAFE/pre-$TASK.status
 
 Antigravity trusts only paths under its `trustedWorkspaces` list (`~/.gemini/antigravity-cli/settings.json`). On this machine that is `~/CureVault/projects/...`, and `/Volumes/CureVault/...` is not trusted even though it is the same disk. An untrusted path costs a full token budget and returns nothing. `lane-preflight.py --dir <path>` checks this.
 
+## Run directory: nothing under /tmp
+
+Every lane writes only inside the repo. `/tmp` and `$TMPDIR` live on the system volume, which filled up on 3 Sep 2026 and stalled every lane mid-task. So:
+
+```bash
+RUN="$(git rev-parse --git-common-dir)/tri-lane/run/$TASK"; mkdir -p "$RUN/tmp"
+export TMPDIR="$RUN/tmp"                 # codex, agy, node, python all honour it
+SPEC="$RUN/spec.md"; FINAL="$RUN/final.md"; EVENTS="$RUN/events.jsonl"; OUT="$RUN/agy.json"; REVIEW="$RUN/review.md"
+```
+
+The main repo's `.git` dir is on the project volume and outside every worktree root, so the sandbox cannot reach it, the files survive worktree removal, and `lane-log.py end` can read them. Never `mktemp -t`; never write to the Claude scratchpad under `/private/tmp` for anything a lane or the report needs. `lane-preflight.py` refuses to dispatch when the repo volume has under 1 GB free and warns when the system volume is low.
+
 ## Codex implementer
 
 ```bash
-SPEC=$(mktemp -t lane-spec.XXXXXX); FINAL=$(mktemp -t lane-final.XXXXXX); EVENTS=$(mktemp -t lane-events.XXXXXX)
 # write the six-part spec to $SPEC, ending with:
 #   "Run the VERIFY command and include its actual output in your final message."
 T=$(command -v gtimeout || command -v timeout || true)
 [ -z "$T" ] && echo "WARN: no timeout binary; brew install coreutils"
 ${T:+$T 600} codex exec - \
-  -C "$WT" -s workspace-write --skip-git-repo-check \
+  -C "$(realpath "$WT")" -s workspace-write --skip-git-repo-check \
+  -c sandbox_workspace_write.exclude_slash_tmp=true \
   -m gpt-5.6-luna -c model_reasoning_effort=high \
   --json -o "$FINAL" < "$SPEC" > "$EVENTS"
 ```
 
 - `-` reads the whole prompt from stdin: no quoting hazards, no truncated specs.
+- `exclude_slash_tmp=true` removes `/tmp` from the sandbox's writable roots; with `TMPDIR` exported to `$RUN/tmp`, the model's own temp files land on the project volume.
 - From a non-TTY parent, `codex exec` without stdin waits on it. Always redirect.
 - `-s` is mandatory. The user config defaults to `danger-full-access`; the plugin hook refuses a `codex exec` without `-s`.
 - `--json` prints JSONL events; the `turn.completed` event carries usage. `-o` captures the last message.
@@ -76,9 +89,9 @@ The wrapper then runs `lane-report.py`, which enforces three things in code rega
 ## Codex reviewer
 
 ```bash
-codex exec review --base dev -c model_reasoning_effort=high -o "$REVIEW"
+TMPDIR="$RUN/tmp" codex exec review --base dev -c model_reasoning_effort=high -o "$REVIEW"
 # or, for the current worktree's uncommitted state:
-codex exec review --uncommitted -c model_reasoning_effort=high -o "$REVIEW"
+TMPDIR="$RUN/tmp" codex exec review --uncommitted -c model_reasoning_effort=high -o "$REVIEW"
 ```
 
 - `--uncommitted`, `--base`, and `--commit` are mutually exclusive and cannot be combined with a custom prompt argument. Put focus instructions in `-c` config or run a plain `codex exec -s read-only` with a review prompt instead.
@@ -88,8 +101,8 @@ codex exec review --uncommitted -c model_reasoning_effort=high -o "$REVIEW"
 ## Antigravity analyst
 
 ```bash
-agy -p "$(cat "$SPEC")" \
-  --add-dir "$(realpath "$WT_RO")" \
+TMPDIR="$RUN/tmp" agy -p "$(cat "$SPEC")" \
+  --add-dir "$WT_RO" \
   --model gemini-3.8-flash-high --effort high \
   --mode plan --sandbox \
   --json-schema "$CLAUDE_PLUGIN_ROOT/skills/tri-lane/schemas/review-verdict.json" \
@@ -131,6 +144,7 @@ Rules: empty diff + exit 0 is `refused`; "the lane said it works" is not evidenc
 | agy: files changed despite `--mode plan` | `always-proceed` settings | Read-only worktree and `--sandbox`; never a live tree |
 | agy: `IneligibleTierError` from `gemini` | Gemini CLI is dead for consumer plans since 18 Jun 2026 | Use `agy`; do not install `gemini` as a lane |
 | Either lane: long silence | No wall-clock cap | `gtimeout` for codex, `--print-timeout` for agy; report `timeout` |
+| Lanes stall mid-task; `ENOSPC` in any log; Claude's own Bash tool fails to write its output | System volume (which holds `/tmp`, `$TMPDIR`, and `~`) is full | Free the system volume first (caches, DerivedData, old `~/.codex/sessions`). Then keep lanes off it: `$RUN` dir + `TMPDIR` export + `exclude_slash_tmp`, as above. Preflight now checks free space (3 Sep) |
 | codex: "not a trusted directory" or refuses to run in the worktree | Codex trusts the **physical** path (`/Volumes/CureVault/...`); Antigravity trusts the **symlink** path (`~/CureVault/...`) | Give codex `-C "$(realpath "$WT")"` and agy `--add-dir` the `~/CureVault` form. `lane-preflight.py --dir` checks both lists (Vendly, 3 Sep) |
 | Report says `refused` but the lane clearly worked | Lane committed its work; the report was measuring uncommitted changes against HEAD | Pass `--base <ref the lane branched from>` to `lane-report.py`; it then measures everything since the base (Vendly, 3 Sep) |
 | Sol exits 124 with a complete, green diff | 30-minute cap hit on a large spec | Run `lane-report.py --status-hint timeout` anyway: a non-empty diff is evaluated (scope, VERIFY) and the overrun lands in GAPS. Consider `xhigh` instead of `max`, or split the spec, before raising the cap (Vendly, 3 Sep: 1,175-line diff) |
