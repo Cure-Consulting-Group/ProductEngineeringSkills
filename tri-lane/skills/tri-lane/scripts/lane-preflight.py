@@ -184,6 +184,19 @@ def main() -> int:
     if not t:
         result["reasons"].append("no gtimeout/timeout binary; codex lanes run uncapped (brew install coreutils)")
 
+    # toolchain caches the sandbox must be allowed to write, or the lane can never build/test (HoopTrace, 2026-09-03)
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from lane_toolchains import detect  # noqa: E402
+        tcs = detect(repo_dir)
+        result["toolchains"] = tcs
+        result["writable_roots"] = sorted({d for t in tcs for d in t["writable"]})
+        for t in tcs:
+            if not t["writable"]:
+                result["reasons"].append(f"{t['toolchain']}: no cache dir exists yet ({', '.join(t['missing'][:2])}); the sandbox blocks network, so warm the cache once on main (run the build unsandboxed) before dispatching a lane")
+    except Exception as e:
+        result["reasons"].append(f"toolchain detection failed: {e}")
+
     if "codex" in lanes:
         result["codex"] = check_codex(args.dir)
         if not (result["codex"]["available"] and result["codex"]["logged_in"]):

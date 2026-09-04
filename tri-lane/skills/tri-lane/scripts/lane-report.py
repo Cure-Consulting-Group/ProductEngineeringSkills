@@ -80,23 +80,26 @@ def in_scope(path: str, allowed: list[str]) -> bool:
     return False
 
 
-def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool) -> tuple[int, str, str]:
+def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: list[str]) -> tuple[int, str, str]:
     """Returns (exit, output, how)."""
     if not unsandboxed and shutil.which("codex"):
         # cwd is the worktree; codex sandbox treats cwd as the writable workspace. (-C would require --permission-profile.)
         # /tmp is excluded from the sandbox; TMPDIR points inside the worktree so test runners still have scratch space
         # on the project volume (the system volume filled and stalled lanes on 2026-09-03).
+        # Toolchain caches (~/.gradle, ~/.npm, ...) are added as writable roots, physical paths only, or builds cannot
+        # take their locks and the lane can never verify itself (HoopTrace, 2026-09-03).
         tmp = Path(wt) / TMP_DIRNAME
         tmp.mkdir(exist_ok=True)
         env = dict(os.environ, TMPDIR=str(tmp))
-        argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "--", "sh", "-c", cmd]
+        roots_cfg = "sandbox_workspace_write.writable_roots=" + json.dumps(writable)
+        argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "-c", roots_cfg, "--", "sh", "-c", cmd]
         try:
             p = subprocess.run(argv, cwd=wt, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL, env=env)
             rc, out = p.returncode, (p.stdout or "") + (p.stderr or "")
         except subprocess.TimeoutExpired:
             rc, out = 124, f"timeout after {timeout}s"
         shutil.rmtree(tmp, ignore_errors=True)
-        return rc, out, "codex sandbox workspace-write, /tmp excluded"
+        return rc, out, f"codex sandbox workspace-write, /tmp excluded, writable: {writable or 'worktree only'}"
     if not unsandboxed:
         return 126, "codex binary not found; refusing to run VERIFY unsandboxed (pass --unsandboxed-verify to override)", "not run"
     rc, out = sh(cmd, wt, timeout, shell=True)
@@ -112,6 +115,8 @@ def main() -> int:
     ap.add_argument("--verify", action="append", default=[], help="VERIFY command to re-run (repeatable)")
     ap.add_argument("--verify-timeout", type=int, default=600, help="seconds per verify command (default 600)")
     ap.add_argument("--unsandboxed-verify", action="store_true", help="run VERIFY outside codex sandbox; only after the diff has been read")
+    ap.add_argument("--writable", action="append", default=[], help="extra directory the sandboxed VERIFY may write (repeatable). Toolchain caches (~/.gradle, ~/.npm, ...) are added automatically")
+    ap.add_argument("--no-toolchain-caches", action="store_true", help="do not auto-add detected toolchain caches as writable roots")
     ap.add_argument("--final", help="file holding the lane's final message")
     ap.add_argument("--base", help="ref the lane branched from (e.g. main, dev, or a SHA). Diff is measured against it, so committed lane work counts. Default HEAD = uncommitted only")
     ap.add_argument("--status-hint", choices=["timeout", "unavailable"], help="the wrapper already knows the lane hit its cap or was unavailable. A timeout with a non-empty diff is still evaluated; the overrun is recorded in GAPS")
@@ -172,8 +177,15 @@ def main() -> int:
         if not args.verify:
             gaps.append("no VERIFY command supplied; the report carries no evidence")
             status = "partial"
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        try:
+            from lane_toolchains import writable_roots  # noqa: E402
+            writable = writable_roots(wt, args.writable) if not args.no_toolchain_caches else [str(Path(p).expanduser().resolve()) for p in args.writable if Path(p).expanduser().exists()]
+        except Exception as e:  # never let cache detection block a report
+            writable = []
+            gaps.append(f"toolchain cache detection failed: {e}")
         for cmd in args.verify:
-            vrc, out, how = run_verify(cmd, wt, args.verify_timeout, args.unsandboxed_verify)
+            vrc, out, how = run_verify(cmd, wt, args.verify_timeout, args.unsandboxed_verify, writable)
             verified.append({"command": cmd, "exit": vrc, "how": how, "output_tail": tail(out, args.tail)})
             if vrc != 0:
                 status = "partial"

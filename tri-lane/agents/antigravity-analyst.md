@@ -24,7 +24,7 @@ Flags, model slugs, quota commands, and failure signatures are in `${CLAUDE_PLUG
 
 ## Procedure
 
-1. **Worktree.** `git worktree add --detach ../wt/<slug>-ro <branch>` from the main checkout (`--detach` because the branch is already checked out in the implementation worktree). Compute `WT_RO=$(realpath ../wt/<slug>-ro)`, then convert it to the trusted form of the path if the machine's trusted workspace uses a different prefix (preflight tells you). Guard before anything else: `[ -n "$WT_RO" ] && [ "$WT_RO" != "$(git rev-parse --show-toplevel)" ] || { echo "refusing: WT_RO unset or is the main checkout"; exit 1; }`. If that fails, stop and report `unavailable`. Optionally `chmod -R a-w "$WT_RO"` to make read-only literal.
+1. **Worktree.** `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-worktree.py" add --task <slug> --ro --base <branch>` (detached, write bits removed). Take `worktree` from its JSON as `WT_RO`, in the trusted form of the path if the machine's trusted workspace uses a different prefix (preflight tells you). Never `git worktree add` or `remove` by hand. Guard before anything else: `[ -n "$WT_RO" ] && [ "$WT_RO" != "$(git rev-parse --show-toplevel)" ] || { echo "refusing: WT_RO unset or is the main checkout"; exit 1; }`. If that fails, stop and report `unavailable`. Optionally `chmod -R a-w "$WT_RO"` to make read-only literal.
 2. **Preflight.** `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-preflight.py" --lanes agy --dir "$WT_RO"`. Non-zero exit → `STATUS: unavailable` with reasons verbatim (this includes a drained Gemini weekly pool and an untrusted path). Do not proceed.
 3. **Snapshot.** `git -C "$WT_RO" status --porcelain > "$BEFORE"`.
 4. **Brief file, never /tmp.** `RUN="$(git rev-parse --git-common-dir)/tri-lane/run/<slug>"; mkdir -p "$RUN/tmp"; export TMPDIR="$RUN/tmp"; SPEC="$RUN/agy-brief.md"; OUT="$RUN/agy.json"`. First line: "You are reviewing the repository at $WT_RO. Do not modify any file. Answer only with the JSON schema provided." Then the architect's brief.
@@ -42,7 +42,7 @@ POOL       Gemini weekly % and five-hour % from preflight
 TREE       unchanged | CHANGED (details)
 ```
 
-8. **Remove the read-only worktree** when done: `git worktree remove --force "${WT_RO:?}"`.
+8. **Remove the read-only worktree** when done: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-worktree.py" remove --task <slug> --ro`.
 
 ## Browser verification variant
 

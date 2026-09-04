@@ -15,25 +15,43 @@ Versions this was verified against: Claude Code 2.1.259, codex-cli 0.152.0, Anti
 
 Second opinion inside Antigravity, drawing on its separate "Claude and GPT models" pool: `claude-opus-4-6-thinking`, `claude-sonnet-4-6`, `gpt-oss-120b-medium`. Use deliberately; it is a different quota.
 
-## Worktree lifecycle
+## Worktree lifecycle: only through `lane-worktree.py`
+
+Never `git worktree remove` by hand. A live Sol lane was orphaned twice in one session because its worktree was removed while it was still running (HoopTrace, 3 Sep 2026). The helper refuses to remove a worktree while its lock is held by a live pid or any codex/agy process references the path, and it pushes unmerged work to `lane/<task>-salvage` before removing.
 
 ```bash
-TASK=slug-for-the-task
-BASE=dev                                   # integration branch
-git worktree add ../wt/$TASK -b lane/$TASK $BASE
-# ... lanes run against ../wt/$TASK ...
-git -C ../wt/$TASK diff --stat             # architect reads this
-# merge: from the main checkout
-git merge --squash lane/$TASK && git commit
-git worktree remove ../wt/$TASK && git branch -D lane/$TASK
+S="$CLAUDE_PLUGIN_ROOT/skills/tri-lane/scripts"
+TASK=slug-for-the-task; BASE=dev
+python3 $S/lane-worktree.py add --task $TASK --base $BASE      # ../wt/$TASK on branch lane/$TASK; prints paths + run dir as JSON
+python3 $S/lane-worktree.py add --task $TASK --ro              # detached, chmod a-w twin ../wt/$TASK-ro for Antigravity
+# wrappers: lock before dispatch, unlock after the report
+python3 $S/lane-worktree.py lock --task $TASK --pid $CODEX_PID --lane "gpt-5.6-sol @ max"
+python3 $S/lane-worktree.py unlock --task $TASK
+# architect, before merging:
+python3 $S/lane-worktree.py status --task $TASK                # exit 3 = still alive; wait for the report
+git -C ../wt/$TASK diff --stat $BASE                           # read it
+git merge --squash lane/$TASK && git commit                    # from the main checkout
+python3 $S/lane-worktree.py remove --task $TASK --base $BASE   # refuses if alive; salvages unmerged commits first
+python3 $S/lane-worktree.py remove --task $TASK --ro
 ```
 
-Antigravity gets its own read-only worktree of the same branch so it can never touch the implementation worktree:
+A lane that ran past its cap is still alive until `status` says otherwise. The report's `timeout` status means the wrapper stopped waiting, not that the process died.
 
-```bash
-git worktree add --detach ../wt/$TASK-ro lane/$TASK    # --detach: the branch is already checked out in ../wt/$TASK
-chmod -R a-w ../wt/$TASK-ro                              # optional: make read-only literal
-```
+## Toolchain caches the sandbox must be allowed to write
+
+`workspace-write` confines writes to the worktree. Gradle then cannot take its lock in `~/.gradle`, npm cannot write `~/.npm`, and the lane produces code it can never build or test (HoopTrace: a full four-screen rewrite that was never compiled). `lane_toolchains.py` detects the repo's toolchains and their caches; preflight prints them; `lane-report.py` adds them to the sandboxed VERIFY automatically; the implementer passes each one as `--add-dir` to `codex exec`.
+
+| Toolchain | Marker | Caches added (physical paths) |
+|---|---|---|
+| Gradle / Android | `gradlew`, `build.gradle(.kts)` | `~/.gradle`, `~/.android`, `~/.m2` |
+| Node | `package.json` | `~/.npm`, `~/.yarn`, pnpm and bun stores |
+| Python | `pyproject.toml`, `requirements.txt` | pip, uv, poetry caches |
+| Rust | `Cargo.toml` | `~/.cargo`, `~/.rustup` |
+| Go | `go.mod` | `~/go`, go-build cache |
+| Swift / iOS | `Package.swift`, `Podfile` | CocoaPods, DerivedData, `.swiftpm` |
+| Flutter | `pubspec.yaml` | `~/.pub-cache` |
+
+Two rules. The sandbox rejects symlinked roots, so paths are resolved first (`~/.gradle` here is `/Volumes/CureVault/gradle-home`). And the sandbox has no network, so a cold cache cannot be filled from inside a lane: warm it once on main, unsandboxed, before the first dispatch. Preflight warns when a detected toolchain has no cache directory yet.
 
 Save the pre-run diff somewhere no lane sandbox can write. `/tmp` and `$TMPDIR` are writable under codex `workspace-write`, so use the main repo's git dir:
 
@@ -63,11 +81,14 @@ The main repo's `.git` dir is on the project volume and outside every worktree r
 #   "Run the VERIFY command and include its actual output in your final message."
 T=$(command -v gtimeout || command -v timeout || true)
 [ -z "$T" ] && echo "WARN: no timeout binary; brew install coreutils"
+ADD_DIRS=$(python3 $S/lane_toolchains.py "$WT" | python3 -c 'import json,sys;print(" ".join("--add-dir "+d for d in json.load(sys.stdin)["writable_roots"]))')
 ${T:+$T 600} codex exec - \
-  -C "$(realpath "$WT")" -s workspace-write --skip-git-repo-check \
+  -C "$(realpath "$WT")" -s workspace-write --skip-git-repo-check $ADD_DIRS \
   -c sandbox_workspace_write.exclude_slash_tmp=true \
   -m gpt-5.6-luna -c model_reasoning_effort=high \
-  --json -o "$FINAL" < "$SPEC" > "$EVENTS"
+  --json -o "$FINAL" < "$SPEC" > "$EVENTS" &
+CODEX_PID=$!; python3 $S/lane-worktree.py lock --task $TASK --pid $CODEX_PID --lane "gpt-5.6-luna @ high"; wait $CODEX_PID; RC=$?
+python3 $S/lane-worktree.py unlock --task $TASK
 ```
 
 - `-` reads the whole prompt from stdin: no quoting hazards, no truncated specs.
@@ -147,6 +168,8 @@ Rules: empty diff + exit 0 is `refused`; "the lane said it works" is not evidenc
 | Lanes stall mid-task; `ENOSPC` in any log; Claude's own Bash tool fails to write its output | System volume (which holds `/tmp`, `$TMPDIR`, and `~`) is full | Free the system volume first (caches, DerivedData, old `~/.codex/sessions`). Then keep lanes off it: `$RUN` dir + `TMPDIR` export + `exclude_slash_tmp`, as above. Preflight now checks free space (3 Sep) |
 | codex: "not a trusted directory" or refuses to run in the worktree | Codex trusts the **physical** path (`/Volumes/CureVault/...`); Antigravity trusts the **symlink** path (`~/CureVault/...`) | Give codex `-C "$(realpath "$WT")"` and agy `--add-dir` the `~/CureVault` form. `lane-preflight.py --dir` checks both lists (Vendly, 3 Sep) |
 | Report says `refused` but the lane clearly worked | Lane committed its work; the report was measuring uncommitted changes against HEAD | Pass `--base <ref the lane branched from>` to `lane-report.py`; it then measures everything since the base (Vendly, 3 Sep) |
+| Lane report says tests never ran, or Gradle/npm "could not lock" / "read-only file system" | Sandbox cannot write the toolchain cache outside the worktree | `--add-dir` each cache (physical path) on `codex exec`; `lane-report.py` adds them to VERIFY automatically; see the toolchain table (HoopTrace, 3 Sep) |
+| A lane "came back from the dead" after its worktree was removed | Worktree removed while the process was alive; `timeout` is the wrapper giving up, not the process ending | Only remove through `lane-worktree.py remove`, which refuses while alive and salvages first (HoopTrace, 3 Sep) |
 | Sol exits 124 with a complete, green diff | 30-minute cap hit on a large spec | Run `lane-report.py --status-hint timeout` anyway: a non-empty diff is evaluated (scope, VERIFY) and the overrun lands in GAPS. Consider `xhigh` instead of `max`, or split the spec, before raising the cap (Vendly, 3 Sep: 1,175-line diff) |
 
 ## Head-to-head log
