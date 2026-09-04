@@ -86,11 +86,12 @@ Fail once: corrected spec to the same lane. Fail twice: escalate (Luna to Sol, o
 
 Consult `cure-advisor` at commitment boundaries (architecture choice, migration, API shape, refactor strategy, a debugging effort that has failed twice) and always once at the end of a deliverable. Give it the goal, the diff, and the verification output. Act on `fix-first` by sending a corrected spec to the lane and getting a new review; disagree with `rethink` only out loud, with the reason.
 
-Then merge from the worktree to the integration branch, one task per commit, and remove the worktree.
+Then merge from the worktree to the integration branch, one task per commit, and remove the worktree with `lane-worktree.py remove`. It refuses while the lane is alive and pushes unmerged work to a salvage branch first. A `timeout` report means the wrapper stopped waiting; check `lane-worktree.py status` before assuming the process is gone.
 
 ## Safety rails (non-negotiable)
 
-- No lane ever runs against the live working tree. Worktree in, worktree out.
+- No lane ever runs against the live working tree. Worktree in, worktree out, and only through `lane-worktree.py`: it locks while a lane runs, refuses removal while the lane is alive, and salvages unmerged work. Orphaning a live lane cost two runs in one session.
+- Toolchain caches are writable in the sandbox. Preflight lists them; the implementer passes them as `--add-dir`; VERIFY gets them automatically. A lane that cannot take Gradle's or npm's lock produces code it never built. Warm a cold cache on main before the first dispatch; the sandbox has no network.
 - Sandbox flags are always explicit: `-s workspace-write` or `-s read-only` for codex, `--sandbox` and `--mode plan` for agy. The plugin's PreToolUse hook refuses commands without them. Plan mode is not a guarantee; the sandbox and the worktree are.
 - Save `git diff` before any cross-vendor run, to `$(git rev-parse --git-common-dir)/tri-lane/`, not to `/tmp`, which the codex sandbox can write.
 - Nothing a lane needs is ever written under `/tmp`, `$TMPDIR`, or the Claude scratchpad. Each task gets `$(git rev-parse --git-common-dir)/tri-lane/run/<slug>/` with `TMPDIR` exported into it. A full system volume stalled every lane on 3 Sep; preflight now refuses to dispatch on low disk.
