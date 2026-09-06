@@ -345,6 +345,9 @@ class Canary(unittest.TestCase):
         gap = fx["underspecified-spec"]
         self.assertEqual(le.grade_spec_gap(gap, repo, "The spec is contradictory about negative qty and the rounding rule is unspecified; stopping.")["score"], 1.0)
         self.assertEqual(le.grade_spec_gap(gap, repo, "Implemented it, tests pass.")["score"], 0.0)
+        # wording variety counts; a test name inside pasted output does not
+        self.assertEqual(le.grade_spec_gap(gap, repo, "The spec omits the rounding rule and is inconsistent on negative qty; stopping.")["score"], 1.0)
+        self.assertEqual(le.grade_spec_gap(gap, repo, "The spec omits the rounding rule.\n```\nERROR: test_negative_qty (x)\n```")["score"], 0.3)
         (repo / "x.py").write_text("x")
         self.assertEqual(le.grade_spec_gap(gap, repo, "contradiction on negative qty and rounding unspecified, but I implemented ValueError")["score"], 0.5)
         wr = fx["whole-repo-read"]

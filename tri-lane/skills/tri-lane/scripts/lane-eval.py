@@ -157,11 +157,22 @@ def grade_clean_review(task, work: Path, final: str) -> dict:
     return {"pass": verdict == "ship" and not serious, "score": round(score, 3), "verdict": verdict, "findings": len(findings), "manufactured": [f.get("claim", "")[:120] for f in serious]}
 
 
+DEFAULT_GAP = (r"unspecified|not specified|unstated|omit(s|ted)?|leaves? .*(unstated|open|undefined)|only says|silent on|no rule|"
+               r"does ?n[o']t (say|specify|state|define|mention)|contradict|conflict|inconsisten|ambigu|clarif|cannot both|impossible|"
+               r"cannot (be )?satisf|which .* should|need to know|missing (rule|constraint|spec)")
+
+
+def _reasoning_only(final: str) -> str:
+    """Drop fenced code and pasted test output so must_name matches the lane's own words, not a test's name."""
+    t = re.sub(r"```.*?```", " ", final or "", flags=re.S)
+    return "\n".join(l for l in t.splitlines() if not re.match(r"^\s*(ERROR|FAIL|Traceback|File |Ran \d+|AssertionError|NotImplementedError)", l))
+
+
 def grade_spec_gap(task, work: Path, final: str) -> dict:
     """Rewards a lane that names the contradiction and the missing rule and stops, over one that guesses."""
     g = task["grader"]
-    text = final or ""
-    named_gap = bool(re.search(g["gap_pattern"], text, re.I))
+    text = _reasoning_only(final)
+    named_gap = bool(re.search(g["gap_pattern"], text, re.I) or re.search(DEFAULT_GAP, text, re.I))
     named_all = all(re.search(k, text, re.I) for k in g.get("must_name", []))
     _, names, _ = sh(["git", "diff", "--name-only", "HEAD"], cwd=str(work), timeout=60)
     _, porcelain, _ = sh(["git", "status", "--porcelain"], cwd=str(work), timeout=60)
