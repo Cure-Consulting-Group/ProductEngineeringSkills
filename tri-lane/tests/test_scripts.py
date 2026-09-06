@@ -123,8 +123,10 @@ class Route(unittest.TestCase):
         self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--attempt", "3")["effort"], "ultra")
 
     def test_reviews_and_system(self):
-        self.assertEqual(self.s("--role", "review", "--kind", "impl")["lane"], "gpt-5.6-sol")
-        self.assertEqual(self.s("--role", "review", "--kind", "impl", "--risk", "payments")["lane"], "gpt-6-astra")
+        # measured 2026-09-06: Luna@medium is the default reviewer for non-risk work; Sol keeps risk-flagged reviews
+        self.assertEqual(self.s("--role", "review", "--kind", "impl")["lane"], "gpt-5.6-luna")
+        self.assertEqual(self.s("--role", "review", "--kind", "impl", "--risk", "payments")["lane"], "gpt-5.6-sol")
+        self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--risk", "underspecified")["lane"], "gpt-5.6-sol")
         self.assertEqual(self.s("--role", "system-review")["lane"], "gemini-3.8-flash-high")
         self.assertEqual(self.s("--role", "whole-repo")["lane"], "gemini-3.1-pro-high")
 
@@ -309,9 +311,9 @@ class Canary(unittest.TestCase):
         rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "evals.jsonl", "run", "--task", "all", "--lane", "reference"], env=env, timeout=600)
         self.assertEqual(rc, 0, out + err)
         rows = [json.loads(l) for l in (d / "evals.jsonl").read_text().splitlines()]
-        self.assertEqual(len(rows), 15)
+        self.assertEqual(len(rows), 18)
         self.assertEqual(sum(1 for r in rows if r["tier"] == "hard"), 5)
-        self.assertEqual(sum(1 for r in rows if r["tier"] == "judgment"), 4)
+        self.assertEqual(sum(1 for r in rows if r["tier"] == "judgment"), 7)
         for r in rows:
             self.assertTrue(r["pass"], f"{r['task']}: {r['grade']}")
             self.assertEqual(r["score"], 1.0, f"{r['task']}: {r['grade']}")
@@ -328,7 +330,8 @@ class Canary(unittest.TestCase):
         d = Path(tempfile.mkdtemp())
         env = dict(ENV, TRI_LANE_EVAL_UNSANDBOXED="1")
         for t in ("cross-module-invariant", "concurrency-race", "needle-in-diff-review", "whole-repo-read", "underspecified-spec",
-                  "nothing-wrong-review", "dead-end-migration", "misleading-bug-report", "scope-discipline"):
+                  "nothing-wrong-review", "dead-end-migration", "misleading-bug-report", "scope-discipline",
+                  "spec-gap-missing-rule", "spec-gap-test-contradiction", "spec-gap-impossible-interface"):
             rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "e.jsonl", "run", "--task", t, "--lane", "reference", "--dry-run"], env=env, timeout=600)
             self.assertEqual(rc, 1, f"{t} should fail unmodified: {out[-300:]}")
         shutil.rmtree(d)
@@ -371,6 +374,21 @@ class Canary(unittest.TestCase):
         os.environ["TRI_LANE_EVAL_UNSANDBOXED"] = "1"
         g = le.grade_hidden_tests(sd, repo, "")
         self.assertFalse(g["pass"]); self.assertIn("other.py", g["out_of_scope"])
+        shutil.rmtree(d)
+
+    def test_baseline_and_compare(self):
+        d = Path(tempfile.mkdtemp())
+        log = d / "e.jsonl"
+        mk = lambda task, lane, score, ts: json.dumps({"ts": ts, "task": task, "tier": "smoke", "role": "implement", "kind": "impl", "lane": lane, "effort": "medium", "repeat": 1, "pass": score >= 1, "score": score, "grade": {}, "elapsed_seconds": 1, "meta": {}})
+        log.write_text("\n".join([mk("t1", "gpt-5.6-luna", 1.0, "2026-09-01T00:00:00"), mk("t2", "gpt-5.6-luna", 1.0, "2026-09-01T00:00:00")]) + "\n")
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", log, "baseline", "--out", d / "b.json"])
+        self.assertEqual(rc, 0, err)
+        with open(log, "a") as f:
+            f.write(mk("t1", "gpt-5.6-luna", 0.5, "2026-09-10T00:00:00") + "\n" + mk("t2", "gpt-5.6-luna", 1.0, "2026-09-10T00:00:00") + "\n")
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", log, "compare", "--baseline", d / "b.json", "--since", "2026-09-10"])
+        self.assertEqual(rc, 1, out)
+        self.assertIn("REGRESSION", out)
+        self.assertIn("t1", out)
         shutil.rmtree(d)
 
     def test_planted_bug_grader_handles_prose_and_neighbours(self):

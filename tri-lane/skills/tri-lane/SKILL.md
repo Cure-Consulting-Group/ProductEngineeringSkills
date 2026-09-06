@@ -125,4 +125,6 @@ Three rules while a benchmark is running: the session model and effort stay fixe
 
 ## Maintenance
 
-Lane models change. Every model generation, run the canary suite against the new model (`lane-eval.py run --task all --lane <slug> --effort high`, review roles for Antigravity), compare `lane-eval.py results` with the previous generation, repin in `models.json` and `lanes.md` only, and delete any rule above that the log does not justify. The suite is the evidence; the head-to-head log in `lanes.md` records the decision.
+Lane models change. Before a model update, `lane-eval.py baseline`. After it, run the suite against the new model (`lane-eval.py run --task all --lane <slug> --effort <rung> --repeat 3`, review roles for Antigravity) and `lane-eval.py compare --since <date>`; a non-zero exit is a regression and blocks the repin. Repin in `models.json` and `lanes.md` only, and delete any rule above that the log does not justify. The suite is the evidence; the head-to-head log in `lanes.md` records the decision.
+
+Routing defaults as measured on 6 Sep 2026: Luna at medium for implementation and non-risk review; Sol at high for risk-flagged reviews and for any spec known to be incomplete (`--risk underspecified` to the router); Gemini 3.8 Flash for system review; Astra reserved until a fixture separates it from Sol.

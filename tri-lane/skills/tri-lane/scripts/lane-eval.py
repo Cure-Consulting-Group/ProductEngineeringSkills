@@ -507,6 +507,70 @@ def cmd_regrade(a) -> int:
     return 0
 
 
+def _matrix(rows: list) -> dict:
+    """{task: {lane@effort: {"runs", "pass_rate", "mean"}}} over graded rows."""
+    m: dict = {}
+    for r in rows:
+        if r.get("error") or r["lane"] == "reference":
+            continue
+        k = f"{r['lane']}@{r['effort']}"
+        c = m.setdefault(r["task"], {}).setdefault(k, {"runs": 0, "passes": 0, "score": 0.0})
+        c["runs"] += 1
+        c["passes"] += 1 if r["pass"] else 0
+        c["score"] += float(r.get("score") or 0)
+    for t in m.values():
+        for c in t.values():
+            c["pass_rate"] = round(c["passes"] / c["runs"], 3)
+            c["mean"] = round(c["score"] / c["runs"], 3)
+            del c["score"]
+    return m
+
+
+def cmd_baseline(a) -> int:
+    """Freeze the current matrix as the regression baseline for the next model generation."""
+    gcd = git_common_dir()
+    log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
+    rows = [json.loads(l) for l in log.read_text().splitlines() if l.strip()] if log.exists() else []
+    out = Path(a.out) if a.out else gcd / "tri-lane" / "evals-baseline.json"
+    out.write_text(json.dumps({"frozen_at": now_iso(), "runs": len(rows), "matrix": _matrix(rows)}, indent=2))
+    print(f"baseline written: {out} ({len(rows)} runs)")
+    return 0
+
+
+def cmd_compare(a) -> int:
+    """Compare the current matrix with the baseline; exit 1 on any regression beyond --tolerance."""
+    gcd = git_common_dir()
+    log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
+    base_p = Path(a.baseline) if a.baseline else gcd / "tri-lane" / "evals-baseline.json"
+    if not base_p.exists():
+        print(f"no baseline at {base_p}; run `lane-eval.py baseline` first", file=sys.stderr)
+        return 2
+    base = json.loads(base_p.read_text())["matrix"]
+    rows = [json.loads(l) for l in log.read_text().splitlines() if l.strip()] if log.exists() else []
+    if a.since:
+        rows = [r for r in rows if r.get("ts", "") >= a.since]
+    cur = _matrix(rows)
+    regressions, improvements, same = [], [], 0
+    for task, lanes in cur.items():
+        for lane, c in lanes.items():
+            b = base.get(task, {}).get(lane)
+            if not b:
+                continue
+            d = c["mean"] - b["mean"]
+            if d < -a.tolerance:
+                regressions.append((task, lane, b["mean"], c["mean"]))
+            elif d > a.tolerance:
+                improvements.append((task, lane, b["mean"], c["mean"]))
+            else:
+                same += 1
+    for t, l, bm, cm in regressions:
+        print(f"REGRESSION  {t:26} {l:28} {bm:.2f} -> {cm:.2f}")
+    for t, l, bm, cm in improvements:
+        print(f"improved    {t:26} {l:28} {bm:.2f} -> {cm:.2f}")
+    print(f"{len(regressions)} regressions, {len(improvements)} improvements, {same} unchanged (tolerance {a.tolerance}); baseline frozen {json.loads(base_p.read_text())['frozen_at'][:10]}")
+    return 1 if regressions else 0
+
+
 def cmd_results(a) -> int:
     gcd = git_common_dir()
     log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
@@ -573,6 +637,14 @@ def main() -> int:
     s = sub.add_parser("results")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_results)
+    b = sub.add_parser("baseline", help="freeze the current task x lane matrix as the regression baseline")
+    b.add_argument("--out")
+    b.set_defaults(fn=cmd_baseline)
+    c = sub.add_parser("compare", help="compare current results with the baseline; exit 1 on regression")
+    c.add_argument("--baseline")
+    c.add_argument("--since", help="only rows with ts >= this ISO timestamp (e.g. after a model update)")
+    c.add_argument("--tolerance", type=float, default=0.05)
+    c.set_defaults(fn=cmd_compare)
     g = sub.add_parser("regrade", help="re-grade kept runs after a fixture or grader change (spends nothing)")
     g.add_argument("--task", default="all")
     g.add_argument("--lane")
