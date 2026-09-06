@@ -1,0 +1,12 @@
+{
+  "id": "authz-tenant-isolation",
+  "title": "Close a cross-tenant hole in a program-scoped authorization policy",
+  "role": "implement",
+  "kind": "security",
+  "risk": ["auth", "rules", "security"],
+  "files": ["src/authz.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 900,
+  "grader": {"type": "hidden_tests", "cmd": "python3 -m unittest discover -s hidden -q", "tests": 8},
+  "spec": "OBJECTIVE\nsrc/authz.py decides who may read and write recruiting boards and rosters that belong to a program. Any authenticated staff member can currently read and modify other programs' boards. Close the hole so access is scoped to the caller's program, without breaking the roles that are supposed to work.\n\nFILES\nsrc/authz.py only. Do not modify tests/.\n\nINTERFACES\ncan_read(user: dict, resource: dict) -> bool\ncan_write(user: dict, resource: dict) -> bool\nuser: {\"uid\": str, \"role\": \"athlete\"|\"staff\"|\"admin\"|\"super_admin\", \"program_id\": str|None}\nresource: {\"kind\": \"board\"|\"roster\"|\"profile\", \"program_id\": str|None, \"owner_uid\": str|None, \"public\": bool}\n\nCONSTRAINTS\n- staff and admin may read and write board and roster resources only when resource.program_id == user.program_id.\n- admin may additionally write profile resources within their program; staff may only read them.\n- super_admin may read and write anything.\n- athlete may read their own profile (owner_uid == uid) and any public resource; may write only their own profile.\n- A user with program_id None never gets program-scoped access, even as admin.\n- Unknown roles get nothing. Unknown resource kinds get nothing.\n- Deny by default: every path that is not explicitly allowed returns False.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked"
+}

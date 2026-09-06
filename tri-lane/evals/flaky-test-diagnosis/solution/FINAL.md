@@ -1,0 +1,1 @@
+Root cause: add() stored the insertion timestamp rounded to 10 milliseconds, so two jobs added 5 ms apart usually landed in the same bucket and the expiry test's ttl comparison raced the wall clock. Fixed by keeping full-precision timestamps from an injectable clock so the test controls time; ordering already followed dict insertion order.

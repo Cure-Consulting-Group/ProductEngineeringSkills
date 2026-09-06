@@ -1,0 +1,77 @@
+{
+  "verdict": "fix-first",
+  "summary": "Reference findings: every planted defect, cited at its line.",
+  "findings": [
+    {
+      "severity": "P1",
+      "file": "src/capture.py",
+      "line": 79,
+      "claim": "Money is accumulated as float dollars and truncated with int(); cents drift.",
+      "evidence": "total += line.qty * line.unit_price * 100; return int(total)"
+    },
+    {
+      "severity": "P0",
+      "file": "src/capture.py",
+      "line": 89,
+      "claim": "Intent is created and confirmed before the sale is persisted; a crash between confirm and save orphans an authorized charge.",
+      "evidence": "create_intent/confirm precede store.save"
+    },
+    {
+      "severity": "P1",
+      "file": "src/capture.py",
+      "line": 86,
+      "claim": "Raw card token is written to the log.",
+      "evidence": "log.info(... token %s ...)"
+    },
+    {
+      "severity": "P0",
+      "file": "src/capture.py",
+      "line": 84,
+      "claim": "Any existing intent id, including a canceled one, blocks a new card attempt and locks the cashier out.",
+      "evidence": "if sale.intent_id is not None: raise"
+    },
+    {
+      "severity": "P1",
+      "file": "src/capture.py",
+      "line": 103,
+      "claim": "Lines are cleared without a snapshot; after a crash the sale is an empty cart.",
+      "evidence": "sale.lines = []"
+    },
+    {
+      "severity": "P0",
+      "file": "src/capture.py",
+      "line": 113,
+      "claim": "Cash checkout does not cancel a pending card authorization; double charge.",
+      "evidence": "no gw.cancel in cash_checkout"
+    },
+    {
+      "severity": "P0",
+      "file": "src/capture.py",
+      "line": 127,
+      "claim": "Recovery raises on stock shortfall before releasing the authorization; the card hold is stranded.",
+      "evidence": "raise RuntimeError before capture_status/cancel"
+    },
+    {
+      "severity": "P0",
+      "file": "src/capture.py",
+      "line": 143,
+      "claim": "Any GatewayError is reported as not_found, so a transport error is treated as no money taken.",
+      "evidence": "except GatewayError: return 'not_found'"
+    },
+    {
+      "severity": "P0",
+      "file": "src/capture.py",
+      "line": 153,
+      "claim": "Webhook replay decrements stock again; seen_events is written but never checked.",
+      "evidence": "_decrement_stock on every delivery"
+    },
+    {
+      "severity": "P1",
+      "file": "src/capture.py",
+      "line": 162,
+      "claim": "Refund amount is not bounded by captured minus refunded.",
+      "evidence": "no check before gw.refund"
+    }
+  ],
+  "missing_information": []
+}

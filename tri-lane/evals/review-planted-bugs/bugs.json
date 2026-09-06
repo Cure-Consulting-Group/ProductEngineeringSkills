@@ -1,0 +1,85 @@
+{
+  "note": "Line numbers refer to src/capture.py as shipped. The grader matches a finding when its file matches and its line is within line_window of the bug line, or when the finding's claim matches the pattern (case-insensitive regex).",
+  "bugs": [
+    {
+      "id": "B01-float-money",
+      "file": "src/capture.py",
+      "line": 79,
+      "severity": "P1",
+      "pattern": "float|rounding|cents.*(drift|truncat)|int\\(total\\)",
+      "description": "total_cents accumulates dollars as floats and truncates with int(): cents drift and truncation."
+    },
+    {
+      "id": "B02-intent-persisted-late",
+      "file": "src/capture.py",
+      "line": 89,
+      "severity": "P0",
+      "pattern": "persist|saved? (after|late)|before (saving|persist)|crash.*(between|after).*(create|confirm)|intent.*(not )?(stored|saved).*(before|until)",
+      "description": "The intent is created and confirmed at the gateway before the sale is saved; process death between confirm and save orphans an authorized charge."
+    },
+    {
+      "id": "B03-token-in-logs",
+      "file": "src/capture.py",
+      "line": 86,
+      "severity": "P1",
+      "pattern": "log.*(token|secret|pan)|token.*log",
+      "description": "begin_card logs the raw card token."
+    },
+    {
+      "id": "B04-dead-intent-lockout",
+      "file": "src/capture.py",
+      "line": 84,
+      "severity": "P0",
+      "pattern": "(already has|existing).*intent|lock(s|ed)? .*out|canceled.*intent|dead intent|cannot (retry|start).*(cancel|fail)",
+      "description": "begin_card refuses when any intent id exists, including canceled or failed ones, locking the cashier out permanently."
+    },
+    {
+      "id": "B05-no-sale-snapshot",
+      "file": "src/capture.py",
+      "line": 103,
+      "severity": "P1",
+      "pattern": "snapshot|lines.*(cleared|emptied|= \\[\\])|empty cart",
+      "description": "capture_card clears sale.lines without a snapshot, so a crash after capture leaves a sale that can be neither edited nor receipted."
+    },
+    {
+      "id": "B06-cash-discards-card-auth",
+      "file": "src/capture.py",
+      "line": 113,
+      "severity": "P0",
+      "pattern": "cash.*(auth|intent|cancel)|pending.*(auth|intent).*(cash|discard)|double.?charg",
+      "description": "cash_checkout does not cancel a pending card authorization, so the customer can be charged twice."
+    },
+    {
+      "id": "B07-stock-check-strands-auth",
+      "file": "src/capture.py",
+      "line": 127,
+      "severity": "P0",
+      "pattern": "strand|out of stock.*(before|prior).*(cancel|release|status)|recover.*(raise|stock).*auth",
+      "description": "recover raises on a stock shortfall before checking or releasing the authorization, stranding the card hold."
+    },
+    {
+      "id": "B08-not-found-conflation",
+      "file": "src/capture.py",
+      "line": 143,
+      "severity": "P0",
+      "pattern": "conflat|transport.*not.?found|GatewayError.*not.?found|except GatewayError|no money taken.*(network|transport|error)",
+      "description": "capture_status returns not_found for any GatewayError, so a network blip is treated as no money taken and the intent is dropped."
+    },
+    {
+      "id": "B09-webhook-replay-double-decrement",
+      "file": "src/capture.py",
+      "line": 153,
+      "severity": "P0",
+      "pattern": "idempot|replay|seen_events|decrement.*(twice|again|double)|duplicate.*(event|webhook)",
+      "description": "replay_webhook decrements stock on every delivery; seen_events is written but never checked."
+    },
+    {
+      "id": "B10-refund-unbounded",
+      "file": "src/capture.py",
+      "line": 162,
+      "severity": "P1",
+      "pattern": "refund.*(exceed|more than|greater|bound|limit|captured)|over.?refund",
+      "description": "refund does not bound amount by captured minus already refunded."
+    }
+  ]
+}

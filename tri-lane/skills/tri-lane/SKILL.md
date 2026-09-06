@@ -125,4 +125,4 @@ Three rules while a benchmark is running: the session model and effort stay fixe
 
 ## Maintenance
 
-Lane models change. Every model generation, re-run the head-to-head in `lanes.md` on a real diff, repin in `lanes.md` only, and delete any rule above that the log does not justify.
+Lane models change. Every model generation, run the canary suite against the new model (`lane-eval.py run --task all --lane <slug> --effort high`, review roles for Antigravity), compare `lane-eval.py results` with the previous generation, repin in `models.json` and `lanes.md` only, and delete any rule above that the log does not justify. The suite is the evidence; the head-to-head log in `lanes.md` records the decision.

@@ -1,0 +1,12 @@
+{
+  "id": "review-planted-bugs",
+  "title": "Adversarial review of a payments capture service with ten planted defects",
+  "role": "review",
+  "kind": "payments",
+  "risk": ["payments", "concurrency", "security"],
+  "files": ["src/capture.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 900,
+  "grader": {"type": "planted_bugs", "registry": "bugs.json", "line_window": 4},
+  "spec": "OBJECTIVE\nReview src/capture.py, a point-of-sale card and cash capture service backed by a Stripe-like gateway, for defects that would lose money, double-charge, strand an authorized card, corrupt stock, lock a cashier out, or leak secrets. Be adversarial and concrete. Report only defects you can point to in the code.\n\nFILES\nsrc/capture.py (read-only review; do not modify anything)\n\nINTERFACES\nReturn findings as JSON matching the schema you are given: each finding has file, line, severity (P0..P3), claim, evidence. Cite the line where the defect is, not where it is triggered.\n\nCONSTRAINTS\nThe service must survive process death at any point, replayed webhooks, network errors from the gateway, and cashiers switching between card and cash mid-sale. Money is integer cents. Card tokens are secrets.\n\nVERIFY\npython3 -m unittest discover -s tests -q   (the visible tests pass; they do not cover the defects)\n\nREASONING\nas invoked"
+}

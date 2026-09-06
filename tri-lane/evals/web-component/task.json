@@ -1,0 +1,18 @@
+{
+  "id": "web-component",
+  "title": "Render a status badge component from a spec",
+  "role": "implement",
+  "kind": "web",
+  "risk": [],
+  "files": [
+    "src/badge.js"
+  ],
+  "verify": "node --test tests/*.test.mjs",
+  "timeout": 600,
+  "grader": {
+    "type": "hidden_tests",
+    "cmd": "node --test hidden/*.test.mjs",
+    "tests": 7
+  },
+  "spec": "OBJECTIVE\nImplement renderBadge in src/badge.js: a small status badge used on the recruiting board to show a count next to a label (e.g. 'Unread 12'). It renders to an HTML string on the server and must be safe against untrusted labels.\n\nFILES\nsrc/badge.js only. Do not modify tests/. Node built-ins only; no npm packages.\n\nINTERFACES\nexport function renderBadge({ label, count = 0, tone = \"neutral\" }) -> string\n\nCONSTRAINTS\n- Output exactly: <span class=\"badge badge--{tone}\" role=\"status\" aria-label=\"{label}: {displayCount}\">{label}<b>{displayCount}</b></span>\n- tone is one of neutral, info, success, warning, danger; anything else falls back to neutral.\n- displayCount: integers 0..99 render as the number; 100 and above render as 99+; negative or non-integer counts render as 0.\n- label is HTML-escaped (& < > \" ') in both the text and the aria-label; a missing or empty label renders as the text Badge.\n- No trailing whitespace or newlines in the output.\n\nVERIFY\nnode --test tests/*.test.mjs\n\nREASONING\nas invoked"
+}
