@@ -1,0 +1,8 @@
+{
+  "note": "Lines refer to after/src/orders/*.py, the version under review (HEAD after the second commit). ~40 legitimate changes surround these three.",
+  "bugs": [
+    {"id": "N1-tax-on-undiscounted", "file": "src/orders/pricing.py", "line": 33, "severity": "P0", "pattern": "tax.*(sub|undiscount|before discount|instead of taxable|on the (full|gross))|taxable.*tax_cents\\(sub", "description": "total_cents now computes tax on the subtotal instead of the discounted amount; every discounted order is overcharged."},
+    {"id": "N2-idempotency-after-write", "file": "src/orders/webhooks.py", "line": 15, "severity": "P0", "pattern": "seen\\.add.*before|add.*then.*check|always (return|treated as) (False|duplicate)|every event.*(dropped|duplicate)|idempot|duplicate check.*after", "description": "Inbox.handle adds the id to seen before checking membership, so every event is reported as a duplicate and none is handled."},
+    {"id": "N3-retry-after-success", "file": "src/orders/delivery.py", "line": 14, "severity": "P0", "pattern": "(no|missing|removed) (return|break)|keeps? (sending|retrying)|sends? (again|twice|multiple|three)|double.?send|after (a )?success|resend", "description": "send_with_retry no longer returns on a successful response, so a delivery that succeeds is sent again on every remaining attempt."}
+  ]
+}

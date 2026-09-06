@@ -1,0 +1,13 @@
+{
+  "id": "cross-module-invariant",
+  "tier": "hard",
+  "title": "Cancelling an order leaves the books unbalanced; the cause spans three modules",
+  "role": "implement",
+  "kind": "impl",
+  "risk": [],
+  "files": ["src/shop/"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 1200,
+  "grader": {"type": "hidden_tests", "cmd": "python3 -m unittest discover -s hidden -q", "tests": 6},
+  "spec": "OBJECTIVE\nAfter an order is cancelled, the shop's books no longer balance and stock counts drift. Reproduce with the visible test, find every cause, and fix them so the invariants hold: reserved stock is fully released on cancel, the ledger reverses exactly what was posted, and the reconciliation report is zero for every cancelled order. Do not special-case the tests.\n\nFILES\nsrc/shop/ (any module in the package). Do not modify tests/.\n\nINTERFACES\nKeep every public function signature in src/shop/*.py unchanged.\nshop.orders.cancel(order_id) must leave: inventory.available(sku) equal to its value before the order was placed; ledger.balance('receivable') and ledger.balance('revenue') equal to their values before the order; reconcile.report(order_id) == {'stock_delta': 0, 'ledger_delta': 0}.\n\nCONSTRAINTS\nThe defect is not in one place. Read the whole package before editing. Python stdlib only.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked"
+}

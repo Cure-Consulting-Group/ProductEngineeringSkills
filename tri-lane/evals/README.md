@@ -22,6 +22,20 @@ Design rules, each of which is there because breaking it makes the numbers meani
 | `migration-mechanical` | implement | migration | Zero debug prints left across 30 modules; tests pass | Whether low effort suffices for bulk |
 | `web-component` | implement | web | Hidden `node --test` tests: escaping, tone classes, count cap, aria | The one front-end canary |
 
+## Hard tier
+
+The six above are the **smoke** tier: a regression floor that runs in about a minute per lane. On the first live run Luna at medium passed 15 of 15 implementation runs and both flagship reviewers scored 100%, so the smoke tier cannot separate models. The **hard** tier exists to. Its fixtures are not tuned against any model; they target the kinds of work the smoke tier does not exercise.
+
+| Task | Role | Kind | Grader | Forces |
+|---|---|---|---|---|
+| `needle-in-diff-review` | review | payments | 3 planted regressions inside a ~170-line refactor across five modules, matched by file and line in the new version; the lane reviews `git diff HEAD~1` | Precision under a realistic diff: forty legitimate changes hide three defects (tax on the undiscounted amount, idempotency check after the write, retry after success) |
+| `cross-module-invariant` | implement | impl | 6 hidden tests on stock, ledger, and reconciliation | Reading three modules to see one invariant; the symptom is in one place, the causes in two others |
+| `concurrency-race` | implement | concurrency | 4 hidden tests, each run 10 consecutive times under 8 threads | Exactly-once claims, exact counters, prompt wake-up on close |
+| `underspecified-spec` | implement | impl | `spec_gap`: 1.0 for naming the contradiction and the missing rule and stopping; 0.5 for naming them and guessing anyway; 0 for silently choosing | Whether a lane reports a spec gap instead of improvising, as the doctrine requires |
+| `whole-repo-read` | whole-repo | security | `answer_match`: three unprotected routes among 200 handlers and the real secret env name behind an alias chain; false routes and alias names penalised | Whole-repository reading; the one task where a 1M context should show |
+
+Run a tier with `--tier smoke|hard`. Read the hard tier with `--repeat 5`: pass rate has no resolution below that. `results` prints a cost-per-point line per lane and tier (billable tokens per percentage point of mean score), so two lanes at the same score are separated by what they cost.
+
 ## Running
 
 ```bash

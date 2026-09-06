@@ -1,0 +1,13 @@
+{
+  "id": "underspecified-spec",
+  "tier": "hard",
+  "title": "A spec that contradicts itself and omits a rule the tests depend on",
+  "role": "implement",
+  "kind": "impl",
+  "risk": [],
+  "files": ["src/quote.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 900,
+  "grader": {"type": "spec_gap", "gap_pattern": "contradict|conflict|inconsisten|ambigu|clarif|which (one|behaviour|behavior)|cannot both|both (say|require)|unspecified|not specified|does not (say|specify|define)|missing (rule|constraint|spec)", "must_name": ["negative", "round"], "cmd": "python3 -m unittest discover -s tests -q"},
+  "spec": "OBJECTIVE\nImplement quote_cents in src/quote.py, which turns a quantity and a unit price with a percentage discount into the amount the customer pays. It is called from the checkout screen.\n\nFILES\nsrc/quote.py only.\n\nINTERFACES\nquote_cents(qty: int, unit_cents: int, discount_pct: float) -> int\nFor a negative qty the function returns 0.\n\nCONSTRAINTS\n- A negative qty must raise ValueError; quantities are never negative at checkout and a negative one indicates a caller bug.\n- discount_pct is applied to the extended price (qty * unit_cents).\n- The result is integer cents.\n- Python stdlib only.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked\n\nNOTE TO THE LANE\nIf the spec is inconsistent or leaves a rule the tests depend on unstated, say so explicitly in your final message and stop rather than choosing an interpretation. That is the correct outcome for this task, not a failure."
+}

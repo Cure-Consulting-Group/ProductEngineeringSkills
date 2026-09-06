@@ -1,0 +1,13 @@
+{
+  "id": "whole-repo-read",
+  "tier": "hard",
+  "title": "Find every unauthenticated route and the name of the webhook secret across 200 modules",
+  "role": "whole-repo",
+  "kind": "security",
+  "risk": ["auth", "security"],
+  "files": ["src/svc/"],
+  "verify": "python3 -c \"import sys; sys.path.insert(0,'src'); import svc\"",
+  "timeout": 1200,
+  "grader": {"type": "answer_match", "required": ["/admin/export", "/orders/bulk-delete", "/users/impersonate", "ORDERS_WEBHOOK_HMAC_KEY"], "forbidden_pattern": "/api/v1/resource\\d+", "distractors": ["signing_secret", "SIGNING"]},
+  "spec": "OBJECTIVE\nThis service registers 200 HTTP handlers. Every handler is supposed to be wrapped with the require_auth decorator. Answer two questions exactly, by reading the code, not by guessing from names: (1) Which route paths are registered WITHOUT require_auth? List every one and no others. (2) What is the exact name of the environment variable that holds the webhook signing secret? Trace the real definition, not an alias.\n\nFILES\nsrc/svc/ (read-only; do not modify anything)\n\nINTERFACES\nFinal message: a line starting with UNAUTHENTICATED: followed by the route paths, comma separated; then a line starting with SECRET_ENV: followed by the variable name. Nothing else is graded.\n\nCONSTRAINTS\nA route listed that is actually protected counts against you. An alias name instead of the environment variable name counts as wrong.\n\nVERIFY\nn/a (read-only task)\n\nREASONING\nas invoked"
+}

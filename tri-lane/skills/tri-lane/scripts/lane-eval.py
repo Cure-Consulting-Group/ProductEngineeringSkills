@@ -92,7 +92,17 @@ def grade_hidden_tests(task, work: Path, final: str) -> dict:
     if dst.exists():
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
-    rc, out = run_in_sandbox(g["cmd"], work, task.get("timeout", 900))
+    # races: the hidden suite must pass every one of `repeat` consecutive runs; report the worst run
+    repeat = int(g.get("repeat", 1))
+    rc, out = 0, ""
+    worst = None
+    for i in range(repeat):
+        rc, out = run_in_sandbox(g["cmd"], work, task.get("timeout", 900))
+        if rc != 0:
+            worst = (i + 1, out)
+            break
+    if worst:
+        out = worst[1] + f"\n[failed on run {worst[0]} of {repeat}]"
     m = re.search(r"Ran (\d+) tests", out)
     ran = int(m.group(1)) if m else None
     if "node --test" in g["cmd"]:
@@ -107,7 +117,41 @@ def grade_hidden_tests(task, work: Path, final: str) -> dict:
     expected = g["tests"]
     score = round(passed / expected, 3) if expected else 0.0
     shutil.rmtree(dst, ignore_errors=True)
-    return {"pass": rc == 0 and passed == expected, "score": score, "passed": passed, "expected": expected, "output_tail": out.strip()[-600:]}
+    return {"pass": rc == 0 and passed == expected, "score": score, "passed": passed, "expected": expected, "repeat": repeat, "output_tail": out.strip()[-600:]}
+
+
+def grade_spec_gap(task, work: Path, final: str) -> dict:
+    """Rewards a lane that names the contradiction and the missing rule and stops, over one that guesses."""
+    g = task["grader"]
+    text = final or ""
+    named_gap = bool(re.search(g["gap_pattern"], text, re.I))
+    named_all = all(re.search(k, text, re.I) for k in g.get("must_name", []))
+    _, names, _ = sh(["git", "diff", "--name-only", "HEAD"], cwd=str(work), timeout=60)
+    _, porcelain, _ = sh(["git", "status", "--porcelain"], cwd=str(work), timeout=60)
+    implemented = bool(names.strip()) or any(l.startswith("??") for l in porcelain.splitlines())
+    if named_gap and named_all and not implemented:
+        score = 1.0
+    elif named_gap and named_all:
+        score = 0.5   # flagged it, then guessed anyway
+    elif named_gap:
+        score = 0.3   # vague "ambiguous" without naming what
+    else:
+        score = 0.0   # silently picked an interpretation
+    return {"pass": score == 1.0, "score": score, "named_gap": named_gap, "named_all": named_all, "implemented_anyway": implemented}
+
+
+def grade_answer_match(task, work: Path, final: str) -> dict:
+    """Exact required facts present, forbidden pattern absent, distractor aliases absent."""
+    g = task["grader"]
+    text = final or ""
+    found = [r for r in g["required"] if r in text]
+    missing = [r for r in g["required"] if r not in text]
+    forbidden = re.findall(g["forbidden_pattern"], text) if g.get("forbidden_pattern") else []
+    distract = [d for d in g.get("distractors", []) if re.search(r"SECRET_ENV:\s*" + re.escape(d) + r"\b", text)]
+    recall = len(found) / len(g["required"])
+    penalty = min(1.0, 0.25 * (len(forbidden) + len(distract)))
+    score = round(max(0.0, recall - penalty), 3)
+    return {"pass": not missing and not forbidden and not distract, "score": score, "found": found, "missing": missing, "false_routes": forbidden[:10], "alias_instead_of_env": distract}
 
 
 def grade_planted_bugs(task, work: Path, final: str) -> dict:
@@ -187,15 +231,29 @@ def grade_migration(task, work: Path, final: str) -> dict:
     return {"pass": passed, "score": score, "forbidden_left": left, "required_found": have, "tests_ok": rc == 0, "output_tail": out.strip()[-300:]}
 
 
-GRADERS = {"hidden_tests": grade_hidden_tests, "planted_bugs": grade_planted_bugs, "flake": grade_flake, "migration": grade_migration}
+GRADERS = {"hidden_tests": grade_hidden_tests, "planted_bugs": grade_planted_bugs, "flake": grade_flake, "migration": grade_migration,
+           "spec_gap": grade_spec_gap, "answer_match": grade_answer_match}
 
 
 # ---------------------------------------------------------------- lanes
 
+def _copy_tree(src: Path, dst: Path) -> None:
+    for p in src.rglob("*"):
+        if p.is_file():
+            d = dst / p.relative_to(src)
+            d.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(p, d)
+
+
 def prepare_work(task, run_dir: Path) -> Path:
+    """Copy the fixture into a fresh git repo. With diff_layout, the base/ tree is the first commit and the
+    after/ tree the second, so the lane reviews `git diff HEAD~1` exactly as a PR review would."""
     work = run_dir / "work"
     work.mkdir(parents=True)
     hidden = {"hidden", "solution", "task.json", "bugs.json", "gen_fixture.py"}
+    layout = task.get("diff_layout")
+    if layout:
+        hidden |= {layout["base"], layout["after"]}
     for p in task["_dir"].iterdir():
         if p.name in hidden or p.name.startswith("."):
             continue
@@ -205,8 +263,16 @@ def prepare_work(task, run_dir: Path) -> Path:
             shutil.copy2(p, work / p.name)
     (work / "SPEC.md").write_text(task["spec"] + "\n")
     git(["init", "-q", "-b", "main"], work)
-    git(["add", "-A"], work)
-    git(["commit", "-qm", "fixture"], work)
+    if layout:
+        _copy_tree(task["_dir"] / layout["base"], work)
+        git(["add", "-A"], work)
+        git(["commit", "-qm", "base"], work)
+        _copy_tree(task["_dir"] / layout["after"], work)
+        git(["add", "-A"], work)
+        git(["commit", "-qm", "refactor: type hints and docstrings across the orders package"], work)
+    else:
+        git(["add", "-A"], work)
+        git(["commit", "-qm", "fixture"], work)
     return work
 
 
@@ -214,6 +280,8 @@ def lane_reference(task, work: Path, run_dir: Path, effort: str) -> tuple[str, d
     sol = task["_dir"] / "solution"
     if task["role"] == "review":
         return (sol / "findings.json").read_text(), {}
+    if task["role"] == "whole-repo" or task["grader"]["type"] == "spec_gap":
+        return (sol / "FINAL.md").read_text(), {}
     for p in sol.rglob("*"):
         if p.is_file() and p.name != "FINAL.md":
             dst = work / p.relative_to(sol)
@@ -231,6 +299,9 @@ def lane_codex(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple
     if task["role"] == "review":
         body += "Return ONLY JSON matching the provided schema. Cite src/... file paths and the exact line of each defect.\n"
         sandbox = ["-s", "read-only", "--output-schema", str(SCHEMA_STRICT)]
+    elif task["role"] == "whole-repo":
+        body += "Read the repository as needed. Do not modify anything. End with the exact answer lines the INTERFACES section asks for.\n"
+        sandbox = ["-s", "read-only"]
     else:
         body += "Run the VERIFY command and include its actual output in your final message.\n"
         sandbox = ["-s", "workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true"]
@@ -260,15 +331,18 @@ def lane_codex(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple
 
 
 def lane_agy(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[str, dict]:
-    if task["role"] != "review":
-        raise SystemExit("Antigravity lanes run review roles only (doctrine: the Antigravity lane never writes)")
+    if task["role"] not in ("review", "whole-repo"):
+        raise SystemExit("Antigravity lanes run review and whole-repo roles only (doctrine: the Antigravity lane never writes)")
     eff = {"low": "low", "medium": "medium", "high": "high"}.get(effort, "high")
-    prompt = f"You are reviewing the repository at {work.resolve()}. Do not modify any file. Answer only with the JSON schema provided.\n\n" + task["spec"]
+    if task["role"] == "review":
+        prompt = f"You are reviewing the repository at {work.resolve()}. Do not modify any file. Answer only with the JSON schema provided.\n\n" + task["spec"]
+    else:
+        prompt = f"You are reading the repository at {work.resolve()}. Do not modify any file. End with the exact answer lines the INTERFACES section asks for.\n\n" + task["spec"]
     out = run_dir / "agy.json"
     env = dict(os.environ, TMPDIR=str(run_dir / "tmp"))
     (run_dir / "tmp").mkdir(exist_ok=True)
     argv = ["agy", "-p", prompt, "--add-dir", str(work.resolve()), "--model", lane, "--effort", eff, "--mode", "plan", "--sandbox",
-            "--json-schema", str(SCHEMA), "--output-format", "json", "--print-timeout", f"{task.get('timeout', 900) // 60}m"]
+            "--output-format", "json", "--print-timeout", f"{task.get('timeout', 900) // 60}m"] + (["--json-schema", str(SCHEMA)] if task["role"] == "review" else [])
     rc, so, se = sh(argv, cwd=str(work), env=env, timeout=task.get("timeout", 900) + 60)
     out.write_text(so)
     try:
@@ -279,8 +353,10 @@ def lane_agy(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[s
 
 
 def lane_claude(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[str, dict]:
-    mode = "plan" if task["role"] == "review" else "acceptEdits"
-    body = task["spec"] + ("\n\nReturn ONLY JSON with a findings array (file, line, severity, claim, evidence)." if task["role"] == "review" else "\n\nRun the VERIFY command and include its actual output in your final message.")
+    mode = "plan" if task["role"] in ("review", "whole-repo") else "acceptEdits"
+    body = task["spec"] + ("\n\nReturn ONLY JSON with a findings array (file, line, severity, claim, evidence)." if task["role"] == "review" else
+                           "\n\nDo not modify anything. End with the exact answer lines the INTERFACES section asks for." if task["role"] == "whole-repo" else
+                           "\n\nRun the VERIFY command and include its actual output in your final message.")
     argv = ["claude", "-p", body, "--model", lane.replace("claude-", "", 1) if lane.startswith("claude-") else lane, "--output-format", "json", "--permission-mode", mode]
     rc, so, se = sh(argv, cwd=str(work), timeout=task.get("timeout", 900) + 60)
     (run_dir / "claude.json").write_text(so)
@@ -307,13 +383,16 @@ def dispatch(task, work, run_dir, lane, effort):
 
 def cmd_list(a) -> int:
     for t in fixtures().values():
-        print(f"{t['id']:26} {t['role']:9} {t['kind']:10} grader={t['grader']['type']:13} {t['title']}")
+        print(f"{t['id']:26} {t.get('tier', 'smoke'):6} {t['role']:11} {t['kind']:12} grader={t['grader']['type']:13} {t['title']}")
     return 0
 
 
 def cmd_run(a) -> int:
     fx = fixtures()
-    ids = list(fx) if a.task == "all" else [a.task]
+    if a.task == "all":
+        ids = [i for i, t in fx.items() if a.tier == "all" or t.get("tier", "smoke") == a.tier]
+    else:
+        ids = [a.task]
     missing = [i for i in ids if i not in fx]
     if missing:
         print(f"unknown task(s): {missing}", file=sys.stderr)
@@ -325,11 +404,11 @@ def cmd_run(a) -> int:
     overall = True
     for tid in ids:
         task = fx[tid]
-        if a.lane.startswith("gemini-") and task["role"] != "review":
-            print(f"skip {tid}: Antigravity lanes run review roles only")
+        if a.lane.startswith("gemini-") and task["role"] not in ("review", "whole-repo"):
+            print(f"skip {tid}: Antigravity lanes run review and whole-repo roles only")
             continue
         for rep in range(a.repeat):
-            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")[:-3]
             run_dir = runs_root / f"{stamp}-{tid}-{a.lane}-{rep + 1}"
             run_dir.mkdir(parents=True)
             work = prepare_work(task, run_dir)
@@ -347,7 +426,7 @@ def cmd_run(a) -> int:
                 grade = {"pass": False, "score": None, "error": meta.get("error") or f"lane exit {meta.get('exit')} with no output"}
             else:
                 grade = GRADERS[task["grader"]["type"]](task, work, final or "")
-            row = {"ts": now_iso(), "task": tid, "role": task["role"], "kind": task["kind"], "lane": a.lane, "effort": a.effort, "repeat": rep + 1,
+            row = {"ts": now_iso(), "task": tid, "tier": task.get("tier", "smoke"), "role": task["role"], "kind": task["kind"], "lane": a.lane, "effort": a.effort, "repeat": rep + 1,
                    "pass": bool(grade.get("pass")), "score": grade.get("score"), "error": grade.get("error"), "grade": grade, "elapsed_seconds": elapsed, "meta": meta,
                    "diff_stat": stat.strip()[-300:], "run_dir": str(run_dir)}
             with open(log, "a") as f:
@@ -405,20 +484,37 @@ def cmd_results(a) -> int:
         return 0
     errors = [r for r in rows if r.get("error")]
     rows = [r for r in rows if not r.get("error")]
+    fx = fixtures()
+    tier_of = lambda r: r.get("tier") or fx.get(r["task"], {}).get("tier", "smoke")
+
+    def billable(r):
+        u = (r.get("meta") or {}).get("usage") or {}
+        if "cached_input_tokens" in u:
+            return u.get("input_tokens", 0) - u.get("cached_input_tokens", 0) + u.get("output_tokens", 0)
+        return u.get("total_tokens") or u.get("input_tokens", 0) + u.get("output_tokens", 0)
+
     lanes = sorted({f"{r['lane']}@{r['effort']}" for r in rows})
-    tasks = sorted({r["task"] for r in rows})
-    print(f"{'task':26} " + " ".join(f"{l[:22]:>22}" for l in lanes))
-    for t in tasks:
-        cells = []
-        for l in lanes:
-            rs = [r for r in rows if r["task"] == t and f"{r['lane']}@{r['effort']}" == l]
-            if not rs:
-                cells.append(f"{'—':>22}")
-            else:
-                p = sum(1 for r in rs if r["pass"]); s = sum((r["score"] or 0) for r in rs) / len(rs)
-                cells.append(f"{f'{p}/{len(rs)} pass, {round(100*s)}%':>22}")
-        print(f"{t:26} " + " ".join(cells))
-    print(f"{len(rows)} graded runs in {log}" + (f"; {len(errors)} lane errors excluded (see 'error' field)" if errors else ""))
+    for tier in ("smoke", "hard"):
+        tasks = sorted({r["task"] for r in rows if tier_of(r) == tier})
+        if not tasks:
+            continue
+        print(f"\n== {tier} tier")
+        print(f"{'task':26} " + " ".join(f"{l[:22]:>22}" for l in lanes))
+        for t in tasks:
+            cells = []
+            for l in lanes:
+                rs = [r for r in rows if r["task"] == t and f"{r['lane']}@{r['effort']}" == l]
+                if not rs:
+                    cells.append(f"{'—':>22}")
+                else:
+                    p = sum(1 for r in rs if r["pass"]); s = sum((r["score"] or 0) for r in rs) / len(rs)
+                    cells.append(f"{f'{p}/{len(rs)} pass, {round(100*s)}%':>22}")
+            print(f"{t:26} " + " ".join(cells))
+        # cost per point: billable tokens per percentage point of mean score, per lane, this tier
+        print(f"{'cost/point (tokens)':26} " + " ".join(
+            (lambda rs: f"{(sum(billable(r) for r in rs) / max(1e-9, 100 * sum((r['score'] or 0) for r in rs))):>22,.0f}" if rs and sum((r['score'] or 0) for r in rs) > 0 else f"{'—':>22}")
+            ([r for r in rows if tier_of(r) == tier and f"{r['lane']}@{r['effort']}" == l and r["lane"] != "reference"]) for l in lanes))
+    print(f"\n{len(rows)} graded runs in {log}" + (f"; {len(errors)} lane errors excluded (see 'error' field)" if errors else ""))
     return 0
 
 
@@ -429,6 +525,7 @@ def main() -> int:
     sub.add_parser("list").set_defaults(fn=cmd_list)
     r = sub.add_parser("run")
     r.add_argument("--task", required=True, help="fixture id or all")
+    r.add_argument("--tier", default="all", choices=["all", "smoke", "hard"], help="with --task all: which tier to run")
     r.add_argument("--lane", required=True, help="reference | gpt-5.6-luna | gpt-5.6-sol | gpt-6-astra | gemini-3.8-flash-high | claude-...")
     r.add_argument("--effort", default="high", help="low | medium | high | xhigh | max | ultra (as the lane accepts)")
     r.add_argument("--repeat", type=int, default=1)

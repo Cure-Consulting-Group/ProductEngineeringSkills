@@ -1,0 +1,10 @@
+{
+  "verdict": "fix-first",
+  "summary": "Three behavioural regressions hidden in the refactor.",
+  "findings": [
+    {"severity": "P0", "file": "src/orders/pricing.py", "line": 33, "claim": "Tax is now computed on the undiscounted subtotal instead of the taxable (discounted) amount.", "evidence": "tax = tax_cents(sub, tax_bps) replaced tax_cents(taxable, tax_bps)"},
+    {"severity": "P0", "file": "src/orders/webhooks.py", "line": 15, "claim": "The idempotency check runs after the id is added to seen, so every event is treated as a duplicate.", "evidence": "self.seen.add(event_id) precedes the membership check"},
+    {"severity": "P0", "file": "src/orders/delivery.py", "line": 14, "claim": "A successful send no longer returns; the loop keeps sending on the remaining attempts (double send).", "evidence": "return resp replaced by last = resp with no break"}
+  ],
+  "missing_information": []
+}
