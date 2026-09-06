@@ -47,6 +47,10 @@ The hard tier's only discriminator turned out to be the under-specified spec: th
 
 Three more spec-gap fixtures were added after the first judgment run, because the under-specified spec was the only fixture in 73 runs that separated models: `spec-gap-missing-rule` (consistent but incomplete: tie-break and short-list rules unstated), `spec-gap-test-contradiction` (constraints say raise on empty, the visible test expects an empty list), and `spec-gap-impossible-interface` (constraints demand a warning the fixed int return type cannot carry). All use the `spec_gap` grader with `must_name` lists, so naming one gap of two scores 0.3 and naming both and stopping scores 1.0.
 
+## Failures are results
+
+A benchmark that drops its failures measures the model on its good days. Every run ends in one terminal state (`complete`, `failed`, `refused`, `timeout`, `stalled`, `error`) and any non-complete run carries a class: `infra`, `harness`, `quota` (ours: retried once, not charged to the model), `model` (theirs: score zero, never retried), or `fixture` (the benchmark's: fix the grader, regrade). A heartbeat on the Codex event stream ends a stalled lane after three minutes of no progress rather than at the cap. `results` prints a reliability block next to the matrix; `failures` lists occurrences by class and flags any class the ledger says is closed; `classify` backfills older logs.
+
 ## Regression floor
 
 Because most fixtures saturate on current models, the suite's main job is catching a drop when a vendor ships a new model. Freeze the current matrix and compare after an update:

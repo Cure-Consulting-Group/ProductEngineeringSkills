@@ -140,6 +140,7 @@ details.eng>summary::before{content:"▸ ";}details.eng[open]>summary::before{co
   <figure id="c-pools"><h4>Quota pool movement per task</h4><p class="sub">Percentage points of each weekly pool consumed. Codex is used-percent; Google pools are remaining-percent, shown as consumption.</p><div class="legend"><span><i style="background:var(--s2)"></i>Codex weekly</span><span><i style="background:var(--s3)"></i>Google Gemini weekly</span></div><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
 </div>
 <div class="grid">
+  <figure id="c-reliability" class="wide"><h4>Reliability: failures are results</h4><p class="sub">Per lane: how often the first attempt succeeded, failures by class (model failures score zero; infra, harness, and quota failures are retried once and charged to us), seconds to a result including failed attempts, tokens wasted on attempts that produced nothing, and cost per point with that waste included.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
   <figure id="c-canary" class="wide"><h4>Canary suite: fixed tasks × lanes</h4><p class="sub">Mean score per cell from evals.jsonl; darker is better. Hover for pass count and grader detail. These numbers drive routing, not adoption.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
 </div>
 <div class="tbl"><table id="tasks"><thead><tr><th>Task</th><th>Project</th><th>Arm</th><th>Kind</th><th>Route</th><th>Lane</th><th>Model</th><th>Status</th><th>Advisor</th><th>Min</th><th>Claude billable</th><th>Codex billable</th><th>Antigravity</th><th>Confirmed</th><th>Rework</th><th>Escaped</th><th>Window</th></tr></thead><tbody></tbody></table></div>
@@ -184,8 +185,9 @@ const DATA = __DATA__;
         why:`On <b>${C.filter(e=>e.lane!=="reference").length} practice tasks</b> with known answers, ${cheapest?`<b>${nice(cheapest.k)}</b> passed ${Math.round(cheapest.rate*100)}% (${cheapest.n} runs)`:""}${top&&cheapest&&top.k!==cheapest.k?`; the best, <b>${nice(top.k)}</b>, passed ${Math.round(top.rate*100)}%`:""}. The expensive models earn their cost only when the instructions are incomplete and the AI has to notice and ask.`});
     } else cards.push({q:"Which AI should do which job?", a:"No practice results yet", cls:"warn", why:"Run the practice suite to compare models on tasks with known answers."});
     // 4. safety
+    const R=DATA.reliability||{}; const rl=Object.values(R); const infraHarness=rl.reduce((a,d)=>a+((d.classes||{}).infra||0)+((d.classes||{}).harness||0)+((d.classes||{}).quota||0),0); const stalls=rl.reduce((a,d)=>a+((d.classes||{}).model||0),0);
     cards.push({q:"Is it safe to let it run?", a: esc?`${esc} bug${esc>1?"s":""} reached users`:"No bugs have reached users", cls: esc?"crit":(unchecked?"warn":"good"),
-      why:`${unchecked?`<b>${unchecked} task${unchecked>1?"s are":" is"} still inside the 7-day watch window</b>, so this can change. `:""}Every AI change is made in an isolated copy of the code, checked by a second vendor, and reviewed by a fresh, independent check before it can be merged.`});
+      why:`${unchecked?`<b>${unchecked} task${unchecked>1?"s are":" is"} still inside the 7-day watch window</b>, so this can change. `:""}Every AI change is made in an isolated copy of the code, checked by a second vendor, and reviewed by a fresh, independent check before it can be merged. Failures are recorded, not hidden: <b>${infraHarness}</b> caused by our environment or tooling (retried once, not charged to the AI) and <b>${stalls}</b> where the AI itself fell short (scored zero).`});
     document.getElementById("cards").innerHTML=cards.map(c=>`<div class="card"><div class="q">${c.q}</div><div class="a ${c.cls}">${c.a}</div><div class="why">${c.why}</div></div>`).join("");
   })();
 
@@ -264,6 +266,15 @@ const DATA = __DATA__;
     rows.forEach((t,i)=>{const y=8+i*rowH; el("text",{x:L-8,y:y+14,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=t.task.length>18?t.task.slice(0,17)+"…":t.task; [["codex",css("--s2"),0],["gem",css("--s3"),11]].forEach(([k,c,dy])=>{const v=val(t,k); const r=el("rect",{x:L,y:y+2+dy,width:x(v)-L,height:9,fill:c},s); hover(r,fig,`${t.task} · ${k==="codex"?"Codex weekly":"Google Gemini weekly"}: ${v} points`);}); });
     table(fig,["Task","Codex weekly used (pts)","Gemini weekly consumed (pts)"],rows.map(t=>[t.task,val(t,"codex"),val(t,"gem")]));})();
 
+  // reliability
+  (function(){const fig=document.getElementById("c-reliability"); const R=DATA.reliability||{}; const lanes=Object.keys(R).sort(); if(!lanes.length){empty(fig,"no lane runs yet");return;}
+    const W=1160,rowH=34,L=230,H=lanes.length*rowH+30; const s=svg(fig,W,H,"First-attempt success rate per lane with failure classes"); const x=v=>L+v*(W-L-260);
+    for(let g=0;g<=1;g+=0.25){el("line",{x1:x(g),y1:8,x2:x(g),y2:H-22,stroke:css("--grid")},s);el("text",{x:x(g),y:H-6,"text-anchor":"middle","font-size":"11",fill:css("--ink-3")},s).textContent=Math.round(g*100)+"%";}
+    lanes.forEach((k,i)=>{const d=R[k]; const y=8+i*rowH; el("text",{x:L-10,y:y+18,"text-anchor":"end","font-size":"12",fill:css("--ink")},s).textContent=k;
+      const rate=d.first_attempt_success_rate||0; const r=el("rect",{x:L,y:y+4,width:x(rate)-L,height:22,fill:css("--s2")},s); hover(r,fig,`${k}: first attempt succeeded ${Math.round(rate*100)}% of ${d.first_attempts}; failures ${JSON.stringify(d.classes)}; ${d.mean_seconds_to_result}s to a result; ${d.wasted_tokens.toLocaleString()} tokens wasted`);
+      const c=d.classes||{}; el("text",{x:x(1)+12,y:y+18,"font-size":"11.5",fill:css("--ink-2")},s).textContent=`${Math.round(rate*100)}% · model ${c.model||0} · infra ${c.infra||0} · harness ${c.harness||0} · quota ${c.quota||0} · ${d.mean_seconds_to_result}s`;});
+    table(fig,["Lane","First-try success","Attempts","Model","Infra","Harness","Quota","Seconds to result","Wasted tokens","Cost/point incl. waste"],lanes.map(k=>{const d=R[k],c=d.classes||{};return [k,d.first_attempt_success_rate,d.attempts,c.model||0,c.infra||0,c.harness||0,c.quota||0,d.mean_seconds_to_result,d.wasted_tokens.toLocaleString(),d.cost_per_point_incl_waste??"—"];}));})();
+
   // canary matrix
   (function(){const fig=document.getElementById("c-canary"); const C=DATA.canary||[]; if(!C.length){empty(fig,"no canary runs yet — python3 lane-eval.py run --task all --lane reference, then real lanes");return;}
     const lanes=[...new Set(C.map(e=>e.lane+" @ "+e.effort))].sort(); const tasks=[...new Set(C.map(e=>e.task))].sort();
@@ -331,7 +342,22 @@ def main() -> int:
                                "score": e.get("score"), "elapsed": e.get("elapsed_seconds"), "ts": e.get("ts"), "detail": {k: v for k, v in (e.get("grade") or {}).items() if k in ("recall", "precision", "passed", "expected", "failed_runs", "forbidden_left", "missed", "false_positives")}})
             except Exception:
                 pass
-    data = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "source": source, "tasks": slim(rows), "arms": summary, "decision": decision, "canary": canary}
+    # reliability per lane, from the same evals logs (failures are results)
+    reliability = {}
+    try:
+        spec_e = importlib.util.spec_from_file_location("lane_eval", HERE / "lane-eval.py")
+        le = importlib.util.module_from_spec(spec_e); spec_e.loader.exec_module(le)
+        eval_rows = []
+        for lp in seen:
+            for line in Path(lp).read_text().splitlines():
+                try:
+                    eval_rows.append(json.loads(line))
+                except Exception:
+                    pass
+        reliability = le._reliability(eval_rows)
+    except Exception:
+        reliability = {}
+    data = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "source": source, "tasks": slim(rows), "arms": summary, "decision": decision, "canary": canary, "reliability": reliability}
     html = TEMPLATE.replace("__DATA__", json.dumps(data))
     out = Path(a.out).expanduser()
     out.write_text(html)

@@ -394,6 +394,30 @@ class Canary(unittest.TestCase):
         self.assertIn("t1", out)
         shutil.rmtree(d)
 
+    def test_failure_taxonomy_and_retry(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from lane_failures import classify
+        self.assertEqual(classify({"pass": False, "meta": {"exit": 1, "error": "Invalid schema for response_format"}, "grade": {"score": None}})["failure_class"], "harness")
+        self.assertEqual(classify({"pass": False, "meta": {"exit": 1, "error": "429 rate limit"}, "grade": {"score": None}})["failure_class"], "quota")
+        self.assertEqual(classify({"pass": False, "meta": {"stalled": True, "stall_seconds": 180}, "grade": {"score": None}})["failure_class"], "model")
+        self.assertEqual(classify({"pass": False, "role": "implement", "meta": {"exit": 0}, "grade": {"score": 0.0}, "diff_stat": ""})["state"], "refused")
+        self.assertEqual(classify({"pass": True, "meta": {}, "grade": {"score": 1.0}})["state"], "complete")
+        # one automatic retry for a harness failure; both attempts logged; the retry succeeds via the reference
+        d = Path(tempfile.mkdtemp())
+        env = dict(ENV, TRI_LANE_EVAL_UNSANDBOXED="1", TRI_LANE_EVAL_FAKE_FAIL="harness")
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "e.jsonl", "run", "--task", "impl-spec-service", "--lane", "reference"], env=env, timeout=300)
+        rows = [json.loads(l) for l in (d / "e.jsonl").read_text().splitlines()]
+        self.assertEqual(rc, 0, out + err)
+        self.assertEqual([r["attempt"] for r in rows], [1, 2])
+        self.assertEqual(rows[0]["failure_class"], "harness")
+        self.assertTrue(rows[1]["pass"])
+        self.assertTrue((d / "failures.jsonl").exists())
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "e.jsonl", "failures"])
+        self.assertIn("harness", out)
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "e.jsonl", "results"])
+        self.assertIn("reliability", out)
+        shutil.rmtree(d)
+
     def test_planted_bug_grader_handles_prose_and_neighbours(self):
         import importlib.util
         spec = importlib.util.spec_from_file_location("le", SCRIPTS / "lane-eval.py")

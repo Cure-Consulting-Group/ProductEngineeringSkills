@@ -360,8 +360,30 @@ def lane_codex(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple
             "-m", lane, "-c", f"model_reasoning_effort={effort}", "--json", "-o", str(final)]
     env = dict(os.environ, TMPDIR=str(run_dir / "tmp"))
     (run_dir / "tmp").mkdir(exist_ok=True)
+    # Heartbeat: codex --json writes an event per tool call. If the events file stops growing for
+    # STALL_SECONDS the lane is stalled; kill it now rather than waiting for the wall-clock cap.
+    stall_seconds = int(os.environ.get("TRI_LANE_STALL_SECONDS", "180"))
+    stalled = False
     with open(spec) as fin, open(events, "w") as fout:
-        p = subprocess.run(argv, cwd=str(work), stdin=fin, stdout=fout, stderr=subprocess.PIPE, text=True, env=env)
+        p = subprocess.Popen(argv, cwd=str(work), stdin=fin, stdout=fout, stderr=subprocess.PIPE, text=True, env=env)
+        last_size, last_change = 0, time.time()
+        while p.poll() is None:
+            time.sleep(2)
+            try:
+                size = events.stat().st_size
+            except OSError:
+                size = last_size
+            if size != last_size:
+                last_size, last_change = size, time.time()
+            elif time.time() - last_change > stall_seconds:
+                stalled = True
+                p.kill()
+                break
+        stderr = p.communicate()[1] or ""
+    class _P:  # keep the shape the code below expects
+        returncode = p.returncode
+    p = _P()
+    p.stderr = stderr
     usage = {}
     error = None
     for line in events.read_text(errors="ignore").splitlines():
@@ -376,7 +398,9 @@ def lane_codex(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple
             except Exception:
                 error = line[:300]
     txt = final.read_text(errors="ignore") if final.exists() else ""
-    return txt, {"exit": p.returncode, "usage": usage, "error": (error or "")[:400] or None, "stderr_tail": (p.stderr or "")[-300:]}
+    ev_lines = events.read_text(errors="ignore").splitlines()
+    return txt, {"exit": p.returncode, "usage": usage, "error": (error or "")[:400] or None, "stderr_tail": (p.stderr or "")[-300:],
+                 "stalled": stalled, "stall_seconds": stall_seconds if stalled else None, "events": len(ev_lines), "events_tail": " ".join(ev_lines[-3:])[-600:]}
 
 
 def lane_agy(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[str, dict]:
@@ -418,6 +442,10 @@ def lane_claude(task, work: Path, run_dir: Path, lane: str, effort: str) -> tupl
 
 def dispatch(task, work, run_dir, lane, effort):
     if lane == "reference":
+        fake = os.environ.get("TRI_LANE_EVAL_FAKE_FAIL")  # tests: "harness" makes the first attempt fail like a schema rejection
+        if fake and not (run_dir.parent / ".fake-fail-consumed").exists():
+            (run_dir.parent / ".fake-fail-consumed").write_text("1")
+            return "", {"exit": 1, "usage": {}, "error": "invalid_json_schema (simulated)", "stderr_tail": "", "stalled": False}
         return lane_reference(task, work, run_dir, effort)
     if lane.startswith("gpt-") or lane.startswith("codex"):
         return lane_codex(task, work, run_dir, lane, effort)
@@ -450,6 +478,9 @@ def cmd_run(a) -> int:
     log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
     runs_root = log.parent / "evals" / "runs"
+    failures_log = log.parent / "failures.jsonl"
+    sys.path.insert(0, str(HERE))
+    from lane_failures import classify  # noqa: E402
     overall = True
     for tid in ids:
         task = fx[tid]
@@ -457,37 +488,64 @@ def cmd_run(a) -> int:
             print(f"skip {tid}: Antigravity lanes run review and whole-repo roles only")
             continue
         for rep in range(a.repeat):
-            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")[:-3]
-            run_dir = runs_root / f"{stamp}-{tid}-{a.lane}-{rep + 1}"
-            run_dir.mkdir(parents=True)
-            work = prepare_work(task, run_dir)
-            t0 = time.time()
-            if a.dry_run:
-                final, meta = "", {"dry_run": True}
-            else:
-                final, meta = dispatch(task, work, run_dir, a.lane, a.effort)
-            elapsed = round(time.time() - t0, 1)
-            (run_dir / "FINAL.md").write_text(final or "")
-            _, stat, _ = git(["diff", "--stat", "HEAD"], work)
-            # a lane that errored before producing anything is an error, not a zero: it must not count against the model
-            lane_error = (meta.get("error") or (meta.get("exit") not in (0, None) and not (final or "").strip() and not stat.strip())) and not a.dry_run and a.lane != "reference"
-            if lane_error:
-                grade = {"pass": False, "score": None, "error": meta.get("error") or f"lane exit {meta.get('exit')} with no output"}
-            else:
-                grade = GRADERS[task["grader"]["type"]](task, work, final or "")
-            row = {"ts": now_iso(), "task": tid, "tier": task.get("tier", "smoke"), "role": task["role"], "kind": task["kind"], "lane": a.lane, "effort": a.effort, "repeat": rep + 1,
-                   "pass": bool(grade.get("pass")), "score": grade.get("score"), "error": grade.get("error"), "grade": grade, "elapsed_seconds": elapsed, "meta": meta,
-                   "diff_stat": stat.strip()[-300:], "run_dir": str(run_dir)}
-            with open(log, "a") as f:
-                f.write(json.dumps(row) + "\n")
-            overall &= row["pass"]
-            status = "ERROR" if lane_error else ("PASS" if row["pass"] else "FAIL")
-            detail = grade.get("error") if lane_error else json.dumps({k: v for k, v in grade.items() if k in ("passed", "expected", "recall", "precision", "failed_runs", "forbidden_left", "missed", "out_of_scope", "forbidden_touched", "changed_lines", "over_budget", "named_cause", "verdict", "manufactured", "named_all", "implemented_anyway")})
-            print(f"{tid:26} {a.lane:22} {a.effort:7} {status} score={row['score']} {elapsed}s  {detail}")
-            if not a.keep:
-                shutil.rmtree(work, ignore_errors=True)
+            attempt = 0
+            retried_from = None
+            while True:
+                attempt += 1
+                stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")[:-3]
+                run_dir = runs_root / (f"{stamp}-{tid}-{a.lane}-{rep + 1}" + (f"-attempt{attempt}" if attempt > 1 else ""))
+                run_dir.mkdir(parents=True)
+                work = prepare_work(task, run_dir)
+                t0 = time.time()
+                if a.dry_run:
+                    final, meta = "", {"dry_run": True}
+                else:
+                    final, meta = dispatch(task, work, run_dir, a.lane, a.effort)
+                elapsed = round(time.time() - t0, 1)
+                (run_dir / "FINAL.md").write_text(final or "")
+                _, stat, _ = git(["diff", "--stat", "HEAD"], work)
+                # a lane that errored or stalled before producing anything is not a zero for the model unless the class says so
+                lane_error = (meta.get("error") or meta.get("stalled") or (meta.get("exit") not in (0, None) and not (final or "").strip() and not stat.strip())) and not a.dry_run
+                if lane_error:
+                    grade = {"pass": False, "score": None, "error": meta.get("error") or ("stalled: no progress" if meta.get("stalled") else f"lane exit {meta.get('exit')} with no output")}
+                else:
+                    grade = GRADERS[task["grader"]["type"]](task, work, final or "")
+                row = {"ts": now_iso(), "task": tid, "tier": task.get("tier", "smoke"), "role": task["role"], "kind": task["kind"], "lane": a.lane, "effort": a.effort, "repeat": rep + 1,
+                       "attempt": attempt, "retried_from": retried_from,
+                       "pass": bool(grade.get("pass")), "score": grade.get("score"), "error": grade.get("error"), "grade": grade, "elapsed_seconds": elapsed, "meta": meta,
+                       "diff_stat": stat.strip()[-300:], "final_tail": (final or "")[-300:], "run_dir": str(run_dir)}
+                fc = classify(row) if not a.dry_run else {"state": "dry-run", "failure_class": None, "reason": None, "retryable": False}
+                row.update({"state": fc["state"], "failure_class": fc["failure_class"], "failure_reason": fc["reason"]})
+                # model-class failures score 0 and count; infra/harness/quota failures are recorded and retried once
+                if fc["failure_class"] == "model" and row["score"] is None:
+                    row["score"] = 0.0
+                with open(log, "a") as f:
+                    f.write(json.dumps(row) + "\n")
+                if fc["failure_class"]:
+                    with open(failures_log, "a") as f:
+                        f.write(json.dumps({"ts": row["ts"], "task": tid, "lane": a.lane, "effort": a.effort, "attempt": attempt, "class": fc["failure_class"], "reason": fc["reason"], "state": fc["state"], "wasted_tokens": _billable(meta), "elapsed_seconds": elapsed, "run_dir": str(run_dir)}) + "\n")
+                status = fc["state"].upper() if fc["state"] not in ("complete", "dry-run") else ("PASS" if row["pass"] else "FAIL")
+                detail = (f"{fc['failure_class']}: {fc['reason']}" if fc["failure_class"] else json.dumps({k: v for k, v in grade.items() if k in ("passed", "expected", "recall", "precision", "failed_runs", "forbidden_left", "missed", "out_of_scope", "forbidden_touched", "changed_lines", "over_budget", "named_cause", "verdict", "manufactured", "named_all", "implemented_anyway")}))
+                print(f"{tid:26} {a.lane:22} {a.effort:7} {status} score={row['score']} {elapsed}s  {detail}")
+                if not a.keep:
+                    shutil.rmtree(work, ignore_errors=True)
+                if fc["retryable"] and attempt < 2 and not a.no_retry:
+                    retried_from = str(run_dir)
+                    if fc["failure_class"] == "quota":
+                        time.sleep(int(os.environ.get("TRI_LANE_QUOTA_WAIT", "60")))
+                    print(f"  retrying once ({fc['failure_class']}: {fc['reason']})")
+                    continue
+                overall &= row["pass"]
+                break
     print(f"log: {log}")
     return 0 if overall else 1
+
+
+def _billable(meta: dict) -> int:
+    u = (meta or {}).get("usage") or {}
+    if "cached_input_tokens" in u:
+        return int(u.get("input_tokens", 0)) - int(u.get("cached_input_tokens", 0)) + int(u.get("output_tokens", 0))
+    return int(u.get("total_tokens") or (u.get("input_tokens", 0) + u.get("output_tokens", 0)))
 
 
 def cmd_regrade(a) -> int:
@@ -582,6 +640,80 @@ def cmd_compare(a) -> int:
     return 1 if regressions else 0
 
 
+def cmd_classify(a) -> int:
+    sys.path.insert(0, str(HERE))
+    from lane_failures import classify  # noqa: E402
+    gcd = git_common_dir()
+    log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
+    rows = [json.loads(l) for l in log.read_text().splitlines() if l.strip()] if log.exists() else []
+    n = 0
+    for r in rows:
+        fc = classify(r)
+        r.update({"state": fc["state"], "failure_class": fc["failure_class"], "failure_reason": fc["reason"]})
+        if fc["failure_class"] == "model" and r.get("score") is None:
+            r["score"] = 0.0
+        n += 1
+    log.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    print(f"classified {n} rows")
+    return 0
+
+
+def cmd_failures(a) -> int:
+    gcd = git_common_dir()
+    log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
+    fl = log.parent / "failures.jsonl"
+    occ = [json.loads(l) for l in fl.read_text().splitlines() if l.strip()] if fl.exists() else []
+    ledger_p = HERE.parents[2] / "failure-ledger.json"
+    ledger = json.loads(ledger_p.read_text())["classes"] if ledger_p.exists() else []
+    closed = {(c["class"], c["signature"]) for c in ledger if c.get("status") == "closed"}
+    reappeared = [o for o in occ if (o["class"], o["reason"]) in closed]
+    if a.json:
+        print(json.dumps({"occurrences": occ, "reappeared": reappeared}, indent=2))
+        return 1 if reappeared else 0
+    by: dict = {}
+    for o in occ:
+        k = (o["class"], o["reason"])
+        d = by.setdefault(k, {"n": 0, "wasted": 0, "lanes": set()})
+        d["n"] += 1; d["wasted"] += int(o.get("wasted_tokens") or 0); d["lanes"].add(o["lane"])
+    print(f"{'class':9} {'n':>3} {'wasted tokens':>14}  reason / lanes")
+    for (c, r), d in sorted(by.items()):
+        flag = "  REAPPEARED (ledger says closed)" if (c, r) in closed else ""
+        print(f"{c:9} {d['n']:>3} {d['wasted']:>14,}  {r} / {', '.join(sorted(d['lanes']))}{flag}")
+    print(f"{len(occ)} failure occurrences in {fl}; ledger: {len(ledger)} classes, {len(closed)} closed")
+    return 1 if reappeared else 0
+
+
+def _reliability(rows: list) -> dict:
+    """Per lane@effort: first-attempt success, stall/error rates by class, mean time to result incl. failed attempts, wasted tokens."""
+    out: dict = {}
+    for r in rows:
+        if r["lane"] == "reference" or r.get("state") == "dry-run":
+            continue
+        k = f"{r['lane']}@{r['effort']}"
+        d = out.setdefault(k, {"attempts": 0, "first_attempt_success": 0, "first_attempts": 0, "classes": {}, "elapsed": 0.0, "wasted_tokens": 0, "good_points": 0.0, "all_tokens": 0})
+        d["attempts"] += 1
+        d["elapsed"] += float(r.get("elapsed_seconds") or 0)
+        tok = _billable(r.get("meta") or {})
+        d["all_tokens"] += tok
+        if r.get("attempt", 1) == 1:
+            d["first_attempts"] += 1
+            if r.get("pass"):
+                d["first_attempt_success"] += 1
+        fc = r.get("failure_class")
+        if fc:
+            d["classes"][fc] = d["classes"].get(fc, 0) + 1
+            d["wasted_tokens"] += tok
+        else:
+            d["good_points"] += 100 * float(r.get("score") or 0)
+    for k, d in out.items():
+        d["first_attempt_success_rate"] = round(d["first_attempt_success"] / d["first_attempts"], 3) if d["first_attempts"] else None
+        d["mean_seconds_to_result"] = round(d["elapsed"] / d["first_attempts"], 1) if d["first_attempts"] else None
+        d["cost_per_point_incl_waste"] = round(d["all_tokens"] / d["good_points"]) if d["good_points"] else None
+        for x in ("elapsed", "good_points"):
+            del d[x]
+    return out
+
+
 def cmd_results(a) -> int:
     gcd = git_common_dir()
     log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
@@ -595,8 +727,10 @@ def cmd_results(a) -> int:
     if a.json:
         print(json.dumps(rows, indent=2))
         return 0
-    errors = [r for r in rows if r.get("error")]
-    rows = [r for r in rows if not r.get("error")]
+    all_rows = rows
+    # model-class failures stay in the matrix at score 0; infra/harness/quota failures move to the reliability block
+    errors = [r for r in rows if r.get("failure_class") in ("infra", "harness", "quota", "fixture") or (r.get("error") and r.get("failure_class") != "model")]
+    rows = [r for r in rows if r not in errors]
     fx = fixtures()
     tier_of = lambda r: r.get("tier") or fx.get(r["task"], {}).get("tier", "smoke")
 
@@ -627,7 +761,14 @@ def cmd_results(a) -> int:
         print(f"{'cost/point (tokens)':26} " + " ".join(
             (lambda rs: f"{(sum(billable(r) for r in rs) / max(1e-9, 100 * sum((r['score'] or 0) for r in rs))):>22,.0f}" if rs and sum((r['score'] or 0) for r in rs) > 0 else f"{'—':>22}")
             ([r for r in rows if tier_of(r) == tier and f"{r['lane']}@{r['effort']}" == l and r["lane"] != "reference"]) for l in lanes))
-    print(f"\n{len(rows)} graded runs in {log}" + (f"; {len(errors)} lane errors excluded (see 'error' field)" if errors else ""))
+    rel = _reliability(all_rows)
+    if rel:
+        print("\n== reliability (failures are results)")
+        print(f"{'lane':28} {'1st-try ok':>10} {'attempts':>8} {'model':>6} {'infra':>6} {'harness':>8} {'quota':>6} {'s/result':>9} {'wasted tok':>11} {'cost/pt incl waste':>19}")
+        for k, d in sorted(rel.items()):
+            c = d["classes"]
+            print(f"{k:28} {str(d['first_attempt_success_rate']):>10} {d['attempts']:>8} {c.get('model',0):>6} {c.get('infra',0):>6} {c.get('harness',0):>8} {c.get('quota',0):>6} {str(d['mean_seconds_to_result']):>9} {d['wasted_tokens']:>11,} {str(d['cost_per_point_incl_waste']):>19}")
+    print(f"\n{len(rows)} graded runs in {log}" + (f"; {len(errors)} infra/harness/quota/fixture failures in the reliability block, not the matrix" if errors else ""))
     return 0
 
 
@@ -644,7 +785,13 @@ def main() -> int:
     r.add_argument("--repeat", type=int, default=1)
     r.add_argument("--dry-run", action="store_true", help="prepare and grade without dispatching (grades the unmodified fixture)")
     r.add_argument("--keep", action="store_true", help="keep the work dir after grading")
+    r.add_argument("--no-retry", action="store_true", help="disable the one automatic retry for infra/harness/quota failures")
     r.set_defaults(fn=cmd_run)
+    fl = sub.add_parser("failures", help="failure occurrences by class, and closed ledger classes that reappeared")
+    fl.add_argument("--json", action="store_true")
+    fl.set_defaults(fn=cmd_failures)
+    cl = sub.add_parser("classify", help="backfill state/failure_class on existing rows (idempotent)")
+    cl.set_defaults(fn=cmd_classify)
     s = sub.add_parser("results")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_results)
