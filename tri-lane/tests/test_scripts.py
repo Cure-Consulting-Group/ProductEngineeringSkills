@@ -279,5 +279,26 @@ class Log(unittest.TestCase):
         self.assertTrue(d["decision"]["verdict"].startswith("keep measuring"))
 
 
+class Dashboard(unittest.TestCase):
+    def test_renders_from_log_and_from_nothing(self):
+        d = Path(tempfile.mkdtemp())
+        log = d / "b.jsonl"
+        row = {"task": "t", "arm": "tri-lane", "kind": "impl", "started_at": "2026-09-01T00:00:00+00:00", "ended_at": "2026-09-01T01:00:00+00:00", "elapsed_seconds": 3600,
+               "claude": {"billable_tokens": 1000, "cache_read_input_tokens": 5000, "messages": 3}, "codex_lane": {"billable_tokens": 200}, "agy": {"total_tokens": 50},
+               "findings": {"codex": {"confirmed": 2, "disputed": 0, "unverified": 1}}, "advisor": "ship", "rework": 0, "escaped_defects": 0, "pool_deltas": {"codex_weekly": 2.0}}
+        log.write_text(json.dumps(row) + "\n")
+        out = d / "dash.html"
+        rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", log, "--out", out])
+        self.assertEqual(rc, 0, se)
+        html = out.read_text()
+        self.assertIn("<title>Tri-Lane Benchmark</title>", html)
+        self.assertNotIn("__DATA__", html)
+        self.assertIn('"task": "t"', html)
+        rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", d / "missing.jsonl", "--out", d / "empty.html"])
+        self.assertEqual(rc, 0, se)
+        self.assertIn("no tasks logged", (d / "empty.html").read_text())
+        shutil.rmtree(d)
+
+
 if __name__ == "__main__":
     unittest.main()

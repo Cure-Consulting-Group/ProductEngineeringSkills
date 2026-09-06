@@ -44,6 +44,10 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Benchmark dashboard (1.4.0)
+
+`benchmark-dashboard.py --all-projects --out dashboard.html` renders the log as one self-contained page: the decision rule with each check passing or blocking, the arms compared measure by measure, Claude tokens per task in run order, confirmed findings by reviewer, reviewer precision, shadow-router agreement, quota pool movement, and a sortable task table. Inline SVG with tooltips and table views, light and dark, no libraries. Regenerate it after every task; publish it as an artifact when you want to share it.
+
 ## Self-test, tests, and the capability table (1.3.0)
 
 - `lane-preflight.py --doctor` on a new machine: tool versions, both logins, trusted paths, disk, toolchain caches, quotas, and `lane-selftest.py`, which builds a scratch repo and exercises every rail (hook matrix, refusal on empty diff, scope block, sandbox denial of home and `/tmp`, worktree lock and salvage) in under a minute.
