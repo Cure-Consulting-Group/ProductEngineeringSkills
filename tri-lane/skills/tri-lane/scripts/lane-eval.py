@@ -362,6 +362,34 @@ def cmd_run(a) -> int:
     return 0 if overall else 1
 
 
+def cmd_regrade(a) -> int:
+    """Re-grade logged runs from their kept run dirs (FINAL.md and work/) after a fixture or grader change. Spends nothing."""
+    fx = fixtures()
+    gcd = git_common_dir()
+    log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
+    rows = [json.loads(l) for l in log.read_text().splitlines() if l.strip()] if log.exists() else []
+    n = 0
+    for r in rows:
+        if r.get("error") or (a.task != "all" and r["task"] != a.task) or (a.lane and r["lane"] != a.lane):
+            continue
+        rd = Path(r.get("run_dir", ""))
+        final = (rd / "FINAL.md").read_text(errors="ignore") if (rd / "FINAL.md").exists() else None
+        task = fx.get(r["task"])
+        if task is None or final is None:
+            continue
+        gtype = task["grader"]["type"]
+        if gtype != "planted_bugs" and not (rd / "work").exists():
+            continue  # code graders need the work dir (kept with --keep)
+        grade = GRADERS[gtype](task, rd / "work", final)
+        old = r.get("score")
+        r.update({"pass": bool(grade.get("pass")), "score": grade.get("score"), "grade": grade, "regraded_at": now_iso()})
+        n += 1
+        print(f"{r['task']:26} {r['lane']:22} {r['effort']:7} {old} -> {r['score']}")
+    log.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    print(f"regraded {n} run(s)")
+    return 0
+
+
 def cmd_results(a) -> int:
     gcd = git_common_dir()
     log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
@@ -410,6 +438,10 @@ def main() -> int:
     s = sub.add_parser("results")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_results)
+    g = sub.add_parser("regrade", help="re-grade kept runs after a fixture or grader change (spends nothing)")
+    g.add_argument("--task", default="all")
+    g.add_argument("--lane")
+    g.set_defaults(fn=cmd_regrade)
     a = ap.parse_args()
     return a.fn(a)
 

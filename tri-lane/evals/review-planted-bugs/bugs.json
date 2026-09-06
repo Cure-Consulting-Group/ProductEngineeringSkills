@@ -80,6 +80,14 @@
       "severity": "P1",
       "pattern": "refund.*(exceed|more than|greater|bound|limit|captured)|over.?refund",
       "description": "refund does not bound amount by captured minus already refunded."
+    },
+    {
+      "id": "B11-stock-underflow",
+      "file": "src/capture.py",
+      "line": 170,
+      "severity": "P1",
+      "pattern": "underflow|negative (stock|inventory)|stock.*negative|unavailable inventory|conditional reservation|oversell",
+      "description": "_decrement_stock subtracts without checking availability, so a sale can drive stock negative (found by Astra and Sol on the first live run; added 2026-09-06)."
     }
   ]
 }

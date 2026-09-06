@@ -71,6 +71,13 @@
       "line": 162,
       "claim": "Refund amount is not bounded by captured minus refunded.",
       "evidence": "no check before gw.refund"
+    },
+    {
+      "severity": "P1",
+      "file": "src/capture.py",
+      "line": 170,
+      "claim": "Stock is decremented without an availability check; a sale can drive inventory negative.",
+      "evidence": "self.store.stock[line.sku] = self.store.stock.get(line.sku, 0) - line.qty"
     }
   ],
   "missing_information": []
