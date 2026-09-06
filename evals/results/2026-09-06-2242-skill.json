@@ -1,0 +1,96 @@
+{
+  "mode": "skill",
+  "stamp": "2026-09-06-2242",
+  "summary": {
+    "t17-brand-vector-engineering|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t17-brand-vector-engineering|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|off": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    }
+  },
+  "runs": [
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "status": "fail",
+      "agent_exit_ok": true,
+      "seconds": 1253.8,
+      "timeout_seconds": 1200,
+      "files_written": 3,
+      "gate_output": "Traceback (most recent call last):\n  File \"<string>\", line 5, in <module>\nAssertionError",
+      "kept_workdir": "evals/results/workdirs/2026-09-06-1753-t17-brand-vector-engineering-claude-on"
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 787.9,
+      "timeout_seconds": 1200,
+      "files_written": 4,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "status": "fail",
+      "agent_exit_ok": false,
+      "seconds": 929.2,
+      "timeout_seconds": 1200,
+      "files_written": 11,
+      "gate_output": "",
+      "kept_workdir": "evals/results/workdirs/2026-09-06-1822-t20-product-ux-architecture-claude-on"
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "status": "timeout",
+      "agent_exit_ok": false,
+      "seconds": 1200.0,
+      "timeout_seconds": 1200,
+      "files_written": 4,
+      "gate_output": "Traceback (most recent call last):\n  File \"<stdin>\", line 5, in <module>\nAssertionError: no fixed region",
+      "kept_workdir": "evals/results/workdirs/2026-09-06-1842-t20-product-ux-architecture-claude-off"
+    }
+  ]
+}
