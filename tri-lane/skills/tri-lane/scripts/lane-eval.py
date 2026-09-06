@@ -123,7 +123,8 @@ def grade_hidden_tests(task, work: Path, final: str) -> dict:
         _, names, _ = sh(["git", "diff", "--name-only", "HEAD"], cwd=str(work), timeout=60)
         _, porcelain, _ = sh(["git", "status", "--porcelain"], cwd=str(work), timeout=60)
         touched = sorted({l.strip() for l in names.splitlines() if l.strip()} | {l[3:] for l in porcelain.splitlines() if l.startswith("??")})
-        touched = [t for t in touched if not t.startswith("hidden/") and t != ".eval-tmp"]
+        noise = ("hidden/", ".eval-tmp", "__pycache__", ".pytest_cache", "node_modules/")
+        touched = [t for t in touched if not any(n in t for n in noise) and not t.endswith((".pyc", ".pyo"))]
         allowed = g.get("allowed_files", [])
         forbidden = g.get("forbidden_files", [])
         out_of_scope = [t for t in touched if allowed and not any(t == a or t.startswith(a.rstrip("/") + "/") for a in allowed)]
@@ -298,6 +299,7 @@ def prepare_work(task, run_dir: Path) -> Path:
         else:
             shutil.copy2(p, work / p.name)
     (work / "SPEC.md").write_text(task["spec"] + "\n")
+    (work / ".gitignore").write_text("__pycache__/\n*.pyc\n.eval-tmp/\n.pytest_cache/\nnode_modules/\n")
     git(["init", "-q", "-b", "main"], work)
     if layout:
         _copy_tree(task["_dir"] / layout["base"], work)
