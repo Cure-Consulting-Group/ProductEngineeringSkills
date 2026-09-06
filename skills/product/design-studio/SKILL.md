@@ -1,120 +1,148 @@
 ---
 name: design-studio
-description: "Engineer brand identities, logos, design tokens, and production assets across Adobe Illustrator, Photoshop, and Figma"
-when_to_use: "Use when designing logos, brand marks, visual identity systems, vector assets, or design tokens, or when pushing brand assets into Illustrator (.ai), Photoshop (.psd) mockups, or Figma variables. NOT for UI component systems (use design-system) or product screens (use product-design)."
-argument-hint: "[brand-or-product-name]"
-disable-model-invocation: true
+description: "Full design studio: brand identity, UX architecture, wireframes, native iOS/Android/web screens, design systems, motion, production assets, Adobe and Figma hand-off"
+when_to_use: "Use for any design assignment, from idea, sketch, PRD, logo, or existing app to screens, system, and assets. NOT for platform code alone or Storybook governance."
+argument-hint: "[assignment or brand/product name]"
 ---
 
-# Design Studio: Brand Identity and Logo Engineering
+# Design Studio
 
-Build agency-grade brand identities, mathematically sound vector marks, and cross-platform design systems, with automated hand-off into **Adobe Illustrator**, **Adobe Photoshop**, and **Figma**.
+A design expert first and an asset generator second. The studio behaves as one team: creative director, brand designer, product designer, UX architect, interaction designer, mobile and web specialists, design systems designer, motion designer, accessibility designer, production designer. It takes a project from ambiguity through research, concept, architecture, design, system, production assets, and implementation-ready specification.
 
-Bundled tooling lives next to this file. In Claude Code the directory is `${CLAUDE_PLUGIN_ROOT}/skills/product/design-studio`; in Gemini or Antigravity it is `.agents/skills/design-studio`. The commands below use `$STUDIO` for that directory.
+The standard for every deliverable: **could this plausibly have shipped from a top-tier product design team or an award-winning digital studio?** "Good AI-generated UI" fails.
+
+Bundled tooling lives next to this file. In Claude Code the directory is `${CLAUDE_PLUGIN_ROOT}/skills/product/design-studio`; in Gemini or Antigravity it is `.agents/skills/design-studio`. Commands below use `$STUDIO` for that directory.
+
+## Tools
 
 | Tool | Does | Needs |
 |---|---|---|
-| `scripts/bridge_macos.sh` | Runs an ExtendScript (`.jsx`) inside Illustrator or Photoshop via AppleScript | macOS, the app installed; only those two apps are allowed |
-| `scripts/figma_sync.py` | Publishes W3C design tokens as a Figma variable collection | `FIGMA_TOKEN` and `FIGMA_FILE_KEY` in the environment; validates offline unless `--apply` is passed |
-| `scripts/export_asset_matrix.py` | Favicons, app icons, social cards, `.ico`, and an HTML brand book from one master SVG | macOS (`qlmanage` and `sips`); standard library only |
-| `templates/illustrator/build_brand_master.jsx` | Five standard artboards, layer architecture, CMYK and spot swatches, `.ai` and `.eps` save | Illustrator |
-| `templates/photoshop/update_mockup.jsx` | Smart Object replacement in a PSD mockup and high-resolution PNG export | Photoshop |
-| `references/` | W3C token schema, Figma variables spec, Adobe ExtendScript API notes | read as needed |
+| `scripts/wireframe.py` | Low or mid fidelity wireframes per screen (device frame, safe areas, named navigation, fixed/sticky/scroll regions), flow diagram, screen inventory with the scroll model, from one JSON spec (`--example`) | nothing |
+| `scripts/contrast_check.py` | WCAG 2.2 ratios for hex pairs, or for every pair the token convention implies (text on surfaces, on-colours on their colour, focus borders), per light/dark mode | nothing |
+| `scripts/tokens_lint.py` | Three-tier token convention, naming, alias resolution, light/dark parity | nothing |
+| `scripts/design_review_panel.py` | Builds the three-perspective review prompts; `--run` executes them on `claude`, `codex`, `gemini` from PATH, read-only | CLIs optional |
+| `scripts/export_asset_matrix.py` | Favicons, `.ico`, maskable and social cards, brand book; `--platforms ios,android` adds the iOS icon set and Android adaptive, legacy, and Play Store assets; verifies transparency pixel by pixel | an SVG renderer: `rsvg-convert`, Inkscape, ImageMagick, or Google Chrome (macOS Quick Look works for opaque outputs only) |
+| `scripts/figma_sync.py` | W3C tokens to a Figma variable collection; validates offline unless `--apply` | `FIGMA_TOKEN`, `FIGMA_FILE_KEY` in the environment |
+| `scripts/bridge_macos.sh` | Runs a `.jsx` inside Illustrator or Photoshop via AppleScript; refuses scripts without `#target` or with shell, network, eval, or include primitives | macOS, the app installed |
+| `templates/illustrator/build_brand_master.jsx` | Five artboards, layer architecture, CMYK and spot swatches, `.ai` and `.eps` save | Illustrator |
+| `templates/photoshop/update_mockup.jsx` | Smart Object replacement in a PSD mockup, 300 DPI PNG export; refuses linked Smart Objects | Photoshop |
 
-Every script supports `--help`; none needs anything installed. None writes outside the paths you pass it. Nothing here sends data anywhere except `figma_sync.py` with `--apply`, which talks only to `api.figma.com`.
+Every script supports `--help`; none needs anything installed. None writes outside the paths you pass it. Nothing sends data anywhere except `figma_sync.py --apply` (api.figma.com) and `design_review_panel.py --run` (the local CLIs). Before every bridge call: print the full `.jsx`, state what it creates or overwrites, and wait for the user to confirm.
 
-The Adobe bridge executes code inside Illustrator or Photoshop with the user's privileges. It refuses scripts without a `#target` line or with shell, network, eval, or include primitives. Before every bridge call: print the full `.jsx`, state what it will create or overwrite, and wait for the user to confirm.
+## References (read the ones the assignment needs)
 
-## Design Asset Hierarchy
-
-```
-Brand Foundation
-  ├── Strategy & Positioning (archetype, tone spectrum, 60-30-10 palette)
-  ├── Master Vectors (pure semantic SVG, viewBox math, no raster embeds)
-  ├── Production Print & Desktop (Illustrator .ai, artboards, CMYK, spot swatches)
-  ├── Realistic Marketing Renders (Photoshop .psd, Smart Object replacement)
-  ├── Digital Design System (W3C tokens.json -> Figma variables and auto-layout components)
-  └── Multi-Resolution Matrix (favicons, app icons, social cards, HTML brand book)
-```
+| File | Holds |
+|---|---|
+| `references/design-intelligence.md` | the education corpus and what to extract, the expressive-vs-utility register, generic-AI anti-patterns, typography, motion spec, content rules |
+| `references/ux-architecture.md` | the ten questions, User→Goal→Flow→Screen→Component→Action→State→Outcome, navigation selection, scrolling rules, state matrix, wireframe fidelity, responsive rules, data-dense design, decision record, deliverable scaling |
+| `references/platform-apple.md`, `platform-android.md`, `platform-web.md` | platform judgment: structure, safe areas and insets, components, type, motion, accessibility, asset specs, implementation mapping |
+| `references/design-system-spec.md` | foundations, three token tiers, component spec template, inventory, cross-platform rules, hand-off package |
+| `references/brand-identity.md` | strategy, logo system matrix, full identity, derivative asset families, mobile asset specs, brand critique |
+| `references/design-review-panel.md` | the three perspectives, routing (subagents, tri-lane lanes, CLIs), synthesis rules |
+| `references/critique-and-quality-bar.md` | the critique questions, the ten-row quality bar, definition of done |
+| `references/w3c_token_schema.json`, `figma_variables_spec.md`, `adobe_extendscript_api.md` | formats and APIs |
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Values are injected inline; in an environment that does not execute them, run the commands.
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Existing brand assets: !`ls design/ brand/ assets/brand/ public/brand/ 2>/dev/null | head -20 || echo "(none)"`
+- Design context: !`cat DESIGN.md design/DESIGN.md 2>/dev/null | head -60 || echo "(no DESIGN.md)"`
+- Existing assets: !`ls design/ brand/ assets/brand/ public/brand/ tokens.json 2>/dev/null | head -20 || echo "(none)"`
+- Stack: !`head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Portfolio: !`sed -n '1,30p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
 - Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
 
-Use this context to tailor every output to the actual product domain and to reuse assets that already exist.
+Honour what exists: an existing DESIGN.md, token file, or component library overrides every default below.
 
-## Step 1: Strategic Discovery
+## Step 1: Classify the assignment
 
-Before generating any visual asset, fix the strategic parameters and write them down; every later step reads them.
+Write these four lines before any other work.
 
-1. **Brand archetype**, one primary: Creator (visionary, inventive), Sage (analytical, authoritative), Ruler (premium, structured), Outlaw (disruptive, bold), Magician (transformational), Hero, Everyman.
-2. **Tone spectrum**: modern vs heritage, playful vs serious, minimal vs rich. Pick a point on each axis and state why.
-3. **Lockup matrix** to deliver:
-   - Primary horizontal: logomark left, wordmark right, aspect about 3:1 to 4:1.
-   - Stacked vertical: mark above wordmark, about 1:1 to 4:5.
-   - Submark or monogram: 1:1 for avatars, app icons, favicons.
-   - Monochrome 1-bit: black and white for engraving, embroidery, single-colour print.
-4. **Colour philosophy**: 60% dominant neutral, 30% structural brand tint, 10% high-energy accent. Every foreground and background pairing passes WCAG AA (4.5:1) for body text and AAA (7:1) for critical UI. Record the ratios, not just the hexes.
-
-## Step 2: Vector Mathematics and Semantic SVG
-
-All marks originate as clean, hand-written or algorithmically verified SVG.
-
-1. `viewBox="0 0 512 512"` (or the matching aspect ratio); no fixed `width` or `height` attributes.
-2. Minimal anchor points; no auto-trace jaggies; relative coordinates where it keeps paths short.
-3. Wordmark letterforms outlined to `<path>` so rendering never depends on an installed font.
-4. No `<image>` elements or embedded bitmaps inside an SVG.
-5. Check optical centring (geometric centre is not optical centre) and a clearspace of at least one logomark height.
-
-## Step 3: Illustrator Automation (`.ai` and print)
-
-1. Adapt `templates/illustrator/build_brand_master.jsx` with the brand name, palette, and SVG paths. It creates five artboards: `01_Primary_Horizontal` (1200 x 400 pt), `02_Stacked_Vertical` (800 x 800), `03_Submark_Icon` (512 x 512), `04_Monochrome_1Bit` (512 x 512), `05_Favicon_Matrix` (400 x 400); layers `[Guides & Clearspace]`, `[Typography - Outlines]`, `[Artwork - Vectors]`, `[Background]`; global CMYK process swatches plus Pantone spot names.
-2. Show the user the finished `.jsx` and the save directory, get confirmation, then run it:
-   ```bash
-   bash "$STUDIO/scripts/bridge_macos.sh" "Adobe Illustrator" "/path/to/build_brand_master.jsx"
-   ```
-3. Deliverables: `.ai` master with PDF compatibility, `.eps`, print-ready PDF/X.
-
-## Step 4: Photoshop Automation (`.psd` mockups)
-
-1. Choose the mockups (business card, stationery, signage, merchandise) and identify the Smart Object layer in each PSD (for example `REPLACE_LOGO`).
-2. Adapt `templates/photoshop/update_mockup.jsx` to open the template, replace the Smart Object contents with the vector mark, and export a 300 DPI PNG.
-3. Show the user the finished `.jsx` and which PSD it edits, get confirmation, then run it. The template refuses linked Smart Objects (they would overwrite their source file); embed them first.
-   ```bash
-   bash "$STUDIO/scripts/bridge_macos.sh" "Adobe Photoshop" "/path/to/update_mockup.jsx"
-   ```
-4. Without Photoshop, deliver the vector lockups and the asset matrix from Step 6; do not fake a mockup with a raster tool.
-
-## Step 5: Figma Sync and Design Tokens
-
-1. Write `tokens.json` in the W3C Design Tokens format (`references/w3c_token_schema.json`): `color`, `typography`, `spacing`, `radii`, `elevation`.
-2. Validate offline first, then publish with `--apply` once the user has confirmed the target file. The token comes only from the environment, never the command line:
-   ```bash
-   python3 "$STUDIO/scripts/figma_sync.py" --tokens-file tokens.json
-   FIGMA_TOKEN=... FIGMA_FILE_KEY=... python3 "$STUDIO/scripts/figma_sync.py" --tokens-file tokens.json --apply
-   ```
-   Each `--apply` creates a new variable collection; delete the previous one in Figma before re-publishing.
-3. Component architecture in Figma: auto-layout frame for mark plus wordmark; variants `Type` (Primary, Stacked, Icon) and `Theme` (Default, Inverted, Monochrome).
-
-## Step 6: Multi-Resolution Asset Matrix
-
-```bash
-python3 "$STUDIO/scripts/export_asset_matrix.py" --svg master_logo.svg --output-dir dist/brand_assets --brand-name "Brand"
+```
+KIND       brand | product | system | asset | review | mixed (list the parts)
+REGISTER   expressive | utility   (per surface if mixed; see design-intelligence.md §3)
+PLATFORMS  ios | ipados | macos | watchos | visionos | android-phone | android-tablet | foldable | wear | web-desktop | web-mobile
+DEPTH      component | screen | flow | product | identity   (sets the deliverable set: ux-architecture.md §10)
 ```
 
-Produces web favicons (16, 32, 48, `.ico`), Apple touch icon 180, Android Chrome 192 and 512, OpenGraph 1200 x 630, Twitter header 1500 x 500, avatar 400 x 400, and `brand_guidelines.html`, a standalone brand book with palette, type, and usage rules.
+Input can be an idea, a sketch, a screenshot, a logo, a PRD, an existing app or site, a wireframe, or a design system. Name what was given and what is missing; ask only for what changes the work materially, otherwise state the assumption and proceed.
 
-## Step 7: Output
+## Step 2: Gather context
 
-Deliver a single folder with: the strategy note from Step 1, master SVGs for each lockup, the Illustrator and Photoshop deliverables when the apps were available, `tokens.json`, the asset matrix, and the brand book. State plainly which steps ran and which were skipped for a missing tool.
+Business goal, user and situation, real content (never lorem when real data exists), constraints (brand, legal, platform, stack), competitors (three, named), and what already exists in the codebase or design files. For an existing product, inventory its screens and states before proposing anything. Write the result as `design/brief.md`; the review panel in Step 8 reads it. All studio output lives under `design/` (or `brand/` for identity work).
 
-## When NOT to Use This Skill
+## Step 3: Architecture before pixels
 
-- Building UI component libraries, spacing scales, or theming for an app: use `design-system`.
-- Designing product screens and flows: use `product-design`.
-- Platform-specific screen guidance: use `web-design-expert`, `ios-design-expert`, `android-design-expert`.
+For `screen` depth and above, answer the ten questions and build the model chain (`ux-architecture.md` §1 and §2). Choose the navigation model from the table, not from habit. Write the scroll model for every screen: what scrolls, what is fixed, what is sticky, what collapses, what changes after scrolling starts. Produce the state matrix (component and data states) and the responsive transformation rules per size class.
+
+Render the architecture so it can be seen:
+
+```bash
+python3 "$STUDIO/scripts/wireframe.py" --example > design/spec.json   # edit: screens, regions, fixed/sticky, notes, flows
+python3 "$STUDIO/scripts/wireframe.py" --spec design/spec.json --out design/wireframes --fidelity low
+```
+
+Low fidelity settles structure; mid fidelity settles components and labels; neither is the final design.
+
+## Step 4: Concept and creative direction
+
+Pick the register and defend it in one paragraph. Extract principles from the corpus (`design-intelligence.md` §2), never a layout. Set typography first (scale, roles, measure), then colour (60-30-10, ratios recorded, light and dark from the same ramps), then motion (specified per moment). Check the concept against the anti-pattern list; every visual decision has a written reason. For brand work follow `brand-identity.md`: strategy, then a logo *system*, then the full identity.
+
+## Step 5: Design for each platform
+
+Shared brand, native interaction. Read the platform file for every target and design the platform's structure (tab bar vs navigation bar vs sidebar; sheets vs bottom sheets vs drawers; safe areas and insets; type scaling). Never skin one layout across platforms and never let platforms drift from the brand without a decision record entry. For component-level specs and code, invoke `ios-design-expert`, `android-design-expert`, or `web-design-expert`; the studio owns the judgment, they own the implementation detail.
+
+Design every state. Empty and error states are designed screens with a next step. Test every screen with long, short, missing, zero, and many.
+
+## Step 6: Systemise
+
+Write `design/tokens.json` in W3C format with primitive, semantic, and component tiers (`references/w3c_token_schema.json` is the starter); specify components with the template in `design-system-spec.md` §3; state the cross-platform mapping. Verify:
+
+```bash
+python3 "$STUDIO/scripts/tokens_lint.py" --tokens design/tokens.json --modes light,dark
+python3 "$STUDIO/scripts/contrast_check.py" --tokens design/tokens.json     # pairs by convention, per mode
+```
+
+For Storybook, Showkase, SwiftUI catalogues, and governance, hand the tokens and component specs to `design-system`.
+
+## Step 7: Produce the work
+
+Visual output over description. If asked for a dashboard, deliver the dashboard: wireframes from Step 3, high-fidelity screens as HTML (web) or platform specs with the state matrix, SVG marks and lockups for brand work, and the asset families the project needs without waiting to be asked (`brand-identity.md` §4).
+
+```bash
+python3 "$STUDIO/scripts/export_asset_matrix.py" --svg master_logo.svg --output-dir dist/brand_assets --brand-name "Brand" --platforms web,ios,android --icon-bg 0F172A
+```
+
+Illustrator (`.ai`, print, spot colour) and Photoshop (mockups) via the templates and the bridge, after user confirmation. Figma: validate, then `--apply` once the user confirms the file. Say plainly which outputs were produced and which were skipped for a missing tool.
+
+## Step 8: Three-perspective review (substantive work)
+
+Applies at `flow`, `product`, and `identity` depth. Creative Director, Product/UX Director, Design Systems/Production Director review the artefacts; they disagree constructively and do not vote (`design-review-panel.md`).
+
+```bash
+python3 "$STUDIO/scripts/design_review_panel.py" --brief design/brief.md --artifacts "design/**/*.md" "design/**/*.json" "design/**/*.html" --out design/review --emit
+```
+
+In Claude Code run the three prompts as parallel subagents; with `cure-tri-lane` installed send the UX prompt to `codex-reviewer` and the systems prompt to `antigravity-analyst` so each verdict comes from a different model family; in a terminal with the CLIs, add `--run`. Label every finding Confirmed, Disputed, or Unverified; decide conflicts by the register and the ten questions; fold the strongest ideas into one direction. One panel per deliverable.
+
+## Step 9: Critique gate
+
+Run the critique in `critique-and-quality-bar.md` (UX, visual, platform, accessibility, product, brand, content, states) and the ten-row quality bar. Fix what fails before delivery. Nothing ships because it is polished; it ships because every row holds.
+
+## Step 10: Deliver
+
+One folder, scaled to `DEPTH`: the classification and ten-question answers, the decision record (only decisions whose reasoning changes UX or implementation), the architecture (inventory, flows, wireframes, scroll model), the designs with state matrices and responsive rules, tokens and component specs, motion spec, the produced assets, the review synthesis, implementation notes with expensive items flagged and a cheaper fallback, and a limitations list naming what was not done and why.
+
+## When NOT to use this skill
+
+- CSS, Compose, or SwiftUI implementation alone: `web-design-expert`, `android-design-expert`, `ios-design-expert`.
+- Storybook, Showkase, SwiftUI catalogues, governance: `design-system`.
+- UI generation through Stitch: `stitch-design`.
+- Charts and data visualisation marks: `dataviz`.
+
+## Limitations
+
+- `export_asset_matrix.py` needs an SVG renderer with alpha (`rsvg-convert`, Inkscape, ImageMagick, or Chrome); with only macOS Quick Look it produces opaque assets and reports the transparent ones as failures. The Adobe bridge needs macOS.
+- Android monochrome layers and notification glyphs are authored as single-colour SVGs (`brand/logo/android-monochrome.svg`, `brand/logo/notification-icon.svg`), not derived.
+- `figma_sync.py --apply` creates a new collection each run; delete the previous one before re-publishing.
+- The studio judges against the corpus from memory; it cannot browse award sites at run time unless a web tool is available.

@@ -136,7 +136,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
 | customer-onboarding | Design user activation and first-run experiences — onboarding flows, empty states, welcome emails, tooltips, and time-to-value optimization for mobile (Android/iOS) and web apps | default |
-| design-studio | Engineer brand identities, logos, design tokens, and production assets across Adobe Illustrator, Photoshop, and Figma | default |
+| design-studio | Full design studio: brand identity, UX architecture, wireframes, native iOS/Android/web screens, design systems, motion, production assets, Adobe and Figma hand-off | default |
 | design-system | Build cross-platform design systems — design tokens, component libraries, Storybook/Catalog setup, theme architecture, and platform consistency | default |
 | feature-audit | Post-ship quality gate — audits a completed feature for missing tests, security gaps, accessibility, analytics, and documentation across Android (.kt), iOS (.swift), Web (.ts/.tsx), and Firebase | Read, Grep, Glob |
 | feature-flags | Implement feature flag systems — progressive rollouts, A/B testing, kill switches, and experimentation frameworks with Firebase Remote Config or LaunchDarkly | default |
