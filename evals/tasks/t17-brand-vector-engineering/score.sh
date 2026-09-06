@@ -15,8 +15,16 @@ python3 -c "
 import json
 with open('tokens.json') as f:
     d = json.load(f)
-assert any(k in d for k in ['color', 'colors', 'colour'])
-assert any(k in d for k in ['spacing', 'space', 'dimensions', 'dimension'])
+# groups may sit at the top level or inside tiers (primitive / semantic / component): search every group name
+def names(node):
+    for k, v in node.items():
+        if k.startswith('\$'): continue
+        yield k
+        if isinstance(v, dict) and '\$value' not in v and 'value' not in v:
+            yield from names(v)
+found = set(names(d))
+assert found & {'color', 'colors', 'colour'}, 'no colour group'
+assert found & {'spacing', 'space', 'dimensions', 'dimension'}, 'no spacing group'
 " || exit 1
 
 # 3. BRAND.md check: archetype and contrast
