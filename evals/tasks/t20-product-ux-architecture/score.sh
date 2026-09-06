@@ -16,7 +16,7 @@ PY
 [ -f design/wireframes/flow.svg ] || exit 1
 [ -f design/wireframes/inventory.md ] || exit 1
 [ "$(ls design/wireframes/screens/*.svg 2>/dev/null | wc -l | tr -d ' ')" -ge 3 ] || exit 1
-[ "$(grep -c '^Decision:' design/decisions.md 2>/dev/null)" -ge 3 ] || exit 1
+[ "$(grep -c -E '^(\*\*|#+ |- )?Decision:' design/decisions.md 2>/dev/null)" -ge 3 ] || exit 1
 grep -qi 'Reason:' design/decisions.md || exit 1
 for s in empty loading error offline long; do grep -qi "$s" design/states.md || exit 1; done
 exit 0
