@@ -1,0 +1,10 @@
+{
+  "id": "t17-brand-vector-engineering",
+  "title": "Engineer vector mark, W3C tokens, and brand strategy for aerospace startup",
+  "source": "design-studio skill",
+  "skills": [
+    "design-studio"
+  ],
+  "prompt": "Create a complete brand identity and vector logo for 'ApexOrbit', an aerospace startup building autonomous satellite telemetry systems.\nYou must output:\n1. 'logo.svg': A pure, semantic SVG logomark and wordmark. It must define viewBox=\"0 0 512 512\", contain NO embedded raster images (<image> or data:image), and convert wordmark typography to vector paths.\n2. 'tokens.json': W3C DTCG-compliant design tokens containing brand colors (primary, secondary, accent, neutral dark, neutral light), spacing scale (xs to 2xl), and border radii.\n3. 'BRAND.md': Brand strategy document specifying the core brand archetype, visual rationale, clearspace rules, and mathematical contrast ratio calculations verifying WCAG compliance.",
+  "timeout_seconds": 1200
+}

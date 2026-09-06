@@ -1,0 +1,10 @@
+{
+  "id": "t19-figma-component-tokens",
+  "title": "Architect Figma Auto-Layout logo component and Light/Dark token collections",
+  "source": "design-studio skill (Figma Architecture)",
+  "skills": [
+    "design-studio"
+  ],
+  "prompt": "Create a production-grade Figma design system specification and W3C design tokens for a fintech application named 'Vaultix'.\nYou must output:\n1. 'tokens.json': W3C DTCG-compliant tokens with color definitions for both light and dark themes (background, surface, text, primary) plus a spacing scale (4px, 8px, 16px, 24px, 32px).\n2. 'FIGMA_SPEC.md': Detailed Figma component specification detailing Auto-Layout frame hierarchy, component variants (Type: Primary/Stacked/Icon; Theme: Light/Dark), and instructions for syncing to Figma Variables via REST API.",
+  "timeout_seconds": 1200
+}

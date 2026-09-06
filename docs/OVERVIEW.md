@@ -7,8 +7,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.7.0 |
-| Skills | 88 |
+| Version | 7.8.0 |
+| Skills | 89 |
 | Agents | 39 |
 | Personas | 4 |
 | Hooks (entries) | 17 |
@@ -131,11 +131,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | release-management | Manage release workflows — app store submissions, staged rollouts, versioning strategy, changelogs, and ASO for Android and iOS | default |
 
 
-### Product (10)
+### Product (11)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
 | customer-onboarding | Design user activation and first-run experiences — onboarding flows, empty states, welcome emails, tooltips, and time-to-value optimization for mobile (Android/iOS) and web apps | default |
+| design-studio | Full design studio: brand identity, UX architecture, wireframes, native iOS/Android/web screens, design systems, motion, production assets, Adobe and Figma hand-off | default |
 | design-system | Build cross-platform design systems — design tokens, component libraries, Storybook/Catalog setup, theme architecture, and platform consistency | default |
 | feature-audit | Post-ship quality gate — audits a completed feature for missing tests, security gaps, accessibility, analytics, and documentation across Android (.kt), iOS (.swift), Web (.ts/.tsx), and Firebase | Read, Grep, Glob |
 | feature-flags | Implement feature flag systems — progressive rollouts, A/B testing, kill switches, and experimentation frameworks with Firebase Remote Config or LaunchDarkly | default |
@@ -255,12 +256,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.7.0). 88 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.8.0). 89 skills (domain-organized), 39… |
 | SessionStart | startup | command | python3 -c " |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 88 skills, 39 agents, 4 personas. Use /cure-pr… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 89 skills, 39 agents, 4 personas. Use /cure-pr… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | PostToolUseFailure |  | command | python3 -c " |

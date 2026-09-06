@@ -1,0 +1,30 @@
+{
+  "mode": "skill",
+  "stamp": "2026-09-06-2131",
+  "summary": {
+    "t17-brand-vector-engineering|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    }
+  },
+  "runs": [
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "status": "timeout",
+      "agent_exit_ok": false,
+      "seconds": 1200.0,
+      "timeout_seconds": 1200,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": "evals/results/workdirs/2026-09-06-1731-t17-brand-vector-engineering-claude-on"
+    }
+  ]
+}

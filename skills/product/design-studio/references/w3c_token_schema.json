@@ -1,0 +1,47 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "Starter in the studio's three tiers. Components consume semantic tokens; semantic tokens alias primitives; light/dark live in $extensions.modes on semantic colours.",
+  "primitive": {
+    "color": {
+      "indigo": { "600": { "$value": "#4F46E5", "$type": "color" }, "400": { "$value": "#818CF8", "$type": "color" } },
+      "cyan":   { "500": { "$value": "#06B6D4", "$type": "color" } },
+      "amber":  { "500": { "$value": "#F59E0B", "$type": "color" } },
+      "slate":  { "900": { "$value": "#0F172A", "$type": "color" }, "700": { "$value": "#334155", "$type": "color" },
+                  "500": { "$value": "#64748B", "$type": "color" }, "200": { "$value": "#E2E8F0", "$type": "color" },
+                  "50":  { "$value": "#F8FAFC", "$type": "color" }, "white": { "$value": "#FFFFFF", "$type": "color" } }
+    },
+    "space": { "1": { "$value": "4px", "$type": "dimension" }, "2": { "$value": "8px", "$type": "dimension" }, "4": { "$value": "16px", "$type": "dimension" },
+               "6": { "$value": "24px", "$type": "dimension" }, "8": { "$value": "32px", "$type": "dimension" }, "12": { "$value": "48px", "$type": "dimension" } },
+    "radius": { "1": { "$value": "4px", "$type": "dimension" }, "2": { "$value": "8px", "$type": "dimension" }, "4": { "$value": "16px", "$type": "dimension" }, "full": { "$value": "9999px", "$type": "dimension" } },
+    "duration": { "150": { "$value": "150ms", "$type": "duration" }, "250": { "$value": "250ms", "$type": "duration" }, "400": { "$value": "400ms", "$type": "duration" } }
+  },
+  "semantic": {
+    "color": {
+      "surface": {
+        "primary":   { "$value": "{primitive.color.slate.white}", "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.white}", "dark": "{primitive.color.slate.900}" } } },
+        "secondary": { "$value": "{primitive.color.slate.50}",    "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.50}",    "dark": "{primitive.color.slate.700}" } } },
+        "inverse":   { "$value": "{primitive.color.slate.900}",   "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.900}",   "dark": "{primitive.color.slate.50}" } } }
+      },
+      "text": {
+        "primary":   { "$value": "{primitive.color.slate.900}", "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.900}", "dark": "{primitive.color.slate.50}" } } },
+        "secondary": { "$value": "{primitive.color.slate.700}", "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.700}", "dark": "{primitive.color.slate.200}" } } },
+        "inverse":   { "$value": "{primitive.color.slate.50}",  "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.50}",  "dark": "{primitive.color.slate.900}" } } }
+      },
+      "brand": {
+        "primary":    { "$value": "{primitive.color.indigo.600}", "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.indigo.600}", "dark": "{primitive.color.indigo.400}" } } },
+        "on-primary": { "$value": "{primitive.color.slate.white}", "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.white}", "dark": "{primitive.color.slate.900}" } } }
+      },
+      "border": {
+        "default": { "$value": "{primitive.color.slate.200}", "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.slate.200}", "dark": "{primitive.color.slate.700}" } } },
+        "focus":   { "$value": "{primitive.color.indigo.600}", "$type": "color", "$extensions": { "modes": { "light": "{primitive.color.indigo.600}", "dark": "{primitive.color.indigo.400}" } } }
+      }
+    },
+    "spacing": { "xs": { "$value": "{primitive.space.1}", "$type": "dimension" }, "sm": { "$value": "{primitive.space.2}", "$type": "dimension" }, "md": { "$value": "{primitive.space.4}", "$type": "dimension" },
+                 "lg": { "$value": "{primitive.space.6}", "$type": "dimension" }, "xl": { "$value": "{primitive.space.8}", "$type": "dimension" }, "2xl": { "$value": "{primitive.space.12}", "$type": "dimension" } },
+    "radius": { "sm": { "$value": "{primitive.radius.1}", "$type": "dimension" }, "md": { "$value": "{primitive.radius.2}", "$type": "dimension" }, "card": { "$value": "{primitive.radius.4}", "$type": "dimension" }, "full": { "$value": "{primitive.radius.full}", "$type": "dimension" } },
+    "motion": { "duration": { "fast": { "$value": "{primitive.duration.150}", "$type": "duration" }, "base": { "$value": "{primitive.duration.250}", "$type": "duration" }, "slow": { "$value": "{primitive.duration.400}", "$type": "duration" } } }
+  },
+  "component": {
+    "button": { "primary": { "bg": { "$value": "{semantic.color.brand.primary}", "$type": "color" }, "fg": { "$value": "{semantic.color.brand.on-primary}", "$type": "color" }, "radius": { "$value": "{semantic.radius.md}", "$type": "dimension" } } }
+  }
+}

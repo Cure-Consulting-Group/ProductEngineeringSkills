@@ -4,3 +4,4 @@ __pycache__/
 
 # OS cruft
 .DS_Store
+evals/results/workdirs/

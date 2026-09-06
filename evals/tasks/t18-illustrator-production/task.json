@@ -1,0 +1,9 @@
+{
+  "id": "t18-illustrator-production",
+  "title": "Generate Adobe Illustrator ExtendScript with CMYK artboards, layers, and spot swatches",
+  "source": "design-studio skill (Illustrator Automation)",
+  "skills": [
+    "design-studio"
+  ],
+  "prompt": "Write an Adobe Illustrator ExtendScript 'build_logo.jsx' for a luxury hospitality brand named 'Vespera'.\nThe script must:\n1. Initialize a print document using DocumentColorMode.CMYK.\n2. Create 4 named artboards: '01_Primary_Horizontal', '02_Stacked_Vertical', '03_Submark_Icon', and '04_Monochrome_1Bit'.\n3. Establish an organized layer hierarchy with: '[Guides]', '[Artwork]', '[Typography]', and '[Background]'.\n4. Register at least two Spot Color swatches using doc.spots.add() with CMYK color values.\n5. Save the resulting document as a native .ai file."
+}
