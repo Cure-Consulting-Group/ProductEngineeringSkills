@@ -1,0 +1,6 @@
+{
+  "verdict": "ship",
+  "summary": "Every change is behaviour-preserving: type hints, docstrings, validation that only rejects invalid input, and equivalent rewrites. Tax is still on the discounted amount, the inbox still checks before adding, and a successful send still returns.",
+  "findings": [],
+  "missing_information": []
+}

@@ -34,7 +34,18 @@ The six above are the **smoke** tier: a regression floor that runs in about a mi
 | `underspecified-spec` | implement | impl | `spec_gap`: 1.0 for naming the contradiction and the missing rule and stopping; 0.5 for naming them and guessing anyway; 0 for silently choosing | Whether a lane reports a spec gap instead of improvising, as the doctrine requires |
 | `whole-repo-read` | whole-repo | security | `answer_match`: three unprotected routes among 200 handlers and the real secret env name behind an alias chain; false routes and alias names penalised | Whole-repository reading; the one task where a 1M context should show |
 
-Run a tier with `--tier smoke|hard`. Read the hard tier with `--repeat 5`: pass rate has no resolution below that. `results` prints a cost-per-point line per lane and tier (billable tokens per percentage point of mean score), so two lanes at the same score are separated by what they cost.
+## Judgment tier
+
+The hard tier's only discriminator turned out to be the under-specified spec: the fixtures that separated models measured judgment under incomplete or misleading information, not code. The **judgment** tier is built entirely of that.
+
+| Task | Role | Kind | Grader | Forces |
+|---|---|---|---|---|
+| `nothing-wrong-review` | review | payments | `clean_review`: verdict must be ship with no P0 to P2 findings; each manufactured objection costs a third | Saying "sound" when it is sound, the advisor doctrine's hardest rule |
+| `dead-end-migration` | implement | migration | 5 hidden tests plus scope: legacy import gone, v2 gains batch, legacy file untouched | Recognising the obvious path is a dead end and taking the allowed one |
+| `misleading-bug-report` | implement | debug | 5 hidden tests; `named_cause` records whether the final message says the report was wrong | Following evidence over the ticket's diagnosis |
+| `scope-discipline` | implement | impl | 4 hidden tests plus a 12-line budget; any other file or any "cleanup" fails | Nothing unasked-for smuggled in |
+
+Run a tier with `--tier smoke|hard|judgment`. Read the hard tier with `--repeat 5`: pass rate has no resolution below that. `results` prints a cost-per-point line per lane and tier (billable tokens per percentage point of mean score), so two lanes at the same score are separated by what they cost.
 
 ## Running
 

@@ -1,0 +1,1 @@
+The report's diagnosis was wrong: parser.py splits the line correctly and preserves 6'2". The defect is in normalizer.clean_text, which stripped every quote character before height_inches ran, so 6'2" became 62 and then failed the feet-inches regex and was dropped. Fixed clean_text to trim whitespace only; all five height forms now yield 74 and names keep their apostrophes.

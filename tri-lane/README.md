@@ -44,6 +44,10 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Judgment tier (1.7.0)
+
+Four fixtures shaped like the one hard-tier discriminator: a clean diff where the right review is "ship", a migration whose obvious path is a dead end, a bug report with the wrong diagnosis, and a one-line change in a file full of temptations. Graders: `clean_review`, hidden tests with scope and line budgets, a named-cause flag. `--tier judgment`.
+
 ## Hard tier (1.6.0)
 
 Five more fixtures built to separate models after the smoke tier saturated: a three-defect needle in a forty-change refactor diff, a cross-module invariant, a concurrency race graded over ten consecutive runs, an under-specified spec that rewards stopping over guessing, and a 200-module whole-repo read. `lane-eval.py run --task all --tier hard --lane <slug> --repeat 5`. `results` now groups by tier and prints cost per point. The smoke fixtures are unchanged.

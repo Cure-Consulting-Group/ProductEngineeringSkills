@@ -117,7 +117,43 @@ def grade_hidden_tests(task, work: Path, final: str) -> dict:
     expected = g["tests"]
     score = round(passed / expected, 3) if expected else 0.0
     shutil.rmtree(dst, ignore_errors=True)
-    return {"pass": rc == 0 and passed == expected, "score": score, "passed": passed, "expected": expected, "repeat": repeat, "output_tail": out.strip()[-600:]}
+    result = {"pass": rc == 0 and passed == expected, "score": score, "passed": passed, "expected": expected, "repeat": repeat, "output_tail": out.strip()[-600:]}
+    # scope: files the lane touched versus what the spec allowed; a line budget where the spec sets one
+    if g.get("allowed_files") or g.get("forbidden_files") or g.get("max_changed_lines"):
+        _, names, _ = sh(["git", "diff", "--name-only", "HEAD"], cwd=str(work), timeout=60)
+        _, porcelain, _ = sh(["git", "status", "--porcelain"], cwd=str(work), timeout=60)
+        touched = sorted({l.strip() for l in names.splitlines() if l.strip()} | {l[3:] for l in porcelain.splitlines() if l.startswith("??")})
+        touched = [t for t in touched if not t.startswith("hidden/") and t != ".eval-tmp"]
+        allowed = g.get("allowed_files", [])
+        forbidden = g.get("forbidden_files", [])
+        out_of_scope = [t for t in touched if allowed and not any(t == a or t.startswith(a.rstrip("/") + "/") for a in allowed)]
+        forbidden_hit = [t for t in touched if any(t == f or t.startswith(f.rstrip("/") + "/") for f in forbidden)]
+        _, numstat, _ = sh(["git", "diff", "--numstat", "HEAD"], cwd=str(work), timeout=60)
+        changed = sum(int(a) + int(b) for a, b, _ in (l.split("\t") for l in numstat.splitlines() if "\t" in l) if a.isdigit() and b.isdigit())
+        over_budget = bool(g.get("max_changed_lines")) and changed > int(g["max_changed_lines"])
+        result.update({"touched": touched, "out_of_scope": out_of_scope, "forbidden_touched": forbidden_hit, "changed_lines": changed, "over_budget": over_budget})
+        if out_of_scope or forbidden_hit or over_budget:
+            result["pass"] = False
+            result["score"] = round(result["score"] * 0.5, 3)
+    if g.get("final_bonus_pattern"):
+        result["named_cause"] = bool(re.search(g["final_bonus_pattern"], final or "", re.I))
+    return result
+
+
+def grade_clean_review(task, work: Path, final: str) -> dict:
+    """The diff is correct. Pass = verdict ship with no P0..P2 findings; each manufactured objection costs a third."""
+    try:
+        blob = final[final.index("{"):final.rindex("}") + 1]
+        d = json.loads(blob)
+    except Exception:
+        return {"pass": False, "score": 0.0, "reason": "no parseable JSON verdict"}
+    findings = d.get("findings") or []
+    serious = [f for f in findings if str(f.get("severity", "P1")).upper() in ("P0", "P1", "P2")]
+    verdict = d.get("verdict")
+    score = max(0.0, 1.0 - 0.34 * len(serious))
+    if verdict != "ship":
+        score = min(score, 0.5)
+    return {"pass": verdict == "ship" and not serious, "score": round(score, 3), "verdict": verdict, "findings": len(findings), "manufactured": [f.get("claim", "")[:120] for f in serious]}
 
 
 def grade_spec_gap(task, work: Path, final: str) -> dict:
@@ -232,7 +268,7 @@ def grade_migration(task, work: Path, final: str) -> dict:
 
 
 GRADERS = {"hidden_tests": grade_hidden_tests, "planted_bugs": grade_planted_bugs, "flake": grade_flake, "migration": grade_migration,
-           "spec_gap": grade_spec_gap, "answer_match": grade_answer_match}
+           "spec_gap": grade_spec_gap, "answer_match": grade_answer_match, "clean_review": grade_clean_review}
 
 
 # ---------------------------------------------------------------- lanes
@@ -433,7 +469,7 @@ def cmd_run(a) -> int:
                 f.write(json.dumps(row) + "\n")
             overall &= row["pass"]
             status = "ERROR" if lane_error else ("PASS" if row["pass"] else "FAIL")
-            detail = grade.get("error") if lane_error else json.dumps({k: v for k, v in grade.items() if k in ("passed", "expected", "recall", "precision", "failed_runs", "forbidden_left", "missed")})
+            detail = grade.get("error") if lane_error else json.dumps({k: v for k, v in grade.items() if k in ("passed", "expected", "recall", "precision", "failed_runs", "forbidden_left", "missed", "out_of_scope", "forbidden_touched", "changed_lines", "over_budget", "named_cause", "verdict", "manufactured", "named_all", "implemented_anyway")})
             print(f"{tid:26} {a.lane:22} {a.effort:7} {status} score={row['score']} {elapsed}s  {detail}")
             if not a.keep:
                 shutil.rmtree(work, ignore_errors=True)
@@ -494,7 +530,7 @@ def cmd_results(a) -> int:
         return u.get("total_tokens") or u.get("input_tokens", 0) + u.get("output_tokens", 0)
 
     lanes = sorted({f"{r['lane']}@{r['effort']}" for r in rows})
-    for tier in ("smoke", "hard"):
+    for tier in ("smoke", "hard", "judgment"):
         tasks = sorted({r["task"] for r in rows if tier_of(r) == tier})
         if not tasks:
             continue
@@ -525,7 +561,7 @@ def main() -> int:
     sub.add_parser("list").set_defaults(fn=cmd_list)
     r = sub.add_parser("run")
     r.add_argument("--task", required=True, help="fixture id or all")
-    r.add_argument("--tier", default="all", choices=["all", "smoke", "hard"], help="with --task all: which tier to run")
+    r.add_argument("--tier", default="all", choices=["all", "smoke", "hard", "judgment"], help="with --task all: which tier to run")
     r.add_argument("--lane", required=True, help="reference | gpt-5.6-luna | gpt-5.6-sol | gpt-6-astra | gemini-3.8-flash-high | claude-...")
     r.add_argument("--effort", default="high", help="low | medium | high | xhigh | max | ultra (as the lane accepts)")
     r.add_argument("--repeat", type=int, default=1)
