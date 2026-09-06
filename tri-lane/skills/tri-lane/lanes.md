@@ -69,7 +69,7 @@ Every lane writes only inside the repo. `/tmp` and `$TMPDIR` live on the system 
 ```bash
 RUN="$(git rev-parse --git-common-dir)/tri-lane/run/$TASK"; mkdir -p "$RUN/tmp"
 export TMPDIR="$RUN/tmp"                 # codex, agy, node, python all honour it
-SPEC="$RUN/spec.md"; FINAL="$RUN/final.md"; EVENTS="$RUN/events.jsonl"; OUT="$RUN/agy.json"; REVIEW="$RUN/review.md"
+SPEC="$RUN/spec.md"; FINAL="$RUN/final.md"; EVENTS="$RUN/events.jsonl"; OUT="$RUN/agy.json"; REVIEW="$RUN/review.md"; ADVISOR="$RUN/advisor.md"
 ```
 
 The main repo's `.git` dir is on the project volume and outside every worktree root, so the sandbox cannot reach it, the files survive worktree removal, and `lane-log.py end` can read them. Never `mktemp -t`; never write to the Claude scratchpad under `/private/tmp` for anything a lane or the report needs. `lane-preflight.py` refuses to dispatch when the repo volume has under 1 GB free and warns when the system volume is low.
