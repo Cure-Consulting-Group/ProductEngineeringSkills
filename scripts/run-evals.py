@@ -98,24 +98,29 @@ def run_arm(task, backend, skills_on, dry):
     wd = setup_workdir(task, skills_on)
     cmd = [a.replace("{prompt}", task["prompt"]) for a in BACKENDS[backend]]
     t0 = time.time()
+    timeout_s = int(task.get("timeout_seconds", TIMEOUT_S))
+    status = "fail"
     try:
-        r = subprocess.run(cmd, cwd=wd, capture_output=True, text=True, timeout=TIMEOUT_S)
+        r = subprocess.run(cmd, cwd=wd, capture_output=True, text=True, timeout=timeout_s)
         agent_ok = r.returncode == 0
-    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        agent_ok = False
-        r = None
+    except subprocess.TimeoutExpired:
+        agent_ok, status = False, "timeout"      # harness class: the agent was cut off, the task is unscored
+    except FileNotFoundError:
+        agent_ok, status = False, "unavailable"  # harness class: backend binary missing
     elapsed = round(time.time() - t0, 1)
     gate = subprocess.run(["sh", str(task["_dir"] / "score.sh"), str(wd)],
                           capture_output=True, text=True)
     passed = gate.returncode == 0
+    if passed:
+        status = "pass"
     # diff hygiene: files created beyond fixtures
     n_files = sum(1 for p in wd.rglob("*")
                   if p.is_file() and ".git" not in p.parts and ".claude" not in p.parts)
     shutil.rmtree(wd, ignore_errors=True)
-    print(f"  {'PASS' if passed else 'FAIL'}  {label}  {elapsed}s")
+    print(f"  {status.upper():11} {label}  {elapsed}s" + (f"  (limit {timeout_s}s, {n_files} files written)" if status == "timeout" else ""))
     return {"task": task["id"], "backend": backend, "skill": skills_on,
-            "pass": passed, "agent_exit_ok": agent_ok, "seconds": elapsed,
-            "files_written": n_files}
+            "pass": passed, "status": status, "agent_exit_ok": agent_ok, "seconds": elapsed,
+            "timeout_seconds": timeout_s, "files_written": n_files}
 
 
 def wilson(p, n, z=1.96):
@@ -270,7 +275,12 @@ def main():
                          and prev["summary"][k]["pass_rate"] > 0 and v["pass_rate"] == 0]
             if regressed:
                 print(f"❌ Ring 0 regression: {regressed}"); return 1
-        print("✅ Ring 0: no regression.")
+        unscored = [f"{r['task']}|{'on' if r['skill'] else 'off'}" for r in runs if r and r.get("status") in ("timeout", "unavailable")]
+        if unscored:
+            print(f"⚠ Ring 0: no regression among scored arms, but {len(unscored)} arm(s) were cut off by the harness and are unscored: {unscored}")
+            print("  Raise timeout_seconds in the task.json or fix the backend, then re-run --tasks for them; a timeout is never a pass.")
+        else:
+            print("✅ Ring 0: no regression.")
 
     if args.json:
         print(json.dumps(summary, indent=2))

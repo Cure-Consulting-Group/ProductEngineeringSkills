@@ -1,0 +1,152 @@
+{
+  "mode": "skill",
+  "stamp": "2026-09-06-1804",
+  "summary": {
+    "t17-brand-vector-engineering|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t17-brand-vector-engineering|claude|off": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t18-illustrator-production|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t18-illustrator-production|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|off": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|off": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    }
+  },
+  "runs": [
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "agent_exit_ok": false,
+      "seconds": 600.0,
+      "files_written": 0
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "agent_exit_ok": false,
+      "seconds": 600.0,
+      "files_written": 2
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 190.9,
+      "files_written": 1
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "agent_exit_ok": true,
+      "seconds": 243.0,
+      "files_written": 1
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "agent_exit_ok": false,
+      "seconds": 600.0,
+      "files_written": 0
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "agent_exit_ok": false,
+      "seconds": 600.0,
+      "files_written": 1
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "agent_exit_ok": false,
+      "seconds": 600.0,
+      "files_written": 7
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "agent_exit_ok": false,
+      "seconds": 600.0,
+      "files_written": 2
+    }
+  ]
+}
