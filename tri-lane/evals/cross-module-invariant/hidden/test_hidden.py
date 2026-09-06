@@ -48,7 +48,9 @@ class Hidden(unittest.TestCase):
         orders.place("o2", [{"sku": "ball", "qty": 2, "unit_cents": 500}])
         orders.cancel("o1")
         self.assertEqual(inventory.available("ball"), 8)
-        self.assertEqual(reconcile.report("o2"), {"stock_delta": 2, "ledger_delta": 0})
+        self.assertEqual(reconcile.report("o1"), {"stock_delta": 0, "ledger_delta": 0})
+        self.assertEqual(ledger.balance("receivable"), 1000)   # o2's books untouched by o1's cancel
+        self.assertEqual(orders.status("o2"), "placed")
 
 
 if __name__ == "__main__":

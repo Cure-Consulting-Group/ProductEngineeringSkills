@@ -1,4 +1,4 @@
-"""Order lifecycle. Reference: cancel releases stock and reverses the ledger."""
+"""Order lifecycle. Reference: cancel releases stock and reverses the ledger; reservations are tracked per order."""
 from __future__ import annotations
 
 from . import inventory, ledger
@@ -18,23 +18,25 @@ def place(order_id: str, lines: list[dict]) -> None:
     total = sum(l["qty"] * l["unit_cents"] for l in lines)
     ledger.post(order_id, "receivable", total)
     ledger.post(order_id, "revenue", -total)
-    _orders[order_id] = {"lines": lines, "status": "placed", "total": total}
+    _orders[order_id] = {"lines": lines, "status": "placed", "total": total, "reservations": {l["sku"]: l["qty"] for l in lines}}
 
 
 def cancel(order_id: str) -> None:
     o = _orders[order_id]
     if o["status"] != "placed":
         raise ValueError("only placed orders can be cancelled")
-    for l in o["lines"]:
-        inventory.release(l["sku"], l["qty"])
+    for sku, qty in o["reservations"].items():
+        inventory.release(sku, qty)
+    o["reservations"] = {}
     ledger.reverse(order_id)
     o["status"] = "cancelled"
 
 
 def ship(order_id: str) -> None:
     o = _orders[order_id]
-    for l in o["lines"]:
-        inventory.commit(l["sku"], l["qty"])
+    for sku, qty in o["reservations"].items():
+        inventory.commit(sku, qty)
+    o["reservations"] = {}
     o["status"] = "shipped"
 
 
