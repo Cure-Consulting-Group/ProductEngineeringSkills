@@ -119,6 +119,8 @@ When the user is benchmarking (see `BENCHMARK.md` in the plugin root), every tas
 
 `end` auto-discovers the run dir's events, agy JSON, and route suggestion, so the flags are only needed for files kept elsewhere. The Confirmed / Disputed / Unverified counts are your labels from Step 4. Report the one-line summary `end` prints. Never estimate tokens; the script reads the logs.
 
+After `end`, regenerate the dashboard: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/benchmark-dashboard.py" --all-projects --out "$(git rev-parse --git-common-dir)/tri-lane/dashboard.html"` and tell the user the path.
+
 Three rules while a benchmark is running: the session model and effort stay fixed for both arms (`start` records them; the report refuses a verdict if they vary); the lean-architect changes (Opus on routine days, explorer subagents, capped reports) are logged as `--arm tri-lane-lean`, never mixed into `tri-lane`; and `lane-log.py due` is checked at the start of every session so no seven-day defect window closes unrecorded.
 
 ## Maintenance

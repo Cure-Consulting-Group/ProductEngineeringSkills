@@ -76,6 +76,7 @@ Adopt Tri-Lane for the repo when all of these hold with at least 8 tasks per arm
 Keep `advisor-only` instead of full Tri-Lane if the Codex and Antigravity reviews together confirm fewer than one finding per task. Drop the Antigravity lane if its confirmed findings per task stay below Codex's while its pool drains faster.
 
 ```bash
+python3 $S/benchmark-dashboard.py --all-projects --out ~/Desktop/tri-lane-dashboard.html --open   # visual: verdict, arms, findings, precision, router, pools, every task
 python3 $S/benchmark-report.py                # Markdown, applies the rule
 python3 $S/benchmark-report.py --html ~/Desktop/tri-lane-report.html
 python3 $S/benchmark-report.py --json | jq .decision
