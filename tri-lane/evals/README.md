@@ -45,6 +45,18 @@ The hard tier's only discriminator turned out to be the under-specified spec: th
 | `misleading-bug-report` | implement | debug | 5 hidden tests; `named_cause` records whether the final message says the report was wrong | Following evidence over the ticket's diagnosis |
 | `scope-discipline` | implement | impl | 4 hidden tests plus a 12-line budget; any other file or any "cleanup" fails | Nothing unasked-for smuggled in |
 
+Three more spec-gap fixtures were added after the first judgment run, because the under-specified spec was the only fixture in 73 runs that separated models: `spec-gap-missing-rule` (consistent but incomplete: tie-break and short-list rules unstated), `spec-gap-test-contradiction` (constraints say raise on empty, the visible test expects an empty list), and `spec-gap-impossible-interface` (constraints demand a warning the fixed int return type cannot carry). All use the `spec_gap` grader with `must_name` lists, so naming one gap of two scores 0.3 and naming both and stopping scores 1.0.
+
+## Regression floor
+
+Because most fixtures saturate on current models, the suite's main job is catching a drop when a vendor ships a new model. Freeze the current matrix and compare after an update:
+
+```bash
+python3 $S/lane-eval.py baseline                                   # writes .git/tri-lane/evals-baseline.json
+python3 $S/lane-eval.py run --task all --lane gpt-5.6-luna --effort medium --repeat 3   # after the update
+python3 $S/lane-eval.py compare --since 2026-10-01                 # exit 1 on any cell that dropped more than 0.05
+```
+
 Run a tier with `--tier smoke|hard|judgment`. Read the hard tier with `--repeat 5`: pass rate has no resolution below that. `results` prints a cost-per-point line per lane and tier (billable tokens per percentage point of mean score), so two lanes at the same score are separated by what they cost.
 
 ## Running

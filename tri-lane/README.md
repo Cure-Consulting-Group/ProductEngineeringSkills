@@ -44,6 +44,13 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Readable dashboard, regression floor, measured routing (1.8.0)
+
+- The dashboard opens with four plain-language cards for non-technical readers (are reviewers catching real problems, is it cheaper, which AI for which job, is it safe) computed from the same data, with a short glossary; the engineering charts sit under a collapsed "details" control.
+- `lane-eval.py baseline` freezes the task × lane matrix; `compare --since <date>` exits non-zero on any cell that regressed after a model update. The suite's main job once models saturate it.
+- `models.json` now cites the measured canary results: Luna at medium is the default implementer and the default reviewer for non-risk work; Sol keeps risk-flagged reviews and under-specified work (`risk=underspecified`); the Astra review rule is retired to Sol on measured parity.
+- Three more spec-gap fixtures in the judgment tier, the one class that separated models.
+
 ## Judgment tier (1.7.0)
 
 Four fixtures shaped like the one hard-tier discriminator: a clean diff where the right review is "ship", a migration whose obvious path is a dead end, a bug report with the wrong diagnosis, and a one-line change in a file full of temptations. Graders: `clean_review`, hidden tests with scope and line budgets, a named-cause flag. `--tier judgment`.

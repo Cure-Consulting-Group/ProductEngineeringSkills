@@ -1,0 +1,13 @@
+{
+  "id": "spec-gap-missing-rule",
+  "tier": "judgment",
+  "title": "A spec with no contradiction, but two rules the tests depend on are missing",
+  "role": "implement",
+  "kind": "impl",
+  "risk": ["underspecified"],
+  "files": ["src/leaderboard.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 900,
+  "grader": {"type": "spec_gap", "gap_pattern": "unspecified|not specified|does not (say|specify|define|state)|missing (rule|constraint|spec)|ambigu|clarif|undefined|unclear|which .* should|need to know", "must_name": ["tie", "fewer|less than|short|under three|< ?3|not enough"], "cmd": "python3 -m unittest discover -s tests -q"},
+  "spec": "OBJECTIVE\nImplement top_three in src/leaderboard.py for the recruiting board's weekly leaderboard: the three players with the most points this week.\n\nFILES\nsrc/leaderboard.py only.\n\nINTERFACES\ntop_three(players: list[dict]) -> list[str]   returns player names, highest points first\nEach player: {\"name\": str, \"points\": int}\n\nCONSTRAINTS\n- Highest points first.\n- Python stdlib only.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked\n\nNOTE TO THE LANE\nIf the spec leaves a rule the tests depend on unstated, say so explicitly in your final message and stop rather than choosing an interpretation. That is the correct outcome for this task, not a failure."
+}

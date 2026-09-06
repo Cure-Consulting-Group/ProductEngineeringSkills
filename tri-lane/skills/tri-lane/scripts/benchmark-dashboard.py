@@ -101,6 +101,20 @@ tr:last-child td{border-bottom:0}td.num{font-family:var(--mono);font-variant-num
 .tbl{overflow-x:auto;border:1px solid var(--line);background:var(--surface);margin-top:18px}
 .hidden{display:none}.empty{color:var(--ink-3);font-size:13px;padding:18px 0}
 .arm{display:inline-block;font-family:var(--mono);font-size:11px;padding:1px 7px;border-radius:3px;background:var(--bg-2);color:var(--ink-2)}
+.glance{margin-top:22px}
+.intro{font-size:16.5px;color:var(--ink-2);max-width:78ch;margin:0 0 18px;line-height:1.55}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{border:1px solid var(--line);background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.card .q{font-family:var(--disp);font-size:18px;font-weight:700;line-height:1.2;text-wrap:balance}
+.card .a{font-family:var(--disp);font-size:30px;font-weight:700;line-height:1.05}
+.card .a.good{color:var(--good)}.card .a.warn{color:var(--warn)}.card .a.crit{color:var(--crit)}
+.card .why{font-size:14px;color:var(--ink-2);line-height:1.5}
+.card .why b{color:var(--ink)}
+.glossary{margin-top:16px;font-size:13.5px;color:var(--ink-2);max-width:90ch;line-height:1.55}
+.glossary b{color:var(--ink)}.glossary i{font-style:normal;color:var(--ink);font-weight:500}
+details.eng{margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+details.eng>summary{cursor:pointer;font-family:var(--mono);font-size:12.5px;color:var(--ink-3);letter-spacing:.04em;padding:6px 0;list-style:none}
+details.eng>summary::before{content:"▸ ";}details.eng[open]>summary::before{content:"▾ ";}
 @media (max-width:900px){.grid{grid-template-columns:1fr}.verdict{grid-template-columns:1fr}.verdict .v{border-right:0;border-bottom:1px solid var(--line)}}
 @media (prefers-reduced-motion: reduce){.tip{transition:none}}
 </style>
@@ -109,6 +123,12 @@ tr:last-child td{border-bottom:0}td.num{font-family:var(--mono);font-variant-num
   <div><div class="eyebrow">Cure Consulting Group · cure-tri-lane · benchmark</div><h1>Tri-Lane Benchmark</h1></div>
   <div class="meta" id="meta"></div>
 </header>
+<section class="glance">
+  <p class="intro">Cure runs software work through three AI systems: a lead that plans and checks (Claude), a builder and reviewer from a second vendor (OpenAI's Codex), and a systems reviewer from a third (Google's Antigravity). This page answers four questions from the recorded results. The engineering detail is further down, folded away.</p>
+  <div class="cards" id="cards"></div>
+  <div class="glossary"><b>Words used here.</b> A <i>task</i> is one piece of real work. A <i>confirmed finding</i> is a defect a reviewer reported that we checked and agreed was real. An <i>escaped defect</i> is a bug that reached users after we shipped. A <i>practice task</i> is a fixed exercise with a known answer, used to compare the AI models fairly. <i>Cost</i> is measured in tokens, the unit the vendors bill; lower is cheaper.</div>
+</section>
+<details class="eng"><summary>Details for engineers: decision rule, arms, findings, precision, routing, quotas, canary matrix, every task</summary>
 <div class="verdict"><div class="v"><div class="k">Decision rule</div><div class="t" id="verdict"></div></div><div class="checks" id="checks"></div></div>
 <div class="tiles" id="tiles"></div>
 <div class="grid">
@@ -123,6 +143,7 @@ tr:last-child td{border-bottom:0}td.num{font-family:var(--mono);font-variant-num
   <figure id="c-canary" class="wide"><h4>Canary suite: fixed tasks × lanes</h4><p class="sub">Mean score per cell from evals.jsonl; darker is better. Hover for pass count and grader detail. These numbers drive routing, not adoption.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
 </div>
 <div class="tbl"><table id="tasks"><thead><tr><th>Task</th><th>Project</th><th>Arm</th><th>Kind</th><th>Route</th><th>Lane</th><th>Model</th><th>Status</th><th>Advisor</th><th>Min</th><th>Claude billable</th><th>Codex billable</th><th>Antigravity</th><th>Confirmed</th><th>Rework</th><th>Escaped</th><th>Window</th></tr></thead><tbody></tbody></table></div>
+</details>
 </div>
 <script>
 const DATA = __DATA__;
@@ -138,6 +159,35 @@ const DATA = __DATA__;
   function table(fig,head,rows){const t=document.createElement("table");t.innerHTML="<thead><tr>"+head.map(h=>`<th>${h}</th>`).join("")+"</tr></thead><tbody>"+rows.map(r=>"<tr>"+r.map((c,i)=>`<td class="${i?'num':''}">${c}</td>`).join("")+"</tr>").join("")+"</tbody>";fig.querySelector(".tview").appendChild(t);}
   function empty(fig,msg){fig.querySelector(".chart").innerHTML=`<div class="empty">${msg}</div>`;}
   const armsPresent=ARMS.filter(a=>S[a]);
+
+  // at-a-glance cards for non-technical readers, computed from the same data
+  (function(){
+    const C=DATA.canary||[]; const conf=T.reduce((a,t)=>a+Object.values(t.findings).reduce((b,f)=>b+f[0],0),0);
+    const fixFirst=T.filter(t=>t.advisor==="fix-first").length, withAdvisor=T.filter(t=>t.advisor).length;
+    const manual=T.filter(t=>t.arm==="manual").length, tri=T.filter(t=>t.arm==="tri-lane").length;
+    const esc=T.reduce((a,t)=>a+t.escaped,0), unchecked=T.filter(t=>!t.window_checked).length;
+    const cards=[];
+    // 1. quality
+    cards.push({q:"Are the extra reviewers catching real problems?", a: conf?`Yes: ${conf} real defects`:"Not enough data", cls: conf?"good":"warn",
+      why: conf?`Found across <b>${T.length} real tasks</b> and confirmed by a person, not just reported. The independent final check changed what shipped on <b>${fixFirst} of ${withAdvisor}</b> tasks.`:"No tasks have been logged yet."});
+    // 2. cost
+    let costA, costCls, costWhy;
+    if(D.checks && D.checks.claude_tokens_drop){const v=D.checks.claude_tokens_drop.value; costA=(v>=0?"Yes":"No")+`: ${Math.round(Math.abs(v)*100)}% ${v>=0?"less":"more"} lead-model cost`; costCls=D.checks.claude_tokens_drop.pass?"good":"crit"; costWhy=`Compared to the old way of working over ${manual} and ${tri} matched tasks.`;}
+    else {costA="Not measurable yet"; costCls="warn"; costWhy=`This needs <b>8 tasks done the old way</b> and 8 with the new system, under the same conditions. So far: <b>${manual} of 8</b> old-way, <b>${tri} of 8</b> new-way. Until then, cost claims are opinion.`;}
+    cards.push({q:"Is it cheaper than working the old way?", a:costA, cls:costCls, why:costWhy});
+    // 3. which model
+    if(C.length){const byLane={}; C.filter(e=>e.lane!=="reference").forEach(e=>{const k=e.lane+" @ "+e.effort; (byLane[k]=byLane[k]||{n:0,p:0,s:0}); byLane[k].n++; byLane[k].p+=e.pass?1:0; byLane[k].s+=(e.score||0);});
+      const rows=Object.entries(byLane).map(([k,v])=>({k,rate:v.p/v.n,mean:v.s/v.n,n:v.n})).sort((a,b)=>b.rate-a.rate||b.mean-a.mean);
+      const nice=k=>k.replace("gpt-5.6-luna","Codex Luna (cheapest)").replace("gpt-5.6-sol","Codex Sol").replace("gpt-6-astra","GPT-6 Astra (most expensive)").replace("gemini-3.8-flash-high","Google Gemini Flash").replace(/ @ (\w+)/," at $1 effort");
+      const top=rows[0]; const cheapest=rows.find(r=>r.k.includes("luna"));
+      cards.push({q:"Which AI should do which job?", a: cheapest&&cheapest.rate>=0.9?"The cheapest one, almost always":"See the practice results", cls:"good",
+        why:`On <b>${C.filter(e=>e.lane!=="reference").length} practice tasks</b> with known answers, ${cheapest?`<b>${nice(cheapest.k)}</b> passed ${Math.round(cheapest.rate*100)}% (${cheapest.n} runs)`:""}${top&&cheapest&&top.k!==cheapest.k?`; the best, <b>${nice(top.k)}</b>, passed ${Math.round(top.rate*100)}%`:""}. The expensive models earn their cost only when the instructions are incomplete and the AI has to notice and ask.`});
+    } else cards.push({q:"Which AI should do which job?", a:"No practice results yet", cls:"warn", why:"Run the practice suite to compare models on tasks with known answers."});
+    // 4. safety
+    cards.push({q:"Is it safe to let it run?", a: esc?`${esc} bug${esc>1?"s":""} reached users`:"No bugs have reached users", cls: esc?"crit":(unchecked?"warn":"good"),
+      why:`${unchecked?`<b>${unchecked} task${unchecked>1?"s are":" is"} still inside the 7-day watch window</b>, so this can change. `:""}Every AI change is made in an isolated copy of the code, checked by a second vendor, and reviewed by a fresh, independent check before it can be merged.`});
+    document.getElementById("cards").innerHTML=cards.map(c=>`<div class="card"><div class="q">${c.q}</div><div class="a ${c.cls}">${c.a}</div><div class="why">${c.why}</div></div>`).join("");
+  })();
 
   // meta + verdict + checks
   document.getElementById("meta").innerHTML=`generated ${DATA.generated}<br>${DATA.source}<br>${T.length} tasks · ${armsPresent.map(a=>a+" "+S[a].tasks).join(" · ")}`;
