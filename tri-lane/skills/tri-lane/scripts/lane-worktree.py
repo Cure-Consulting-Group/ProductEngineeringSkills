@@ -165,6 +165,8 @@ def cmd_remove(a) -> int:
                 if rc3 != 0:
                     salvage += " (push failed: " + out3.strip()[:80] + ")"
     if wt.exists():
+        if a.ro:
+            sh(["chmod", "-R", "u+w", str(wt)], timeout=300)  # the --ro twin had its write bits stripped
         rc, out = sh(["git", "worktree", "remove", "--force", str(wt)], cwd=str(root))
         if rc != 0:
             print(out.strip(), file=sys.stderr)

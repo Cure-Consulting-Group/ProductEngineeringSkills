@@ -80,8 +80,22 @@ def in_scope(path: str, allowed: list[str]) -> bool:
     return False
 
 
+import re as _re
+
+def gradle_safe(cmd: str) -> str:
+    """Inside the sandbox Gradle cannot open daemon sockets or reach the network (HoopTrace, Vendly f10).
+    Force no-daemon and offline on every gradle invocation unless already present."""
+    def sub(m):
+        return m.group(0) + " --no-daemon --offline"
+    if "--no-daemon" in cmd:
+        return cmd
+    return _re.sub(r"(?:^|(?<=[\s;&|(]))(\./gradlew|gradlew|gradle)\b", sub, cmd)
+
+
 def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: list[str]) -> tuple[int, str, str]:
     """Returns (exit, output, how)."""
+    if not unsandboxed:
+        cmd = gradle_safe(cmd)
     if not unsandboxed and shutil.which("codex"):
         # cwd is the worktree; codex sandbox treats cwd as the writable workspace. (-C would require --permission-profile.)
         # /tmp is excluded from the sandbox; TMPDIR points inside the worktree so test runners still have scratch space
@@ -90,7 +104,7 @@ def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: lis
         # take their locks and the lane can never verify itself (HoopTrace, 2026-09-03).
         tmp = Path(wt) / TMP_DIRNAME
         tmp.mkdir(exist_ok=True)
-        env = dict(os.environ, TMPDIR=str(tmp))
+        env = dict(os.environ, TMPDIR=str(tmp), GRADLE_OPTS=(os.environ.get("GRADLE_OPTS", "") + " -Dorg.gradle.daemon=false").strip())
         roots_cfg = "sandbox_workspace_write.writable_roots=" + json.dumps(writable)
         argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "-c", roots_cfg, "--", "sh", "-c", cmd]
         try:

@@ -1,0 +1,43 @@
+{
+  "updated": "2026-09-05",
+  "note": "Capability table for lane routing. Public benchmarks set the prior; the project's benchmark.jsonl overrides a rule once the model has own_data_threshold tasks of that kind. Dates matter: lane models changed five times in two months. Re-run the head-to-head in lanes.md per model generation.",
+  "sources": {
+    "deepswe": "OpenAI GPT-6 Astra launch tables, 2026-09-03: Astra 74.1, Sol 72.7, Opus 5 73.7, Gemini 3.8 Flash 73.8 (a tie)",
+    "terminal_bench_4": "Astra 57.7, Sol 37.3, Fable 5.1 55.8 (OpenAI, 2026-09-03)",
+    "sre_bench": "Astra 88.0, Sol 55.9, Claude 12.5 single attempt (OpenAI, 2026-09-03)",
+    "coderabbit_review": "cross-file bug coverage: Astra 57.1%, Sol 47.6%, Opus 5 42.9% (CodeRabbit, 2026-09-04)",
+    "vals_migration": "Vals.ai Code Migration #1 Astra (2026-09-04)",
+    "own_head_to_head": "lanes.md 2026-09-02: gemini-3.8-flash-high 5 valid findings vs gemini-3.1-pro-high 1 valid + reverted tree",
+    "own_precision": "Vendly benchmark.jsonl through 2026-09-05: codex 0.73, agy 0.70, advisor 0.88; near 1.0 on payments, lower on infra",
+    "effort_note": "Effort moves outcomes more than model within a family: paddo.dev Astra low 5 bugs/60s vs max 7 bugs/446s"
+  },
+  "quota": {
+    "gpt-6-astra": "about half of Sol's Codex Pro allowance; ultra spawns Sol/Terra/Luna workers",
+    "gpt-5.6-sol": "ultra: 5-10 runs can drain a Pro window",
+    "gemini": "weekly pool can lock the account for days when drained; preflight threshold applies"
+  },
+  "rules": [
+    {"id": "impl-strings-docs", "role": "implement", "kinds": ["strings", "docs", "config", "rename"], "risk": [], "lane": "gpt-5.6-luna", "effort": "low", "basis": "mechanical; cheapest lane", "own_data_threshold": 5},
+    {"id": "impl-routine", "role": "implement", "kinds": ["impl", "feature", "android", "ios", "web", "tests"], "risk": [], "lane": "gpt-5.6-luna", "effort": "medium", "basis": "deepswe tie across the family; volume belongs on the cheapest pool", "own_data_threshold": 5},
+    {"id": "impl-design-left-to-lane", "role": "implement", "kinds": ["feature"], "risk": [], "min_diff_lines": 300, "lane": "gpt-5.6-luna", "effort": "high", "basis": "a couple of design decisions left to the lane", "own_data_threshold": 5},
+    {"id": "impl-terminal-sre-migration", "role": "implement", "kinds": ["ci", "sre", "infra", "migration", "build", "debug"], "risk": [], "lane": "gpt-6-astra", "effort": "xhigh", "basis": "terminal_bench_4, sre_bench, vals_migration", "shadow": true, "own_data_threshold": 3},
+    {"id": "impl-risk", "role": "implement", "kinds": ["*"], "risk": ["payments", "auth", "rules", "security", "concurrency", "billing"], "lane": "gpt-5.6-sol", "effort": "max", "basis": "mistakes are expensive; strongest implementer; own_precision on payments", "own_data_threshold": 5},
+    {"id": "impl-wide", "role": "implement", "kinds": ["*"], "risk": [], "min_diff_lines": 800, "lane": "gpt-5.6-sol", "effort": "xhigh", "basis": "wide blast radius; Sol 30-min cap, split the spec first", "own_data_threshold": 5},
+    {"id": "review-crossfile-money", "role": "review", "kinds": ["*"], "risk": ["payments", "auth", "billing", "api"], "lane": "gpt-6-astra", "effort": "high", "basis": "coderabbit_review cross-file lead; pending the two-diff replay", "shadow": true, "own_data_threshold": 2},
+    {"id": "review-default", "role": "review", "kinds": ["*"], "risk": [], "lane": "gpt-5.6-sol", "effort": "high", "basis": "own_precision 0.73 overall, ~1.0 on payments", "own_data_threshold": 5},
+    {"id": "system-review", "role": "system-review", "kinds": ["*"], "risk": [], "lane": "gemini-3.8-flash-high", "effort": "high", "basis": "own_head_to_head", "own_data_threshold": 0},
+    {"id": "whole-repo", "role": "whole-repo", "kinds": ["*"], "risk": [], "lane": "gemini-3.1-pro-high", "effort": "high", "basis": "1M context is the point", "own_data_threshold": 3},
+    {"id": "triage", "role": "triage", "kinds": ["*"], "risk": [], "lane": "gemini-3.8-flash-low", "effort": "low", "basis": "cost; 14.5k floor per call so batch", "own_data_threshold": 0}
+  ],
+  "escalation": {
+    "attempt_2": {"lane": "gpt-5.6-sol", "effort": "xhigh", "basis": "repetition is evidence of misclassification"},
+    "attempt_3": {"lane": "gpt-5.6-sol", "effort": "ultra", "basis": "resisted two attempts; ultra fans out"}
+  },
+  "architect": {
+    "note": "Per session, not per task. Claude Code cannot switch the session model per task.",
+    "long_horizon_or_architecture": "claude-fable-5-1",
+    "routine_day": "claude-opus-5",
+    "explorer_subagent": "claude-sonnet-5",
+    "freeze_during_benchmark": true
+  }
+}

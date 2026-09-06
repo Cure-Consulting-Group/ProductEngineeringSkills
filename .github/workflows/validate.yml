@@ -69,6 +69,14 @@ jobs:
           print(f"eval index OK: {len(tasks)} tasks, {len(idx)} skills")
           EOF
 
+      - name: cure-tri-lane plugin — script unit tests and guard-hook matrix (stdlib, no tokens)
+        # Separate opt-in plugin under tri-lane/. Tests build throwaway git repos; the codex
+        # sandbox checks are skipped here and covered by `lane-preflight.py --self-test` locally.
+        run: |
+          git config --global user.email ci@cure && git config --global user.name ci
+          python3 -m unittest discover -s tri-lane/tests -v
+          python3 -c "import json;json.load(open('tri-lane/.claude-plugin/plugin.json'));json.load(open('tri-lane/skills/tri-lane/models.json'))"
+
       - name: type:prompt hooks only on low-frequency events, with timeouts
         # Wave 2 (BACKLOG T10/T11) deliberately ships two LLM-evaluating hooks:
         # the Stop quality gate and PostToolUseFailure triage. The original

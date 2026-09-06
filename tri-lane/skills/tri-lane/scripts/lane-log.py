@@ -4,8 +4,14 @@
   start   snapshot the clock and every quota pool before a task begins
   end     close the task: elapsed, Claude + Codex usage from logs, Antigravity usage from
           agy JSON files, pool deltas, route/lane/status, review labels; append to the log
-  update  amend a logged task later (escaped defects found after merge, notes)
+  update  amend a logged task later (escaped defects found after merge, notes); --escaped-defects 0 marks the window checked
+  due     tasks whose 7-day defect window has closed and has not been checked
   list    print the log as a table
+
+`start` records the session model and effort from ~/.claude/settings.json so the benchmark's fixed-model
+rule is checkable. `end` auto-discovers events*.jsonl, agy*.json and route-suggestion.json in the task's
+run dir ($(git rev-parse --git-common-dir)/tri-lane/run/<task>/), so nothing is missed when flags are
+omitted. Set TRI_LANE_NO_POOLS=1 to skip the quota snapshots (tests, offline).
 
 Log lives at $(git rev-parse --git-common-dir)/tri-lane/benchmark.jsonl (override with --log).
 Python stdlib only; reads agy and codex logs, never spends quota except one free `agy -p /usage`.
@@ -25,7 +31,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -88,10 +94,49 @@ def codex_pool() -> dict:
 
 
 def snapshot_pools() -> dict:
+    if os.environ.get("TRI_LANE_NO_POOLS"):
+        return {"captured_at": now_iso(), "skipped": True}
     d = agy_pools()
     d.update(codex_pool())
     d["captured_at"] = now_iso()
     return d
+
+
+def session_model() -> dict:
+    """The Claude Code session model and effort, from ~/.claude/settings.json (overridable by flags).
+    The benchmark protocol freezes these for both arms; recording them makes the freeze checkable."""
+    out = {"model": None, "effort": None}
+    try:
+        s = json.loads((Path.home() / ".claude" / "settings.json").read_text())
+        out["model"] = s.get("model")
+        out["effort"] = s.get("effortLevel")
+    except Exception:
+        pass
+    return out
+
+
+def run_dir_for(log: Path, task: str) -> Path:
+    return log.parent / "run" / task
+
+
+def discover_run_files(log: Path, task: str) -> dict:
+    """Events, agy JSON, and route suggestion the lanes left in the run dir, so `end` needs no flags."""
+    rd = run_dir_for(log, task)
+    found = {"codex_events": [], "agy_json": [], "suggestion": None}
+    if not rd.exists():
+        return found
+    for f in sorted(rd.glob("*.jsonl")):
+        if "events" in f.name:
+            found["codex_events"].append(str(f))
+    for f in sorted(rd.glob("*.json")):
+        if f.name == "route-suggestion.json":
+            try:
+                found["suggestion"] = json.loads(f.read_text())
+            except Exception:
+                pass
+        elif f.name.startswith("agy"):
+            found["agy_json"].append(str(f))
+    return found
 
 
 def read_log(log: Path) -> list:
@@ -144,13 +189,15 @@ def cmd_start(a) -> int:
         print(f"task {a.task} already started at {json.loads(sp.read_text()).get('started_at')}; use --force to restart", file=sys.stderr)
         return 1
     rc, head = sh(["git", "rev-parse", "--short", "HEAD"])
+    sm = session_model()
     rec = {
         "task": a.task, "arm": a.arm, "kind": a.kind, "started_at": now_iso(),
         "project": str(Path.cwd().resolve()), "head": head.strip(), "notes": a.notes or "",
+        "model": a.model or sm["model"], "effort": a.effort or sm["effort"],
         "pools_before": snapshot_pools(),
     }
     sp.write_text(json.dumps(rec, indent=2))
-    print(json.dumps({"started": a.task, "arm": a.arm, "pools_before": rec["pools_before"]}, indent=2))
+    print(json.dumps({"started": a.task, "arm": a.arm, "model": rec["model"], "effort": rec["effort"], "pools_before": rec["pools_before"]}, indent=2))
     return 0
 
 
@@ -176,15 +223,18 @@ def cmd_end(a) -> int:
     except Exception:
         usage = {"claude": {}, "codex": {}}
 
+    found = discover_run_files(log, a.task)
+    agy_files = list(a.agy_json or []) + [f for f in found["agy_json"] if f not in (a.agy_json or [])]
+    codex_files = list(a.codex_events or []) + [f for f in found["codex_events"] if f not in (a.codex_events or [])]
     agy = {"input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0, "cache_read_tokens": 0, "total_tokens": 0, "calls": 0}
-    for f in a.agy_json or []:
+    for f in agy_files:
         u = parse_agy_json(f)
         if u:
             agy["calls"] += 1
             for k in ("input_tokens", "output_tokens", "thinking_tokens", "cache_read_tokens", "total_tokens"):
                 agy[k] += u.get(k, 0)
     codex_lane = {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "reasoning_output_tokens": 0, "total_tokens": 0, "billable_tokens": 0, "calls": 0}
-    for f in a.codex_events or []:
+    for f in codex_files:
         u = parse_codex_events(f)
         codex_lane["calls"] += 1
         for k in ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens", "total_tokens", "billable_tokens"):
@@ -209,8 +259,10 @@ def cmd_end(a) -> int:
     row = {
         **{k: rec[k] for k in ("task", "arm", "kind", "project", "head")},
         "started_at": started, "ended_at": ended, "elapsed_seconds": round(elapsed),
+        "model": rec.get("model"), "effort": rec.get("effort"),
         "route": a.route, "lane": a.lane, "status": a.status, "advisor": a.advisor,
-        "rework": a.rework, "escalated": bool(a.escalated), "escaped_defects": 0,
+        "suggested": found["suggestion"], "suggestion_followed": (bool(found["suggestion"]) and found["suggestion"].get("lane") and found["suggestion"]["lane"] in (a.lane or "")) or None,
+        "rework": a.rework, "escalated": bool(a.escalated), "escaped_defects": 0, "window_checked_at": None,
         "claude": usage.get("claude", {}), "codex_logs": usage.get("codex", {}),
         "codex_lane": codex_lane, "agy": agy,
         "findings": findings, "pools_before": rec["pools_before"], "pools_after": pools_after, "pool_deltas": deltas,
@@ -221,7 +273,8 @@ def cmd_end(a) -> int:
     write_log(log, rows)
     sp.unlink()
     summary = {
-        "task": a.task, "arm": a.arm if hasattr(a, "arm") else rec["arm"], "elapsed_min": round(elapsed / 60, 1),
+        "task": a.task, "arm": rec["arm"], "model": rec.get("model"), "elapsed_min": round(elapsed / 60, 1),
+        "auto_discovered": {"codex_events": len(found["codex_events"]), "agy_json": len(found["agy_json"]), "suggestion": bool(found["suggestion"])},
         "claude_billable": row["claude"].get("billable_tokens"), "claude_cache_read": row["claude"].get("cache_read_input_tokens"),
         "codex_billable": codex_lane["billable_tokens"] or row["codex_logs"].get("billable_tokens"), "codex_total": codex_lane["total_tokens"] or row["codex_logs"].get("total_tokens"), "agy_total": agy["total_tokens"],
         "pool_deltas": deltas, "log": str(log),
@@ -240,6 +293,7 @@ def cmd_update(a) -> int:
     r = hit[-1]
     if a.escaped_defects is not None:
         r["escaped_defects"] = a.escaped_defects
+        r["window_checked_at"] = now_iso()
     if a.notes:
         r["notes"] = (r.get("notes", "") + " " + a.notes).strip()
     if a.set:
@@ -254,17 +308,40 @@ def cmd_update(a) -> int:
     return 0
 
 
+def cmd_due(a) -> int:
+    """Tasks whose 7-day escaped-defect window has closed (or closes within --within days) and that
+    have not been checked with `update --escaped-defects N` (0 counts as checked)."""
+    log = log_path(a.log)
+    now = datetime.now(timezone.utc)
+    rows = []
+    for r in read_log(log):
+        if r.get("window_checked_at") or not r.get("ended_at"):
+            continue
+        closes = datetime.fromisoformat(r["ended_at"]) + timedelta(days=7)
+        days = (closes - now).total_seconds() / 86400
+        if days <= a.within:
+            rows.append({"task": r["task"], "arm": r.get("arm"), "window_closes": closes.date().isoformat(), "days": round(days, 1)})
+    if a.json:
+        print(json.dumps(rows, indent=2))
+    else:
+        for r in rows:
+            state = "CLOSED" if r["days"] <= 0 else f"closes in {r['days']}d"
+            print(f"{r['task']:24} {r['arm'] or '':13} {r['window_closes']}  {state}   -> lane-log.py update --task {r['task']} --escaped-defects N")
+        print(f"{len(rows)} task(s) need a defect check")
+    return 0
+
+
 def cmd_list(a) -> int:
     log = log_path(a.log)
     rows = read_log(log)
     if a.json:
         print(json.dumps(rows, indent=2))
         return 0
-    print(f"{'task':10} {'arm':13} {'kind':9} {'route':9} {'status':9} {'min':>6} {'claude_bill':>11} {'codex':>9} {'agy':>9} {'conf':>4} {'esc':>3}")
+    print(f"{'task':22} {'arm':13} {'model':16} {'kind':9} {'route':9} {'status':9} {'min':>6} {'claude_bill':>11} {'codex':>9} {'agy':>9} {'conf':>4} {'esc':>3}")
     for r in rows:
         conf = sum(v.get("confirmed", 0) for v in (r.get("findings") or {}).values())
-        codex = (r.get("codex_lane") or {}).get("total_tokens") or (r.get("codex_logs") or {}).get("total_tokens") or 0
-        print(f"{r.get('task',''):10} {r.get('arm',''):13} {(r.get('kind') or ''):9} {(r.get('route') or ''):9} {(r.get('status') or ''):9} "
+        codex = (r.get("codex_lane") or {}).get("billable_tokens") or (r.get("codex_logs") or {}).get("billable_tokens") or (r.get("codex_logs") or {}).get("total_tokens") or 0
+        print(f"{r.get('task',''):22} {r.get('arm',''):13} {(r.get('model') or '?')[:16]:16} {(r.get('kind') or ''):9} {(r.get('route') or ''):9} {(r.get('status') or ''):9} "
               f"{round(r.get('elapsed_seconds',0)/60):>6} {(r.get('claude') or {}).get('billable_tokens',0):>11} {codex:>9} {(r.get('agy') or {}).get('total_tokens',0):>9} {conf:>4} {r.get('escaped_defects',0):>3}")
     print(f"{len(rows)} tasks in {log}")
     return 0
@@ -279,9 +356,16 @@ def main() -> int:
     s.add_argument("--task", required=True)
     s.add_argument("--arm", required=True, choices=["manual", "tri-lane", "advisor-only"])
     s.add_argument("--kind", default="", help="impl | security | infra | debug | refactor | docs")
+    s.add_argument("--model", help="override the session model recorded (default: ~/.claude/settings.json)")
+    s.add_argument("--effort", help="override the session effort recorded")
     s.add_argument("--notes", default="")
     s.add_argument("--force", action="store_true")
     s.set_defaults(fn=cmd_start)
+
+    d = sub.add_parser("due", help="tasks whose 7-day defect window needs checking")
+    d.add_argument("--within", type=float, default=0, help="also list windows closing within N days")
+    d.add_argument("--json", action="store_true")
+    d.set_defaults(fn=cmd_due)
 
     e = sub.add_parser("end", help="close a task and append the benchmark line")
     e.add_argument("--task", required=True)
