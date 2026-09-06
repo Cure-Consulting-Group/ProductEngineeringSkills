@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tri-Lane review verdict (strict: for codex --output-schema, where every property must be required)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "summary", "findings", "missing_information"],
+  "properties": {
+    "verdict": {"type": "string", "enum": ["ship", "fix-first", "rethink"]},
+    "summary": {"type": "string"},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "file", "line", "claim", "evidence", "fix"],
+        "properties": {
+          "severity": {"type": "string", "enum": ["P0", "P1", "P2", "P3"]},
+          "file": {"type": "string"},
+          "line": {"type": ["integer", "null"]},
+          "claim": {"type": "string"},
+          "evidence": {"type": "string"},
+          "fix": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "missing_information": {"type": "array", "items": {"type": "string"}}
+  }
+}
