@@ -34,6 +34,8 @@ ROUTE: solo | delegate | audit | full — <one-sentence reason>
 
 Routes escalate on observed risk. They never silently downgrade. If you started `solo` and the diff grew past one sentence, say so and re-declare.
 
+**Shadow router.** Before writing the spec, ask the capability table what it would pick and record it: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-route.py" suggest --role implement|review|system-review --kind <kind> --risk <flags> --attempt <n> --task <slug>`. It writes the suggestion to the run dir; `lane-log end` logs it beside what you chose. You still choose. The table (`models.json`) carries dated benchmark sources and is overridden by the project's own log once a model has enough tasks of that kind. It becomes the default only after the shadow log shows it would have done better.
+
 ## Step 2: Write the six-part spec
 
 Every lane receives exactly this, written to a file the wrapper reads from stdin:
@@ -97,7 +99,8 @@ Then merge from the worktree to the integration branch, one task per commit, and
 - Nothing a lane needs is ever written under `/tmp`, `$TMPDIR`, or the Claude scratchpad. Each task gets `$(git rev-parse --git-common-dir)/tri-lane/run/<slug>/` with `TMPDIR` exported into it. A full system volume stalled every lane on 3 Sep; preflight now refuses to dispatch on low disk.
 - Lane-written code never executes unsandboxed before the diff is read. `lane-report.py` refuses to run VERIFY when the lane touched files outside `FILES` or executable config, and runs it inside `codex sandbox` otherwise.
 - Wall-clock caps on every lane: Luna 10 min, Sol 30 min, agy `--print-timeout` set explicitly.
-- Run `lane-preflight.py` before the first dispatch of a session. Skip Antigravity when its Gemini weekly pool is under the threshold; a drained pool can lock the account for days.
+- Gradle inside the sandbox runs `--no-daemon --offline`; `lane-report.py` rewrites the VERIFY command. Daemon sockets and downloads are blocked in there, and a lane that cannot build reports partial forever.
+- Run `lane-preflight.py` before the first dispatch of a session (`--doctor` on a new machine: versions, lanes, disk, toolchains, quotas, and the self-test that exercises every rail in a scratch repo). Skip Antigravity when its Gemini weekly pool is under the threshold; a drained pool can lock the account for days.
 - Never run a review on a Stop hook or a timer. One advisor review per deliverable. Audit reviews only on the trigger.
 
 ## Budget notes
@@ -114,7 +117,9 @@ When the user is benchmarking (see `BENCHMARK.md` in the plugin root), every tas
 - Before the first tool call: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-log.py" start --task <id> --arm tri-lane --kind <impl|security|infra|debug|refactor>`
 - After merge or abandonment: `lane-log.py end --task <id> --route <route> --lane "<model> @ <rung>" --status <status> --advisor <verdict> --rework <n> --codex-events <file> --agy-json <file> --finding codex:C:D:U --finding agy:C:D:U --finding advisor:C:D:U`
 
-Keep the events and JSON files the lanes produce; `end` reads them. The Confirmed / Disputed / Unverified counts are your labels from Step 4. Report the one-line summary `end` prints. Never estimate tokens; the script reads the logs.
+`end` auto-discovers the run dir's events, agy JSON, and route suggestion, so the flags are only needed for files kept elsewhere. The Confirmed / Disputed / Unverified counts are your labels from Step 4. Report the one-line summary `end` prints. Never estimate tokens; the script reads the logs.
+
+Three rules while a benchmark is running: the session model and effort stay fixed for both arms (`start` records them; the report refuses a verdict if they vary); the lean-architect changes (Opus on routine days, explorer subagents, capped reports) are logged as `--arm tri-lane-lean`, never mixed into `tri-lane`; and `lane-log.py due` is checked at the start of every session so no seven-day defect window closes unrecorded.
 
 ## Maintenance
 

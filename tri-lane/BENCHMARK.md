@@ -9,6 +9,14 @@ The question: does Claude architect + Codex + Antigravity lanes beat Claude Code
 | `manual` | Today's flow: Claude Code with the library; Codex and Antigravity used by hand in other terminals, or not at all | `--arm manual` |
 | `tri-lane` | `/cure-tri-lane:tri-lane` doctrine: declared route, lanes in worktrees, advisor once | `--arm tri-lane` |
 | `advisor-only` | Tri-lane with no Codex or Antigravity review, only the fresh-context advisor. Isolates cross-vendor review value | `--arm advisor-only` |
+| `tri-lane-lean` | Tri-lane plus the lean-architect changes (Opus on routine days, explorer subagents for reads, capped lane reports). Logged separately so it never contaminates the arm under test | `--arm tri-lane-lean` |
+
+## Rules the tooling enforces
+
+- **Fixed model and effort.** `lane-log start` records the session model and effort from settings; `benchmark-report` refuses a verdict when the manual and tri-lane arms show more than one combination.
+- **Closed defect windows.** Every task carries a seven-day escaped-defect window. `lane-log due` lists tasks whose window has closed without a check; `update --escaped-defects N` (zero counts) closes it. The report refuses a verdict while any window in either arm is open, because "defects not up" passes on zero versus zero by construction.
+- **Eight per arm.** The report says "keep measuring" until both arms have eight tasks.
+- **Shadow router.** `lane-route.py suggest --task <id>` records what the capability table would have chosen; the report shows how often the architect agreed and the rework rate either way. The router changes nothing during the benchmark.
 
 ## Design
 

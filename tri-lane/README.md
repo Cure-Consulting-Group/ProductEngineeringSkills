@@ -44,6 +44,14 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Self-test, tests, and the capability table (1.3.0)
+
+- `lane-preflight.py --doctor` on a new machine: tool versions, both logins, trusted paths, disk, toolchain caches, quotas, and `lane-selftest.py`, which builds a scratch repo and exercises every rail (hook matrix, refusal on empty diff, scope block, sandbox denial of home and `/tmp`, worktree lock and salvage) in under a minute.
+- `tests/test_scripts.py`: stdlib unit tests for every script, run by the library's CI on each PR.
+- `models.json` + `lane-route.py suggest`: a dated capability table (public benchmarks as the prior, the project's own log as the posterior) that suggests a lane and effort per task. Shadow mode: the suggestion is logged next to the architect's choice; it never decides.
+- `lane-log.py due`: seven-day defect windows that need a check. `start` now records the session model and effort; `end` auto-discovers run-dir files.
+- Gradle inside the sandbox runs `--no-daemon --offline`.
+
 ## Worktrees and toolchain caches
 
 Create and remove lane worktrees only through `lane-worktree.py`. It writes a lock while a lane runs, refuses to remove a worktree while the lane process is alive, and pushes unmerged commits to `lane/<task>-salvage` before removing. A live Sol lane was orphaned twice in one HoopTrace session by manual cleanup.

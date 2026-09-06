@@ -26,7 +26,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-ARMS = ("manual", "tri-lane", "advisor-only")
+ARMS = ("manual", "tri-lane", "advisor-only", "tri-lane-lean")
+PROJECT_ROOTS = ("~/CureVault/projects", "/Volumes/CureVault/projects")
 
 
 def default_log() -> Path:
@@ -43,9 +44,26 @@ def load(log: Path) -> list:
         return rows
     for line in log.read_text().splitlines():
         try:
-            rows.append(json.loads(line))
+            r = json.loads(line)
+            r.setdefault("_log", str(log))
+            rows.append(r)
         except Exception:
             pass
+    return rows
+
+
+def load_all_projects() -> list:
+    """Every benchmark.jsonl under the known project roots (symlinked and physical paths deduplicated)."""
+    seen, rows = set(), []
+    for root in PROJECT_ROOTS:
+        for log in Path(root).expanduser().glob("*/.git/tri-lane/benchmark.jsonl"):
+            key = str(log.resolve())
+            if key in seen:
+                continue
+            seen.add(key)
+            for r in load(log):
+                r["_project"] = log.resolve().parents[2].name
+                rows.append(r)
     return rows
 
 
@@ -65,7 +83,24 @@ def codex_tokens(r) -> int:
     return int(lane.get("billable_tokens") or logs.get("billable_tokens") or lane.get("total_tokens") or logs.get("total_tokens") or 0)
 
 
+_ROWS: list = []
+
+
+def rows_for(_s, arms):
+    return [r for r in _ROWS if r.get("arm") in arms]
+
+
+def window_open(r) -> bool:
+    from datetime import datetime, timedelta, timezone
+    try:
+        return datetime.fromisoformat(r["ended_at"]) + timedelta(days=7) > datetime.now(timezone.utc)
+    except Exception:
+        return True
+
+
 def summarise(rows: list) -> dict:
+    global _ROWS
+    _ROWS = rows
     out = {}
     for arm in ARMS:
         rs = [r for r in rows if r.get("arm") == arm]
@@ -86,8 +121,14 @@ def summarise(rows: list) -> dict:
         for r in rs:
             for k, v in (r.get("pool_deltas") or {}).items():
                 pool.setdefault(k, []).append(v)
+        sugg = [r for r in rs if r.get("suggested")]
         out[arm] = {
             "tasks": len(rs),
+            "projects": sorted({r.get("_project") for r in rs if r.get("_project")}),
+            "models": sorted({f"{r.get('model')}@{r.get('effort')}" for r in rs}),
+            "router_shadow": {"suggested": len(sugg), "followed": sum(1 for r in sugg if r.get("suggestion_followed")),
+                               "rework_when_followed": mean([r.get("rework") for r in sugg if r.get("suggestion_followed")]),
+                               "rework_when_not": mean([r.get("rework") for r in sugg if r.get("suggestion_followed") is False])},
             "kinds": sorted({r.get("kind") or "" for r in rs}),
             "routes": {k: sum(1 for r in rs if r.get("route") == k) for k in sorted({r.get("route") or "" for r in rs})},
             "status": {k: sum(1 for r in rs if r.get("status") == k) for k in sorted({r.get("status") or "" for r in rs})},
@@ -122,8 +163,15 @@ def decide(s: dict, claude_drop: float, max_slowdown: float) -> dict:
         checks["slowdown"] = {"value": round(ratio, 2), "max": max_slowdown, "pass": ratio <= max_slowdown}
     n_ok = min(m["tasks"], t["tasks"]) >= 8
     checks["sample_size"] = {"manual": m["tasks"], "tri_lane": t["tasks"], "pass": n_ok, "note": "8+ per arm before trusting medians"}
+    # fixed-model rule: both arms must have run under one session model + effort
+    models = sorted({f"{r.get('model')}@{r.get('effort')}" for r in rows_for(s, ("manual", "tri-lane"))})
+    checks["model_frozen"] = {"models_seen": models, "pass": len(models) == 1 and models[0] != "None@None", "note": "recorded by lane-log start; None means the task predates 1.3.0"}
+    # defect windows: every task in both arms must have had its 7-day window checked or closed
+    open_w = [r["task"] for r in rows_for(s, ("manual", "tri-lane")) if not r.get("window_checked_at") and window_open(r)]
+    checks["defect_windows_closed"] = {"open": open_w, "pass": not open_w, "note": "escaped_defects_not_up passes on 0 vs 0 by construction while windows are open"}
     all_pass = all(c.get("pass") for c in checks.values())
-    verdict = "adopt tri-lane" if all_pass else ("keep measuring" if not n_ok else "do not adopt as-is")
+    blockers = [k for k in ("sample_size", "model_frozen", "defect_windows_closed") if not checks[k]["pass"]]
+    verdict = "adopt tri-lane" if all_pass else ("keep measuring: " + ", ".join(blockers) if blockers else "do not adopt as-is")
     extra = {}
     a = s.get("advisor-only")
     if a and t:
@@ -153,6 +201,7 @@ def render_md(s: dict, d: dict, log: Path) -> str:
             continue
         a = s[arm]
         out.append(f"## {arm}")
+        out.append(f"- projects: {a['projects']}  models: {a['models']}  router shadow: {a['router_shadow']}")
         out.append(f"- routes: {a['routes']}  status: {a['status']}  advisor: {a['advisor_verdicts']}")
         out.append(f"- escalated rate: {a['escalated_rate']}  pool delta mean: {a['pool_delta_mean']}")
         if a["reviewers"]:
@@ -180,13 +229,16 @@ def render_html(md: str) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--log", help="benchmark.jsonl path")
+    ap.add_argument("--all-projects", action="store_true", help="aggregate every project's benchmark.jsonl under the Cure project roots")
     ap.add_argument("--claude-drop", type=float, default=0.33, help="required fractional drop in Claude billable tokens per task")
     ap.add_argument("--max-slowdown", type=float, default=1.5, help="max elapsed ratio tri-lane / manual")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--html", help="write a one-page HTML report to this path")
     args = ap.parse_args()
     log = Path(args.log) if args.log else default_log()
-    rows = load(log)
+    rows = load_all_projects() if args.all_projects else load(log)
+    if args.all_projects:
+        log = Path("(all projects)")
     if not rows:
         print(f"no rows in {log}", file=sys.stderr)
         return 1

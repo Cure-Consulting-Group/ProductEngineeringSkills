@@ -159,8 +159,12 @@ def main() -> int:
     ap.add_argument("--lanes", default="codex,agy", help="comma list of lanes to check: codex, agy (default both)")
     ap.add_argument("--min-gemini-weekly", type=int, default=15, help="skip agy below this weekly percent remaining (default 15)")
     ap.add_argument("--min-repo-free-gb", type=float, default=1.0, help="refuse to dispatch when the repo volume has less free space than this (default 1 GB)")
+    ap.add_argument("--self-test", action="store_true", help="also run lane-selftest.py (every rail exercised in a scratch repo)")
+    ap.add_argument("--doctor", action="store_true", help="everything: tool versions, both lanes, disk, toolchains, quotas, and the self-test")
     ap.add_argument("--json", action="store_true", help="JSON output (always on; flag kept for convention)")
     args = ap.parse_args()
+    if args.doctor:
+        args.self_test = True
 
     lanes = {l.strip() for l in args.lanes.split(",") if l.strip()}
     result: dict = {"status": "ok", "reasons": []}
@@ -208,6 +212,24 @@ def main() -> int:
         if hard:
             result["status"] = "unavailable"
         result["reasons"] += [f"agy: {r}" for r in result["agy"]["reasons"]]
+
+    if args.doctor:
+        vers = {}
+        for name, cmd in (("claude", ["claude", "--version"]), ("codex", ["codex", "--version"]), ("agy", ["agy", "--version"]), ("gtimeout", ["gtimeout", "--version"])):
+            rc, txt = run(cmd, timeout=20)
+            m = re.search(r"(\d+\.\d+\.\d+)", txt)
+            vers[name] = m.group(1) if m else (None if rc != 0 else txt.strip().splitlines()[0][:40])
+        result["versions"] = vers
+        result["plugin_root"] = str(Path(__file__).resolve().parents[3])
+    if args.self_test:
+        rc, txt = run([sys.executable, str(Path(__file__).resolve().parent / "lane-selftest.py")], timeout=300)
+        try:
+            result["self_test"] = json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+        except Exception:
+            result["self_test"] = {"status": "FAIL", "raw": txt[-400:]}
+        if result["self_test"].get("status") != "ok":
+            result["status"] = "unavailable"
+            result["reasons"].append("self-test failed: " + ", ".join(c["check"] for c in result["self_test"].get("checks", []) if c.get("status") == "FAIL"))
 
     print(json.dumps(result, indent=2))
     return 0 if result["status"] == "ok" else 1
