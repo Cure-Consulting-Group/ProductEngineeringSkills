@@ -1,0 +1,12 @@
+{
+  "id": "migration-mechanical",
+  "title": "Replace debug prints with structured logging across a package",
+  "role": "implement",
+  "kind": "migration",
+  "risk": [],
+  "files": ["src/pkg/"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 900,
+  "grader": {"type": "migration", "cmd": "python3 -m unittest discover -s tests -q", "forbidden_pattern": "^\\s*print\\(", "search_glob": "src/pkg/**/*.py", "exempt": ["src/pkg/log.py"], "required_pattern": "log\\.debug\\(", "required_min": 30},
+  "spec": "OBJECTIVE\nEvery module under src/pkg/ has leftover debug print() calls that spam production logs and leak internal state to stdout. Replace each with a structured debug log call so the output can be filtered by level, without changing any behaviour the tests cover.\n\nFILES\nsrc/pkg/**/*.py. Do not modify tests/ or src/pkg/log.py.\n\nINTERFACES\nfrom pkg.log import log   # a logging.Logger named \"pkg\"\nlog.debug(\"message %s\", value)   # use %-style lazy formatting, never f-strings inside log calls\n\nCONSTRAINTS\n- Zero print( calls remain under src/pkg/ except in src/pkg/log.py.\n- Every replaced call keeps the same information (the message text and the values) as a log.debug call.\n- No other behaviour changes. No new dependencies.\n- The visible tests must still pass.\n\nVERIFY\npython3 -m unittest discover -s tests -q && ! grep -rn \"^\\s*print(\" src/pkg --include=*.py | grep -v src/pkg/log.py\n\nREASONING\nas invoked"
+}

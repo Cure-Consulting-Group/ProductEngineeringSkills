@@ -119,6 +119,9 @@ tr:last-child td{border-bottom:0}td.num{font-family:var(--mono);font-variant-num
   <figure id="c-router"><h4>Shadow router</h4><p class="sub">How often the capability table's suggestion matched the architect's choice, and rework either way.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
   <figure id="c-pools"><h4>Quota pool movement per task</h4><p class="sub">Percentage points of each weekly pool consumed. Codex is used-percent; Google pools are remaining-percent, shown as consumption.</p><div class="legend"><span><i style="background:var(--s2)"></i>Codex weekly</span><span><i style="background:var(--s3)"></i>Google Gemini weekly</span></div><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
 </div>
+<div class="grid">
+  <figure id="c-canary" class="wide"><h4>Canary suite: fixed tasks × lanes</h4><p class="sub">Mean score per cell from evals.jsonl; darker is better. Hover for pass count and grader detail. These numbers drive routing, not adoption.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
+</div>
 <div class="tbl"><table id="tasks"><thead><tr><th>Task</th><th>Project</th><th>Arm</th><th>Kind</th><th>Route</th><th>Lane</th><th>Model</th><th>Status</th><th>Advisor</th><th>Min</th><th>Claude billable</th><th>Codex billable</th><th>Antigravity</th><th>Confirmed</th><th>Rework</th><th>Escaped</th><th>Window</th></tr></thead><tbody></tbody></table></div>
 </div>
 <script>
@@ -211,6 +214,20 @@ const DATA = __DATA__;
     rows.forEach((t,i)=>{const y=8+i*rowH; el("text",{x:L-8,y:y+14,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=t.task.length>18?t.task.slice(0,17)+"…":t.task; [["codex",css("--s2"),0],["gem",css("--s3"),11]].forEach(([k,c,dy])=>{const v=val(t,k); const r=el("rect",{x:L,y:y+2+dy,width:x(v)-L,height:9,fill:c},s); hover(r,fig,`${t.task} · ${k==="codex"?"Codex weekly":"Google Gemini weekly"}: ${v} points`);}); });
     table(fig,["Task","Codex weekly used (pts)","Gemini weekly consumed (pts)"],rows.map(t=>[t.task,val(t,"codex"),val(t,"gem")]));})();
 
+  // canary matrix
+  (function(){const fig=document.getElementById("c-canary"); const C=DATA.canary||[]; if(!C.length){empty(fig,"no canary runs yet — python3 lane-eval.py run --task all --lane reference, then real lanes");return;}
+    const lanes=[...new Set(C.map(e=>e.lane+" @ "+e.effort))].sort(); const tasks=[...new Set(C.map(e=>e.task))].sort();
+    const cell=(t,l)=>C.filter(e=>e.task===t&&e.lane+" @ "+e.effort===l);
+    const W=1160,L=200,T0=30,rowH=30,colW=Math.min(150,(W-L)/lanes.length),H=T0+tasks.length*rowH+8; const s=svg(fig,W,H,"Canary suite score matrix");
+    lanes.forEach((l,j)=>{el("text",{x:L+j*colW+colW/2,y:18,"text-anchor":"middle","font-size":"11",fill:css("--ink-2")},s).textContent=l.length>20?l.slice(0,19)+"…":l;});
+    const mix=(hex,alpha)=>{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${alpha})`;};
+    tasks.forEach((t,i)=>{const y=T0+i*rowH; el("text",{x:L-10,y:y+19,"text-anchor":"end","font-size":"12",fill:css("--ink")},s).textContent=t;
+      lanes.forEach((l,j)=>{const rs=cell(t,l); const x=L+j*colW+2; if(!rs.length){el("rect",{x,y:y+2,width:colW-4,height:rowH-4,fill:css("--bg-2")},s);return;}
+        const sc=rs.reduce((a,e)=>a+(e.score||0),0)/rs.length; const p=rs.filter(e=>e.pass).length; const r=el("rect",{x,y:y+2,width:colW-4,height:rowH-4,fill:mix(css("--s2"),0.15+0.85*sc)},s);
+        hover(r,fig,`${t} · ${l}: ${p}/${rs.length} pass, mean ${Math.round(sc*100)}% · ${JSON.stringify(rs[rs.length-1].detail)}`);
+        el("text",{x:x+(colW-4)/2,y:y+19,"text-anchor":"middle","font-size":"11.5",fill:sc>0.55?css("--surface"):css("--ink")},s).textContent=`${Math.round(sc*100)}% · ${p}/${rs.length}`;});});
+    table(fig,["Task","Lane","Runs","Pass","Mean score","Last detail"],tasks.flatMap(t=>lanes.map(l=>{const rs=cell(t,l);if(!rs.length)return null;return [t,l,rs.length,rs.filter(e=>e.pass).length,(rs.reduce((a,e)=>a+(e.score||0),0)/rs.length).toFixed(2),JSON.stringify(rs[rs.length-1].detail)];}).filter(Boolean)));})();
+
   // task table with sort
   (function(){const tb=document.querySelector("#tasks tbody"); const cell=(v,num)=>`<td class="${num?'num':''}">${v}</td>`;
     const rowHtml=t=>`<tr>${cell(t.task)}${cell(t.project)}<td><span class="arm">${t.arm}</span></td>${cell(t.kind)}${cell(t.route)}${cell(t.lane)}${cell((t.model||"?")+(t.effort?" @ "+t.effort:""))}${cell(t.status)}${cell(t.advisor)}${cell(t.elapsed_min,1)}${cell(t.claude_billable.toLocaleString(),1)}${cell(t.codex_billable.toLocaleString(),1)}${cell(t.agy_total.toLocaleString(),1)}${cell(Object.values(t.findings).reduce((a,f)=>a+f[0],0),1)}${cell(t.rework,1)}${cell(t.escaped,1)}<td>${t.window_checked?'<span class="pill good">checked</span>':'<span class="pill warn">open</span>'}</td></tr>`;
@@ -243,7 +260,28 @@ def main() -> int:
         rows, source = br.load(log), str(log)
     summary = br.summarise(rows) if rows else {}
     decision = br.decide(summary, a.claude_drop, a.max_slowdown) if rows else {"verdict": "no tasks logged", "checks": {}, "reason": "run lane-log.py start/end around a task"}
-    data = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "source": source, "tasks": slim(rows), "arms": summary, "decision": decision}
+    # canary suite results (evals.jsonl next to each benchmark.jsonl)
+    canary = []
+    seen = set()
+    logs = [Path(r["_log"]).parent / "evals.jsonl" for r in rows if r.get("_log")] if rows else []
+    if not a.all_projects:
+        logs.append((Path(a.log).parent if a.log else br.default_log().parent) / "evals.jsonl")
+    for lp in logs:
+        try:
+            key = str(lp.resolve())
+        except Exception:
+            continue
+        if key in seen or not lp.exists():
+            continue
+        seen.add(key)
+        for line in lp.read_text().splitlines():
+            try:
+                e = json.loads(line)
+                canary.append({"task": e.get("task"), "role": e.get("role"), "kind": e.get("kind"), "lane": e.get("lane"), "effort": e.get("effort"), "pass": bool(e.get("pass")),
+                               "score": e.get("score"), "elapsed": e.get("elapsed_seconds"), "ts": e.get("ts"), "detail": {k: v for k, v in (e.get("grade") or {}).items() if k in ("recall", "precision", "passed", "expected", "failed_runs", "forbidden_left", "missed", "false_positives")}})
+            except Exception:
+                pass
+    data = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "source": source, "tasks": slim(rows), "arms": summary, "decision": decision, "canary": canary}
     html = TEMPLATE.replace("__DATA__", json.dumps(data))
     out = Path(a.out).expanduser()
     out.write_text(html)

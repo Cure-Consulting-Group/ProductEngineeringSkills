@@ -1,0 +1,12 @@
+{
+  "id": "impl-spec-service",
+  "title": "Implement a refund policy from a six-part spec",
+  "role": "implement",
+  "kind": "impl",
+  "risk": [],
+  "files": ["src/refund_policy.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 900,
+  "grader": {"type": "hidden_tests", "cmd": "python3 -m unittest discover -s hidden -q", "tests": 9},
+  "spec": "OBJECTIVE\nImplement compute_refund in src/refund_policy.py so a cashier can see exactly how much of a captured card sale is refundable today, per line, under the store's policy. The function is called from the POS refund screen; wrong answers become chargebacks.\n\nFILES\nsrc/refund_policy.py only. Do not modify tests/.\n\nINTERFACES\ncompute_refund(lines: list[dict], captured_cents: int, refunded_cents: int, days_since_capture: int) -> dict\nEach line: {\"sku\": str, \"qty\": int, \"unit_cents\": int, \"refundable\": bool}\nReturns {\"lines\": [{\"sku\": str, \"eligible_cents\": int}...], \"total_cents\": int, \"rate\": float}\n\nCONSTRAINTS\n- Policy: days 0..14 inclusive refund at rate 1.0; days 15..30 inclusive at 0.5; after 30 at 0.0.\n- Lines with refundable false are always 0 regardless of days.\n- Per-line eligible_cents = floor(qty * unit_cents * rate). Integer arithmetic only; never floats on money except the rate itself.\n- total_cents = sum of eligible line amounts, then capped at captured_cents - refunded_cents, never below 0.\n- Preserve line order; include every input line in the output even when 0.\n- Negative days or negative refunded_cents raise ValueError.\n- Python stdlib only; no new files.\n\nVERIFY\npython3 -m unittest discover -s tests -q   (visible tests; hidden tests grade the same contract more thoroughly)\n\nREASONING\nas invoked"
+}

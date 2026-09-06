@@ -1,0 +1,12 @@
+{
+  "id": "flaky-test-diagnosis",
+  "title": "Diagnose and fix an intermittently failing test",
+  "role": "implement",
+  "kind": "ci",
+  "risk": ["ci"],
+  "files": ["src/scheduler.py", "tests/test_scheduler.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 900,
+  "grader": {"type": "flake", "cmd": "python3 -m unittest discover -s tests -q", "runs": 20, "must_keep_tests": ["test_expired_jobs_are_collected", "test_ordering_is_stable"], "cause_pattern": "clock|time\\.time|monotonic|sleep|wall|race|non-?determin|order|sort|dict|set|equal timestamp|tie"},
+  "spec": "OBJECTIVE\nCI fails roughly one run in four on tests/test_scheduler.py and the team has started re-running the job until it passes. Find the real cause, fix it at the source, and leave the tests meaningful. Do not delete or skip tests, do not add retries, do not widen assertions until they cannot fail.\n\nFILES\nsrc/scheduler.py and tests/test_scheduler.py. Nothing else.\n\nINTERFACES\nScheduler.add(job_id: str, run_at: float) -> None; Scheduler.due(now: float) -> list[str] returns due job ids in a stable, documented order; Scheduler.collect_expired(now: float, ttl: float) -> list[str].\nKeep the public interface. You may add an injectable clock.\n\nCONSTRAINTS\nThe suite must pass 20 of 20 consecutive runs. Both existing test functions must still exist and still assert behaviour. In your final message, name the root cause in one sentence.\n\nVERIFY\nfor i in $(seq 1 20); do python3 -m unittest discover -s tests -q || exit 1; done\n\nREASONING\nas invoked"
+}

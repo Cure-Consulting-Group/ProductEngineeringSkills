@@ -91,8 +91,30 @@ def suggest(role: str, kind: str, risk: set, attempt: int, diff_lines: int) -> d
     out = {"rule": best["id"], "lane": best["lane"], "effort": best["effort"], "basis": best["basis"], "shadow": bool(best.get("shadow"))}
     od = own_data(kind, best["lane"])
     out["own_data"] = od
-    out["prior_or_posterior"] = "posterior" if od.get("tasks", 0) >= best.get("own_data_threshold", 5) else "prior"
+    cn = canary_data(kind, best["lane"], role)
+    out["canary"] = cn
+    posterior = od.get("tasks", 0) >= best.get("own_data_threshold", 5) or cn.get("runs", 0) >= 2
+    out["prior_or_posterior"] = "posterior" if posterior else "prior"
     return out
+
+
+def canary_data(kind: str, lane: str, role: str) -> dict:
+    """Mean canary score for this lane on fixtures of the same kind or role (evals.jsonl)."""
+    gcd = git_common_dir()
+    log = (gcd / "tri-lane" / "evals.jsonl") if gcd else None
+    if not log or not log.exists():
+        return {"runs": 0}
+    scores = []
+    for line in log.read_text().splitlines():
+        try:
+            e = json.loads(line)
+        except Exception:
+            continue
+        if e.get("lane") != lane:
+            continue
+        if e.get("kind") == kind or e.get("role") == role:
+            scores.append(float(e.get("score") or 0))
+    return {"runs": len(scores), "mean_score": round(sum(scores) / len(scores), 3) if scores else None}
 
 
 def main() -> int:

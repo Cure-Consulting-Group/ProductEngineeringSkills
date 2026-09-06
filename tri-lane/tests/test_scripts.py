@@ -300,5 +300,39 @@ class Dashboard(unittest.TestCase):
         shutil.rmtree(d)
 
 
+class Canary(unittest.TestCase):
+    """The reference solution must score 100% on every fixture: this validates fixtures and graders together."""
+
+    def test_reference_passes_every_fixture(self):
+        d = Path(tempfile.mkdtemp())
+        env = dict(ENV, TRI_LANE_EVAL_UNSANDBOXED="1")  # CI has no codex; the sandbox is covered by lane-selftest locally
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "evals.jsonl", "run", "--task", "all", "--lane", "reference"], env=env, timeout=600)
+        self.assertEqual(rc, 0, out + err)
+        rows = [json.loads(l) for l in (d / "evals.jsonl").read_text().splitlines()]
+        self.assertEqual(len(rows), 6)
+        for r in rows:
+            self.assertTrue(r["pass"], f"{r['task']}: {r['grade']}")
+            self.assertEqual(r["score"], 1.0, f"{r['task']}: {r['grade']}")
+        shutil.rmtree(d)
+
+    def test_unmodified_fixture_fails(self):
+        d = Path(tempfile.mkdtemp())
+        env = dict(ENV, TRI_LANE_EVAL_UNSANDBOXED="1")
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "evals.jsonl", "run", "--task", "impl-spec-service", "--lane", "reference", "--dry-run"], env=env, timeout=300)
+        self.assertEqual(rc, 1)
+        shutil.rmtree(d)
+
+    def test_planted_bug_grader_handles_prose_and_neighbours(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("le", SCRIPTS / "lane-eval.py")
+        le = importlib.util.module_from_spec(spec); spec.loader.exec_module(le)
+        task = le.fixtures()["review-planted-bugs"]
+        prose = "src/capture.py:84 the sale already has an intent check locks the cashier out. src/capture.py line 86 logs the token. src/capture.py:200 unrelated nit."
+        g = le.grade_planted_bugs(task, Path("."), prose)
+        self.assertIn("B04-dead-intent-lockout", g["found"])
+        self.assertIn("B03-token-in-logs", g["found"])
+        self.assertEqual(g["false_positives"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
