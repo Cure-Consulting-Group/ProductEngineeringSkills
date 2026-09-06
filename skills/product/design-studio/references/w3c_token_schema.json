@@ -1,0 +1,48 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "color": {
+    "brand": {
+      "primary": {
+        "$value": "#4F46E5",
+        "$type": "color",
+        "$description": "Primary brand tint for call-to-actions, logo marks, and focal elements"
+      },
+      "secondary": {
+        "$value": "#06B6D4",
+        "$type": "color",
+        "$description": "Complementary accent for gradients, secondary buttons, and active states"
+      },
+      "accent": {
+        "$value": "#F59E0B",
+        "$type": "color",
+        "$description": "High-visibility warning, highlights, and badge accents"
+      }
+    },
+    "neutral": {
+      "dark": {
+        "$value": "#0F172A",
+        "$type": "color",
+        "$description": "Deep background in dark mode or primary text in light mode"
+      },
+      "light": {
+        "$value": "#F8FAFC",
+        "$type": "color",
+        "$description": "Clean canvas surface in light mode or high-contrast text in dark mode"
+      }
+    }
+  },
+  "spacing": {
+    "xs": { "$value": "4px", "$type": "dimension" },
+    "sm": { "$value": "8px", "$type": "dimension" },
+    "md": { "$value": "16px", "$type": "dimension" },
+    "lg": { "$value": "24px", "$type": "dimension" },
+    "xl": { "$value": "32px", "$type": "dimension" },
+    "2xl": { "$value": "48px", "$type": "dimension" }
+  },
+  "radius": {
+    "sm": { "$value": "4px", "$type": "dimension" },
+    "md": { "$value": "8px", "$type": "dimension" },
+    "lg": { "$value": "16px", "$type": "dimension" },
+    "full": { "$value": "9999px", "$type": "dimension" }
+  }
+}

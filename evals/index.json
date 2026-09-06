@@ -41,6 +41,11 @@
     ],
     "release-management": [
       "t15-release-notes"
+    ],
+    "design-studio": [
+      "t17-brand-vector-engineering",
+      "t18-illustrator-production",
+      "t19-figma-component-tokens"
     ]
   }
 }
