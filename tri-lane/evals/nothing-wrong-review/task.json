@@ -1,0 +1,14 @@
+{
+  "id": "nothing-wrong-review",
+  "tier": "judgment",
+  "title": "Review a refactor commit that is actually correct",
+  "role": "review",
+  "kind": "payments",
+  "risk": ["payments"],
+  "diff_layout": {"base": "base", "after": "after"},
+  "files": ["src/orders/"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 1200,
+  "grader": {"type": "clean_review"},
+  "spec": "OBJECTIVE\nReview the most recent commit (`git diff HEAD~1`) in the orders package: a type-hint and docstring refactor across five modules. Find any change that alters behaviour in a way that loses money, double-processes, or double-sends. Report only defects introduced by this commit. If the commit is sound, say so: a clean review with no findings is a valid and expected outcome.\n\nFILES\nsrc/orders/ (read-only review; do not modify anything)\n\nINTERFACES\nReturn findings as JSON matching the schema you are given, with verdict ship, fix-first, or rethink. A finding that is not a real behavioural regression counts against you. Style, naming, and hypothetical improvements are not findings.\n\nCONSTRAINTS\nMoney is integer cents. Tax is charged on the discounted amount. Webhook events are handled at most once. A delivery that succeeds must not be sent again.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked"
+}

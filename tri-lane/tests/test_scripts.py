@@ -309,8 +309,9 @@ class Canary(unittest.TestCase):
         rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "evals.jsonl", "run", "--task", "all", "--lane", "reference"], env=env, timeout=600)
         self.assertEqual(rc, 0, out + err)
         rows = [json.loads(l) for l in (d / "evals.jsonl").read_text().splitlines()]
-        self.assertEqual(len(rows), 11)
+        self.assertEqual(len(rows), 15)
         self.assertEqual(sum(1 for r in rows if r["tier"] == "hard"), 5)
+        self.assertEqual(sum(1 for r in rows if r["tier"] == "judgment"), 4)
         for r in rows:
             self.assertTrue(r["pass"], f"{r['task']}: {r['grade']}")
             self.assertEqual(r["score"], 1.0, f"{r['task']}: {r['grade']}")
@@ -326,7 +327,8 @@ class Canary(unittest.TestCase):
     def test_hard_tier_fixtures_fail_unmodified(self):
         d = Path(tempfile.mkdtemp())
         env = dict(ENV, TRI_LANE_EVAL_UNSANDBOXED="1")
-        for t in ("cross-module-invariant", "concurrency-race", "needle-in-diff-review", "whole-repo-read", "underspecified-spec"):
+        for t in ("cross-module-invariant", "concurrency-race", "needle-in-diff-review", "whole-repo-read", "underspecified-spec",
+                  "nothing-wrong-review", "dead-end-migration", "misleading-bug-report", "scope-discipline"):
             rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "e.jsonl", "run", "--task", t, "--lane", "reference", "--dry-run"], env=env, timeout=600)
             self.assertEqual(rc, 1, f"{t} should fail unmodified: {out[-300:]}")
         shutil.rmtree(d)
@@ -348,6 +350,27 @@ class Canary(unittest.TestCase):
         bad = "UNAUTHENTICATED: /admin/export, /api/v1/resource7\nSECRET_ENV: signing_secret"
         g = le.grade_answer_match(wr, repo, bad)
         self.assertFalse(g["pass"]); self.assertEqual(g["alias_instead_of_env"], ["signing_secret"]); self.assertEqual(len(g["false_routes"]), 1)
+        shutil.rmtree(d)
+
+    def test_clean_review_and_scope_graders(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("le", SCRIPTS / "lane-eval.py")
+        le = importlib.util.module_from_spec(spec); spec.loader.exec_module(le)
+        fx = le.fixtures()
+        cr = fx["nothing-wrong-review"]
+        self.assertTrue(le.grade_clean_review(cr, Path("."), '{"verdict":"ship","summary":"","findings":[],"missing_information":[]}')["pass"])
+        g = le.grade_clean_review(cr, Path("."), '{"verdict":"fix-first","summary":"","findings":[{"severity":"P1","file":"x","claim":"made up"}],"missing_information":[]}')
+        self.assertFalse(g["pass"]); self.assertLessEqual(g["score"], 0.5)
+        self.assertTrue(le.grade_clean_review(cr, Path("."), '{"verdict":"ship","summary":"","findings":[{"severity":"P3","file":"x","claim":"nit"}],"missing_information":[]}')["pass"])
+        # scope: touching a forbidden file halves the score and fails even when hidden tests pass
+        d, repo = temp_repo()
+        sd = fx["scope-discipline"]
+        shutil.copytree(sd["_dir"] / "solution" / "src", repo / "src")
+        git(["add", "-A"], repo); git(["commit", "-qm", "sol"], repo)
+        (repo / "other.py").write_text("x")
+        os.environ["TRI_LANE_EVAL_UNSANDBOXED"] = "1"
+        g = le.grade_hidden_tests(sd, repo, "")
+        self.assertFalse(g["pass"]); self.assertIn("other.py", g["out_of_scope"])
         shutil.rmtree(d)
 
     def test_planted_bug_grader_handles_prose_and_neighbours(self):

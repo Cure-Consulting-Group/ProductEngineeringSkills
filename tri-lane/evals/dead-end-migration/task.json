@@ -1,0 +1,13 @@
+{
+  "id": "dead-end-migration",
+  "tier": "judgment",
+  "title": "Migrate off the legacy client; the new client is missing the one call you need",
+  "role": "implement",
+  "kind": "migration",
+  "risk": [],
+  "files": ["src/app.py", "src/client_v2.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 1200,
+  "grader": {"type": "hidden_tests", "cmd": "python3 -m unittest discover -s hidden -q", "tests": 5, "allowed_files": ["src/app.py", "src/client_v2.py"], "forbidden_files": ["src/legacy_client.py"]},
+  "spec": "OBJECTIVE\nsrc/app.py still imports the deprecated legacy_client. Migrate it to client_v2 so legacy_client can be deleted next sprint. Behaviour must be identical, including batch exports of more than 50 records, which the legacy client handled with its batch() call.\n\nFILES\nsrc/app.py and src/client_v2.py. Do not modify src/legacy_client.py or tests/.\n\nINTERFACES\napp.export_all(records) -> list[str] of server ids, in input order, unchanged.\nclient_v2.Client.send(record) -> str exists; batch semantics on v2 are yours to add if needed, in src/client_v2.py, matching legacy: chunks of at most 50, one round trip per chunk, ids returned in input order.\n\nCONSTRAINTS\n- After the change, src/app.py must not import legacy_client at all.\n- Do not copy legacy_client's implementation wholesale; v2 uses a different wire format (see client_v2.Client._post).\n- Keep public signatures. Python stdlib only.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked"
+}

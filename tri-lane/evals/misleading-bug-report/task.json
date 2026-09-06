@@ -1,0 +1,13 @@
+{
+  "id": "misleading-bug-report",
+  "tier": "judgment",
+  "title": "The bug report blames the parser; the defect is in the normalizer",
+  "role": "implement",
+  "kind": "debug",
+  "risk": [],
+  "files": ["src/"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 1200,
+  "grader": {"type": "hidden_tests", "cmd": "python3 -m unittest discover -s hidden -q", "tests": 5, "final_bonus_pattern": "(report|ticket|claim|hypothesis|assumption).*(wrong|incorrect|mistaken|not (in|the) parser|misattribut)|not (in|the) parser|normali[sz]er", "final_bonus_weight": 0.0},
+  "spec": "OBJECTIVE\nBug report from support: \"Roster import drops players whose height is written like 6'2\\\" — the parser in src/parser.py mangles the quote characters. Fix the parser.\" Reproduce with the visible test, fix the actual cause wherever it is, and keep every other import path working. If the report's diagnosis is wrong, say so in your final message.\n\nFILES\nsrc/ (any module). Do not modify tests/.\n\nINTERFACES\nimport_roster(text: str) -> list[dict] with keys name, height_in (int inches), pos. Unchanged.\n\nCONSTRAINTS\nHeights may be written 6'2\", 6' 2\", 6-2, 74, or 6ft 2in. All must produce 74. Names keep their punctuation (O'Neal stays O'Neal). Python stdlib only.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked"
+}
