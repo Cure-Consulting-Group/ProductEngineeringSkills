@@ -82,6 +82,16 @@ def setup_workdir(task, skills_on):
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(content)
     subprocess.run(["git", "init", "-q"], cwd=wd, capture_output=True)
+    # Both arms get the same scoped Bash permissions: without these, `claude -p --permission-mode acceptEdits`
+    # denies every script call ("This command requires approval"), so a skill that ships tools is measured
+    # under conditions where its tools cannot run. Found in the design-studio t17 arm (2026-09-06).
+    settings = wd / ".claude" / "settings.json"
+    settings.parent.mkdir(parents=True, exist_ok=True)
+    settings.write_text(json.dumps({"permissions": {"allow": [
+        "Bash(python3 *)", "Bash(python *)", "Bash(bash *)", "Bash(sh *)", "Bash(ls *)", "Bash(ls)", "Bash(cat *)",
+        "Bash(head *)", "Bash(tail *)", "Bash(wc *)", "Bash(mkdir *)", "Bash(cp *)", "Bash(mv *)", "Bash(which *)",
+        "Bash(command *)", "Bash(grep *)", "Bash(find *)", "Bash(sips *)", "Bash(qlmanage *)", "Bash(node *)",
+        "Bash(npm test*)", "Bash(npx *)", "Bash(pytest *)", "Bash(git *)"], "deny": ["Bash(curl *)", "Bash(wget *)", "Bash(rm -rf /*)"]}}, indent=2))
     if skills_on:
         for s in task["skills"]:
             src = find_skill_dir(s)
@@ -103,10 +113,12 @@ def run_arm(task, backend, skills_on, dry):
     try:
         r = subprocess.run(cmd, cwd=wd, capture_output=True, text=True, timeout=timeout_s)
         agent_ok = r.returncode == 0
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as e:
         agent_ok, status = False, "timeout"      # harness class: the agent was cut off, the task is unscored
+        r = subprocess.CompletedProcess(cmd, -1, stdout=(e.stdout or b"").decode(errors="replace") if isinstance(e.stdout, bytes) else (e.stdout or ""), stderr=(e.stderr or b"").decode(errors="replace") if isinstance(e.stderr, bytes) else (e.stderr or ""))
     except FileNotFoundError:
         agent_ok, status = False, "unavailable"  # harness class: backend binary missing
+        r = None
     elapsed = round(time.time() - t0, 1)
     gate = subprocess.run(["sh", str(task["_dir"] / "score.sh"), str(wd)],
                           capture_output=True, text=True)
@@ -116,11 +128,28 @@ def run_arm(task, backend, skills_on, dry):
     # diff hygiene: files created beyond fixtures
     n_files = sum(1 for p in wd.rglob("*")
                   if p.is_file() and ".git" not in p.parts and ".claude" not in p.parts)
-    shutil.rmtree(wd, ignore_errors=True)
-    print(f"  {status.upper():11} {label}  {elapsed}s" + (f"  (limit {timeout_s}s, {n_files} files written)" if status == "timeout" else ""))
+    gate_out = (gate.stdout + gate.stderr).strip()[-2000:]
+    kept = None
+    if status != "pass":
+        # keep the evidence: a failing or cut-off arm is a result to read, not a directory to delete
+        keep_root = RESULTS_DIR / "workdirs"
+        keep_root.mkdir(parents=True, exist_ok=True)
+        kept = keep_root / f"{time.strftime('%Y-%m-%d-%H%M')}-{task['id']}-{backend}-{'on' if skills_on else 'off'}"
+        shutil.rmtree(wd / ".git", ignore_errors=True)
+        shutil.rmtree(wd / ".claude", ignore_errors=True)
+        shutil.move(str(wd), str(kept))
+        if r is not None:
+            (kept / "_agent_stdout.txt").write_text((r.stdout or "")[-20000:])
+            (kept / "_agent_stderr.txt").write_text((r.stderr or "")[-20000:])
+        (kept / "_gate_output.txt").write_text(gate_out or "(grader printed nothing; exit %d)" % gate.returncode)
+    else:
+        shutil.rmtree(wd, ignore_errors=True)
+    print(f"  {status.upper():11} {label}  {elapsed}s" + (f"  (limit {timeout_s}s, {n_files} files written)" if status == "timeout" else "")
+          + (f"  kept -> {kept.relative_to(ROOT)}" if kept else ""))
     return {"task": task["id"], "backend": backend, "skill": skills_on,
             "pass": passed, "status": status, "agent_exit_ok": agent_ok, "seconds": elapsed,
-            "timeout_seconds": timeout_s, "files_written": n_files}
+            "timeout_seconds": timeout_s, "files_written": n_files, "gate_output": gate_out,
+            "kept_workdir": str(kept.relative_to(ROOT)) if kept else None}
 
 
 def wilson(p, n, z=1.96):
@@ -223,6 +252,7 @@ def main():
     ap.add_argument("--mode", choices=["skill", "model"], default="skill")
     ap.add_argument("--backends", default="claude", help="comma list for --mode model")
     ap.add_argument("--reps", type=int, default=3)
+    ap.add_argument("--skill", choices=["on", "off", "both"], default="both", help="Which arm(s) to run in --mode skill")
     ap.add_argument("--tasks", help="comma list of task ids to run")
     ap.add_argument("--changed", metavar="REF", help="Ring-0 gate: eval only skills changed vs REF")
     ap.add_argument("--dry-run", action="store_true")
@@ -253,7 +283,7 @@ def main():
     runs = []
     for task in tasks:
         for b in backends:
-            arms = [True, False] if args.mode == "skill" else [True]
+            arms = ([True, False] if args.skill == "both" else [args.skill == "on"]) if args.mode == "skill" else [True]
             for skills_on in arms:
                 for _ in range(reps):
                     runs.append(run_arm(task, b, skills_on, args.dry_run))

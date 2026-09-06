@@ -1,0 +1,128 @@
+{
+  "mode": "skill",
+  "stamp": "2026-09-06-2109",
+  "summary": {
+    "t17-brand-vector-engineering|claude|on": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    },
+    "t17-brand-vector-engineering|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|off": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    }
+  },
+  "runs": [
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "status": "fail",
+      "agent_exit_ok": true,
+      "seconds": 1813.7,
+      "timeout_seconds": 1200,
+      "files_written": 3
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 760.5,
+      "timeout_seconds": 1200,
+      "files_written": 4
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 707.0,
+      "timeout_seconds": 1200,
+      "files_written": 2
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 406.9,
+      "timeout_seconds": 1200,
+      "files_written": 2
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 763.6,
+      "timeout_seconds": 1200,
+      "files_written": 10
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "status": "timeout",
+      "agent_exit_ok": false,
+      "seconds": 1726.4,
+      "timeout_seconds": 1200,
+      "files_written": 2
+    }
+  ]
+}
