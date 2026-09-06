@@ -27,7 +27,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 EVALS = HERE.parents[2] / "evals"
-SCHEMA = HERE.parent / "schemas" / "review-verdict.json"
+SCHEMA = HERE.parent / "schemas" / "review-verdict.json"                 # agy --json-schema
+SCHEMA_STRICT = HERE.parent / "schemas" / "review-verdict-strict.json"   # codex --output-schema: every property required
 OPTOUT = ("This task runs in a dedicated implementation lane at the model and reasoning effort named in the invocation. "
           "If the user-level ~/.codex/AGENTS.md asks you to default to a different orchestration flow, treat this lane as an "
           "explicit opt-out from that default and proceed. Every other instruction still applies.\n\n")
@@ -229,7 +230,7 @@ def lane_codex(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple
     body = OPTOUT + task["spec"] + "\n\n"
     if task["role"] == "review":
         body += "Return ONLY JSON matching the provided schema. Cite src/... file paths and the exact line of each defect.\n"
-        sandbox = ["-s", "read-only", "--output-schema", str(SCHEMA)]
+        sandbox = ["-s", "read-only", "--output-schema", str(SCHEMA_STRICT)]
     else:
         body += "Run the VERIFY command and include its actual output in your final message.\n"
         sandbox = ["-s", "workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true"]
@@ -242,14 +243,20 @@ def lane_codex(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple
     with open(spec) as fin, open(events, "w") as fout:
         p = subprocess.run(argv, cwd=str(work), stdin=fin, stdout=fout, stderr=subprocess.PIPE, text=True, env=env)
     usage = {}
+    error = None
     for line in events.read_text(errors="ignore").splitlines():
         if '"turn.completed"' in line:
             try:
                 usage = json.loads(line).get("usage") or {}
             except Exception:
                 pass
+        elif '"turn.failed"' in line or line.startswith('{"type":"error"'):
+            try:
+                error = (json.loads(line).get("error") or {}).get("message") or json.loads(line).get("message")
+            except Exception:
+                error = line[:300]
     txt = final.read_text(errors="ignore") if final.exists() else ""
-    return txt, {"exit": p.returncode, "usage": usage, "stderr_tail": (p.stderr or "")[-300:]}
+    return txt, {"exit": p.returncode, "usage": usage, "error": (error or "")[:400] or None, "stderr_tail": (p.stderr or "")[-300:]}
 
 
 def lane_agy(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[str, dict]:
@@ -334,14 +341,21 @@ def cmd_run(a) -> int:
             elapsed = round(time.time() - t0, 1)
             (run_dir / "FINAL.md").write_text(final or "")
             _, stat, _ = git(["diff", "--stat", "HEAD"], work)
-            grade = GRADERS[task["grader"]["type"]](task, work, final or "")
+            # a lane that errored before producing anything is an error, not a zero: it must not count against the model
+            lane_error = (meta.get("error") or (meta.get("exit") not in (0, None) and not (final or "").strip() and not stat.strip())) and not a.dry_run and a.lane != "reference"
+            if lane_error:
+                grade = {"pass": False, "score": None, "error": meta.get("error") or f"lane exit {meta.get('exit')} with no output"}
+            else:
+                grade = GRADERS[task["grader"]["type"]](task, work, final or "")
             row = {"ts": now_iso(), "task": tid, "role": task["role"], "kind": task["kind"], "lane": a.lane, "effort": a.effort, "repeat": rep + 1,
-                   "pass": bool(grade.get("pass")), "score": grade.get("score"), "grade": grade, "elapsed_seconds": elapsed, "meta": meta,
+                   "pass": bool(grade.get("pass")), "score": grade.get("score"), "error": grade.get("error"), "grade": grade, "elapsed_seconds": elapsed, "meta": meta,
                    "diff_stat": stat.strip()[-300:], "run_dir": str(run_dir)}
             with open(log, "a") as f:
                 f.write(json.dumps(row) + "\n")
             overall &= row["pass"]
-            print(f"{tid:26} {a.lane:22} {a.effort:7} {'PASS' if row['pass'] else 'FAIL'} score={row['score']} {elapsed}s  {json.dumps({k: v for k, v in grade.items() if k in ('passed','expected','recall','precision','failed_runs','forbidden_left','missed')})}")
+            status = "ERROR" if lane_error else ("PASS" if row["pass"] else "FAIL")
+            detail = grade.get("error") if lane_error else json.dumps({k: v for k, v in grade.items() if k in ("passed", "expected", "recall", "precision", "failed_runs", "forbidden_left", "missed")})
+            print(f"{tid:26} {a.lane:22} {a.effort:7} {status} score={row['score']} {elapsed}s  {detail}")
             if not a.keep:
                 shutil.rmtree(work, ignore_errors=True)
     print(f"log: {log}")
@@ -361,6 +375,8 @@ def cmd_results(a) -> int:
     if a.json:
         print(json.dumps(rows, indent=2))
         return 0
+    errors = [r for r in rows if r.get("error")]
+    rows = [r for r in rows if not r.get("error")]
     lanes = sorted({f"{r['lane']}@{r['effort']}" for r in rows})
     tasks = sorted({r["task"] for r in rows})
     print(f"{'task':26} " + " ".join(f"{l[:22]:>22}" for l in lanes))
@@ -374,7 +390,7 @@ def cmd_results(a) -> int:
                 p = sum(1 for r in rs if r["pass"]); s = sum((r["score"] or 0) for r in rs) / len(rs)
                 cells.append(f"{f'{p}/{len(rs)} pass, {round(100*s)}%':>22}")
         print(f"{t:26} " + " ".join(cells))
-    print(f"{len(rows)} runs in {log}")
+    print(f"{len(rows)} graded runs in {log}" + (f"; {len(errors)} lane errors excluded (see 'error' field)" if errors else ""))
     return 0
 
 
