@@ -1,0 +1,13 @@
+{
+  "id": "concurrency-race",
+  "tier": "hard",
+  "title": "A job queue loses claims and drops counts under eight workers",
+  "role": "implement",
+  "kind": "concurrency",
+  "risk": ["concurrency"],
+  "files": ["src/jobs.py"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 1200,
+  "grader": {"type": "hidden_tests", "cmd": "python3 -m unittest discover -s hidden -q", "tests": 4, "repeat": 10},
+  "spec": "OBJECTIVE\nsrc/jobs.py is a small in-process job queue used by eight worker threads. Under load, two workers sometimes claim the same job, the processed counter under-counts, and shutdown occasionally hangs. Make it correct under concurrency without serialising the workers onto one thread.\n\nFILES\nsrc/jobs.py only. Do not modify tests/.\n\nINTERFACES\nJobQueue.put(job_id: str) -> None\nJobQueue.claim() -> str | None      returns a job id exactly once per job, or None when the queue is empty\nJobQueue.done(job_id: str) -> None  marks a claimed job finished; increments the processed counter\nJobQueue.processed -> int           number of done() calls\nJobQueue.close() -> None            after close, claim() returns None and waiting claimers wake up\nStats.record(key: str, value: int) -> None ; Stats.total(key: str) -> int   exact sums under concurrent record()\n\nCONSTRAINTS\n- Each job id is returned by claim() exactly once across all threads.\n- processed equals the number of done() calls exactly.\n- claim() may block briefly waiting for work but must return None promptly after close().\n- Stats totals must be exact under concurrent writers.\n- Python stdlib only (threading is fine). Keep the public interface.\n\nVERIFY\npython3 -m unittest discover -s tests -q\n\nREASONING\nas invoked"
+}

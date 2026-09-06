@@ -309,7 +309,8 @@ class Canary(unittest.TestCase):
         rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "evals.jsonl", "run", "--task", "all", "--lane", "reference"], env=env, timeout=600)
         self.assertEqual(rc, 0, out + err)
         rows = [json.loads(l) for l in (d / "evals.jsonl").read_text().splitlines()]
-        self.assertEqual(len(rows), 6)
+        self.assertEqual(len(rows), 11)
+        self.assertEqual(sum(1 for r in rows if r["tier"] == "hard"), 5)
         for r in rows:
             self.assertTrue(r["pass"], f"{r['task']}: {r['grade']}")
             self.assertEqual(r["score"], 1.0, f"{r['task']}: {r['grade']}")
@@ -320,6 +321,33 @@ class Canary(unittest.TestCase):
         env = dict(ENV, TRI_LANE_EVAL_UNSANDBOXED="1")
         rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "evals.jsonl", "run", "--task", "impl-spec-service", "--lane", "reference", "--dry-run"], env=env, timeout=300)
         self.assertEqual(rc, 1)
+        shutil.rmtree(d)
+
+    def test_hard_tier_fixtures_fail_unmodified(self):
+        d = Path(tempfile.mkdtemp())
+        env = dict(ENV, TRI_LANE_EVAL_UNSANDBOXED="1")
+        for t in ("cross-module-invariant", "concurrency-race", "needle-in-diff-review", "whole-repo-read", "underspecified-spec"):
+            rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", d / "e.jsonl", "run", "--task", t, "--lane", "reference", "--dry-run"], env=env, timeout=600)
+            self.assertEqual(rc, 1, f"{t} should fail unmodified: {out[-300:]}")
+        shutil.rmtree(d)
+
+    def test_spec_gap_and_answer_graders(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("le", SCRIPTS / "lane-eval.py")
+        le = importlib.util.module_from_spec(spec); spec.loader.exec_module(le)
+        d, repo = temp_repo()
+        fx = le.fixtures()
+        gap = fx["underspecified-spec"]
+        self.assertEqual(le.grade_spec_gap(gap, repo, "The spec is contradictory about negative qty and the rounding rule is unspecified; stopping.")["score"], 1.0)
+        self.assertEqual(le.grade_spec_gap(gap, repo, "Implemented it, tests pass.")["score"], 0.0)
+        (repo / "x.py").write_text("x")
+        self.assertEqual(le.grade_spec_gap(gap, repo, "contradiction on negative qty and rounding unspecified, but I implemented ValueError")["score"], 0.5)
+        wr = fx["whole-repo-read"]
+        good = "UNAUTHENTICATED: /admin/export, /orders/bulk-delete, /users/impersonate\nSECRET_ENV: ORDERS_WEBHOOK_HMAC_KEY"
+        self.assertTrue(le.grade_answer_match(wr, repo, good)["pass"])
+        bad = "UNAUTHENTICATED: /admin/export, /api/v1/resource7\nSECRET_ENV: signing_secret"
+        g = le.grade_answer_match(wr, repo, bad)
+        self.assertFalse(g["pass"]); self.assertEqual(g["alias_instead_of_env"], ["signing_secret"]); self.assertEqual(len(g["false_routes"]), 1)
         shutil.rmtree(d)
 
     def test_planted_bug_grader_handles_prose_and_neighbours(self):

@@ -44,6 +44,10 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Hard tier (1.6.0)
+
+Five more fixtures built to separate models after the smoke tier saturated: a three-defect needle in a forty-change refactor diff, a cross-module invariant, a concurrency race graded over ten consecutive runs, an under-specified spec that rewards stopping over guessing, and a 200-module whole-repo read. `lane-eval.py run --task all --tier hard --lane <slug> --repeat 5`. `results` now groups by tier and prints cost per point. The smoke fixtures are unchanged.
+
 ## Canary suite (1.5.0)
 
 `evals/` holds six fixed tasks cut from the defect classes the lanes met in the field: a payments capture service with ten planted bugs (reviewer recall and precision by line), a refund policy from a six-part spec (hidden tests), a cross-tenant authorization hole (hidden tests), a genuinely intermittent test (20-run flake check plus a named cause), a 30-module print-to-logger migration (grep and tests), and a status-badge component (hidden Node tests). Zero dependencies, hidden deterministic graders, a reference solution per fixture that CI runs to 100%. `lane-eval.py run --task all --lane gpt-6-astra --effort high` runs a model through the suite with the production wrappers; `results` prints the task × lane matrix; the dashboard shows it; `lane-route.py` treats a lane with canary runs as a posterior. See `evals/README.md`.

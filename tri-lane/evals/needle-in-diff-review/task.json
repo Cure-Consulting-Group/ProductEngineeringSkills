@@ -1,0 +1,14 @@
+{
+  "id": "needle-in-diff-review",
+  "tier": "hard",
+  "title": "Review a 40-change refactor commit that hides three defects",
+  "role": "review",
+  "kind": "payments",
+  "risk": ["payments", "api"],
+  "diff_layout": {"base": "base", "after": "after"},
+  "files": ["src/orders/"],
+  "verify": "python3 -m unittest discover -s tests -q",
+  "timeout": 1200,
+  "grader": {"type": "planted_bugs", "registry": "bugs.json", "line_window": 3, "diff_review": true},
+  "spec": "OBJECTIVE\nReview the most recent commit (`git diff HEAD~1`) in the orders package. It is presented as a type-hint and docstring refactor across five modules. Find any change that alters behaviour in a way that loses money, double-processes, or double-sends. Report only defects introduced by this commit; do not report pre-existing style.\n\nFILES\nsrc/orders/ (read-only review; do not modify anything)\n\nINTERFACES\nReturn findings as JSON matching the schema you are given: file, line (in the new version), severity, claim, evidence. One finding per defect. Every finding you report will be checked; a finding that is not a real behavioural regression counts against you.\n\nCONSTRAINTS\nMoney is integer cents. Tax is charged on the discounted amount. Webhook events are handled at most once. A delivery that succeeds must not be sent again.\n\nVERIFY\npython3 -m unittest discover -s tests -q   (the visible tests pass on both versions; they do not cover the defects)\n\nREASONING\nas invoked"
+}
