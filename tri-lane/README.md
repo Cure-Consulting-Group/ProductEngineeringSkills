@@ -44,6 +44,10 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Failures are results (1.9.0)
+
+Every non-complete run is classified into a fixed taxonomy by `lane_failures.py`: `infra` (our environment), `harness` (our wrapper), `quota` (our budget), `model` (the lane), `fixture` (the benchmark). Infra, harness, and quota failures are retried once automatically and never charged to the model; model failures score zero and are never retried, because a retry that succeeds is the rework the field benchmark exists to count. A heartbeat watcher on the Codex event stream kills a lane that makes no progress for three minutes (`TRI_LANE_STALL_SECONDS`) instead of waiting for the cap. `lane-eval.py results` prints a reliability block per lane (first-attempt success, failures by class, seconds to a result including failed attempts, wasted tokens, cost per point including waste); the dashboard shows it. Every occurrence lands in `.git/tri-lane/failures.jsonl`; `lane-eval.py failures` flags any class the ledger (`FAILURE-LEDGER.md`, `failure-ledger.json`) says is closed. `lane-eval.py classify` backfills existing logs.
+
 ## Readable dashboard, regression floor, measured routing (1.8.0)
 
 - The dashboard opens with four plain-language cards for non-technical readers (are reviewers catching real problems, is it cheaper, which AI for which job, is it safe) computed from the same data, with a short glossary; the engineering charts sit under a collapsed "details" control.

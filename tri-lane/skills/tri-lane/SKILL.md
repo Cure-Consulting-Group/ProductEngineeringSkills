@@ -127,4 +127,6 @@ Three rules while a benchmark is running: the session model and effort stay fixe
 
 Lane models change. Before a model update, `lane-eval.py baseline`. After it, run the suite against the new model (`lane-eval.py run --task all --lane <slug> --effort <rung> --repeat 3`, review roles for Antigravity) and `lane-eval.py compare --since <date>`; a non-zero exit is a regression and blocks the repin. Repin in `models.json` and `lanes.md` only, and delete any rule above that the log does not justify. The suite is the evidence; the head-to-head log in `lanes.md` records the decision.
 
+Failures are results. A lane that stalls, errors, or refuses is classified (infra, harness, quota, model, fixture), retried once only when the cause is ours, and counted in the reliability block that sits next to every pass rate. Check `lane-eval.py failures` in every maintenance pass: a class the ledger marks closed that reappears restarts the clean-week clock and is fixed before anything else.
+
 Routing defaults as measured on 6 Sep 2026: Luna at medium for implementation and non-risk review; Sol at high for risk-flagged reviews and for any spec known to be incomplete (`--risk underspecified` to the router); Gemini 3.8 Flash for system review; Astra reserved until a fixture separates it from Sol.

@@ -1,0 +1,19 @@
+{
+  "updated": "2026-09-06",
+  "classes": [
+    {"class": "infra", "signature": "plan-mode write to live tree", "first_seen": "2026-09-02", "closed_by": "1.0.0 worktrees + --sandbox hook", "status": "closed"},
+    {"class": "infra", "signature": "disk full", "first_seen": "2026-09-03", "closed_by": "1.1.2 run dirs on project volume, /tmp excluded, disk preflight", "status": "closed"},
+    {"class": "infra", "signature": "untrusted path", "first_seen": "2026-09-03", "closed_by": "1.1.1 preflight checks both trust lists", "status": "closed"},
+    {"class": "harness", "signature": "committed diff read as refusal", "first_seen": "2026-09-03", "closed_by": "1.1.1 --base", "status": "closed"},
+    {"class": "harness", "signature": "hit the wall-clock cap with a diff (cap too small for the task size)", "first_seen": "2026-09-03", "closed_by": "1.1.1 timeout still evaluated", "status": "closed"},
+    {"class": "infra", "signature": "worktree removed while lane alive", "first_seen": "2026-09-03", "closed_by": "1.2.0 lane-worktree lock/refuse/salvage", "status": "closed"},
+    {"class": "infra", "signature": "sandbox denied a required write", "first_seen": "2026-09-03", "closed_by": "1.2.0 toolchain caches as writable roots", "status": "closed"},
+    {"class": "infra", "signature": "gradle daemon sockets", "first_seen": "2026-09-04", "closed_by": "1.3.0 --no-daemon --offline", "status": "closed"},
+    {"class": "harness", "signature": "output schema rejected", "first_seen": "2026-09-06", "closed_by": "1.5.1 strict schema", "status": "closed"},
+    {"class": "harness", "signature": "stdin never fed", "first_seen": "2026-09-02", "closed_by": "1.0.0 spec on stdin", "status": "closed"},
+    {"class": "fixture", "signature": "assertion on unspecified behaviour", "first_seen": "2026-09-06", "closed_by": "1.6.1", "status": "closed"},
+    {"class": "fixture", "signature": "race not exercised", "first_seen": "2026-09-06", "closed_by": "1.6.0 switch interval", "status": "closed"},
+    {"class": "fixture", "signature": "grader wording", "first_seen": "2026-09-06", "closed_by": "1.8.1, 1.8.2", "status": "closed"},
+    {"class": "model", "signature": "no progress", "first_seen": "2026-09-06", "closed_by": null, "status": "open by design: detected and recorded, never retried"}
+  ]
+}
