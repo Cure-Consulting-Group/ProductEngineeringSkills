@@ -119,6 +119,41 @@
       "first_seen": "2026-09-06",
       "closed_by": "1.9.1 every brief names an output path under $RUN (#51)",
       "status": "closed"
+    },
+    {
+      "class": "harness",
+      "signature": "implementer turns spent on setup, codex never dispatched",
+      "first_seen": "2026-09-06",
+      "closed_by": "1.9.2 cached preflight, single wait, 40 turns, refuse past turn 10 (#53)",
+      "status": "closed"
+    },
+    {
+      "class": "harness",
+      "signature": "gradle lock listener socket denied in sandboxed VERIFY",
+      "first_seen": "2026-09-06",
+      "closed_by": "1.9.2 sandbox network open for gradle, writes confined (#53)",
+      "status": "closed"
+    },
+    {
+      "class": "harness",
+      "signature": "lane work uncommitted, git metadata outside sandbox",
+      "first_seen": "2026-09-06",
+      "closed_by": "1.9.2 lane-report --commit (#53)",
+      "status": "closed"
+    },
+    {
+      "class": "model",
+      "signature": "deletion-only diff for spec file",
+      "first_seen": "2026-09-06",
+      "closed_by": "1.9.2 refused, VERIFY skipped (#53)",
+      "status": "closed"
+    },
+    {
+      "class": "harness",
+      "signature": "status needs --task",
+      "first_seen": "2026-09-06",
+      "closed_by": "1.9.2 status lists all lanes (#53)",
+      "status": "closed"
     }
   ]
 }

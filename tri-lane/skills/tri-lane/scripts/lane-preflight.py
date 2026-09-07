@@ -23,6 +23,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -162,9 +163,21 @@ def main() -> int:
     ap.add_argument("--self-test", action="store_true", help="also run lane-selftest.py (every rail exercised in a scratch repo)")
     ap.add_argument("--doctor", action="store_true", help="everything: tool versions, both lanes, disk, toolchains, quotas, and the self-test")
     ap.add_argument("--json", action="store_true", help="JSON output (always on; flag kept for convention)")
+    ap.add_argument("--cached", type=int, metavar="MINUTES", help="reuse the last ok result if it is younger than MINUTES (lanes pass 120 so the architect's once-per-session preflight is not repeated per lane, #53)")
     args = ap.parse_args()
     if args.doctor:
         args.self_test = True
+    marker = marker_path(args.dir or os.getcwd())
+    if args.cached and marker and marker.exists():
+        try:
+            prev = json.loads(marker.read_text())
+            age_min = (time.time() - prev.get("_at", 0)) / 60
+            if prev.get("status") == "ok" and age_min <= args.cached and set(prev.get("_lanes", [])) >= {l.strip() for l in args.lanes.split(",") if l.strip()}:
+                prev["_cached"] = f"reused, {age_min:.0f} min old"
+                print(json.dumps(prev, indent=2))
+                return 0
+        except Exception:
+            pass
 
     lanes = {l.strip() for l in args.lanes.split(",") if l.strip()}
     result: dict = {"status": "ok", "reasons": []}
@@ -231,8 +244,27 @@ def main() -> int:
             result["status"] = "unavailable"
             result["reasons"].append("self-test failed: " + ", ".join(c["check"] for c in result["self_test"].get("checks", []) if c.get("status") == "FAIL"))
 
+    result["_at"] = time.time()
+    result["_lanes"] = sorted(lanes)
+    if marker:
+        try:
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            marker.write_text(json.dumps(result, indent=2))
+        except OSError:
+            pass
     print(json.dumps(result, indent=2))
     return 0 if result["status"] == "ok" else 1
+
+
+def marker_path(repo_dir: str):
+    """$(git rev-parse --git-common-dir)/tri-lane/preflight.json for the repo containing repo_dir, else None."""
+    try:
+        p = subprocess.run(["git", "rev-parse", "--git-common-dir"], cwd=repo_dir, capture_output=True, text=True, timeout=30)
+        if p.returncode != 0:
+            return None
+        return (Path(repo_dir) / p.stdout.strip()).resolve() / "tri-lane" / "preflight.json"
+    except Exception:
+        return None
 
 
 if __name__ == "__main__":

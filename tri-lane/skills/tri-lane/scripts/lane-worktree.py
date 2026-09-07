@@ -5,7 +5,8 @@
           creates the run dir $(git rev-parse --git-common-dir)/tri-lane/run/<task>/ and prints paths as JSON
   lock    write run/<task>/lane.lock with the lane's pid and start time (wrappers call this before dispatch)
   unlock  remove the lock (wrappers call this after the report is produced)
-  status  is the lane alive? lock present, pid alive, any codex/agy process with the worktree path in its args
+  status  is the lane alive? lock present, pid alive, any codex/agy process with the worktree path in its args;
+          without --task lists every lane (run dirs and worktrees) and exits 3 if any is alive
   remove  refuses while a lock is present and its pid is alive, or while a codex/agy process references the
           worktree; otherwise pushes the branch as lane/<task>-salvage if it has unmerged commits, then removes.
           --force skips the liveness check but never the salvage push.
@@ -17,6 +18,7 @@ Examples:
   python3 lane-worktree.py add --task a4 --ro
   python3 lane-worktree.py lock --task a4 --pid $!
   python3 lane-worktree.py status --task a4
+  python3 lane-worktree.py status              # all lanes
   python3 lane-worktree.py remove --task a4
 """
 from __future__ import annotations
@@ -135,10 +137,31 @@ def cmd_unlock(a) -> int:
     return 0
 
 
+def all_tasks() -> list:
+    """Every task with a run dir or a worktree, so `status` can answer "what is live right now?" (#53)."""
+    names = set()
+    rc, out = sh(["git", "rev-parse", "--git-common-dir"])
+    if rc == 0:
+        runs = Path(out.strip()).resolve() / "tri-lane" / "run"
+        if runs.exists():
+            names |= {d.name for d in runs.iterdir() if d.is_dir()}
+    wts = repo_root().parent / "wt"
+    if wts.exists():
+        names |= {d.name[:-3] if d.name.endswith("-ro") else d.name for d in wts.iterdir() if d.is_dir()}
+    return sorted(names)
+
+
 def cmd_status(a) -> int:
-    info = liveness(a.task, wt_path(a.task, a.ro))
-    print(json.dumps(info, indent=2))
-    return 0 if not info["alive"] else 3
+    if a.task:
+        info = liveness(a.task, wt_path(a.task, a.ro))
+        print(json.dumps(info, indent=2))
+        return 0 if not info["alive"] else 3
+    lanes = []
+    for t in all_tasks():
+        info = liveness(t, wt_path(t, False))
+        lanes.append({"task": t, "alive": info["alive"], "worktree_exists": info["exists"], "lock": info["lock"], "processes": info["processes"]})
+    print(json.dumps({"lanes": lanes, "alive": [l["task"] for l in lanes if l["alive"]]}, indent=2))
+    return 3 if any(l["alive"] for l in lanes) else 0
 
 
 def cmd_remove(a) -> int:
@@ -184,7 +207,7 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name, fn in (("add", cmd_add), ("lock", cmd_lock), ("unlock", cmd_unlock), ("status", cmd_status), ("remove", cmd_remove)):
         s = sub.add_parser(name)
-        s.add_argument("--task", required=True)
+        s.add_argument("--task", required=(name != "status"), help="task slug (status: omit to list every lane)")
         s.add_argument("--ro", action="store_true", help="the read-only twin worktree (<task>-ro)")
         if name in ("add", "remove"):
             s.add_argument("--base", help="base ref (add: branch point; remove: what counts as merged; default HEAD)")

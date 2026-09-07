@@ -7,9 +7,15 @@ What it enforces, in order:
                     executable config (package.json, Makefile, conftest.py, CI, ...), VERIFY is NOT run
                     and STATUS is partial. Lane-written code must never execute before a human-grade
                     read of the diff decides it is safe.
-  3. VERIFY      -> re-run by this script inside `codex sandbox` (workspace-write: no network, writes
-                    confined to the worktree). Pass --unsandboxed-verify only when the architect has
-                    already read the diff and accepts the risk.
+  3. Deletion    -> a FILES path the spec asked the lane to modify that comes back deleted with nothing
+                    written (deletion-only diff) is STATUS refused and VERIFY is not run (#53).
+  4. VERIFY      -> re-run by this script inside `codex sandbox` (workspace-write: no network, writes
+                    confined to the worktree). Gradle needs a loopback socket for its lock listener,
+                    which the sandbox denies; for Gradle commands (or --verify-network) the sandbox
+                    keeps writes confined but opens the network, and says so in `how` and GAPS (#53).
+                    Pass --unsandboxed-verify only when the architect has already read the diff.
+  5. --commit    -> commit the lane's diff on its behalf (the lane cannot: worktree git metadata lives
+                    outside its sandbox), so salvage and merge have a real commit (#53).
 
 Exit codes: 0 complete, 2 partial, 3 refused, 4 timeout/unavailable (via --status-hint).
 Python stdlib only.
@@ -92,10 +98,17 @@ def gradle_safe(cmd: str) -> str:
     return _re.sub(r"(?:^|(?<=[\s;&|(]))(\./gradlew|gradlew|gradle)\b", sub, cmd)
 
 
-def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: list[str]) -> tuple[int, str, str]:
+def needs_network(cmd: str) -> bool:
+    """Gradle's FileLockContentionHandler binds a loopback UDP socket; the sandbox denies it even with
+    --no-daemon --offline (java.net.SocketException: Operation not permitted). Observed on an Android monorepo, #53."""
+    return bool(_re.search(r"(?:^|[\s;&|(/])(gradlew?|gradle)\b", cmd))
+
+
+def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: list[str], network: bool = False) -> tuple[int, str, str]:
     """Returns (exit, output, how)."""
     if not unsandboxed:
         cmd = gradle_safe(cmd)
+    network = network or needs_network(cmd)
     if not unsandboxed and shutil.which("codex"):
         # cwd is the worktree; codex sandbox treats cwd as the writable workspace. (-C would require --permission-profile.)
         # /tmp is excluded from the sandbox; TMPDIR points inside the worktree so test runners still have scratch space
@@ -106,14 +119,17 @@ def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: lis
         tmp.mkdir(exist_ok=True)
         env = dict(os.environ, TMPDIR=str(tmp), GRADLE_OPTS=(os.environ.get("GRADLE_OPTS", "") + " -Dorg.gradle.daemon=false").strip())
         roots_cfg = "sandbox_workspace_write.writable_roots=" + json.dumps(writable)
-        argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "-c", roots_cfg, "--", "sh", "-c", cmd]
+        argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "-c", roots_cfg]
+        if network:
+            argv += ["-c", "sandbox_workspace_write.network_access=true"]
+        argv += ["--", "sh", "-c", cmd]
         try:
             p = subprocess.run(argv, cwd=wt, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL, env=env)
             rc, out = p.returncode, (p.stdout or "") + (p.stderr or "")
         except subprocess.TimeoutExpired:
             rc, out = 124, f"timeout after {timeout}s"
         shutil.rmtree(tmp, ignore_errors=True)
-        return rc, out, f"codex sandbox workspace-write, /tmp excluded, writable: {writable or 'worktree only'}"
+        return rc, out, f"codex sandbox workspace-write, /tmp excluded, {'NETWORK OPEN (Gradle lock listener needs loopback; writes still confined)' if network else 'no network'}, writable: {writable or 'worktree only'}"
     if not unsandboxed:
         return 126, "codex binary not found; refusing to run VERIFY unsandboxed (pass --unsandboxed-verify to override)", "not run"
     rc, out = sh(cmd, wt, timeout, shell=True)
@@ -129,6 +145,8 @@ def main() -> int:
     ap.add_argument("--verify", action="append", default=[], help="VERIFY command to re-run (repeatable)")
     ap.add_argument("--verify-timeout", type=int, default=600, help="seconds per verify command (default 600)")
     ap.add_argument("--unsandboxed-verify", action="store_true", help="run VERIFY outside codex sandbox; only after the diff has been read")
+    ap.add_argument("--verify-network", action="store_true", help="keep the sandbox but open the network for VERIFY (automatic for Gradle commands)")
+    ap.add_argument("--commit", action="store_true", help="commit the lane's diff in the worktree on its behalf (lane/<task> branch) when the diff is non-empty and not refused")
     ap.add_argument("--writable", action="append", default=[], help="extra directory the sandboxed VERIFY may write (repeatable). Toolchain caches (~/.gradle, ~/.npm, ...) are added automatically")
     ap.add_argument("--no-toolchain-caches", action="store_true", help="do not auto-add detected toolchain caches as writable roots")
     ap.add_argument("--final", help="file holding the lane's final message")
@@ -163,6 +181,14 @@ def main() -> int:
     untracked = [l[3:] for l in porcelain.splitlines() if l.startswith("??") and not l[3:].startswith(TMP_DIRNAME)]
     touched = sorted({l.strip() for l in names.splitlines() if l.strip() and not l.strip().startswith(TMP_DIRNAME)} | set(untracked))
     changed = bool(touched)
+    _, name_status = sh(["git", "diff", "--name-status", ref], wt, 60)
+    deleted = sorted({l.split("\t", 1)[1].strip() for l in name_status.splitlines() if l.startswith("D") and "\t" in l})
+    deleted += [l[3:] for l in porcelain.splitlines() if l.startswith(" D") or l.startswith("D ")]
+    deleted = sorted(set(deleted))
+    # a spec file the lane was asked to modify that comes back deleted, with nothing else written: worse than an empty diff (#53)
+    spec_files = [f for f in args.files if not f.endswith("/") and not (Path(wt) / f).is_dir()]
+    deleted_spec = [d for d in deleted if d in spec_files]
+    deletion_only = changed and set(touched) <= set(deleted)
 
     lane_said = ""
     if args.final and Path(args.final).exists():
@@ -178,6 +204,9 @@ def main() -> int:
     elif not changed:
         status = "refused"
         gaps.append("empty diff with clean exit: treat as refusal, not success; check AGENTS.md pins and the spec preamble")
+    elif deleted_spec or deletion_only:
+        status = "refused"
+        gaps.append(f"VERIFY not run: deletion-only diff for {deleted_spec or deleted}: the lane deleted what it was asked to modify and wrote nothing back. Restore from the base and resubmit with a corrected spec")
     elif out_of_scope or exec_cfg:
         status = "partial"
         if out_of_scope:
@@ -199,10 +228,21 @@ def main() -> int:
             writable = []
             gaps.append(f"toolchain cache detection failed: {e}")
         for cmd in args.verify:
-            vrc, out, how = run_verify(cmd, wt, args.verify_timeout, args.unsandboxed_verify, writable)
+            vrc, out, how = run_verify(cmd, wt, args.verify_timeout, args.unsandboxed_verify, writable, args.verify_network)
             verified.append({"command": cmd, "exit": vrc, "how": how, "output_tail": tail(out, args.tail)})
+            if "NETWORK OPEN" in how:
+                gaps.append("VERIFY ran with the sandbox network open (Gradle lock listener); writes stayed confined. Read the diff for network use before trusting it")
             if vrc != 0:
                 status = "partial"
+    commit_sha = None
+    if args.commit and changed and status in ("complete", "partial", "timeout"):
+        sh(["git", "add", "-A", "--", ".", f":(exclude){TMP_DIRNAME}"], wt, 60)
+        rc_c, out_c = sh(["git", "-c", "user.email=tri-lane@cure", "-c", "user.name=tri-lane", "commit", "-qm", f"lane: {args.objective or args.lane} [{status}]"], wt, 120)
+        if rc_c == 0:
+            _, sha = sh(["git", "rev-parse", "--short", "HEAD"], wt, 30)
+            commit_sha = sha.strip()
+        elif "nothing to commit" not in out_c:
+            gaps.append(f"--commit failed: {out_c.strip()[:160]}")
     if lane_said and changed and ("no changes" in lane_said.lower() or "did not modify" in lane_said.lower()):
         gaps.append("lane's final message disagrees with the diff")
 
@@ -217,6 +257,7 @@ def main() -> int:
         "EXEC_CONFIG_TOUCHED": exec_cfg,
         "VERIFIED": verified,
         "LANE_SAID": lane_said or "(no final message captured)",
+        "COMMIT": commit_sha,
         "GAPS": gaps,
     }
     if args.json:
@@ -240,6 +281,8 @@ def main() -> int:
             print(f"  $ {v['command']}  -> exit {v['exit']}  [{v['how']}]")
             print("  " + v["output_tail"].replace("\n", "\n  "))
         print(f"LANE SAID  {report['LANE_SAID']}")
+        if commit_sha:
+            print(f"COMMIT     {commit_sha} (on the lane branch; merge from there)")
         print("GAPS       " + ("; ".join(gaps) if gaps else "none"))
     return {"complete": 0, "partial": 2, "refused": 3}.get(status, 4)
 
