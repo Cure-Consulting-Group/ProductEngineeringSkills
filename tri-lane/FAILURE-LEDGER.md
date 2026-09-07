@@ -18,3 +18,6 @@ Every failure class the lanes have produced, when it was first seen, what closed
 | fixture | Race fixture passed on buggy code under the default switch interval | 2026-09-06 | 1 µs switch interval in the hidden tests (1.6.0) | closed |
 | fixture | Spec-gap grader rejected natural wording and accepted pasted test names | 2026-09-06 | Default gap pattern, reasoning-only matching, code-style terms (1.8.1, 1.8.2) | closed |
 | model | Stalled with no progress (heartbeat) | 2026-09-06 | Detected and killed by the heartbeat watcher; recorded, never retried (1.9.0) | open by design |
+| harness | Advisor verdict lost at the turn limit (read-only lane, smallest budget, no output file) | 2026-09-06 | `Write` + `$RUN/advisor.md` first, 15 turns, verdict-from-incomplete-reading rule (1.9.1, #51) | closed |
+| harness | Parallel subagent fabricated sibling status ("all four lanes are in") and slept waiting on lanes it could not see | 2026-09-06 | Own-work-only clause in every parallel brief; sibling claims stripped before quoting (1.9.1, #51) | closed |
+| harness | Ad-hoc research report existed only in the notification | 2026-09-06 | Every brief names an output path under `$RUN` (1.9.1, #51) | closed |

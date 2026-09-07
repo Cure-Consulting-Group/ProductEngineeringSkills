@@ -73,6 +73,10 @@ Invoke the agents by name. Independent specs go out in one message so they run i
 
 For work you want two opinions on, send the same spec to Luna and Sol and pick the stronger diff.
 
+A parallel subagent cannot see its siblings. Put *"report only your own work; you have no visibility into other agents and must not describe their status or wait for them"* in every parallel brief, and strip any sibling-status claim before quoting a lane report. A report that opens with "all lanes are in" was written by an agent that could not know that.
+
+Every brief names where the output goes. The four lanes write to the run directory (`lanes.md`: `final.md`, `review.md`, `agy.json`, `advisor.md`). An ad-hoc research or exploration agent gets an explicit path under `$RUN` too, or its report exists only in the notification and is lost at the turn limit.
+
 ## Step 4: Verify
 
 For every lane report:
@@ -81,12 +85,13 @@ For every lane report:
 2. Read the diff in the worktree yourself. Nothing asked-for missing, nothing unasked-for smuggled in.
 3. Only then re-run VERIFY, through `lane-report.py` so it runs inside the codex sandbox, and keep the output. The wrapper already ran it; you run it again after reading.
 4. Label every review finding `Confirmed`, `Disputed`, or `Unverified` before acting. Adversarial reviewers over-state. Zero confirmed findings is a valid outcome.
+5. On any "stopped at its turn limit" or partial-result notification, `ls "$RUN"` before resuming. `codex-implementer`, `codex-reviewer`, and `antigravity-analyst` usually finished and burned their remaining turns on cleanup; the result is in the file. `cure-advisor` writes `advisor.md` first for the same reason. Resume only when the file is missing, and then say "stop reading, give the verdict from what you have".
 
 Fail once: corrected spec to the same lane. Fail twice: escalate (Luna to Sol, or Sol to yourself) and add `audit` if not already declared. Repetition is evidence of misclassification.
 
 ## Step 5: Advisor, then merge
 
-Consult `cure-advisor` at commitment boundaries (architecture choice, migration, API shape, refactor strategy, a debugging effort that has failed twice) and always once at the end of a deliverable. Give it the goal, the diff, and the verification output. Act on `fix-first` by sending a corrected spec to the lane and getting a new review; disagree with `rethink` only out loud, with the reason.
+Consult `cure-advisor` at commitment boundaries (architecture choice, migration, API shape, refactor strategy, a debugging effort that has failed twice) and always once at the end of a deliverable. Give it the goal, the diff, the verification output, and `RUN`; it writes `$RUN/advisor.md` before it answers. Act on `fix-first` by sending a corrected spec to the lane and getting a new review; disagree with `rethink` only out loud, with the reason.
 
 Then merge from the worktree to the integration branch, one task per commit, and remove the worktree with `lane-worktree.py remove`. It refuses while the lane is alive and pushes unmerged work to a salvage branch first. A `timeout` report means the wrapper stopped waiting; check `lane-worktree.py status` before assuming the process is gone.
 
