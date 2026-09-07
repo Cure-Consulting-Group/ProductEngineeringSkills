@@ -21,3 +21,8 @@ Every failure class the lanes have produced, when it was first seen, what closed
 | harness | Advisor verdict lost at the turn limit (read-only lane, smallest budget, no output file) | 2026-09-06 | `Write` + `$RUN/advisor.md` first, 15 turns, verdict-from-incomplete-reading rule (1.9.1, #51) | closed |
 | harness | Parallel subagent fabricated sibling status ("all four lanes are in") and slept waiting on lanes it could not see | 2026-09-06 | Own-work-only clause in every parallel brief; sibling claims stripped before quoting (1.9.1, #51) | closed |
 | harness | Ad-hoc research report existed only in the notification | 2026-09-06 | Every brief names an output path under `$RUN` (1.9.1, #51) | closed |
+| harness | Implementer spent its 25 turns on preflight and cache warming, never dispatched codex | 2026-09-06 | Once-per-session preflight reused via `--cached 120`; single `wait`; 40 turns; refuse past turn 10 with no dispatch (1.9.2, #53) | closed |
+| harness | Sandboxed VERIFY can never pass on Gradle (lock listener loopback socket denied) | 2026-09-06 | Sandbox network opened for Gradle commands, writes confined, recorded in GAPS (1.9.2, #53) | closed |
+| harness | Lane work left uncommitted; git metadata outside the sandbox | 2026-09-06 | `lane-report.py --commit` commits on the lane's behalf (1.9.2, #53) | closed |
+| model | Deletion-only diff for a spec file with nothing written back, reported as partial | 2026-09-06 | `refused`, VERIFY skipped, restore and resubmit (1.9.2, #53) | closed |
+| harness | `lane-worktree.py status` could not answer "what is live?" without a task | 2026-09-06 | `status` without `--task` lists every lane (1.9.2, #53) | closed |

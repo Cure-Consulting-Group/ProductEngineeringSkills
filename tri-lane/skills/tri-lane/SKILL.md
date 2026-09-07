@@ -83,7 +83,7 @@ For every lane report:
 
 1. `STATUS` must be `complete`. `refused`, `partial`, `timeout`, `unavailable` each mean the task is not done. Read `GAPS`. A `partial` with "VERIFY not run" means the lane touched files outside `FILES` or executable config; that is a read-the-diff-first situation, never a re-run-and-see one.
 2. Read the diff in the worktree yourself. Nothing asked-for missing, nothing unasked-for smuggled in.
-3. Only then re-run VERIFY, through `lane-report.py` so it runs inside the codex sandbox, and keep the output. The wrapper already ran it; you run it again after reading.
+3. Only then re-run VERIFY, through `lane-report.py` so it runs inside the codex sandbox, and keep the output. The wrapper already ran it; you run it again after reading. Gradle verifies with the sandbox network open (its lock listener needs loopback); writes stay confined, and the report says so. A deletion-only diff for a spec file is `refused`, never progress.
 4. Label every review finding `Confirmed`, `Disputed`, or `Unverified` before acting. Adversarial reviewers over-state. Zero confirmed findings is a valid outcome.
 5. On any "stopped at its turn limit" or partial-result notification, `ls "$RUN"` before resuming. `codex-implementer`, `codex-reviewer`, and `antigravity-analyst` usually finished and burned their remaining turns on cleanup; the result is in the file. `cure-advisor` writes `advisor.md` first for the same reason. Resume only when the file is missing, and then say "stop reading, give the verdict from what you have".
 
@@ -93,7 +93,7 @@ Fail once: corrected spec to the same lane. Fail twice: escalate (Luna to Sol, o
 
 Consult `cure-advisor` at commitment boundaries (architecture choice, migration, API shape, refactor strategy, a debugging effort that has failed twice) and always once at the end of a deliverable. Give it the goal, the diff, the verification output, and `RUN`; it writes `$RUN/advisor.md` before it answers. Act on `fix-first` by sending a corrected spec to the lane and getting a new review; disagree with `rethink` only out loud, with the reason.
 
-Then merge from the worktree to the integration branch, one task per commit, and remove the worktree with `lane-worktree.py remove`. It refuses while the lane is alive and pushes unmerged work to a salvage branch first. A `timeout` report means the wrapper stopped waiting; check `lane-worktree.py status` before assuming the process is gone.
+Then merge from the lane branch (the report committed the diff there) to the integration branch, one task per commit, and remove the worktree with `lane-worktree.py remove`. It refuses while the lane is alive and pushes unmerged work to a salvage branch first. A `timeout` report means the wrapper stopped waiting; check `lane-worktree.py status` (no `--task`: every lane) before assuming the process is gone.
 
 ## Safety rails (non-negotiable)
 
@@ -105,7 +105,7 @@ Then merge from the worktree to the integration branch, one task per commit, and
 - Lane-written code never executes unsandboxed before the diff is read. `lane-report.py` refuses to run VERIFY when the lane touched files outside `FILES` or executable config, and runs it inside `codex sandbox` otherwise.
 - Wall-clock caps on every lane: Luna 10 min, Sol 30 min, agy `--print-timeout` set explicitly.
 - Gradle inside the sandbox runs `--no-daemon --offline`; `lane-report.py` rewrites the VERIFY command. Daemon sockets and downloads are blocked in there, and a lane that cannot build reports partial forever.
-- Run `lane-preflight.py` before the first dispatch of a session (`--doctor` on a new machine: versions, lanes, disk, toolchains, quotas, and the self-test that exercises every rail in a scratch repo). Skip Antigravity when its Gemini weekly pool is under the threshold; a drained pool can lock the account for days.
+- Run `lane-preflight.py` once before the first dispatch of a session; lanes reuse its result for two hours (`--cached 120`) instead of repeating it, and never warm caches themselves (`--doctor` on a new machine: versions, lanes, disk, toolchains, quotas, and the self-test that exercises every rail in a scratch repo). Skip Antigravity when its Gemini weekly pool is under the threshold; a drained pool can lock the account for days.
 - Never run a review on a Stop hook or a timer. One advisor review per deliverable. Audit reviews only on the trigger.
 
 ## Budget notes

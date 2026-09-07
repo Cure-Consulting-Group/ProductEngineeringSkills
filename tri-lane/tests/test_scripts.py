@@ -192,6 +192,32 @@ class Report(unittest.TestCase):
         self.assertEqual(lr.gradle_safe("npm test"), "npm test")
 
 
+    def test_deletion_only_diff_for_spec_file_is_refused(self):
+        (self.wt / "README.md").unlink()
+        rc, d = self.report("--files", "README.md", "--verify", "echo no", "--unsandboxed-verify")
+        self.assertEqual((rc, d["STATUS"]), (3, "refused"))
+        self.assertEqual(d["VERIFIED"], [])
+        self.assertTrue(any("deletion-only" in g for g in d["GAPS"]))
+
+    def test_commit_flag_commits_lane_diff(self):
+        (self.wt / "README.md").write_text("changed\n")
+        (self.wt / "NEW.txt").write_text("new\n")
+        rc, d = self.report("--files", "README.md", "--files", "NEW.txt", "--verify", "true", "--unsandboxed-verify", "--commit", "--objective", "obj")
+        self.assertEqual(d["STATUS"], "complete")
+        self.assertTrue(d["COMMIT"])
+        self.assertIn("lane: obj", git(["log", "-1", "--format=%s"], self.wt).stdout)
+        self.assertEqual(git(["status", "--porcelain"], self.wt).stdout.strip(), "")
+
+    def test_gradle_verify_opens_sandbox_network(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("lr2", SCRIPTS / "lane-report.py")
+        lr = importlib.util.module_from_spec(spec); spec.loader.exec_module(lr)
+        self.assertTrue(lr.needs_network("./gradlew :app:testDebugUnitTest"))
+        self.assertTrue(lr.needs_network("cd android && gradle build"))
+        self.assertFalse(lr.needs_network("npm test"))
+        self.assertFalse(lr.needs_network("pytest -q"))
+
+
 class Worktree(unittest.TestCase):
     def setUp(self):
         self.d, self.repo = temp_repo()
@@ -223,6 +249,23 @@ class Worktree(unittest.TestCase):
         branches = git(["branch", "--list", "lane/t-salvage"], self.repo).stdout
         self.assertIn("lane/t-salvage", branches)
 
+    def test_status_without_task_lists_every_lane(self):
+        self.lw("add", "--task", "one", "--base", "main")
+        self.lw("add", "--task", "two", "--base", "main")
+        rc, out, err = self.lw("status")
+        self.assertEqual(rc, 0, err)
+        d = json.loads(out)
+        self.assertEqual({l["task"] for l in d["lanes"]} >= {"one", "two"}, True)
+        self.assertEqual(d["alive"], [])
+        sleeper = subprocess.Popen(["sleep", "30"])
+        try:
+            self.lw("lock", "--task", "two", "--pid", str(sleeper.pid))
+            rc, out, err = self.lw("status")
+            self.assertEqual((rc, json.loads(out)["alive"]), (3, ["two"]))
+        finally:
+            sleeper.kill(); sleeper.wait()
+            self.lw("unlock", "--task", "two")
+
     def test_ro_twin_is_detached_and_unwritable(self):
         self.lw("add", "--task", "t", "--base", "main")
         rc, out, err = self.lw("add", "--task", "t", "--ro", "--base", "lane/t")
@@ -231,6 +274,27 @@ class Worktree(unittest.TestCase):
         self.assertTrue(ro.exists())
         self.assertFalse(os.access(ro / "README.md", os.W_OK))
         self.assertEqual(self.lw("remove", "--task", "t", "--ro")[0], 0)
+
+
+class Preflight(unittest.TestCase):
+    def test_cached_marker_is_reused_only_when_fresh_and_ok(self):
+        d, repo = temp_repo()
+        try:
+            import importlib.util, time as _t
+            spec = importlib.util.spec_from_file_location("pf", SCRIPTS / "lane-preflight.py")
+            pf = importlib.util.module_from_spec(spec); spec.loader.exec_module(pf)
+            marker = pf.marker_path(str(repo))
+            self.assertTrue(str(marker).endswith("tri-lane/preflight.json"))
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            marker.write_text(json.dumps({"status": "ok", "reasons": [], "_at": _t.time(), "_lanes": ["codex"]}))
+            rc, out, err = run([SCRIPTS / "lane-preflight.py", "--lanes", "codex", "--cached", "120", "--dir", str(repo)], cwd=repo)
+            self.assertEqual(rc, 0, err)
+            self.assertIn("reused", json.loads(out).get("_cached", ""))
+            marker.write_text(json.dumps({"status": "ok", "reasons": [], "_at": _t.time() - 3 * 3600, "_lanes": ["codex"]}))
+            rc, out, err = run([SCRIPTS / "lane-preflight.py", "--lanes", "codex", "--cached", "120", "--dir", str(repo)], cwd=repo)
+            self.assertNotIn("_cached", json.loads(out))
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
 
 
 class Log(unittest.TestCase):
