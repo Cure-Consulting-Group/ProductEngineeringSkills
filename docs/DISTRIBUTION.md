@@ -91,8 +91,7 @@ What it does, in order:
 3. `audit-library.py --fail-under 9.0 --min-item 7.0` — blocks the release if quality regressed.
 4. `fix-library.py --check` — blocks if any inert field / broken ref slipped in.
 5. `generate-overview.py` — regenerates `docs/OVERVIEW.md`.
-6. `generate-gemini-skills.sh` — regenerates the Gemini `.skill` packages.
-7. Commits the release and prints the `git tag` / push commands.
+6. Commits the release and prints the `git tag` / push commands.
 
 CI (`.github/workflows/validate.yml`) runs the same gates on every PR, and
 `publish.yml` publishes on version-tagged pushes to `main`.

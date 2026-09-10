@@ -549,6 +549,34 @@ this would be a third mirror stands, as an argument against `dist/`, not for a r
 The cheap, high-value half of Wave 2.5 is real and should ship. The expensive half is a solution
 looking for the user it was scoped for in July.
 
+### Shipped 2026-09-09 (the cheap half)
+
+Pass 3 recommended shipping the low-cost, high-value items and deferring
+T25/T26/T29 until a named consumer exists. Those items are done:
+
+- **Guardrail translation into source bodies (C3).** 13 skills gained a
+  READ-ONLY or DESTRUCTIVE prose block: 11 whose `allowed-tools`/`disallowed-tools`
+  made them read-only under Claude, and 2 carrying `disable-model-invocation`.
+  The blocks live in the *source* SKILL.md, so every runtime inherits them — the
+  exposure was never Antigravity-specific, since Codex ignores the same fields.
+  `env-secrets-manager` was the case that forced this: a secret-leak-detection
+  skill, read-only under Claude, unrestricted anywhere else.
+- **CI schema coverage (A8).** `validate.yml` now validates `.codex-plugin/plugin.json`
+  and `.agents/plugins/marketplace.json`, and asserts Codex's `skills` is a
+  **string** where Claude's is an **array** — a wrong type there fails at the
+  consumer's `codex plugin add`, not in CI.
+- **Retired the `.skill` ZIP pipeline.** `gemini skills/` (89 ZIPs) and
+  `generate-gemini-skills.sh` deleted, release step removed, references scrubbed
+  from `release.sh`, `sync-legacy-commands.py`, `GEMINI.md`, `CLAUDE.md` and
+  `DISTRIBUTION.md`. Confirmed unconsumed before deleting.
+
+**Correction to A2.** Pass 1 called the `reference/` vs `references/` split "a
+latent bug". It is not: a link check across all 89 skills resolves **50 of 50**
+relative links, and both directory names exist where they are referenced. The
+earlier check used `find -maxdepth 2` and missed directories one level deeper.
+It is a cosmetic naming inconsistency with no current consumer, and renaming it
+would churn a dozen files for nothing while the exporter stays deferred.
+
 ### Revised sequencing and effort
 
 | Step | Work | Effort |

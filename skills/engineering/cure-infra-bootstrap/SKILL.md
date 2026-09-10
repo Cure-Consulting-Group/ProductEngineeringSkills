@@ -9,6 +9,13 @@ context: fork
 
 # Claude Bootstrap
 
+> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
+> mutating commands, and do not create or delete resources. Under Claude Code
+> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
+> fields, and activation there can widen rather than narrow file access — so on
+> any runtime other than Claude Code this paragraph is the only guardrail.
+
 Provisions and maintains the `.claude/` development surface area in any project.
 
 The actual engine is the npm package `@cure-consulting-group/claude-bootstrap`

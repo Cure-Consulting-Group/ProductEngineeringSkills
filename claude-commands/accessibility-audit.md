@@ -1,5 +1,12 @@
 # Accessibility Audit
 
+> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
+> mutating commands, and do not create or delete resources. Under Claude Code
+> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
+> fields, and activation there can widen rather than narrow file access — so on
+> any runtime other than Claude Code this paragraph is the only guardrail.
+
 Comprehensive WCAG 2.2 accessibility audit across Android, iOS, and Web platforms. Evaluates perceivability, operability, understandability, and robustness. Produces a scored compliance report with severity-ranked findings and actionable remediation guidance.
 
 ## Pre-Processing (Auto-Context)

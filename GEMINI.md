@@ -8,7 +8,6 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 - **Standards**: Clean Architecture, MVI (Android), MVVM (iOS), Next.js App Router (Web), Firebase (Backend).
 - **Distribution**:
   - Claude Code Plugin (manifest in `.claude-plugin/plugin.json`).
-  - Google Gemini Skills (`gemini skills/*.skill`).
   - Legacy slash commands (`claude-commands/*.md`).
 
 ## Repository Structure
@@ -20,7 +19,6 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 - `hooks/hooks.json`: Multi-layer automated enforcement (command, prompt, agent — 12 event types).
 - `rules/`: 11 path-specific coding standards (Android, iOS, Web, Firebase, Python, Go, Rust, SQL, Docker, Terraform, CI/CD).
 - `output-styles/`: 9 custom formatting styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts).
-- `gemini skills/`: Flat `.skill` ZIP archives for importing into Google Gemini workspace.
 - `claude-commands/`: Legacy Markdown format for backwards compatibility.
 - `.claude-plugin/plugin.json`: Plugin manifest and metadata.
 - `.mcp.json` & `.lsp.json`: Pre-configured MCP and LSP server settings.
@@ -30,9 +28,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ### Maintenance Commands
 
-- **Generate Gemini Skills**: `./generate-gemini-skills.sh` (converts `skills/{domain}/{name}/SKILL.md` to `.skill` ZIPs).
 - **Verify Installation**: `./verify-install.sh` (audits the local installation health).
-- **Auto-Update**: `./auto-update.sh` (pulls latest changes and version bumps).
 - **Project Setup**: `./setup.sh` (onboards a new project to use these standards).
 - **Regenerate Overview**: `python3 scripts/generate-overview.py` (rebuilds `docs/OVERVIEW.md` from frontmatter).
 - **Verify Skill Scripts**: `./scripts/verify-skill-scripts.sh` (smoke-tests every bundled skill script via `--help`).
@@ -43,7 +39,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
   1. Create `skills/{domain}/{name}/SKILL.md`. Domain is one of: engineering, platform, product, business, marketing, security, legal.
   2. Include YAML frontmatter: `name`, `description`, `argument-hint`.
   3. Set `allowed-tools: ["Read", "Grep", "Glob"]` if read-only; set `disable-model-invocation: true` if destructive/sensitive.
-  4. Sync to `claude-commands/` and run `./generate-gemini-skills.sh`.
+  4. Sync to `claude-commands/`.
   5. Run `python3 scripts/generate-overview.py` to refresh `docs/OVERVIEW.md`.
 - **Bundled Scripts**: Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`.
 - **Adding a Persona**: Create `personas/{name}.md` with frontmatter (`name`, `description`, `type: persona`). Reference only existing skills/agents — never invent names.
