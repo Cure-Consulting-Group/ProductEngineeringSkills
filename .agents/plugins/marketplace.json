@@ -1,0 +1,60 @@
+{
+  "name": "cure",
+  "description": "Cure Consulting Group's private plugin marketplace \u2014 the product engineering skill library and tooling.",
+  "owner": {
+    "name": "Cure Consulting Group",
+    "url": "https://github.com/Cure-Consulting-Group"
+  },
+  "plugins": [
+    {
+      "name": "cure-product-engineering",
+      "source": ".",
+      "version": "7.8.0",
+      "description": "Complete product engineering skill library \u2014 89 skills (domain-organized), 39 agents (engineering, product, marketing, business, data, security), 4 personas (cross-domain engagement archetypes), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering, bundled stdlib Python tooling, MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "product-engineering",
+        "android",
+        "ios",
+        "nextjs",
+        "firebase",
+        "python",
+        "go",
+        "rust",
+        "docker",
+        "terraform",
+        "clean-architecture",
+        "sdlc",
+        "security",
+        "devops",
+        "compliance",
+        "observability",
+        "consulting",
+        "finops",
+        "llmops",
+        "testing",
+        "infrastructure"
+      ]
+    },
+    {
+      "name": "cure-tri-lane",
+      "source": "./tri-lane",
+      "version": "1.9.2",
+      "description": "Opt-in multi-vendor orchestration: Claude architect, Codex implementation and correctness lanes (codex exec), Antigravity system-review lane (agy) in read-only worktrees, and a fresh-context advisor. Uses existing ChatGPT and Google logins; independent of cure-product-engineering.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "orchestration",
+        "codex",
+        "antigravity",
+        "cross-vendor-review",
+        "worktrees"
+      ]
+    }
+  ]
+}

@@ -348,6 +348,29 @@ def manifest_unlisted_domains():
     return sorted(domains - declared)
 
 
+def flat_name_conflicts():
+    """Skill `name` values that break a flattened export.
+
+    Antigravity discovers skills only as a flat <root>/<name>/SKILL.md and keys
+    off the directory name, so a name that disagrees with its directory, or a
+    name reused across domains, silently resolves to the wrong skill there.
+    Returns (mismatches, duplicates).
+    """
+    seen, mismatches, duplicates = {}, [], []
+    for path in sorted(SKILLS_DIR.rglob("SKILL.md")):
+        d = path.parent.name
+        fm = parse_frontmatter(path.read_text(encoding="utf-8"))[0] or {}
+        name = (fm.get("name") or "").strip()
+        if name and name != d:
+            mismatches.append(f"skills/{path.parent.relative_to(SKILLS_DIR)} declares name: {name}")
+        key = name or d
+        if key in seen:
+            duplicates.append(f"{key} in both {seen[key]} and {path.parent.relative_to(SKILLS_DIR).parts[0]}")
+        else:
+            seen[key] = path.parent.relative_to(SKILLS_DIR).parts[0]
+    return mismatches, duplicates
+
+
 def grade(score):
     if score >= 9: return "A"
     if score >= 8: return "B"
@@ -404,6 +427,14 @@ def main():
         print()
 
     fail = False
+    mismatches, duplicates = flat_name_conflicts()
+    for m in mismatches:
+        print(f"FAIL: skill name must equal its directory name — {m}", file=sys.stderr)
+    for d in duplicates:
+        print(f"FAIL: duplicate skill name across domains — {d} "
+              f"(a flattened export would silently overwrite one)", file=sys.stderr)
+    if mismatches or duplicates:
+        fail = True
     unlisted = manifest_unlisted_domains()
     if unlisted:
         print(f"FAIL: skills/{{{','.join(unlisted)}}} not in plugin.json `skills` array — "
