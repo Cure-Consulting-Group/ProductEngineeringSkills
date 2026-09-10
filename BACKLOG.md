@@ -309,6 +309,81 @@ T23 release mechanics apply as the closing checklist. Total estimate: **3–4 de
 
 ---
 
+## Wave 2.5 — verified corrections (2026-09-09)
+
+Amends the assumptions in T25/T26/T29 below. The ticket text is left intact; where this
+block disagrees with it, this block is newer and was verified by probing the real CLIs
+(codex-cli 0.153.4, agy 1.1.27) rather than by reading docs. Re-probe before building —
+both vendors ship fast.
+
+### What was measured
+
+| Probe | Result |
+|---|---|
+| Codex, domain-nested skill (`skills/engineering/<name>/`) | **Discovered.** No flattening needed for Codex |
+| Codex, Claude-only frontmatter (`when_to_use`, `argument-hint`) | Tolerated, ignored |
+| Antigravity, `~/.gemini/config/skills/<name>/SKILL.md` | **Discovered** (flat) |
+| Antigravity, one level deeper (`.../<domain>/<name>/`) | **Not discovered** — flattening confirmed necessary |
+| Antigravity, `<workspace>/.agents/skills/<name>/` | **Did not load** at 1.1.27 |
+| Antigravity, `.agents/skills.json` (`entries`, workspace/home/absolute paths) | **Did not load** at 1.1.27, though documented inside the agy binary |
+| Control: builtin `antigravity_guide` visible in same session | Yes — so the probe method is sound, not a false negative |
+
+### Correction 1 — T26's freshness mechanism no longer exists
+
+T26 items 2 and 3 hang freshness on `auto-update.sh` ("symlinks keep the existing
+auto-update flow as the single freshness mechanism"). That script is dead: `PLUGIN_DIR`
+resolves to `~/.claude/plugins/ProductEngineeringSkills`, which is a **dangling symlink**
+into a deleted `wt/sprint0/node_modules` vendoring, so `do_update()` fails its `.git`
+check and exits 1. It is also deleted in the current working tree.
+
+Replacement freshness model, three independent layers:
+- **Repo side:** T29.1 regenerate-and-diff in CI. Unchanged, still correct.
+- **Machine side:** the install command records the source SHA in a manifest at the install
+  root; a `--check` mode compares it against the repo and exits non-zero when behind. This
+  is the layer T26 assumed auto-update would cover, and nothing covers today.
+- **Lane side:** `lane-preflight.py` fails the agy lane on that mismatch, so a stale export
+  cannot silently produce a review of code that is not what is in the tree.
+
+### Correction 2 — the "universal workspace path" claim is unverified
+
+T26.1 treats `<workspace>/.agents/skills/` as universal across Gemini CLI and all three
+Antigravity variants. That did not hold for agy 1.1.27 in any form tried. Only the global
+`~/.gemini/config/skills/` path is confirmed. Before building T26, re-probe on current
+versions and record the result here; if workspace scope still does not work for Antigravity,
+`--workspace` serves Gemini CLI only and Antigravity is global-scope-only.
+
+### Correction 3 — Codex is a third consumer and needs no export
+
+Shipped 2026-09-09: `.codex-plugin/plugin.json` + `.agents/plugins/marketplace.json` install
+all 89 skills into Codex straight from `skills/`, nesting intact. The exporter is therefore
+**Gemini/Antigravity-only**, not a general "second distribution target". T28's parity matrix
+gains a third column, and `sync-metadata.py`/`fix-library.py --check` already keep the Codex
+manifests from drifting.
+
+### Correction 4 — T25.5 is already enforced upstream
+
+`audit-library.py` now fails on any skill whose `name` differs from its directory, and on any
+name reused across domains. T25 item 5 ("fail the export on duplicate name") is still worth
+asserting in the exporter, but it is now a second line of defence rather than the only one.
+
+### Revised sequencing and effort
+
+| Step | Work | Effort |
+|---|---|---|
+| 0 | Re-probe Antigravity + Gemini CLI paths; update the table above | 0.5 day |
+| 1 | T25 exporter → `dist/agent-skills/` (unchanged scope, minus item 6) | 1–1.5 days |
+| 2 | T26 install command, rewritten around the three-layer freshness model | 0.5–1 day |
+| 3 | T29 CI freshness + docs | 0.5 day |
+| 4 | Retire `gemini skills/` + `generate-gemini-skills.sh` — **separate change** | 0.25 day |
+
+Step 4 is deliberately last and standalone. Nothing consumes the ZIPs (confirmed), but it
+deletes a top-level directory and is cleanly revertible only while it is its own commit.
+
+Step 0 gates the rest: if Antigravity still cannot read a workspace path, the install story
+is materially different and T26 should be rewritten before it is built, not during.
+
+---
+
 ## T25 — Standard-format exporter; retire the `.skill` ZIP pipeline
 
 **Status:** Open
