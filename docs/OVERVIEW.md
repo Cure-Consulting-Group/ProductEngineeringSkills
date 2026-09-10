@@ -80,7 +80,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | self-improving-memory | Curate Claude Code auto-memory (user/feedback/project/reference) — bootstrap, audit, pattern detection, and health checks on MEMORY.md | default |
 | stitch-design | AI-native UI design via Stitch MCP — screen generation, mockups, design systems, DESIGN.md authoring, token export, screen-to-code handoff, visual consistency audits | default |
 | stripe-integration | Integrate Stripe payments and subscriptions via Firebase Cloud Functions with webhook handling | default |
-| test-accounts | Generate test account strategies, seed data scripts, test user personas, and environment-scoped credentials for all platforms | default |
+| test-accounts | Generate test account strategies, QA email provisioning, seed data scripts, test user personas, and environment-scoped credentials | default |
 | testing-strategy | Define the overall testing architecture — pyramid ratios, platform-specific frameworks (JUnit5/MockK, XCTest, Vitest/Playwright), coverage thresholds, and CI integration for a project or feature | default |
 | web-design-expert | Expert web design guidance — responsive design, CSS architecture, design tokens, container queries, accessibility-first patterns, dark mode, and Tailwind/CSS implementation | default |
 
