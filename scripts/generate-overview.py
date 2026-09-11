@@ -445,7 +445,7 @@ SKILL_CATEGORY_RULES: list[tuple[str, list[str]]] = [
 AGENT_CATEGORY_RULES: list[tuple[str, list[str]]] = [
     ("security", ["security", "accessibility", "firebase-security"]),
     ("legal", ["legal", "contract"]),
-    ("business", ["financial", "investor", "ops-finance", "market-intelligence"]),
+    ("business", ["financial", "investor", "ops-finance", "tax-analyst", "market-intelligence"]),
     ("marketing", ["content", "campaign", "brand", "growth"]),
     ("product", ["product", "ux", "roadmap", "competitive"]),
     ("data", ["data-analyst", "metrics-dashboard", "ab-test"]),

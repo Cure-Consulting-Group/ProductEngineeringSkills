@@ -1,7 +1,7 @@
 ---
 name: capture-management
 description: "Build and qualify a public-sector pipeline — opportunity sourcing, target profile, pre-RFP positioning, teaming, past performance"
-when_to_use: "Use when entering a new market or deciding which solicitations to chase. NOT for evaluating a specific RFP (use rfp-evaluation). NOT for the go/no-go call (use bid-decision)."
+when_to_use: "Use when entering a new market or deciding which solicitations to chase. NOT for screening a specific solicitation (use solicitation-triage). NOT for evaluating a qualified RFP (use rfp-evaluation). NOT for the go/no-go call (use bid-decision)."
 argument-hint: "[market-or-agency]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch", "WebFetch"]
 ---
@@ -164,7 +164,8 @@ Most of a public-sector proposal is reusable. Building it once converts every fu
 
 ## Handoff
 
-- A specific solicitation lands → `rfp-evaluation`
+- A specific solicitation lands → `solicitation-triage`, then `rfp-evaluation`
+- Mining declines, sole source notices, and award notices for buyer data → `buyer-intelligence`
 - Pursue or not → `bid-decision`
 - Contract terms in the target market → `public-sector-contracting`
 - Market sizing and ICP → `market-research`

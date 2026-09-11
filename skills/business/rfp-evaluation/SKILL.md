@@ -1,7 +1,7 @@
 ---
 name: rfp-evaluation
 description: "Evaluate an RFP/RFQ/ITB — extract every requirement, build the compliance matrix, map the scoring rubric to effort, track addenda"
-when_to_use: "Use when a solicitation lands and you need to know what it requires and where the points are. NOT for the go/no-go call (use bid-decision). NOT for writing the response (use proposal-generator)."
+when_to_use: "Use when a solicitation has PASSED triage and you need to know what it requires and where the points are. NOT for first-pass screening (use solicitation-triage). NOT for the go/no-go call (use bid-decision). NOT for writing the response (use proposal-generator)."
 argument-hint: "[solicitation-number]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
 ---
@@ -209,6 +209,8 @@ Generate using Write, in the bid folder:
 | Starting to write before the checklist exists | You will discover a mandatory form in the final week |
 
 ## Handoff
+
+- This solicitation had not been screened → `solicitation-triage`
 
 - Go/no-go decision → `bid-decision`
 - Contract terms and insurance → `public-sector-contracting`

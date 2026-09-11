@@ -1,0 +1,148 @@
+{
+  "set": "tcp-planning",
+  "title": "TCP Discipline — Tax Compliance and Planning",
+  "taxYear": 2026,
+  "questions": [
+    {
+      "id": "TCP-001", "area": "QBI Planning", "type": "numeric", "difficulty": "application",
+      "q": "For 2026, at what level of taxable income is the §199A deduction of a single filer operating a specified service trade or business fully phased out?",
+      "answer": 276775, "tolerance": 1,
+      "cite": "IRC §199A(d)(3), §199A(e)(2); OBBBA §70105",
+      "why": "2026 threshold for single is $201,775 with a phase-in range widened by OBBBA to $75,000. Full phase-out at $201,775 + $75,000 = $276,775. Above that, an SSTB gets no deduction regardless of wages or UBIA."
+    },
+    {
+      "id": "TCP-002", "area": "QBI Planning", "type": "mcq", "difficulty": "analysis",
+      "q": "A non-SSTB business owner is above the §199A threshold. The deduction is limited to the greater of:",
+      "choices": {"A": "50% of W-2 wages, or 25% of W-2 wages plus 2.5% of UBIA of qualified property", "B": "20% of W-2 wages, or 10% of UBIA", "C": "50% of QBI, or 25% of taxable income", "D": "There is no wage limitation for non-SSTBs"},
+      "answer": "A",
+      "cite": "IRC §199A(b)(2)(B)",
+      "why": "The wage/UBIA limitation phases in above the threshold. This is why paying W-2 wages can increase the QBI deduction, and why setting an S corp salary too low can reduce it."
+    },
+    {
+      "id": "TCP-003", "area": "QBI Planning", "type": "mcq", "difficulty": "remember",
+      "q": "New for 2026 under OBBBA, a taxpayer with at least $1,000 of active qualified business income receives:",
+      "choices": {"A": "A $400 minimum §199A deduction", "B": "A $1,000 refundable credit", "C": "An exemption from the SSTB limitation", "D": "A doubled phase-in range"},
+      "answer": "A",
+      "cite": "IRC §199A; OBBBA §70105",
+      "why": "The $400 minimum deduction applies from 2026 when active QBI is at least $1,000."
+    },
+    {
+      "id": "TCP-004", "area": "QSBS / Exit Planning", "type": "mcq", "difficulty": "analysis",
+      "q": "Which business would NOT qualify as a qualified trade or business for §1202 purposes?",
+      "choices": {"A": "A software company selling a SaaS product", "B": "A soap manufacturer", "C": "A management consulting firm", "D": "A restaurant"},
+      "answer": "C",
+      "cite": "IRC §1202(e)(3)",
+      "why": "Consulting is expressly disqualified, along with health, law, engineering, architecture, accounting, actuarial science, performing arts, athletics, financial services, and brokerage, plus any business whose principal asset is the reputation or skill of its employees."
+    },
+    {
+      "id": "TCP-005", "area": "QSBS / Exit Planning", "type": "mcq", "difficulty": "application",
+      "q": "A founder receives QSBS at original issuance after July 4, 2025 and sells at a gain four years later. Under OBBBA, the exclusion percentage is:",
+      "choices": {"A": "0%, because the five-year holding period was not met", "B": "50%", "C": "75%", "D": "100%"},
+      "answer": "C",
+      "cite": "IRC §1202(a); OBBBA §70431",
+      "why": "OBBBA created a tiered exclusion for stock acquired after 2025-07-04: 50% at three years, 75% at four, 100% at five. Stock acquired on or before that date keeps the all-or-nothing five-year rule. VERIFY against primary text before filing."
+    },
+    {
+      "id": "TCP-006", "area": "QSBS / Exit Planning", "type": "mcq", "difficulty": "analysis",
+      "q": "A taxpayer sells QSBS held for 18 months and wants to avoid recognizing the gain. The correct mechanism and deadline are:",
+      "choices": {"A": "§1031 exchange within 180 days", "B": "§1045 rollover into new QSBS within 60 days", "C": "§1033 replacement within two years", "D": "No deferral is available before five years"},
+      "answer": "B",
+      "cite": "IRC §1045",
+      "why": "§1045 permits rollover of QSBS gain into other QSBS within 60 days if the original stock was held more than six months. The holding period tacks, preserving progress toward the exclusion."
+    },
+    {
+      "id": "TCP-007", "area": "Compensation Planning", "type": "mcq", "difficulty": "remember",
+      "q": "An employee receives restricted stock subject to vesting. The §83(b) election must be filed within:",
+      "choices": {"A": "30 days of the transfer, with no extensions available", "B": "60 days of the transfer", "C": "The due date of the return for the year of transfer", "D": "30 days of the first vesting date"},
+      "answer": "A",
+      "cite": "IRC §83(b)(2)",
+      "why": "Thirty days from transfer, strictly enforced, no relief for a late election. Missing it means ordinary income at each vesting tranche at then-current FMV and delays the QSBS holding period. Form 15620 may be used; send certified mail and retain the receipt."
+    },
+    {
+      "id": "TCP-008", "area": "Retirement Planning", "type": "numeric", "difficulty": "application",
+      "q": "For 2026, a 52-year-old self-employed individual with ample net earnings maintains a solo 401(k). What is the maximum total annual addition including the catch-up contribution?",
+      "answer": 80000, "tolerance": 1,
+      "cite": "IRC §415(c), §414(v); Notice 2025-67",
+      "why": "2026 §415(c) total annual addition limit is $72,000, and the age-50 catch-up of $8,000 is on top of that limit. $72,000 + $8,000 = $80,000. The employee deferral component is $24,500 + $8,000."
+    },
+    {
+      "id": "TCP-009", "area": "Retirement Planning", "type": "mcq", "difficulty": "analysis",
+      "q": "A taxpayer with a $200,000 pre-tax rollover IRA makes a $7,500 nondeductible traditional IRA contribution and immediately converts $7,500 to a Roth. The taxable portion of the conversion is approximately:",
+      "choices": {"A": "$0, because the contribution was nondeductible", "B": "$7,500, fully taxable", "C": "About $7,229, because of the pro-rata rule", "D": "$3,750, one half"},
+      "answer": "C",
+      "cite": "IRC §408(d)(2)",
+      "why": "All traditional IRAs are aggregated. Basis is $7,500 of $207,500 total, so only about 3.6% of the conversion is tax-free; roughly $7,229 is taxable. Rolling the pre-tax IRA into a 401(k) first removes it from the calculation."
+    },
+    {
+      "id": "TCP-010", "area": "Retirement Planning", "type": "mcq", "difficulty": "application",
+      "q": "The best year to execute a large Roth conversion is generally one in which the taxpayer:",
+      "choices": {"A": "Has the highest marginal rate", "B": "Has an NOL or unusually low income", "C": "Is about to sell a business at a large gain", "D": "Has maximized itemized deductions"},
+      "answer": "B",
+      "cite": "IRC §408A(d)(3)",
+      "why": "Conversions fill low brackets permanently. A loss year or pre-revenue year is the ideal window. Note that recharacterization of conversions was repealed, so the conversion is irrevocable once made."
+    },
+    {
+      "id": "TCP-011", "area": "Entity Planning", "type": "mcq", "difficulty": "analysis",
+      "q": "A profitable business owner is deciding between operating as a C corporation and as an S corporation. The C corporation is generally superior when:",
+      "choices": {"A": "All earnings will be distributed to the owner annually", "B": "Earnings are retained and reinvested in the business", "C": "The owner wants to minimize payroll taxes", "D": "The owner wants to deduct losses currently"},
+      "answer": "B",
+      "cite": "IRC §11, §531, §1366",
+      "why": "The 21% flat rate beats individual rates only when earnings stay inside. Distributed earnings suffer double tax approaching 40%. Retained earnings also raise §531 accumulated earnings exposure above the credit, and C corp losses are trapped at the entity level."
+    },
+    {
+      "id": "TCP-012", "area": "Entity Planning", "type": "mcq", "difficulty": "application",
+      "q": "An S corporation shows $300,000 of net profit and pays its sole owner-employee a $20,000 salary while distributing the rest. The principal exposure is:",
+      "choices": {"A": "Accumulated earnings tax under §531", "B": "Recharacterization of distributions as wages, with payroll tax, interest and penalties", "C": "Loss of S status", "D": "Personal holding company tax"},
+      "answer": "B",
+      "cite": "IRC §162(a)(1); Watson v. United States, 668 F.3d 1008 (8th Cir. 2012)",
+      "why": "Unreasonably low officer compensation is the leading S corp audit issue. A low wage also shrinks the §199A W-2 wage limitation, so it can cost more than it saves at higher income."
+    },
+    {
+      "id": "TCP-013", "area": "Loss Limitations", "type": "mcq", "difficulty": "analysis",
+      "q": "Place the loss limitation gates in the order they are applied to a pass-through business loss.",
+      "choices": {"A": "At-risk, basis, passive activity, excess business loss", "B": "Basis, at-risk, passive activity, excess business loss", "C": "Passive activity, basis, at-risk, excess business loss", "D": "Excess business loss, basis, at-risk, passive activity"},
+      "answer": "B",
+      "cite": "IRC §704(d)/§1366(d), §465, §469, §461(l)",
+      "why": "Basis first, then at-risk, then passive activity, then the excess business loss cap. Amounts disallowed by §461(l) become an NOL carryforward under §172."
+    },
+    {
+      "id": "TCP-014", "area": "Loss Limitations", "type": "mcq", "difficulty": "remember",
+      "q": "A post-2020 federal net operating loss carryforward may offset what portion of taxable income?",
+      "choices": {"A": "100%", "B": "80% of taxable income determined without regard to the NOL deduction", "C": "90%", "D": "50%, with a two-year carryback"},
+      "answer": "B",
+      "cite": "IRC §172(a)(2)",
+      "why": "80% limitation, indefinite carryforward, no carryback for most taxpayers. This changes the value of accelerating deductions into a loss year."
+    },
+    {
+      "id": "TCP-015", "area": "SALT Planning", "type": "mcq", "difficulty": "application",
+      "q": "A pass-through entity tax (PTET) election benefits the owner because:",
+      "choices": {"A": "It reduces the entity's federal taxable income by a state tax deduction not subject to the §164 SALT cap, with a state credit to the owner", "B": "It exempts the owner from state tax entirely", "C": "It converts ordinary income to capital gain", "D": "It eliminates self-employment tax"},
+      "answer": "A",
+      "cite": "IRC §164; Notice 2020-75",
+      "why": "The entity-level payment is a business deduction, bypassing the individual SALT cap, and the owner takes a state credit. Blessed by Notice 2020-75 and preserved by OBBBA. The New York election deadline is March 15 of the tax year and is irrevocable."
+    },
+    {
+      "id": "TCP-016", "area": "Deduction Planning", "type": "numeric", "difficulty": "application",
+      "q": "For 2026, a single taxpayer with MAGI of $200,000 received $30,000 of qualified tips. Compute the allowable Schedule 1-A tips deduction.",
+      "answer": 20000, "tolerance": 1,
+      "cite": "OBBBA §70201; IRC §224",
+      "why": "Maximum is $25,000, reduced $100 for each $1,000 of MAGI over $150,000. Excess = $50,000 = 50 increments x $100 = $5,000. $25,000 - $5,000 = $20,000. Married taxpayers must file jointly to claim it."
+    },
+    {
+      "id": "TCP-017", "area": "Deduction Planning", "type": "mcq", "difficulty": "analysis",
+      "q": "A taxpayer wants to donate appreciated stock held three years to a public charity. The optimal treatment is:",
+      "choices": {"A": "Sell the stock, recognize the gain, and donate the cash", "B": "Donate the stock directly, deducting fair market value and avoiding the built-in gain, limited to 30% of AGI", "C": "Donate the stock, deducting basis only", "D": "Donate to a private foundation for a higher AGI limit"},
+      "answer": "B",
+      "cite": "IRC §170(b)(1)(C), §170(e)",
+      "why": "Long-term capital gain property donated to a public charity is deducted at FMV with no recognition of the gain, subject to a 30%-of-AGI limit and a five-year carryforward. Depreciated property should be sold first so the loss is usable."
+    },
+    {
+      "id": "TCP-018", "area": "Business Credits", "type": "mcq", "difficulty": "analysis",
+      "q": "A pre-revenue startup with no income tax liability generates a $150,000 research credit. The most valuable election is:",
+      "choices": {"A": "Carry the credit forward 20 years under §39", "B": "Elect under §41(h) to apply up to $500,000 against employer payroll tax ($250,000 against Social Security, the rest against Medicare)", "C": "Elect §280C to reduce the credit by 21%", "D": "Carry the credit back one year"},
+      "answer": "B",
+      "cite": "IRC §41(h), §3111(f)",
+      "why": "A qualified small business (under $5M gross receipts and no gross receipts more than five years back) can convert the credit into payroll tax cash via Form 8974. The election must be made on a timely filed original return; it cannot be made on an amended return."
+    }
+  ]
+}

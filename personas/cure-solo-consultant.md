@@ -29,7 +29,7 @@ The one-person engagement team for a small client, an early-stage founder, or a 
 - **Setup & exploration:** project-bootstrapper, codebase-explainer
 - **Review your own work:** code-reviewer, pr-reviewer, qa-engineer
 - **Sanity-check the plan:** roadmap-strategist, system-architect
-- **Founder-grade artifacts:** financial-analyst, investor-relations
+- **Founder-grade artifacts:** financial-analyst, investor-relations, tax-analyst
 - **Cheap quality gates:** dependency-auditor, accessibility-checker, deployment-validator
 
 ## Decision Frameworks
