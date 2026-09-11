@@ -1,7 +1,7 @@
 ---
 name: bid-decision
 description: "Make a disciplined go/no-go call on a solicitation — kill criteria, weighted scorecard, win probability, and pursuit economics"
-when_to_use: "Use before committing resources to a proposal, or when a pursuit is drifting. NOT for parsing requirements (use rfp-evaluation). NOT for sourcing opportunities (use capture-management)."
+when_to_use: "Use before committing resources to a proposal, or when a pursuit is drifting. NOT for first-pass screening (use solicitation-triage). NOT for parsing requirements (use rfp-evaluation). NOT for sourcing opportunities (use capture-management)."
 argument-hint: "[solicitation-number]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
 ---
@@ -178,4 +178,5 @@ Record every decision in the pipeline, including no-bids, and revisit quarterly.
 - Contract terms driving the risk score → `public-sector-contracting`
 - Cost and effort driving the economics score → `technical-estimation`
 - Pipeline and opportunity sourcing → `capture-management`
+- No-bid, but the buyer is worth keeping → `buyer-intelligence`
 - If go → `proposal-generator`

@@ -156,7 +156,8 @@ Most of a public-sector proposal is reusable. Building it once converts every fu
 
 ## Handoff
 
-- A specific solicitation lands → `rfp-evaluation`
+- A specific solicitation lands → `solicitation-triage`, then `rfp-evaluation`
+- Mining declines, sole source notices, and award notices for buyer data → `buyer-intelligence`
 - Pursue or not → `bid-decision`
 - Contract terms in the target market → `public-sector-contracting`
 - Market sizing and ICP → `market-research`

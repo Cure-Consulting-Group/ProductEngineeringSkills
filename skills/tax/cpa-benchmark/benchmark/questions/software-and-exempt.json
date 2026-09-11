@@ -1,0 +1,102 @@
+{
+  "set": "software-and-exempt",
+  "title": "Software Development Costs & Exempt Organization Wind-Down",
+  "taxYear": 2026,
+  "questions": [
+    {
+      "id": "SW-001", "area": "Software R&E", "type": "mcq", "difficulty": "remember",
+      "q": "For a tax year beginning in 2026, domestic software development costs are:",
+      "choices": {"A": "Capitalized and amortized over five years", "B": "Currently deductible under §174A", "C": "Ordinary §162 business expenses", "D": "Capitalized to the software and amortized over 15 years under §197"},
+      "answer": "B",
+      "cite": "IRC §174A; §174(c)(3); OBBBA",
+      "why": "OBBBA restored immediate expensing of domestic R&E for tax years beginning after 2024. Software development is statutorily treated as R&E under §174(c)(3) — this is a characterization rule, not an election. Foreign R&E is still 15-year."
+    },
+    {
+      "id": "SW-002", "area": "Software R&E", "type": "mcq", "difficulty": "analysis",
+      "q": "A company develops a mobile app that it sells to consumers through the App Store. For §41 purposes, the software is:",
+      "choices": {"A": "Internal-use software, subject to the high threshold of innovation test", "B": "Not internal-use software, so only the four-part test applies", "C": "Ineligible because consumer apps are not technological in nature", "D": "Dual-function software subject to the 25% safe harbor"},
+      "answer": "B",
+      "cite": "IRC §41(d)(4)(E); Treas. Reg. §1.41-4(c)(6)",
+      "why": "Software developed for sale, lease, or license to third parties is excluded from the internal-use software rules and therefore escapes the high threshold of innovation test entirely. This is the favorable posture for a commercial product portfolio."
+    },
+    {
+      "id": "SW-003", "area": "Software R&E", "type": "mcq", "difficulty": "analysis",
+      "q": "A development shop builds a website for a client under a fixed-fee contract. The client pays regardless of technical outcome and owns all deliverables. The developer's costs are:",
+      "choices": {"A": "QREs eligible for the §41 credit at 100%", "B": "QREs at 65% as contract research", "C": "Deductible, but NOT eligible for the credit — funded research", "D": "Nondeductible under §263"},
+      "answer": "C",
+      "cite": "IRC §41(d)(4)(H)",
+      "why": "Research funded by another person is excluded. The two tests are who bears the economic risk and who retains substantial rights. A fixed fee payable regardless of success plus IP assignment to the client fails both. The costs remain deductible; only the credit is lost."
+    },
+    {
+      "id": "SW-004", "area": "Software R&E", "type": "numeric", "difficulty": "application",
+      "q": "A company pays a domestic contractor $200,000 for qualified research, bearing the economic risk and retaining substantial rights. Compute the contract research QRE.",
+      "answer": 130000, "tolerance": 1,
+      "cite": "IRC §41(b)(3)(A)",
+      "why": "65% of qualifying contract research amounts. $200,000 x 0.65 = $130,000. The 75% rate applies only to qualified research consortia."
+    },
+    {
+      "id": "SW-005", "area": "Software R&E", "type": "mcq", "difficulty": "application",
+      "q": "An employee spends 85% of their time performing qualified research. For QRE purposes, the includible portion of their wages is:",
+      "choices": {"A": "85%", "B": "100%, under the substantially-all rule", "C": "65%", "D": "80%"},
+      "answer": "B",
+      "cite": "Treas. Reg. §1.41-2(d)(2)",
+      "why": "If substantially all (at least 80%) of an employee's services constitute qualified services, 100% of that employee's wages are a QRE. Below 80%, allocate actual qualified time."
+    },
+    {
+      "id": "SW-006", "area": "Software R&E", "type": "mcq", "difficulty": "analysis",
+      "q": "A founder personally writes all the code for a product but takes no salary. The wage QREs attributable to that work are:",
+      "choices": {"A": "The fair market value of comparable engineering services", "B": "Zero — there are no wages", "C": "65% of imputed value, as contract research", "D": "An amount elected by the taxpayer up to reasonable compensation"},
+      "answer": "B",
+      "cite": "IRC §41(b)(2)(D); §3401(a)",
+      "why": "Wage QREs require amounts actually paid that constitute wages. There is no imputation of uncompensated founder labor. This is the structural reason an uncompensated founder's R&D credit collapses to supplies plus 65% of contractors."
+    },
+    {
+      "id": "SW-007", "area": "Software R&E", "type": "mcq", "difficulty": "analysis",
+      "q": "Which cost is a QRE under §41?",
+      "choices": {"A": "Cloud compute used to train and test models during development", "B": "Production hosting for a released application", "C": "IDE and GitHub subscriptions for the engineering team", "D": "Recruiting fees for hiring engineers"},
+      "answer": "A",
+      "cite": "IRC §41(b)(2)(A)(iii)",
+      "why": "Payments for the right to use computers in the conduct of qualified research are QREs. Production hosting of a shipped product is not research. General developer tooling is ordinary §162 overhead — QRE supplies must be tangible property used and consumed in the research."
+    },
+    {
+      "id": "SW-008", "area": "Software R&E", "type": "mcq", "difficulty": "application",
+      "q": "A company had no QREs in any of the three preceding tax years. Under the Alternative Simplified Credit, the current-year credit rate is:",
+      "choices": {"A": "20% of QREs over a base amount", "B": "14% of QREs over 50% of the three-year average", "C": "6% of current-year QREs", "D": "65% of current-year QREs"},
+      "answer": "C",
+      "cite": "IRC §41(c)(5)(B)(ii)",
+      "why": "When there are no QREs in any of the three preceding years, the ASC is 6% of current-year QREs. Otherwise it is 14% of the excess over 50% of the prior three-year average."
+    },
+    {
+      "id": "SW-009", "area": "Software R&E", "type": "mcq", "difficulty": "analysis",
+      "q": "Work performed on a product AFTER it is functionally ready for commercial release is generally:",
+      "choices": {"A": "Still a QRE because the product continues to improve", "B": "Excluded as research after commercial production, unless it is a genuinely new component with its own uncertainty", "C": "A QRE at 65%", "D": "Capitalized under §263A"},
+      "answer": "B",
+      "cite": "IRC §41(d)(4)(A)",
+      "why": "Research after commercial production begins is excluded. This makes the per-product release date the decisive fact for allocating a development year, and it is why the boundary must be recorded as it happens rather than reconstructed."
+    },
+    {
+      "id": "NFP-001", "area": "Exempt Organizations", "type": "mcq", "difficulty": "application",
+      "q": "A dissolving 501(c)(3) has $40,000 remaining after paying all liabilities. Those assets may be distributed to:",
+      "choices": {"A": "The founding directors, in proportion to their service", "B": "Another 501(c)(3) organization or a government entity", "C": "Any party the board designates", "D": "The organization's largest donors, as a refund"},
+      "answer": "B",
+      "cite": "Treas. Reg. §1.501(c)(3)-1(b)(4)",
+      "why": "The organizational test requires a dissolution clause dedicating assets to exempt purposes. Distribution to insiders is private inurement, can retroactively jeopardize exempt status for open years, and exposes recipients to §4958 excess benefit excise taxes."
+    },
+    {
+      "id": "NFP-002", "area": "Exempt Organizations", "type": "mcq", "difficulty": "remember",
+      "q": "A terminating public charity filing Form 990-EZ must attach which schedule reporting its asset distributions?",
+      "choices": {"A": "Schedule A", "B": "Schedule N", "C": "Schedule L", "D": "Schedule O"},
+      "answer": "B",
+      "cite": "Form 990/990-EZ Schedule N",
+      "why": "Schedule N reports liquidation, termination, dissolution, or significant disposition of assets — asset by asset, with each recipient's name, address, and EIN, and whether any officer or director became an owner of the assets."
+    },
+    {
+      "id": "NFP-003", "area": "Exempt Organizations", "type": "mcq", "difficulty": "application",
+      "q": "An exempt organization fails to file a required annual return for three consecutive years. The consequence is:",
+      "choices": {"A": "A penalty but no effect on status", "B": "Automatic revocation of exempt status by operation of law", "C": "Referral for examination", "D": "Conversion to a private foundation"},
+      "answer": "B",
+      "cite": "IRC §6033(j)",
+      "why": "Exempt status is revoked automatically on the filing due date of the third consecutive missed year. Reinstatement requires a new exemption application. Confirm an organization is not already auto-revoked before planning a dissolution."
+    }
+  ]
+}

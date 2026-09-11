@@ -8,8 +8,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- |
 | Plugin | cure-product-engineering |
 | Version | 7.8.0 |
-| Skills | 89 |
-| Agents | 39 |
+| Skills | 103 |
+| Agents | 40 |
 | Personas | 4 |
 | Hooks (entries) | 17 |
 | Rules | 11 |
@@ -21,12 +21,13 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 ## 2. Skills
 
 
-### Business (12)
+### Business (14)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
 | bid-decision | Make a disciplined go/no-go call on a solicitation — kill criteria, weighted scorecard, win probability, and pursuit economics | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 | burn-rate-tracker | Model burn rates, runway scenarios, break-even analysis, and cash flow projections for multi-product venture studios | Read, Grep, Glob, WebSearch |
+| buyer-intelligence | Turn solicitations you cannot win into a durable buyer, incumbent, and renewal-date database — harvest sole source and award notices, and time the approach | Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch |
 | capture-management | Build and qualify a public-sector pipeline — opportunity sourcing, target profile, pre-RFP positioning, teaming, past performance | Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch |
 | engineering-cost-model | Engineering cost estimation — developer hours, infrastructure spend (Firebase/GCP/AWS), build-vs-buy analysis, and project budgeting for internal planning | Read, Grep, Glob, WebSearch |
 | finops | Optimize cloud costs — budget alerts, resource right-sizing, usage analysis, FinOps practices, and cost allocation for Firebase and GCP | default |
@@ -36,6 +37,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | public-sector-contracting | Navigate government contract terms — liability, IP, termination for convenience, non-appropriation, insurance, exceptions strategy | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 | rfp-evaluation | Evaluate an RFP/RFQ/ITB — extract every requirement, build the compliance matrix, map the scoring rubric to effort, track addenda | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 | saas-financial-model | Model unit economics, MRR/ARR projections, pricing tiers, runway, and break-even analysis | Read, Grep, Glob, WebSearch |
+| solicitation-triage | Screen public-sector solicitations at portal volume — classify the procurement instrument, run the ten-minute read order and gate check, reach a verdict in under an hour | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 | technical-estimation | Build defensible software estimates with explicit uncertainty — decomposition, PERT, reference-class forecasting, risk contingency | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 
 
@@ -158,10 +160,28 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | security-review | OWASP Top 10 security audit for codebases — scans auth flows, API endpoints, data storage, secrets handling, and dependency supply chain across .kt, .swift, .ts, .py, .go, .rs, and infrastructure files | Read, Grep, Glob |
 
 
+### Tax (12)
+
+| Skill | Description | Allowed Tools |
+| --- | --- | --- |
+| audit-risk-substantiation | Assess audit exposure and penalty risk on a return or position, then build the file that defends it — trigger scoring, the §6662/§6694 penalty map, reasonable cause, disclosure decisions, and contemporaneous evidence. Use when judging how risky a position is, preparing audit defense, or answering an IRS notice. | default |
+| cpa-benchmark | Measure tax competency against CPA-exam-grade standards. Runs a scored question bank over REG core, TCP planning, and software/exempt-org fact patterns, reports weak areas, and turns misses into remediation. Use when setting a baseline, when gating a filing season, or when regression-testing a tax engine or skill library after changes. | default |
+| cpa-standards | Apply the professional standards a return preparer is held to — Circular 230, the AICPA Statements on Standards for Tax Services, due diligence, workpaper standards, conflicts of interest, and §7216 confidentiality. Use when preparing or reviewing any return or tax advice, or deciding whether a position may be taken or must be disclosed. | default |
+| deductions-and-credits | Identify and qualify every deduction, credit, and exclusion a taxpayer or entity is entitled to, with the IRC test, limits, phase-outs, and substantiation for each. Use when asked what is deductible, what credits apply, or whether anything is being missed, and when building the benefit side of a return or plan. | default |
+| estimated-tax-compliance | Manage estimated payments, withholding, and filing compliance — §6654/§6655 safe harbors, quarterly computation, the annualized income method, and the multi-entity due-date calendar. Use when computing or timing estimates, avoiding an underpayment penalty, or adjusting withholding. | default |
+| irc-lookup | Look up and cite Internal Revenue Code authority correctly — find the controlling section, read it against the regulations and rulings, weigh how strong the authority is, and produce a citation that survives review. Use when a position, deduction, credit, or election needs a statutory basis, or when a citation needs verifying. | default |
+| nonprofit-dissolution | Wind down a New York not-for-profit corporation and close its federal exempt-organization filings — final Form 990 with Schedule N, asset distribution under the dissolution clause, NY Attorney General Charities Bureau approval, Certificate of Dissolution, and final payroll closings. Use when dissolving a nonprofit or filing its final returns. | default |
+| return-review | Review a computed return for correctness before it is filed — tie-outs, reasonableness tests, cross-form consistency, prior-year variance, diagnostics, and a missed-opportunity scan. Use when a return or calculation is complete, when validating engine output, or as the pass before any accountant handoff. | default |
+| software-dev-tax | Determine the tax treatment of software and platform development costs — §174A R&E expensing, the §41 research credit and its internal-use software rules, what counts as a QRE, the pre-release boundary, and per-repo cost allocation. Use when accounting for engineering spend or evaluating an R&D credit. | default |
+| tax-preparation | Prepare a complete, filable return end to end — gather and reconcile source documents, select forms and schedules, compute each line, make and document elections, and assemble the workpaper file and accountant handoff package. Use when preparing a return, assembling a filing package, or asked what documents it needs. | default |
+| tax-recommendations | Turn tax analysis into a ranked, quantified action list for a specific taxpayer — screen opportunities, quantify after-tax benefit, score risk and effort, sequence by deadline, and present it so decisions get made. Use when asked what to do, for a tax plan, or to produce a client-facing deliverable. | default |
+| tax-strategies | Design legitimate tax-reduction strategies grounded in the IRC — entity structure, timing, character conversion, QSBS, R&D, retirement stacking, SALT workarounds, depreciation, and exit planning. Every strategy must clear the anti-abuse doctrines first. Use when asked how to pay less tax or how to structure a transaction. | default |
+
+
 ## 3. Agents
 
 
-### Business (4)
+### Business (5)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
@@ -169,6 +189,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | investor-relations | Generates investor-facing materials — board updates, quarterly reports, KPI dashboards, fundraising narratives, and cap table scenarios from product and financial data. Use when preparing board updates, investor reports, KPI dashboards, or fundraising materials. | Read, Grep, Glob, Bash |
 | market-intelligence | Market intelligence agent for TAM/SAM/SOM analysis, industry trends, regulatory landscape, market timing, and investment thesis validation. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
 | ops-finance | Operational finance agent that assists with invoice generation, 1099 tracking, bookkeeping, tax compliance prep, and multi-entity consolidation for Cure Consulting Group. | Read, Grep, Glob, Bash |
+| tax-analyst | Tax analysis agent that drafts return workpapers, reviews, estimates, and plans against the IRC, gating every position through Circular 230/SSTS for CPA review. Use when preparing or reviewing a return, planning estimates, scoring audit risk, or treating software dev costs. | Read, Grep, Glob, Bash |
 
 
 ### Data (3)
@@ -256,12 +277,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.8.0). 89 skills (domain-organized), 39… |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.8.0). 103 skills (domain-organized), 4… |
 | SessionStart | startup | command | python3 -c " |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 89 skills, 39 agents, 4 personas. Use /cure-pr… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 103 skills, 40 agents, 4 personas. Use /cure-p… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | PostToolUseFailure |  | command | python3 -c " |

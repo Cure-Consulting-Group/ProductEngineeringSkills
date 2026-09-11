@@ -4,17 +4,17 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 89 production-grade skills (organized into 7 domain folders), 39 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 103 production-grade skills (organized into 9 domain folders), 40 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Repository Structure
 
 ```
 .claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
-skills/{domain}/{name}/SKILL.md — 81 skills, organized by domain folder
-                                 Domains: engineering (39), platform (11), product (10),
-                                 business (7), finance (4), marketing (5), security (4), legal (1)
+skills/{domain}/{name}/SKILL.md — 103 skills, organized by domain folder
+                                 Domains: engineering (40), platform (11), product (11), business (14),
+                                 finance (4), marketing (6), security (4), legal (1), tax (12)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
-agents/*.md                    — 39 specialized subagents with tool/skill bindings
+agents/*.md                    — 40 specialized subagents with tool/skill bindings
 personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant)
 hooks/hooks.json               — Multi-layer hooks (command + prompt) across 9 event types incl. Stop quality gate, ConfigChange audit, skill security guard
 rules/*.md                     — 11 path-specific coding standards
@@ -37,7 +37,7 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 
 ## Development Rules
 
-- When adding a new skill, create it in `skills/{domain}/{name}/SKILL.md` with proper YAML frontmatter. Domain is one of: engineering, platform, product, business, finance, marketing, security, legal. If unsure, run `python3 scripts/generate-overview.py` after — it categorizes by name patterns and will surface the inferred domain.
+- When adding a new skill, create it in `skills/{domain}/{name}/SKILL.md` with proper YAML frontmatter. Domain is one of: engineering, platform, product, business, finance, marketing, security, legal, tax. If unsure, run `python3 scripts/generate-overview.py` after — it categorizes by name patterns and will surface the inferred domain.
 - Domain folders are an authoring convention only — the Claude Code plugin loader scans one level deep (`<dir>/<name>/SKILL.md`), so every `skills/{domain}` directory MUST be listed in the `skills` array in `.claude-plugin/plugin.json` or none of its skills load in consuming projects. When you create a new domain folder, add it to that array in the same commit (`audit-library.py` fails if you forget). `claude-commands/` is deliberately NOT mapped as the plugin `commands` dir — the skills already register `/cure-product-engineering:<name>`, and mapping the stubs too would register 81 duplicate names; it exists only for the npm/legacy vendoring path.
 - Every skill must have: `name`, `description`, and `argument-hint` in frontmatter. Fold the trigger ("Use when…") into `description` itself (or `when_to_use`) — it drives auto-discovery. Keep `description` + `when_to_use` combined under 1,536 chars (the skill-listing truncates past that). Skill `name` must be lowercase/hyphens, ≤64 chars, and **must not contain "claude" or "anthropic"** (reserved words — the harness rejects them).
 - To make a skill genuinely read-only, set `disallowed-tools` (e.g. `Write Edit Bash`). NOTE: `allowed-tools` does **not** restrict anything — it only grants no-prompt permission for the listed tools; every other tool stays callable. Do not rely on `allowed-tools` as a sandbox.
@@ -113,7 +113,7 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 | **brand-guardian** | Voice/tone consistency, visual identity audit, microcopy quality, cross-platform consistency | Read-only |
 | **growth-analyst** | Activation funnels, retention mechanics, viral coefficients, growth experiment infrastructure | Read + Bash |
 
-### Business & Finance Agents (4)
+### Business & Finance Agents (5)
 
 | Agent | Purpose | Tools |
 |-------|---------|-------|
@@ -121,6 +121,7 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 | **market-intelligence** | TAM/SAM/SOM, Porter's Five Forces, trend analysis, market timing | Read + Web |
 | **investor-relations** | Board updates, KPI dashboards, fundraising narratives, investor materials | Read + Bash |
 | **contract-reviewer** | SOW/contract risk analysis, missing clauses, unfavorable terms, IP issues | Read-only |
+| **tax-analyst** | Tax workpapers, return review, estimates, audit risk — drafts for CPA review, never files | Read + Bash (no Write/Edit) |
 
 ### Data & Analytics Agents (3)
 

@@ -202,6 +202,8 @@ Generate using Write, in the bid folder:
 
 ## Handoff
 
+- This solicitation had not been screened → `solicitation-triage`
+
 - Go/no-go decision → `bid-decision`
 - Contract terms and insurance → `public-sector-contracting`
 - Effort and cost → `technical-estimation`, then `engineering-cost-model`

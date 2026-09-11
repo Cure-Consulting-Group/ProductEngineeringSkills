@@ -1,0 +1,178 @@
+{
+  "set": "reg-core",
+  "title": "REG Core — Taxation and Regulation",
+  "taxYear": 2026,
+  "questions": [
+    {
+      "id": "REG-001", "area": "Ethics/Professional Responsibility", "type": "mcq", "difficulty": "application",
+      "q": "A preparer discovers that a client's prior-year return, prepared by another firm, materially understated income. Under SSTS No. 6 and Circular 230 §10.21, what must the preparer do?",
+      "choices": {"A": "Notify the IRS immediately", "B": "Inform the client of the error and its consequences, and recommend corrective action", "C": "Refuse to prepare the current-year return until the prior year is amended", "D": "Amend the prior-year return without the client's consent"},
+      "answer": "B",
+      "cite": "SSTS No. 6; Circular 230 §10.21",
+      "why": "The duty runs to the client, not the IRS. Notifying the IRS without permission may violate §7216 confidentiality. The preparer may withdraw if the client refuses to correct a material error, but cannot self-report or amend unilaterally."
+    },
+    {
+      "id": "REG-002", "area": "Ethics/Professional Responsibility", "type": "mcq", "difficulty": "analysis",
+      "q": "A position has roughly a 25% likelihood of being sustained on its merits. What is required for the taxpayer to avoid the §6662 accuracy-related penalty?",
+      "choices": {"A": "Nothing; 25% exceeds the reasonable basis standard", "B": "Disclosure on Form 8275 or 8275-R", "C": "A more-likely-than-not opinion from counsel", "D": "The position may not be taken under any circumstances"},
+      "answer": "B",
+      "cite": "IRC §6662(d)(2)(B); Treas. Reg. §1.6662-4",
+      "why": "25% clears reasonable basis (~20%) but falls short of substantial authority (~40%). Disclosure bridges the gap for the substantial-understatement penalty. Disclosure does not help for negligence, listed transactions, or economic-substance failures."
+    },
+    {
+      "id": "REG-003", "area": "Ethics/Professional Responsibility", "type": "mcq", "difficulty": "remember",
+      "q": "Knowingly disclosing tax return information without the taxpayer's consent, for a purpose other than preparing the return, exposes the preparer to what?",
+      "choices": {"A": "A civil penalty only", "B": "Loss of PTIN only", "C": "Criminal misdemeanor liability under §7216 plus a civil penalty under §6713", "D": "No penalty if no harm resulted"},
+      "answer": "C",
+      "cite": "IRC §7216; IRC §6713",
+      "why": "§7216 is criminal: up to $1,000 and up to one year imprisonment. §6713 adds a civil penalty per disclosure. Sending return data to a third-party API is a disclosure requiring consent under Reg. §301.7216-3."
+    },
+    {
+      "id": "REG-004", "area": "Ethics/Professional Responsibility", "type": "mcq", "difficulty": "application",
+      "q": "Under Circular 230 §10.37, when rendering written tax advice, the practitioner may NOT:",
+      "choices": {"A": "Rely on representations of the taxpayer that are reasonable", "B": "Consider the possibility that the return will not be audited", "C": "Rely on the advice of another practitioner who is competent", "D": "Reach a conclusion favorable to the taxpayer"},
+      "answer": "B",
+      "cite": "Circular 230 §10.37(a)(2)(vi)",
+      "why": "Audit probability may not be taken into account in evaluating a position. Its appearance in a workpaper is itself evidence of an unreasonable position."
+    },
+    {
+      "id": "REG-005", "area": "Federal Tax Procedure", "type": "mcq", "difficulty": "application",
+      "q": "An individual had 2025 AGI of $210,000 and 2025 tax of $46,000. To avoid the §6654 underpayment penalty for 2026 using the prior-year safe harbor, total 2026 withholding and estimates must be at least:",
+      "choices": {"A": "$41,400 (90% of prior year)", "B": "$46,000 (100% of prior year)", "C": "$50,600 (110% of prior year)", "D": "90% of 2026 actual tax, with no prior-year option"},
+      "answer": "C",
+      "cite": "IRC §6654(d)(1)(C)",
+      "why": "Because prior-year AGI exceeded $150,000, the prior-year safe harbor requires 110%, not 100%. $46,000 x 1.10 = $50,600. The alternative is 90% of current-year actual tax."
+    },
+    {
+      "id": "REG-006", "area": "Federal Tax Procedure", "type": "mcq", "difficulty": "remember",
+      "q": "The general statute of limitations on assessment is three years. It extends to six years when:",
+      "choices": {"A": "The taxpayer files late", "B": "Gross income is omitted in an amount exceeding 25% of the gross income stated on the return", "C": "The taxpayer claims a refund", "D": "The return reports a net operating loss"},
+      "answer": "B",
+      "cite": "IRC §6501(e)(1)(A)",
+      "why": "Substantial omission of income extends the period to six years. A false or fraudulent return, or no return at all, leaves the period open indefinitely under §6501(c)."
+    },
+    {
+      "id": "REG-007", "area": "Federal Tax Procedure", "type": "mcq", "difficulty": "analysis",
+      "q": "A transaction lacks economic substance under §7701(o). The understatement was not disclosed. Which is true?",
+      "choices": {"A": "A 20% penalty applies, but reasonable cause under §6664(c) may excuse it", "B": "A 40% penalty applies and the reasonable-cause defense is unavailable", "C": "No penalty applies if the taxpayer relied on a tax opinion", "D": "The penalty is 75% because lack of economic substance is fraud"},
+      "answer": "B",
+      "cite": "IRC §6662(b)(6), §6662(i), §7701(o)",
+      "why": "Economic substance failures carry a strict-liability penalty: 20% if disclosed, 40% if not. §6664(c) reasonable cause does not apply, so no opinion letter or advisor reliance provides relief."
+    },
+    {
+      "id": "REG-008", "area": "Individual Taxation", "type": "numeric", "difficulty": "application",
+      "q": "A sole proprietor has Schedule C net profit of $100,000 and no other earned income. Compute the total self-employment tax for 2026.",
+      "answer": 14129.55, "tolerance": 2,
+      "cite": "IRC §1401, §1402(a)(12)",
+      "why": "Net earnings = $100,000 x 0.9235 = $92,350. Social Security 12.4% = $11,451.40 (below the $184,500 wage base). Medicare 2.9% = $2,678.15. Total $14,129.55. One-half ($7,064.78) is deductible under §164(f)."
+    },
+    {
+      "id": "REG-009", "area": "Individual Taxation", "type": "numeric", "difficulty": "application",
+      "q": "For 2026, a single taxpayer has AMTI of $600,000. Compute the allowable AMT exemption.",
+      "answer": 40100, "tolerance": 1,
+      "cite": "IRC §55(d); Rev. Proc. 2025-32; OBBBA §70107",
+      "why": "2026 single exemption is $90,100, phasing out at 50% (doubled by OBBBA from 25%) of AMTI over $500,000. Excess = $100,000; reduction = $50,000; exemption = $90,100 - $50,000 = $40,100."
+    },
+    {
+      "id": "REG-010", "area": "Individual Taxation", "type": "numeric", "difficulty": "application",
+      "q": "For 2026, a married-filing-jointly couple with two qualifying children has MAGI of $440,000. Compute the allowable child tax credit.",
+      "answer": 2400, "tolerance": 1,
+      "cite": "IRC §24; OBBBA §70104",
+      "why": "Base credit = 2 x $2,200 = $4,400. Phase-out is $50 per $1,000 of MAGI over $400,000 MFJ. Excess = $40,000 = 40 increments x $50 = $2,000 reduction. $4,400 - $2,000 = $2,400."
+    },
+    {
+      "id": "REG-011", "area": "Individual Taxation", "type": "numeric", "difficulty": "analysis",
+      "q": "For 2026, a taxpayer has MAGI of $605,000 and paid $60,000 of state and local taxes. Compute the deductible SALT amount.",
+      "answer": 10400, "tolerance": 1,
+      "cite": "IRC §164(b)(6); OBBBA §70120",
+      "why": "2026 cap is $40,400, phasing down by 30% of MAGI over $505,000 to a $10,000 floor. Excess = $100,000; reduction = $30,000; cap = $10,400, which is above the floor. Deduction is limited to $10,400."
+    },
+    {
+      "id": "REG-012", "area": "Individual Taxation", "type": "mcq", "difficulty": "application",
+      "q": "A taxpayer sells stock at a loss on March 1 and repurchases the identical stock inside an IRA on March 20. What is the result?",
+      "choices": {"A": "The loss is allowed because the IRA is a separate taxpayer", "B": "The loss is deferred and added to the basis of the replacement shares", "C": "The loss is permanently disallowed with no basis adjustment to the IRA", "D": "The wash sale rule does not apply to IRAs"},
+      "answer": "C",
+      "cite": "IRC §1091; Rev. Rul. 2008-5",
+      "why": "The wash sale rule applies to IRA purchases, but no basis adjustment is available in the IRA. Unlike a normal wash sale where the loss is merely deferred, the loss is permanently lost."
+    },
+    {
+      "id": "REG-013", "area": "Individual Taxation", "type": "mcq", "difficulty": "remember",
+      "q": "The maximum net capital loss an individual may deduct against ordinary income in one year is:",
+      "choices": {"A": "$1,500", "B": "$3,000", "C": "$10,000", "D": "Unlimited against business income"},
+      "answer": "B",
+      "cite": "IRC §1211(b), §1212(b)",
+      "why": "$3,000 ($1,500 MFS). The excess carries forward indefinitely, retaining its character."
+    },
+    {
+      "id": "REG-014", "area": "Property Transactions", "type": "mcq", "difficulty": "application",
+      "q": "A business exchanges manufacturing equipment for similar equipment in 2026. What is the tax treatment?",
+      "choices": {"A": "Nonrecognition under §1031 if the 45/180-day deadlines are met", "B": "Nonrecognition only to the extent no boot is received", "C": "Fully taxable; §1031 applies only to real property", "D": "Nonrecognition under §1033"},
+      "answer": "C",
+      "cite": "IRC §1031(a)(1) as amended by TCJA",
+      "why": "Since 2018, like-kind exchange treatment is limited to real property held for productive use or investment. Personal property exchanges, including equipment and crypto, are fully taxable."
+    },
+    {
+      "id": "REG-015", "area": "Property Transactions", "type": "mcq", "difficulty": "analysis",
+      "q": "A taxpayer sells business equipment on the installment method. Depreciation recapture under §1245 is:",
+      "choices": {"A": "Spread ratably over the installment payments", "B": "Recognized in full in the year of sale, even if no cash is received", "C": "Converted to capital gain", "D": "Deferred until the final payment"},
+      "answer": "B",
+      "cite": "IRC §453(i)",
+      "why": "Recapture income is recognized entirely in the year of disposition regardless of payments received, and increases basis for computing the remaining gross profit ratio. This can create tax due with no cash."
+    },
+    {
+      "id": "REG-016", "area": "Property Transactions", "type": "mcq", "difficulty": "application",
+      "q": "Stock in a qualifying small business corporation becomes worthless. The shareholder, filing jointly, has a $150,000 loss. Under §1244:",
+      "choices": {"A": "The entire $150,000 is an ordinary loss", "B": "$100,000 is an ordinary loss and $50,000 is a capital loss", "C": "$50,000 is an ordinary loss and $100,000 is a capital loss", "D": "The entire loss is a capital loss"},
+      "answer": "B",
+      "cite": "IRC §1244(b)",
+      "why": "The annual §1244 ordinary loss limit is $50,000 ($100,000 MFJ). The excess is a capital loss subject to the $3,000 limitation. The qualification paperwork must exist at issuance."
+    },
+    {
+      "id": "REG-017", "area": "Business Taxation", "type": "numeric", "difficulty": "application",
+      "q": "In 2026 a business places $4,300,000 of qualifying property in service. Compute the maximum §179 deduction before the taxable income limitation.",
+      "answer": 2350000, "tolerance": 1,
+      "cite": "IRC §179(b); OBBBA §70301",
+      "why": "2026 limit is $2,560,000, reduced dollar-for-dollar by the excess of property placed in service over $4,090,000. Excess = $210,000. $2,560,000 - $210,000 = $2,350,000. Any remainder may still qualify for 100% bonus under §168(k)."
+    },
+    {
+      "id": "REG-018", "area": "Business Taxation", "type": "mcq", "difficulty": "analysis",
+      "q": "Which is a correct distinction between §179 expensing and §168(k) bonus depreciation?",
+      "choices": {"A": "§179 can create or increase a net operating loss; bonus cannot", "B": "Bonus depreciation can create a loss; §179 is limited to business taxable income", "C": "Both are elected asset by asset", "D": "Bonus depreciation must be elected in; §179 applies automatically"},
+      "answer": "B",
+      "cite": "IRC §179(b)(3), §168(k)(7)",
+      "why": "§179 cannot exceed business taxable income (excess carries forward). Bonus applies automatically unless elected out by class, is not income-limited, and can generate a loss."
+    },
+    {
+      "id": "REG-019", "area": "Business Taxation", "type": "mcq", "difficulty": "application",
+      "q": "A cash-method business incurs $62,000 of startup costs and begins operations on July 1. The first-year deduction is:",
+      "choices": {"A": "$5,000 plus amortization of $57,000 over 180 months", "B": "$0 plus amortization of $62,000 over 180 months", "C": "$62,000, fully deductible under §162", "D": "$3,000 plus amortization of $59,000 over 180 months"},
+      "answer": "B",
+      "cite": "IRC §195(b)",
+      "why": "The $5,000 immediate deduction is reduced dollar-for-dollar by startup costs exceeding $50,000. $62,000 - $50,000 = $12,000 exceeds $5,000, so the immediate deduction is fully eliminated and the entire $62,000 is amortized over 180 months beginning with the month business begins."
+    },
+    {
+      "id": "REG-020", "area": "Business Taxation", "type": "mcq", "difficulty": "analysis",
+      "q": "An S corporation shareholder has stock basis of $10,000 and no debt basis. The S corporation allocates a $25,000 loss. The shareholder also personally guaranteed a $40,000 corporate bank loan. The deductible loss is:",
+      "choices": {"A": "$25,000, because the guarantee creates basis", "B": "$25,000, limited only by at-risk rules", "C": "$10,000, with $15,000 suspended", "D": "$50,000"},
+      "answer": "C",
+      "cite": "IRC §1366(d)(1); Reg. §1.1366-2",
+      "why": "A mere guarantee does not create debt basis for an S shareholder; only actual economic outlay (a direct loan from the shareholder to the corporation) does. This differs from partnership rules, where guaranteed debt can increase outside basis."
+    },
+    {
+      "id": "REG-021", "area": "Business Taxation", "type": "mcq", "difficulty": "application",
+      "q": "Four individuals transfer property to a newly formed corporation solely in exchange for 100% of its stock. One of them also performs services in exchange for part of their stock. Which is correct?",
+      "choices": {"A": "The entire transaction is taxable because services were involved", "B": "§351 nonrecognition applies to the property transfers; stock received for services is taxable compensation", "C": "§351 applies to everyone including the service provider", "D": "§351 fails because there are more than two transferors"},
+      "answer": "B",
+      "cite": "IRC §351(a), §351(d)(1), §83",
+      "why": "Stock issued for services is not received in exchange for property and is taxable as compensation at FMV. The property transferors still qualify if the control test is met. Relevant to any IP-for-stock contribution."
+    },
+    {
+      "id": "REG-022", "area": "Business Taxation", "type": "mcq", "difficulty": "remember",
+      "q": "The accumulated earnings tax under §531 is imposed at what rate, and above what accumulated earnings credit for a non-service corporation?",
+      "choices": {"A": "21% above $150,000", "B": "20% above $250,000", "C": "15% above $500,000", "D": "20% above $150,000"},
+      "answer": "B",
+      "cite": "IRC §531, §535(c)",
+      "why": "20% penalty tax on earnings accumulated beyond the reasonable needs of the business, with a $250,000 credit ($150,000 for personal service corporations). Documented business needs in board minutes are the defense."
+    }
+  ]
+}

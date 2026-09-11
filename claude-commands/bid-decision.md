@@ -170,4 +170,5 @@ Record every decision in the pipeline, including no-bids, and revisit quarterly.
 - Contract terms driving the risk score → `public-sector-contracting`
 - Cost and effort driving the economics score → `technical-estimation`
 - Pipeline and opportunity sourcing → `capture-management`
+- No-bid, but the buyer is worth keeping → `buyer-intelligence`
 - If go → `proposal-generator`

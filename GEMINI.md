@@ -12,7 +12,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## Repository Structure
 
-- `skills/{domain}/{name}/SKILL.md`: 80 skills organized by domain. Domains: engineering (39), platform (10), product (10), business (11), marketing (5), security (4), legal (1).
+- `skills/{domain}/{name}/SKILL.md`: 103 skills organized by domain. Domains: engineering (40), platform (11), product (11), business (14), finance (4), marketing (6), security (4), legal (1), tax (12).
 - `skills/{domain}/{name}/scripts/`: Optional bundled Python stdlib scripts (zero pip). See `docs/SCRIPTS_CONVENTION.md`.
 - `agents/`: 39 custom subagent definitions in Markdown.
 - `personas/`: 4 cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant).
@@ -36,7 +36,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 ### Development Rules
 
 - **Adding a Skill**:
-  1. Create `skills/{domain}/{name}/SKILL.md`. Domain is one of: engineering, platform, product, business, marketing, security, legal.
+  1. Create `skills/{domain}/{name}/SKILL.md`. Domain is one of: engineering, platform, product, business, finance, marketing, security, legal, tax.
   2. Include YAML frontmatter: `name`, `description`, `argument-hint`.
   3. Set `allowed-tools: ["Read", "Grep", "Glob"]` if read-only; set `disable-model-invocation: true` if destructive/sensitive.
   4. Sync to `claude-commands/`.
