@@ -9,7 +9,7 @@
     {
       "name": "cure-product-engineering",
       "source": ".",
-      "version": "7.8.0",
+      "version": "7.9.0",
       "description": "Complete product engineering skill library \u2014 89 skills (domain-organized), 39 agents (engineering, product, marketing, business, data, security), 4 personas (cross-domain engagement archetypes), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering, bundled stdlib Python tooling, MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
       "author": {
         "name": "Cure Consulting Group",

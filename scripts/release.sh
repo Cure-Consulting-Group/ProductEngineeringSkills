@@ -52,7 +52,7 @@ if [ -n "$LAST_TAG" ]; then
 fi
 
 if [ "$DRY" = "1" ]; then
-  echo "Would bump $PLUGIN, sync metadata, regenerate OVERVIEW + Gemini, commit, and print tag command."
+  echo "Would bump $PLUGIN, sync metadata, regenerate OVERVIEW + legacy commands, commit, and print tag command."
   exit 0
 fi
 
@@ -75,15 +75,15 @@ PY
 echo "==> Sync metadata"
 python3 scripts/sync-metadata.py --write >/dev/null
 
-# 4) Regenerate derived artifacts (OVERVIEW, legacy commands, Gemini skills)
-echo "==> Regenerate OVERVIEW + legacy commands + Gemini skills"
+# 4) Regenerate derived artifacts (OVERVIEW, legacy commands)
+echo "==> Regenerate OVERVIEW + legacy commands"
 python3 scripts/generate-overview.py >/dev/null
 python3 scripts/sync-legacy-commands.py --write >/dev/null
 
 # 5) Final gate (post-sync) + commit
 python3 scripts/sync-metadata.py --check >/dev/null
 git add -A
-git commit -q -m "chore(release): v$NEXT" -m "Bumped version, synced metadata, regenerated OVERVIEW + Gemini skills."
+git commit -q -m "chore(release): v$NEXT" -m "Bumped version, synced metadata, regenerated OVERVIEW + legacy commands."
 echo
 echo "Committed v$NEXT. To publish:"
 echo "    git tag v$NEXT && git push && git push --tags"
