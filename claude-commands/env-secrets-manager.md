@@ -1,5 +1,12 @@
 # Environment Secrets Manager
 
+> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
+> mutating commands, and do not create or delete resources. Under Claude Code
+> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
+> fields, and activation there can widen rather than narrow file access — so on
+> any runtime other than Claude Code this paragraph is the only guardrail.
+
 Read-only skill for auditing and designing how a codebase handles environment variables and secrets. This skill never writes to `.env` files directly — it produces schemas, audit reports, runbooks, and migration plans for the team to apply. The default operating assumption: every secret in a `.env` file is one careless commit away from being public.
 
 ## Pre-Processing (Auto-Context)

@@ -79,7 +79,6 @@ python3 scripts/sync-metadata.py --write >/dev/null
 echo "==> Regenerate OVERVIEW + legacy commands + Gemini skills"
 python3 scripts/generate-overview.py >/dev/null
 python3 scripts/sync-legacy-commands.py --write >/dev/null
-[ -x ./generate-gemini-skills.sh ] && ./generate-gemini-skills.sh --force >/dev/null 2>&1 || true
 
 # 5) Final gate (post-sync) + commit
 python3 scripts/sync-metadata.py --check >/dev/null

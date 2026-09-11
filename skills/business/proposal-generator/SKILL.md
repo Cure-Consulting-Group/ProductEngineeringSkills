@@ -8,6 +8,13 @@ disable-model-invocation: true
 
 # Proposal Generator
 
+> **DESTRUCTIVE — confirm before each mutating step.** Ask the user explicitly
+> before every action that writes, overwrites, sends, or files anything on their
+> behalf, and never batch those actions behind a single approval. Under Claude
+> Code `disable-model-invocation` keeps this skill from auto-triggering; **other
+> runtimes ignore that field**, so on Codex and Antigravity this paragraph is the
+> only thing standing between a suggestion and an irreversible act.
+
 Generate professional consulting proposals and Statements of Work. Every proposal should be clear enough that a non-technical decision-maker can say yes, and specific enough that scope creep has no room to hide.
 
 ## Pre-Processing (Auto-Context)

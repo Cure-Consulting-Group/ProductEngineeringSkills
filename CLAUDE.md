@@ -24,7 +24,6 @@ output-styles/*/output-style.md — 9 custom output styles (PRD, code, financial
 .claude-plugin/marketplace.json — Private plugin-marketplace manifest (name: "cure"); see docs/DISTRIBUTION.md
 settings.json                  — Default permission rules (35 deny rules)
 claude-commands/*.md           — Legacy command format (backwards compat)
-gemini skills/*.skill          — Google Gemini skill packages (flat, .skill zip files)
 CLAUDE.md                      — Project instructions (Claude)
 GEMINI.md                      — Project instructions (Gemini CLI)
 AGENT-GUIDE.md                 — How to structure prompts for agents & skills
@@ -48,7 +47,6 @@ BACKLOG.md                     — Internal improvement backlog (not for distrib
 - Do NOT add a `version:` field to skills — it is not read by the harness. Library version lives only in `.claude-plugin/plugin.json`.
 - After any change to skills/agents/personas, run `python3 scripts/audit-library.py` (must stay green) and `python3 scripts/sync-metadata.py --write` (keeps all docs/counts in sync).
 - Keep the legacy `claude-commands/` format in sync for backwards compatibility
-- Create both Claude and Gemini versions of each skill (Gemini files are flat zips in `gemini skills/`, regenerated via `generate-gemini-skills.sh`)
 - Follow the existing format: Step 1 (Classify), Step 2 (Gather Context), Step 3+ (Framework/Output)
 - When adding a new persona, create it in `personas/{name}.md` with frontmatter (`name`, `description`, `type: persona`). Personas reference only existing skills/agents — never invent names. Match Cure's voice: terse, opinionated, concrete with numbers, no marketing fluff.
 - A skill MAY ship `skills/{domain}/{name}/scripts/*.py` — Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`. See `docs/SCRIPTS_CONVENTION.md` for the full convention.

@@ -1,0 +1,1 @@
+- [design-studio audit 2026-09](project_design_studio_audit.md) — design-studio + brand-identity-design FAILed first audit; Antigravity port, Pillow, unguarded JSX bridge, client data in benchmarks

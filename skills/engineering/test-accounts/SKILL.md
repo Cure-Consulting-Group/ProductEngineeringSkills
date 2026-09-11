@@ -1,7 +1,7 @@
 ---
 name: test-accounts
-description: "Generate test account strategies, seed data scripts, test user personas, and environment-scoped credentials for all platforms"
-when_to_use: "Use when generating test user personas, seed data scripts, or environment-scoped credentials. NOT for test strategy (use testing-strategy). NOT for E2E tests (use e2e-testing)."
+description: "Generate test account strategies, QA email provisioning, seed data scripts, test user personas, and environment-scoped credentials"
+when_to_use: "Use when generating test user personas, provisioning QA email addresses, or writing seed and credential scripts. NOT for test strategy (use testing-strategy). NOT for E2E tests (use e2e-testing)."
 argument-hint: "[project-or-feature]"
 ---
 
@@ -61,6 +61,73 @@ Before generating, confirm:
 6. **Compliance flags** — HIPAA, COPPA, PCI, GDPR, SOC 2, none?
 7. **Existing seed scripts** — any current test data setup? Where does it live?
 8. **Environments** — local, dev, staging, production? Which need test data?
+
+## Email Address Strategy (Decide Before Personas)
+
+Every persona below needs an address that can actually **receive** mail — verification links,
+password resets, magic links, receipts. Pick the strategy first; personas inherit it.
+
+| Context | Strategy | Why |
+|---|---|---|
+| Shared QA / staging, humans clicking | **Catch-all on a dedicated non-prod domain** | Default. Zero provisioning, real unique addresses, wipe by dropping the mailbox |
+| CI / automated E2E | **Programmatic inbox API** (Mailosaur, MailSlurp, Testmail) | Only option that can read a verification code back into a test |
+| Local dev / emulator | **Local SMTP sink** (Mailpit, MailHog, Firebase Auth emulator) | No real mail leaves the machine |
+| One-off manual check | Plus-addressing on an existing inbox | Acceptable for a throwaway; never as the project standard |
+
+### Do NOT standardize on plus-addressing
+
+`user+tag@domain` is real (RFC 5233 subaddressing, works on Google Workspace, M365, Fastmail,
+Proton, iCloud) and it is the wrong default:
+
+```
+- Many signup forms reject "+" outright, so the strategy fails exactly where you need it.
+- If the app dedupes users on a normalized email, every "+" variant collides into ONE account.
+  Stripe and several vendors normalize too — silent cross-test contamination.
+- It is not isolation. All mail lands in one human's inbox, so whoever reads that inbox can
+  reset the password of every QA account. That inbox becomes a credential.
+- "+" is trivially stripped, so it is not a reliable tenancy or routing signal either.
+```
+
+### Default: catch-all on a dedicated non-production domain
+
+```
+qa.<project>.dev          <- own it; never a subdomain of the production domain
+*@qa.<project>.dev        <- catch-all; anything@ works with zero provisioning
+```
+
+Never hang QA accounts off the production domain: it risks sender reputation, and a QA
+address that leaks into a real marketing list is a support incident.
+
+### Address naming is the audit trail
+
+```
+qa-<project>-<persona>-<yyyymmdd>@qa.<project>.dev
+  e.g. qa-vendly-owner-20260909@qa.vendly.dev
+```
+
+Deterministic and self-identifying: an orphan tells you what created it and when, so teardown
+never has to guess. Encode nothing secret — these addresses appear in logs.
+
+### Deletion must cascade
+
+Creating accounts is easy; the leak is always deletion. One test account is a row in **five**
+systems, and deleting only the auth user orphans the rest:
+
+```
+auth user -> database rows -> Stripe customer -> storage objects -> analytics identity
+```
+
+Orphaned Stripe customers are the classic offender: they survive, they accumulate, and on a
+metered plan they cost money. Delete in dependency order, and make teardown idempotent so a
+half-finished run can be re-run safely.
+
+**Cure constraint — no scheduled reaper.** Org policy (2026-08-08) is no cron jobs anywhere,
+which rules out the nightly-cleanup design every external example reaches for. Reap on demand
+(`npm run qa:reap`) or off an existing event trigger. Deletion still runs behind the same
+environment guard as the seed scripts — never pattern-match-delete against production.
+
+See [reference/email-accounts.md](reference/email-accounts.md) for the address generator,
+E2E inbox polling, and the cascading teardown script.
 
 ## Step 3: Test User Personas
 

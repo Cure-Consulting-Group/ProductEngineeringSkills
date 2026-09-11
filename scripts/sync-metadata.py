@@ -99,6 +99,46 @@ def apply_rules(t, write):
     return changes
 
 
+def apply_vendor_manifests(t, write):
+    """Propagate version into the Codex manifests structurally, not by regex.
+
+    Codex carries `version` inline: once in .codex-plugin/plugin.json and once per
+    entry in .agents/plugins/marketplace.json. The Claude marketplace instead reads
+    it from plugin.json, so nothing else here would keep the Codex side honest and a
+    bump would land for one vendor only. Parsed as JSON rather than pattern-matched
+    so reformatting the file cannot silently defeat the sync.
+    """
+    v = t["version"]
+    tri = ROOT / "tri-lane" / ".claude-plugin" / "plugin.json"
+    tv = json.loads(tri.read_text(encoding="utf-8"))["version"] if tri.exists() else None
+    changes = {}
+
+    codex = ROOT / ".codex-plugin" / "plugin.json"
+    if codex.exists():
+        data = json.loads(codex.read_text(encoding="utf-8"))
+        if data.get("version") != v:
+            changes.setdefault(".codex-plugin/plugin.json", []).append("version")
+            if write:
+                data["version"] = v
+                codex.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+    mkt = ROOT / ".agents" / "plugins" / "marketplace.json"
+    if mkt.exists():
+        data = json.loads(mkt.read_text(encoding="utf-8"))
+        expected = {"cure-product-engineering": v, "cure-tri-lane": tv}
+        touched = False
+        for entry in data.get("plugins", []):
+            want = expected.get(entry.get("name"))
+            if want is not None and entry.get("version") != want:
+                changes.setdefault(".agents/plugins/marketplace.json", []).append(
+                    f"version ({entry['name']})")
+                entry["version"] = want
+                touched = True
+        if touched and write:
+            mkt.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    return changes
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group()
@@ -116,6 +156,8 @@ def main():
     print(f"Domains: " + ", ".join(f"{k} ({v})" for k, v in t['domains'].items()))
 
     changes = apply_rules(t, write=args.write)
+    for rel, labels in apply_vendor_manifests(t, write=args.write).items():
+        changes.setdefault(rel, []).extend(labels)
     if not changes:
         print("\nAll metadata in sync. ✓")
         return

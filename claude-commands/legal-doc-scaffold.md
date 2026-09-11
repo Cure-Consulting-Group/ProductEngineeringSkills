@@ -1,5 +1,12 @@
 # Legal Document Scaffold
 
+> **DESTRUCTIVE — confirm before each mutating step.** Ask the user explicitly
+> before every action that writes, overwrites, sends, or files anything on their
+> behalf, and never batch those actions behind a single approval. Under Claude
+> Code `disable-model-invocation` keeps this skill from auto-triggering; **other
+> runtimes ignore that field**, so on Codex and Antigravity this paragraph is the
+> only thing standing between a suggestion and an irreversible act.
+
 ## Pre-Processing (Auto-Context)
 
 Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.

@@ -1,5 +1,12 @@
 # Security Review
 
+> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
+> mutating commands, and do not create or delete resources. Under Claude Code
+> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
+> fields, and activation there can widen rather than narrow file access — so on
+> any runtime other than Claude Code this paragraph is the only guardrail.
+
 Structured security review for mobile apps, web apps, APIs, and cloud infrastructure. Run before every launch, after major features, and quarterly on production systems.
 
 ## Pre-Processing (Auto-Context)

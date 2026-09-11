@@ -16,6 +16,7 @@ Agent fixes:
 Run with --dry-run to preview, --apply to write. Re-running is a no-op.
 """
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -143,6 +144,51 @@ def fix_agent(path, idx, changes):
     return rebuild(out, body), True
 
 
+def manifest_version_drift():
+    """Vendor manifests whose version disagrees with the source of truth.
+
+    Codex carries `version` inline on each marketplace entry, while the Claude
+    marketplace reads it from plugin.json. That asymmetry means a bump can land
+    for one vendor and not the other, and a stale Codex entry installs silently.
+    """
+    out = []
+
+    def load(rel):
+        f = ROOT / rel
+        if not f.exists():
+            out.append(f"{rel} is missing")
+            return None
+        try:
+            return json.loads(f.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            out.append(f"{rel} is not valid JSON ({e})")
+            return None
+
+    truth = load(".claude-plugin/plugin.json")
+    if truth is None:
+        return out
+    v = truth.get("version")
+
+    codex = load(".codex-plugin/plugin.json")
+    if codex is not None and codex.get("version") != v:
+        out.append(f".codex-plugin/plugin.json version {codex.get('version')} != {v}")
+
+    tri = load("tri-lane/.claude-plugin/plugin.json")
+    tv = tri.get("version") if tri else None
+
+    mkt = load(".agents/plugins/marketplace.json")
+    if mkt is not None:
+        expected = {"cure-product-engineering": v, "cure-tri-lane": tv}
+        for entry in mkt.get("plugins", []):
+            want = expected.get(entry.get("name"))
+            if want is not None and entry.get("version") != want:
+                out.append(
+                    f".agents/plugins/marketplace.json entry {entry.get('name')} "
+                    f"version {entry.get('version')} != {want}"
+                )
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
@@ -153,6 +199,7 @@ def main():
 
     idx = skill_index()
     changes = []
+    drift = manifest_version_drift()
 
     for p in sorted(SKILLS_DIR.rglob("SKILL.md")):
         new, touched = fix_skill(p, changes)
@@ -163,6 +210,16 @@ def main():
         new, touched = fix_agent(p, idx, changes)
         if touched and args.apply:
             p.write_text(new, encoding="utf-8")
+
+    if drift:
+        print("Vendor manifest drift:\n")
+        for d in drift:
+            print(f"  - {d}")
+        if args.check:
+            print(f"\nFAIL: {len(drift)} vendor manifest disagreement(s). "
+                  f"Run `python3 scripts/sync-metadata.py --write`.", file=sys.stderr)
+            sys.exit(1)
+        print()
 
     if not changes:
         print("Nothing to fix — library already compliant. ✓")

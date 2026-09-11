@@ -146,7 +146,7 @@ jobs:
 
       - name: Validate plugin + marketplace manifest schema
         run: |
-          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json.example .lsp.json settings.json; do
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .codex-plugin/plugin.json .agents/plugins/marketplace.json .mcp.json.example .lsp.json settings.json; do
             python3 -c "import json,sys; json.load(open('$f')); print('ok json: $f')"
           done
           # Plugin manifest field TYPES must match the Claude Code schema
@@ -164,6 +164,26 @@ jobs:
           need("homepage", str, "string"); need("license", str, "string")
           need("author", dict, "object"); need("keywords", list, "array")
           if "bugs" in p: errs.append("plugin.json: `bugs` is not a plugin-manifest field; remove it")
+          # Codex manifest. `skills` is a STRING here and an ARRAY in the Claude
+          # manifest — get it wrong and `codex plugin add` fails at the consumer,
+          # not in CI, which is exactly the class of bug this job exists to stop.
+          c = json.load(open(".codex-plugin/plugin.json"))
+          if not isinstance(c.get("skills"), str):
+              errs.append(".codex-plugin/plugin.json: `skills` must be a string (Claude's is an array)")
+          for field, typ, label in (("name", str, "string"), ("version", str, "string"),
+                                    ("description", str, "string"), ("author", dict, "object")):
+              if field in c and not isinstance(c[field], typ):
+                  errs.append(f".codex-plugin/plugin.json: `{field}` must be {label}")
+          # Codex carries `version` inline per marketplace entry; the Claude
+          # marketplace reads it from plugin.json. fix-library.py --check enforces
+          # that they agree — this only enforces that the field exists at all.
+          am = json.load(open(".agents/plugins/marketplace.json"))
+          for f_ in ("name", "owner", "plugins"):
+              if f_ not in am: errs.append(f".agents/plugins/marketplace.json: missing required `{f_}`")
+          for entry in am.get("plugins", []):
+              for f_ in ("name", "source", "version"):
+                  if f_ not in entry:
+                      errs.append(f".agents/plugins/marketplace.json: entry {entry.get('name','?')} missing `{f_}`")
           m = json.load(open(".claude-plugin/marketplace.json"))
           for f in ("name", "owner", "plugins"):
               if f not in m: errs.append(f"marketplace.json: missing required `{f}`")

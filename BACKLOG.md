@@ -309,6 +309,292 @@ T23 release mechanics apply as the closing checklist. Total estimate: **3–4 de
 
 ---
 
+## Wave 2.5 — verified corrections (2026-09-09)
+
+Amends the assumptions in T25/T26/T29 below. The ticket text is left intact; where this
+block disagrees with it, this block is newer and was verified by probing the real CLIs
+(codex-cli 0.153.4, agy 1.1.27) rather than by reading docs. Re-probe before building —
+both vendors ship fast.
+
+### What was measured
+
+| Probe | Result |
+|---|---|
+| Codex, domain-nested skill (`skills/engineering/<name>/`) | **Discovered.** No flattening needed for Codex |
+| Codex, Claude-only frontmatter (`when_to_use`, `argument-hint`) | Tolerated, ignored |
+| Antigravity, `~/.gemini/config/skills/<name>/SKILL.md` | **Discovered** (flat) |
+| Antigravity, one level deeper (`.../<domain>/<name>/`) | **Not discovered** — flattening confirmed necessary |
+| Antigravity, `<workspace>/.agents/skills/<name>/` | **Did not load** at 1.1.27 |
+| Antigravity, `.agents/skills.json` (`entries`, workspace/home/absolute paths) | **Did not load** at 1.1.27, though documented inside the agy binary |
+| Control: builtin `antigravity_guide` visible in same session | Yes — so the probe method is sound, not a false negative |
+
+### Correction 1 — T26's freshness mechanism no longer exists
+
+T26 items 2 and 3 hang freshness on `auto-update.sh` ("symlinks keep the existing
+auto-update flow as the single freshness mechanism"). That script is dead: `PLUGIN_DIR`
+resolves to `~/.claude/plugins/ProductEngineeringSkills`, which is a **dangling symlink**
+into a deleted `wt/sprint0/node_modules` vendoring, so `do_update()` fails its `.git`
+check and exits 1. It is also deleted in the current working tree.
+
+Replacement freshness model, three independent layers:
+- **Repo side:** T29.1 regenerate-and-diff in CI. Unchanged, still correct.
+- **Machine side:** the install command records the source SHA in a manifest at the install
+  root; a `--check` mode compares it against the repo and exits non-zero when behind. This
+  is the layer T26 assumed auto-update would cover, and nothing covers today.
+- **Lane side:** `lane-preflight.py` fails the agy lane on that mismatch, so a stale export
+  cannot silently produce a review of code that is not what is in the tree.
+
+### Correction 2 — the "universal workspace path" claim is unverified
+
+T26.1 treats `<workspace>/.agents/skills/` as universal across Gemini CLI and all three
+Antigravity variants. That did not hold for agy 1.1.27 in any form tried. Only the global
+`~/.gemini/config/skills/` path is confirmed. Before building T26, re-probe on current
+versions and record the result here; if workspace scope still does not work for Antigravity,
+`--workspace` serves Gemini CLI only and Antigravity is global-scope-only.
+
+### Correction 3 — Codex is a third consumer and needs no export
+
+Shipped 2026-09-09: `.codex-plugin/plugin.json` + `.agents/plugins/marketplace.json` install
+all 89 skills into Codex straight from `skills/`, nesting intact. The exporter is therefore
+**Gemini/Antigravity-only**, not a general "second distribution target". T28's parity matrix
+gains a third column, and `sync-metadata.py`/`fix-library.py --check` already keep the Codex
+manifests from drifting.
+
+### Correction 4 — T25.5 is already enforced upstream
+
+`audit-library.py` now fails on any skill whose `name` differs from its directory, and on any
+name reused across domains. T25 item 5 ("fail the export on duplicate name") is still worth
+asserting in the exporter, but it is now a second line of defence rather than the only one.
+
+### Adversarial re-scope — pass 1 of 3 (2026-09-09)
+
+Measured against the tree, not reasoned from the tickets. Each finding names what was counted.
+
+**A1 — T25.4's counts are stale, but its hard case is easier than written.**
+T25 says "all 71 migrated skills". Actual: **307 inline `` !`cmd` `` occurrences across 77 of
+89 files**. The shape is uniform — **zero** fenced ```` ```! ```` blocks and **zero** commands
+containing `$(...)` nesting. So the rewrite is one regex, not a parser. Require the exporter to
+assert `0` remaining occurrences post-export and to report a rewrite count, so a silently
+skipped file fails loudly.
+
+**A2 — the exporter copies too little (real gap, not a nitpick).**
+T25.1 copies `SKILL.md` + `scripts/` verbatim. Skill bodies also link to **`reference/` (39),
+`references/` (5), `workflows/` (3), `assets/` (3)** — ~50 relative links that 404 in the export.
+Two of those directories are the same concept spelled differently (`reference` vs `references`),
+which is a latent bug in the source tree worth fixing in the same pass.
+
+**A3 — this would be the *third* generated mirror of every skill.**
+`skills/` already mirrors to `claude-commands/` (89 files, CI-enforced by
+`sync-legacy-commands.py --check`). Adding `dist/agent-skills/` makes three representations, on
+top of the `gemini skills/` ZIPs being retired. T29's own stated rationale is the T9/T14 lesson
+that "hand-maintained parallel artifacts drift into fiction" — generated ones drift too, just
+more quietly. Decide whether `claude-commands/` can be folded into the same exporter before
+adding a third surface, rather than after.
+
+**A4 — `dist/` commit cost is unscoped.**
+`dist/` is not in `.gitignore`, and T29.1's regenerate-and-diff pattern implies it is committed.
+That duplicates **2.0 MB / 160 tracked files** and makes every skill PR a 2× diff, half of it
+generated — which is how reviewers learn to skim. The cited precedent (`docs/OVERVIEW.md`
+freshness) is *one* file and does not scale to 160. Pick explicitly: commit it (diffable, bloaty,
+review fatigue) or gitignore it and have CI build-and-discard (clean, but loses the diff signal
+that T29 wants).
+
+**A5 — destination namespace collisions are unguarded.**
+`~/.gemini/config/skills/` is shared with builtins and extension-bundled skills — **17 present on
+this machine** (`firebase-*` ×6, `stripe-*` ×2, `chrome-devtools`, `antigravity_guide`, …).
+Collisions with our 89: **zero today**. But `audit-library.py` only enforces uniqueness *within*
+our library; nothing checks the destination. Google and any installed extension can add a name at
+any time, and precedence then decides silently which skill a name resolves to. The install
+command must detect collisions at install time and refuse (or namespace-prefix) rather than
+overwrite.
+
+**A6 — export inflation vs the 500-line limit is unmodelled.**
+`split-oversized-skills.py --check` caps source bodies at 500 lines. The exporter *adds* text:
+READ-ONLY / DESTRUCTIVE prose blocks plus 307 injection→instruction rewrites. No limit is
+enforced on exported bodies, and whether either runtime truncates a long body is unknown. Measure
+worst-case post-export line counts during step 0.
+
+**A7 — folding `when_to_use` into `description` is unverified at length.**
+T25.2 folds the two fields. Ours are budgeted to ≤350 chars combined for Claude's listing. If
+Gemini or Antigravity truncate `description` below that, the fold silently cuts the trigger text
+that makes the skill discoverable — the one thing the export exists to preserve. Verify the
+truncation threshold on both runtimes before folding; otherwise keep the fold but cap it.
+
+**A8 — gap in what shipped 2026-09-09 (self-correction).**
+`validate.yml`'s manifest-schema step hardcodes `.claude-plugin/*`. The new Codex manifests get
+JSON-validity and version-drift coverage via `fix-library.py --check`, but **no field-type
+assertion** — notably that Codex's `skills` must be a **string** where Claude's is an **array**.
+A wrong type there fails at the consumer's `codex plugin add`, not in CI. Add both files to that
+loop.
+
+### Adversarial re-scope — pass 2 of 3 (2026-09-09)
+
+Pass 1 counted files. Pass 2 went after behaviour, security surface, and coupling. Two findings
+here change what T25 *is*, not just how long it takes.
+
+**B1 — the export is a link-rewriting problem, and T25 does not scope link rewriting at all.**
+Beyond pass 1's ~50 intra-skill links, skill bodies reference repo directories that do not travel:
+**`docs/` (35 skills)**, `rules/` (6), `shared/` (2), `agents/` (2), `hooks/` (1). Copying
+`SKILL.md` + `scripts/` produces ~100 dead links across the export. Every one either needs
+rewriting to an absolute repo URL, inlining, or deliberate removal — a decision per link class,
+which is design work T25 currently budgets zero time for.
+
+**B2 — T25.3 translates the wrong field set (security-relevant).**
+It converts `disallowed-tools` (**4 skills**) and `disable-model-invocation` (**2**) into prose.
+It ignores **`allowed-tools`, which 16 skills set** — and 8 of those are read-only lists
+(`["Read","Grep","Glob"]` ×4, `+WebSearch` ×4). In Claude those narrow the tool surface. Stripped
+on export into runtimes with **no tool-restriction mechanism at all**, they silently become
+full-access. T25.3 as written would give 6 skills a warning and quietly widen 16.
+
+**B3 — `env-secrets-manager` is the case that should force an explicit policy exception.**
+Its frontmatter is `allowed-tools: ["Read","Grep","Glob","Bash"]`, `disallowed-tools: Write Edit`,
+`context: fork`, and its own description ends "— read-only audits". It is a secret-leak-detection
+skill. Exported, it lands in a runtime with no tool restriction, where (per Wave 2.5's own
+verified facts) **activation widens read access** because the skill dir joins the allowed read
+paths. T25.3's default — "destructive skills ARE exported with a prose warning, not excluded",
+decided 2026-07-13 — predates anyone enumerating which skills those are. Use T28's per-skill
+override here and record the decision; do not let this one ride the default.
+
+**B4 — `context: fork` (17 skills) is stripped with nothing in its place.**
+Those skills fork precisely so a large body does not consume the main window. Inline on
+Antigravity they pay the ~14.5k-token floor *plus* the full body on every activation. This is a
+cost and behaviour change, not a cosmetic field strip; T28's parity matrix must state it.
+
+**B5 — `paths:` (4 skills) is silent capability loss.**
+`paths` auto-activates a skill on matching file patterns. Neither target runtime has an
+equivalent, so those 4 become manual-only. Correct to strip, wrong to strip silently.
+
+**B6 — exporting the library also exports it *unguarded*.**
+`hooks/hooks.json` registers matchers on `Skill`/`skills`. Whatever that guard enforces at
+invocation time does not travel, and Wave 2.5 already declares hooks a non-goal. So the library's
+security posture is Claude-specific by construction: the same 89 skills run with strictly fewer
+controls on the other two runtimes. That is defensible, but it should be a written decision in
+T28 rather than an emergent property.
+
+**B7 — A7 stays unverified, and "we looked and found nothing" is not evidence.**
+No description-length constant was recoverable from the agy binary. That does not establish the
+absence of truncation. Keep A7 as an empirical step-0 probe on both runtimes; do not let a failed
+search get logged as a negative result.
+
+### Adversarial re-scope — pass 3 of 3 (2026-09-09)
+
+Passes 1 and 2 attacked the tickets. Pass 3 attacks the wave's premise, and the work already
+shipped. It reaches a different conclusion than "do A".
+
+**C1 — the premise no longer holds as written, because B changed it.**
+Wave 2.5's stated theme (2026-07-13) is that consultants who exhaust Claude credits "fall back to
+Gemini CLI or Antigravity", so the library needs a second distribution target. As of 2026-09-09
+there is a **third** runtime that needs no export at all: Codex installs all 89 skills straight
+from `skills/`, nesting intact, verified end-to-end. The fallback need the wave exists to serve is
+now largely met at zero translation cost and zero ongoing maintenance. A's value dropped
+materially the day B shipped, while passes 1–2 raised its cost.
+
+**C2 — the export has no identified consumer inside this org.**
+Antigravity's only current use here is the tri-lane system-review lane, which runs
+`agy -p "$(cat "$SPEC")" --json-schema …` — a **self-contained spec**. It does not invoke library
+skills and would not benefit from the export. So the export's consumer is hypothetical ("a
+consultant, mid-engagement, out of Claude credits, who prefers Antigravity over Codex"), and
+hypothetical consumers are how 89-file generated mirrors get built and then rot. Name a real one
+before building, or don't build.
+
+**C3 — the guardrail gap is not A's problem, it is already shipped (self-correction).**
+B2/B3 flagged that exporting strips `allowed-tools` into runtimes with no enforcement. That
+reasoning applies **verbatim to Codex, which shipped today**. Codex ignores Claude-only
+frontmatter — the same property that made the nested tree "just work" also means `allowed-tools`
+(16 skills), `disallowed-tools` (4) and `disable-model-invocation` (2) are unenforced there. On
+this machine `~/.codex/config.toml` sets `approval_policy = "never"` and
+`sandbox_mode = "danger-full-access"`, so `env-secrets-manager` — a secret-hunting skill that is
+read-only under Claude — is installed unrestricted and unprompted. **This is the highest-priority
+item in this whole block, and it belongs to work already merged, not to A.**
+Fix independently of A: translate guardrails into prose in the *source* SKILL.md bodies (so every
+runtime inherits them), or maintain a per-vendor exclusion list applied at install. Prose is not
+enforcement, but it is strictly better than silence, and it costs hours rather than days.
+
+**C4 — the honest re-estimate is roughly double.**
+The 2.75–3.75 day figure predates B1 (≈100 dead links needing per-class rewriting decisions), B2
+(guardrail translation for 16 more skills), B3 (a per-skill security policy call), and A4 (the
+commit-vs-gitignore decision for 160 generated files). Realistic range is **5–7 days**, and the
+riskiest part is design, not code: nobody has decided what a `docs/` link *becomes* in an export.
+
+**C5 — step 0 was underspecified; here is the experiment that falsifies T26.**
+"Re-probe the paths" is not a test. The falsifiable version, per runtime and per scope:
+place a sentinel skill whose `description` is a unique token at each candidate path
+(`<ws>/.agents/skills/`, `~/.gemini/skills/`, `~/.gemini/config/skills/`), open a session in a
+**trusted** workspace, and ask the model to name the sentinel — with a known-good builtin as the
+positive control in the same session. Without the control, "did not load" is indistinguishable
+from "loaded but the model declined to enumerate", which is exactly the ambiguity that made the
+2026-09-09 `.agents/skills.json` result worth only a "did not load at 1.1.27" rather than a
+stronger claim. Record agy and Gemini CLI **versions** with every result; these paths are moving.
+
+**C6 — what pass 1 got wrong.**
+A3 proposed folding `claude-commands/` into the same exporter. That is scope creep dressed as
+consolidation: `claude-commands/` (89 files, 1.3 MB, committed, CI-enforced) serves a live
+Claude-side legacy path with different translation rules. Touching it as part of a Gemini/
+Antigravity wave couples two unrelated risks. Withdraw that suggestion; the *observation* that
+this would be a third mirror stands, as an argument against `dist/`, not for a refactor.
+
+### Recommendation after three passes: descope A, do not run it as a wave
+
+| Do now | Why | Effort |
+|---|---|---|
+| **Guardrail translation into source bodies** (C3) | Already-shipped exposure, all runtimes, worst on a `danger-full-access` machine | 0.5 day |
+| **Add `.codex-plugin` + `.agents` to `validate.yml`'s schema loop** (A8) | Wrong field type fails at the consumer, not in CI | 1 hour |
+| **Retire `gemini skills/` + `generate-gemini-skills.sh`** | Confirmed dead; standalone, revertible | 0.25 day |
+| **Fix `reference/` vs `references/`** (A2) | Latent source bug, independent of any export | 1 hour |
+
+| Defer until a named consumer exists | Why |
+|---|---|
+| T25 exporter, T26 install, T29 CI freshness | C1 + C2: the need is now largely served by Codex, and no in-org consumer requires the export. Re-open with C5's experiment and C4's estimate when someone actually needs Antigravity to run library skills. |
+
+The cheap, high-value half of Wave 2.5 is real and should ship. The expensive half is a solution
+looking for the user it was scoped for in July.
+
+### Shipped 2026-09-09 (the cheap half)
+
+Pass 3 recommended shipping the low-cost, high-value items and deferring
+T25/T26/T29 until a named consumer exists. Those items are done:
+
+- **Guardrail translation into source bodies (C3).** 13 skills gained a
+  READ-ONLY or DESTRUCTIVE prose block: 11 whose `allowed-tools`/`disallowed-tools`
+  made them read-only under Claude, and 2 carrying `disable-model-invocation`.
+  The blocks live in the *source* SKILL.md, so every runtime inherits them — the
+  exposure was never Antigravity-specific, since Codex ignores the same fields.
+  `env-secrets-manager` was the case that forced this: a secret-leak-detection
+  skill, read-only under Claude, unrestricted anywhere else.
+- **CI schema coverage (A8).** `validate.yml` now validates `.codex-plugin/plugin.json`
+  and `.agents/plugins/marketplace.json`, and asserts Codex's `skills` is a
+  **string** where Claude's is an **array** — a wrong type there fails at the
+  consumer's `codex plugin add`, not in CI.
+- **Retired the `.skill` ZIP pipeline.** `gemini skills/` (89 ZIPs) and
+  `generate-gemini-skills.sh` deleted, release step removed, references scrubbed
+  from `release.sh`, `sync-legacy-commands.py`, `GEMINI.md`, `CLAUDE.md` and
+  `DISTRIBUTION.md`. Confirmed unconsumed before deleting.
+
+**Correction to A2.** Pass 1 called the `reference/` vs `references/` split "a
+latent bug". It is not: a link check across all 89 skills resolves **50 of 50**
+relative links, and both directory names exist where they are referenced. The
+earlier check used `find -maxdepth 2` and missed directories one level deeper.
+It is a cosmetic naming inconsistency with no current consumer, and renaming it
+would churn a dozen files for nothing while the exporter stays deferred.
+
+### Revised sequencing and effort
+
+| Step | Work | Effort |
+|---|---|---|
+| 0 | Re-probe Antigravity + Gemini CLI paths; update the table above | 0.5 day |
+| 1 | T25 exporter → `dist/agent-skills/` (unchanged scope, minus item 6) | 1–1.5 days |
+| 2 | T26 install command, rewritten around the three-layer freshness model | 0.5–1 day |
+| 3 | T29 CI freshness + docs | 0.5 day |
+| 4 | Retire `gemini skills/` + `generate-gemini-skills.sh` — **separate change** | 0.25 day |
+
+Step 4 is deliberately last and standalone. Nothing consumes the ZIPs (confirmed), but it
+deletes a top-level directory and is cleanly revertible only while it is its own commit.
+
+Step 0 gates the rest: if Antigravity still cannot read a workspace path, the install story
+is materially different and T26 should be rewritten before it is built, not during.
+
+---
+
 ## T25 — Standard-format exporter; retire the `.skill` ZIP pipeline
 
 **Status:** Open

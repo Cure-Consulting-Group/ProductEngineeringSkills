@@ -9,6 +9,13 @@ context: fork
 
 # QSBS Compliance Tracker
 
+> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
+> mutating commands, and do not create or delete resources. Under Claude Code
+> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
+> fields, and activation there can widen rather than narrow file access — so on
+> any runtime other than Claude Code this paragraph is the only guardrail.
+
 IRC §1202 Qualified Small Business Stock compliance monitoring. QSBS allows up to \$10M (or 10× basis) in capital gains exclusion per shareholder — but qualification is fragile. A single disqualifying event can void the entire exclusion retroactively.
 
 This skill does NOT constitute tax advice. All output requires CPA/tax attorney review.

@@ -7,8 +7,8 @@ A `claude-commands/<name>.md` file is simply a skill's body with the YAML
 frontmatter removed. This tool derives every command from its SKILL.md, adds
 any missing commands, and removes orphans (commands whose skill is gone).
 
-Gemini `.skill` packages are regenerated separately by generate-gemini-skills.sh
-(also derived from skills/); run that with --force on release.
+Gemini/Antigravity distribution is deferred (BACKLOG Wave 2.5); the `.skill`
+ZIP pipeline this note used to reference was retired 2026-09-09 as unconsumed.
 
 --check (CI gate) exits 1 on any drift. --write regenerates. Stdlib only.
 """
