@@ -333,6 +333,34 @@ class Log(unittest.TestCase):
         rc, out, _ = self.ll("due", "--within", "8", "--json")
         self.assertEqual(json.loads(out), [])
 
+    def test_session_model_reads_effort_from_model_settings(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ll", SCRIPTS / "lane-log.py")
+        ll = importlib.util.module_from_spec(spec); spec.loader.exec_module(ll)
+        home = Path(tempfile.mkdtemp()); (home / ".claude").mkdir()
+        (home / ".claude" / "settings.json").write_text(json.dumps({"model": "claude-fable-5-1[1m]", "modelSettings": {"claude-fable-5-1": {"effortLevel": "xhigh"}}}))
+        real = Path.home
+        Path.home = staticmethod(lambda: home)
+        try:
+            self.assertEqual(ll.session_model(), {"model": "claude-fable-5-1[1m]", "effort": "xhigh"})
+        finally:
+            Path.home = real
+            shutil.rmtree(home)
+
+    def test_backfilled_rows_do_not_enter_the_rule(self):
+        self.ll("start", "--task", "a", "--arm", "manual", "--model", "m1", "--effort", "e")
+        self.ll("end", "--task", "a", "--route", "manual", "--status", "complete")
+        self.ll("start", "--task", "b", "--arm", "tri-lane", "--model", "m1", "--effort", "e")
+        self.ll("end", "--task", "b", "--route", "delegate", "--status", "complete")
+        with open(self.log, "a") as f:
+            f.write(json.dumps({"task": "old", "arm": "tri-lane", "backfilled": True, "model": "claude-opus-5", "effort": None, "started_at": "2026-09-01T00:00:00+00:00", "ended_at": "2026-09-01T01:00:00+00:00", "claude": {}, "codex_lane": {}, "agy": {}}) + "\n")
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--log", self.log, "--json"], cwd=self.repo)
+        d = json.loads(out)["decision"]
+        self.assertEqual(d["backfilled_excluded"], 1)
+        self.assertTrue(d["checks"]["model_frozen"]["pass"], d["checks"]["model_frozen"])
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--log", self.log, "--json", "--include-backfill"], cwd=self.repo)
+        self.assertFalse(json.loads(out)["decision"]["checks"]["model_frozen"]["pass"])
+
     def test_report_blocks_on_model_freeze_and_windows(self):
         self.ll("start", "--task", "a", "--arm", "manual", "--model", "m1", "--effort", "e")
         self.ll("end", "--task", "a", "--route", "manual", "--status", "complete")
@@ -357,7 +385,7 @@ class Dashboard(unittest.TestCase):
         rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", log, "--out", out])
         self.assertEqual(rc, 0, se)
         html = out.read_text()
-        self.assertIn("<title>Tri-Lane Benchmark</title>", html)
+        self.assertIn("<title>Tri-Lane Benchmark Log</title>", html)
         self.assertNotIn("__DATA__", html)
         self.assertIn('"task": "t"', html)
         rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", d / "missing.jsonl", "--out", d / "empty.html"])
@@ -492,6 +520,441 @@ class Canary(unittest.TestCase):
         self.assertIn("B04-dead-intent-lockout", g["found"])
         self.assertIn("B03-token-in-logs", g["found"])
         self.assertEqual(g["false_positives"], 1)
+
+
+class Evidence(unittest.TestCase):
+    """Wave 4 T43: the report and every VERIFY leave evidence in the run dir."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.wt = self.d / "wt"
+        git(["worktree", "add", "--detach", "-q", str(self.wt), "HEAD"], self.repo)
+        self.rd = self.d / "rundir"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def report(self, *args):
+        rc, out, err = run([SCRIPTS / "lane-report.py", "--worktree", self.wt, "--lane", "x", "--json", "--run-dir", self.rd, *args], cwd=self.repo)
+        return rc, json.loads(out)
+
+    def test_report_json_and_verify_records_are_written(self):
+        (self.wt / "README.md").write_text("changed\n")
+        rc, d = self.report("--files", "README.md", "--verify", "echo out-line; echo err-line 1>&2", "--unsandboxed-verify")
+        self.assertEqual(d["STATUS"], "complete")
+        rep = json.loads((self.rd / "report.json").read_text())
+        self.assertEqual(rep["STATUS"], "complete")
+        self.assertEqual(rep["attempt"], 1)
+        recs = [json.loads(l) for l in (self.rd / "verify.jsonl").read_text().splitlines()]
+        self.assertEqual(len(recs), 1)
+        self.assertEqual(recs[0]["exit"], 0)
+        self.assertFalse(recs[0]["filtered"])
+        self.assertEqual(Path(recs[0]["stdout_path"]).read_text().strip(), "out-line")
+        self.assertEqual(Path(recs[0]["stderr_path"]).read_text().strip(), "err-line")
+        # a second report archives the first
+        rc, d = self.report("--files", "README.md", "--verify", "true", "--unsandboxed-verify")
+        self.assertTrue((self.rd / "report-1.json").exists())
+        self.assertEqual(json.loads((self.rd / "report.json").read_text())["attempt"], 2)
+
+    def test_timeout_keeps_partial_output_and_flags_it(self):
+        (self.wt / "README.md").write_text("changed\n")
+        rc, d = self.report("--files", "README.md", "--verify", "echo partial; sleep 5; echo never", "--unsandboxed-verify", "--verify-timeout", "1")
+        v = d["VERIFIED"][0]
+        self.assertEqual(v["exit"], 124)
+        self.assertTrue(v["timed_out"])
+        self.assertIn("partial", v["output_tail"])
+        self.assertNotIn("never", v["output_tail"])
+        self.assertEqual(d["STATUS"], "partial")
+        rec = json.loads((self.rd / "verify.jsonl").read_text().splitlines()[0])
+        self.assertTrue(rec["timed_out"])
+        self.assertIn("partial", Path(rec["stdout_path"]).read_text())
+
+    def test_filtered_verify_is_flagged(self):
+        (self.wt / "README.md").write_text("changed\n")
+        rc, d = self.report("--files", "README.md", "--verify", "false | grep -c x || true", "--unsandboxed-verify")
+        self.assertTrue(d["VERIFIED"][0]["filtered"])
+        self.assertTrue(any("masked" in g for g in d["GAPS"]))
+
+
+class Lifecycle(unittest.TestCase):
+    """Wave 4 T42/T44/T45/T51: the worktree lifecycle opens and closes the benchmark record; routes and verdicts are files."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.gcd = self.repo / ".git" / "tri-lane"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def lw(self, *args, env=ENV):
+        return run([SCRIPTS / "lane-worktree.py", *args], cwd=self.repo, env=env)
+
+    def rows(self):
+        p = self.gcd / "benchmark.jsonl"
+        return [json.loads(l) for l in p.read_text().splitlines()] if p.exists() else []
+
+    def test_add_opens_record_and_remove_closes_it_with_no_flags(self):
+        rc, out, err = self.lw("add", "--task", "t", "--base", "main", "--kind", "impl")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(json.loads(out)["benchmark_record"], "opened")
+        rd = self.gcd / "run" / "t"
+        meta = json.loads((rd / "meta.json").read_text())
+        self.assertEqual(meta["kind"], "impl")
+        self.assertTrue((self.gcd / "bench-open" / "t.json").exists())
+        # a second add is idempotent
+        rc, out, err = self.lw("add", "--task", "t", "--base", "main")
+        self.assertEqual(json.loads((rd / "meta.json").read_text())["started_at"], meta["started_at"])
+        # declare a route, then re-declare (escalation)
+        rc, out, err = run([SCRIPTS / "lane-route.py", "declare", "--task", "t", "--route", "delegate", "--reason", "spec-determined"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        rc, out, err = run([SCRIPTS / "lane-route.py", "declare", "--task", "t", "--route", "audit", "--reason", "touched rules"], cwd=self.repo)
+        self.assertTrue(json.loads(out)["escalated"])
+        # the lane works, the report persists, two spec versions, an advisor verdict
+        wt = self.d / "wt" / "t"
+        (wt / "README.md").write_text("lane work\n")
+        (rd / "spec.md").write_text("LANE luna\n"); (rd / "spec-2.md").write_text("LANE luna\n")
+        (rd / "events.jsonl").write_text(json.dumps({"type": "thread.started"}) + "\n" + json.dumps({"type": "turn.completed", "usage": {"input_tokens": 100, "cached_input_tokens": 40, "output_tokens": 10, "total_tokens": 110}}) + "\n")
+        rc, out, err = run([SCRIPTS / "lane-report.py", "--worktree", wt, "--lane", "gpt-5.6-luna @ medium", "--base", "main", "--files", "README.md", "--verify", "true", "--unsandboxed-verify", "--commit", "--json"], cwd=self.repo)
+        self.assertEqual(json.loads(out)["STATUS"], "complete", err)
+        self.assertTrue((rd / "report.json").exists())
+        (rd / "advisor.md").write_text("# Advisor verdict — t\n\n```\nVERDICT   fix-first\n```\nBECAUSE x\n")
+        rc, out, err = self.lw("remove", "--task", "t", "--base", "main", "--no-push")
+        self.assertEqual(rc, 0, err)
+        logged = json.loads(out)["logged"]
+        self.assertTrue(logged["ok"], logged)
+        rows = self.rows()
+        self.assertEqual(len(rows), 1)
+        r = rows[0]
+        self.assertEqual((r["route"], r["lane"], r["status"], r["advisor"], r["rework"], r["dispatches"]), ("audit", "gpt-5.6-luna @ medium", "complete", "fix-first", 1, 1))
+        self.assertTrue(r["escalated"])
+        self.assertEqual(r["codex_lane"]["billable_tokens"], 70)
+        self.assertFalse(r["findings_labeled"])
+        self.assertEqual(r["verify"]["commands"], 1)
+        self.assertFalse((self.gcd / "bench-open" / "t.json").exists())
+        # labels can be added after the fact
+        rc, out, err = run([SCRIPTS / "lane-log.py", "update", "--task", "t", "--finding", "codex:2:1:0"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        self.assertTrue(self.rows()[0]["findings_labeled"])
+
+    def test_remove_survives_a_broken_log(self):
+        self.lw("add", "--task", "b", "--base", "main")
+        bad = dict(ENV, TRI_LANE_LOG=str(self.repo))  # a directory, not a file: lane-log must fail
+        rc, out, err = self.lw("remove", "--task", "b", "--base", "main", "--no-push", env=bad)
+        self.assertEqual(rc, 0, err)
+        d = json.loads(out)
+        self.assertFalse(d["logged"]["ok"])
+        self.assertFalse((self.d / "wt" / "b").exists())
+        self.assertTrue((self.gcd / "run" / "b" / "log-error.txt").exists())
+
+    def test_end_falls_back_to_meta_and_backfills_with_ended_at(self):
+        rc, out, err = run([SCRIPTS / "lane_run.py", "ensure", "--task", "m", "--kind", "docs"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        (self.gcd / "bench-open" / "m.json").unlink()  # no open start record: meta.json must carry it
+        rc, out, err = run([SCRIPTS / "lane-log.py", "end", "--task", "m", "--ended-at", "2026-09-10T12:00:00+00:00"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        r = self.rows()[-1]
+        self.assertTrue(r["backfilled"])
+        self.assertEqual(r["kind"], "docs")
+        self.assertEqual(r["ended_at"], "2026-09-10T12:00:00+00:00")
+        self.assertTrue(r["pools_after"].get("skipped"))
+
+    def test_due_quiet_is_silent_when_nothing_is_due_and_fails_open(self):
+        rc, out, err = run([SCRIPTS / "lane-log.py", "due", "--within", "1", "--quiet"], cwd=self.repo)
+        self.assertEqual((rc, out), (0, ""))
+        (self.gcd).mkdir(parents=True, exist_ok=True)
+        (self.gcd / "benchmark.jsonl").write_text("not json\n{\"task\": \"z\", \"ended_at\": \"2026-01-01T00:00:00+00:00\"}\n")
+        rc, out, err = run([SCRIPTS / "lane-log.py", "due", "--within", "1", "--quiet"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        self.assertIn("defect window for z closed", out)
+
+    def test_advisor_verdict_parser_accepts_production_variants(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import lane_run
+        cases = {"VERDICT   fix-first\n\nBECAUSE x": "fix-first",
+                 "# Advisor verdict — readiness-scope\n\n```\nVERDICT   fix-first\n```": "fix-first",
+                 "# Advisor verdict: SHIP\n\nNo deliverable blocker remains.": "ship",
+                 "VERDICT   fix-first (P0 §12.7) · rethink one premise (P1–P3)\nBECAUSE": "fix-first",
+                 "**VERDICT** rethink\n": "rethink",
+                 "some prose with no verdict": None}
+        for text, want in cases.items():
+            d = Path(tempfile.mkdtemp())
+            (d / "advisor.md").write_text(text)
+            self.assertEqual(lane_run.advisor_verdict(d), want, text)
+            shutil.rmtree(d)
+
+
+class AdvisorGate(unittest.TestCase):
+    """Wave 4 T45: a lane diff does not leave the merge gate without advisor evidence or a recorded skip."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.gcd = self.repo / ".git" / "tri-lane"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def lw(self, *args):
+        return run([SCRIPTS / "lane-worktree.py", *args], cwd=self.repo)
+
+    def lane(self, task, lane="gpt-5.6-luna @ medium", lines=1, files=("README.md",)):
+        self.lw("add", "--task", task, "--base", "main")
+        wt = self.d / "wt" / task
+        for f in files:
+            (wt / f).parent.mkdir(parents=True, exist_ok=True)
+            (wt / f).write_text("x\n" * lines)
+        rc, out, err = run([SCRIPTS / "lane-report.py", "--worktree", wt, "--lane", lane, "--base", "main", *sum([["--files", f] for f in files], []), "--verify", "true", "--unsandboxed-verify", "--commit", "--json"], cwd=self.repo)
+        self.assertIn(json.loads(out)["STATUS"], ("complete", "partial"), err)
+        return self.gcd / "run" / task
+
+    def test_refuses_without_advisor_then_accepts_recorded_skip(self):
+        rd = self.lane("g")
+        rc, out, err = self.lw("remove", "--task", "g", "--base", "main", "--no-push")
+        self.assertEqual(rc, 4, out + err)
+        self.assertIn("no advisor verdict", err)
+        self.assertTrue((self.d / "wt" / "g").exists())
+        rc, out, err = self.lw("remove", "--task", "g", "--base", "main", "--no-push", "--skip-advisor", "trivial copy change")
+        self.assertEqual(rc, 0, err)
+        row = json.loads((self.gcd / "benchmark.jsonl").read_text().splitlines()[-1])
+        self.assertEqual(row["advisor"], "none")
+        self.assertEqual(row["advisor_skip_reason"], "trivial copy change")
+
+    def test_mandatory_tier_refuses_skip(self):
+        for task, kw in (("sol", {"lane": "gpt-5.6-sol @ max"}), ("big", {"lines": 200}), ("rules", {"files": ("firestore.rules",)})):
+            self.lane(task, **kw)
+            rc, out, err = self.lw("remove", "--task", task, "--base", "main", "--no-push", "--skip-advisor", "no")
+            self.assertEqual(rc, 4, f"{task}: {err}")
+            self.assertIn("mandatory", err)
+
+    def test_verdict_on_disk_passes_and_no_diff_needs_nothing(self):
+        rd = self.lane("v")
+        (rd / "advisor.md").write_text("VERDICT   ship\n")
+        self.assertEqual(self.lw("remove", "--task", "v", "--base", "main", "--no-push")[0], 0)
+        self.lw("add", "--task", "empty", "--base", "main")
+        self.assertEqual(self.lw("remove", "--task", "empty", "--base", "main", "--no-push")[0], 0)
+
+
+class Causes(unittest.TestCase):
+    """Wave 4 T46: production runs classify into causes; environment retries do not escalate."""
+
+    def test_classify_run_from_run_dir(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from lane_failures import classify_run
+        d = Path(tempfile.mkdtemp())
+        def mk(name, report=None, stderr="", final="", verify=None):
+            rd = d / name; rd.mkdir()
+            if report is not None:
+                (rd / "report.json").write_text(json.dumps(report))
+            if stderr:
+                (rd / "stderr.log").write_text(stderr)
+            if final:
+                (rd / "final.md").write_text(final)
+            if verify:
+                (rd / "verify-1.err").write_text(verify.get("err", "")); (rd / "verify-1.out").write_text(verify.get("out", ""))
+                (rd / "verify.jsonl").write_text(json.dumps({"exit": verify.get("exit", 1), "timed_out": verify.get("timed_out", False), "stderr_path": str(rd / "verify-1.err"), "stdout_path": str(rd / "verify-1.out")}) + "\n")
+            return rd
+        ok = {"STATUS": "complete", "TOUCHED": ["a"], "GAPS": []}
+        self.assertEqual(classify_run(mk("ok", ok))["state"], "complete")
+        self.assertEqual(classify_run(mk("scope", {"STATUS": "partial", "TOUCHED": ["a", "b"], "OUT_OF_SCOPE": ["b"], "GAPS": ["VERIFY not run"]}))["cause"], "scope-violation")
+        self.assertEqual(classify_run(mk("cache", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"err": "npm ERR! code ENOTCACHED"}))["cause"], "cache-miss")
+        self.assertEqual(classify_run(mk("sim", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"err": "CoreSimulator disconnected"}))["cause"], "service-unavailable")
+        self.assertEqual(classify_run(mk("sb", None, final="Blocked by the sandbox, so I made no edits."))["cause"], "refused-by-instruction")
+        self.assertEqual(classify_run(mk("tests", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"out": "Tests: 3 failed, 10 passed"}))["cause"], "test-failure")
+        self.assertEqual(classify_run(mk("to", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"exit": 124, "timed_out": True}))["cause"], "build-timeout")
+        self.assertEqual(classify_run(mk("empty", {"STATUS": "refused", "TOUCHED": [], "GAPS": ["empty diff with clean exit"]}))["cause"], "empty-diff")
+        self.assertEqual(classify_run(mk("old"))["state"], "unclassified")
+        shutil.rmtree(d)
+
+    def test_environment_cause_does_not_escalate(self):
+        def s(*args):
+            rc, out, err = run([SCRIPTS / "lane-route.py", "suggest", *args]); return json.loads(out)
+        base = s("--role", "implement", "--kind", "impl")
+        env = s("--role", "implement", "--kind", "impl", "--attempt", "2", "--cause", "infra")
+        self.assertEqual((env["lane"], env["effort"]), (base["lane"], base["effort"]))
+        self.assertTrue(env["environment_retry"])
+        model = s("--role", "implement", "--kind", "impl", "--attempt", "2", "--cause", "model")
+        self.assertEqual(model["effort"], "xhigh")
+
+    def test_classify_production_writes_histogram(self):
+        d, repo = temp_repo()
+        rd = repo / ".git" / "tri-lane" / "run" / "p1"; rd.mkdir(parents=True)
+        (rd / "report.json").write_text(json.dumps({"STATUS": "complete", "TOUCHED": ["a"], "GAPS": [], "attempt": 1}))
+        rd2 = repo / ".git" / "tri-lane" / "run" / "p2"; rd2.mkdir()
+        (rd2 / "final.md").write_text("Blocked by the sandbox, so I made no edits.")
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", repo / ".git" / "tri-lane" / "evals.jsonl", "classify", "--production"], cwd=repo)
+        self.assertEqual(rc, 0, err)
+        h = json.loads(out)["histogram"]
+        self.assertEqual((h.get("complete"), h.get("refused-by-instruction")), (1, 1))
+        rows = [json.loads(l) for l in (repo / ".git" / "tri-lane" / "failures.jsonl").read_text().splitlines()]
+        self.assertEqual(len(rows), 2)
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", repo / ".git" / "tri-lane" / "evals.jsonl", "classify", "--production"], cwd=repo)
+        self.assertEqual(json.loads(out)["new_rows"], 0)
+        shutil.rmtree(d)
+
+
+class Backfill(unittest.TestCase):
+    """Wave 4 T47/T48: rows from run dirs with inferred fields marked; export reproduces totals; dashboard renders the new panels."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.gcd = self.repo / ".git" / "tri-lane"
+        self.runs = self.gcd / "run"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def mk(self, task, spec=True, events=None, agy=False, advisor=None, final="done"):
+        rd = self.runs / task; rd.mkdir(parents=True)
+        if spec:
+            (rd / "spec.md").write_text("LANE        luna\nREASONING   high\nOBJECTIVE   do the thing\nFILES       src/a.py\n            src/b.py\nINTERFACES  none\nCONSTRAINTS none\nVERIFY      `pytest -q`\n")
+        if events is not None:
+            (rd / "events.jsonl").write_text(json.dumps({"type": "thread.started"}) + "\n" + json.dumps({"type": "turn.completed", "usage": {"input_tokens": events, "cached_input_tokens": events // 2, "output_tokens": 10, "total_tokens": events + 10}}) + "\n")
+        if agy:
+            (rd / "agy.json").write_text(json.dumps({"usage": {"input_tokens": 50, "output_tokens": 5, "thinking_tokens": 0, "cache_read_tokens": 0, "total_tokens": 55}, "duration_seconds": 3}))
+        if advisor:
+            (rd / "advisor.md").write_text(f"VERDICT   {advisor}\n")
+        (rd / "final.md").write_text(final)
+        return rd
+
+    def test_backfill_infers_marks_and_never_overwrites_live_rows(self):
+        self.mk("d1", events=100)
+        self.mk("a1", spec=False, agy=True, advisor="fix-first", final="review")
+        self.mk("f1", events=200, agy=True)
+        self.mk("blocked", events=0, final="Blocked by the sandbox, so I made no edits.")
+        live = {"task": "d1", "arm": "tri-lane", "route": "delegate", "status": "complete", "backfilled": False, "claude": {}, "codex_lane": {}, "agy": {}}
+        self.gcd.mkdir(parents=True, exist_ok=True)
+        (self.gcd / "benchmark.jsonl").write_text(json.dumps(live) + "\n")
+        rc, out, err = run([SCRIPTS / "lane-log.py", "backfill", "--from-run-dirs"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        rows = {json.loads(l)["task"]: json.loads(l) for l in (self.gcd / "benchmark.jsonl").read_text().splitlines()}
+        self.assertFalse(rows["d1"]["backfilled"])  # lifecycle row kept
+        self.assertEqual((rows["a1"]["route"], rows["a1"]["route_inferred"], rows["a1"]["advisor"]), ("audit", True, "fix-first"))
+        self.assertEqual((rows["f1"]["route"], rows["f1"]["lane"], rows["f1"]["codex_lane"]["billable_tokens"], rows["f1"]["agy"]["total_tokens"]), ("full", "gpt-5.6-luna @ high", 110, 55))
+        self.assertEqual(rows["f1"]["spec"]["files"], ["src/a.py", "src/b.py"])
+        self.assertEqual(rows["f1"]["spec"]["verify"], "pytest -q")
+        self.assertEqual((rows["blocked"]["cause"], rows["blocked"]["status_inferred"]), ("refused-by-instruction", True))
+        self.assertTrue(all(r["backfilled"] for k, r in rows.items() if k != "d1"))
+        # every backfilled window overlaps the others (same minute): flagged, and excluded from Claude medians by the report
+        self.assertTrue(rows["f1"]["claude_overlap"])
+        rc, out, err = run([SCRIPTS / "lane-log.py", "backfill", "--from-run-dirs"], cwd=self.repo)
+        self.assertEqual(len((self.gcd / "benchmark.jsonl").read_text().splitlines()), 4)  # idempotent
+        # export reproduces the totals
+        rc, out, err = run([SCRIPTS / "lane-export.py", "--summary", "--out", self.d / "x.json"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        s = json.loads(err)
+        # d1 is the live row (empty codex_lane); f1 = 200 - 100 + 10; blocked = 0 - 0 + 10
+        self.assertEqual((s["tasks"], s["codex_billable"], s["agy_tokens"], s["backfilled"]), (4, 110 + 10, 110, 3))
+        # dashboard renders the new panels from these rows
+        out_html = self.d / "dash.html"
+        rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", self.gcd / "benchmark.jsonl", "--out", out_html, "--no-advisor-cost"], cwd=self.repo)
+        self.assertEqual(rc, 0, se)
+        html = out_html.read_text()
+        for needle in ('id="evidence"', 'id="c-advisor"', 'id="c-effort"', 'id="c-causes"', '"route_inferred": true', '"backfilled": true'):
+            self.assertIn(needle, html)
+
+
+class Proxy(unittest.TestCase):
+    """Wave 4 T49 part 1: the cost proxy runs on a repo with commits and no transcripts and reports its confounds."""
+
+    def test_proxy_shape(self):
+        d, repo = temp_repo()
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--proxy", "--pre", "2026-01-01T00:00:00Z", "--post", "2026-06-01T00:00:00Z", "--projects", str(repo), "--json"], cwd=repo)
+        self.assertEqual(rc, 0, err)
+        j = json.loads(out)
+        self.assertIn(repo.name, j["projects"])
+        self.assertIn("not the pre-registered rule", " ".join(j["confounds"]))
+        self.assertEqual(j["projects"][repo.name]["post"]["claude_billable"], 0)
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--proxy", "--pre", "2026-01-01T00:00:00Z", "--post", "2026-06-01T00:00:00Z", "--projects", str(repo)], cwd=repo)
+        self.assertIn("Proxy, not the rule", out)
+        shutil.rmtree(d)
+
+
+class Spec(unittest.TestCase):
+    """Wave 4 T50: the spec substance lint refuses only on hard failures and warns on masked VERIFY and directory FILES."""
+
+    def check(self, text, wt=None):
+        d = Path(tempfile.mkdtemp()); (d / "s.md").write_text(text)
+        args = [SCRIPTS / "lane-spec.py", "check", d / "s.md", "--json"] + (["--worktree", wt] if wt else [])
+        rc, out, err = run(args)
+        shutil.rmtree(d)
+        return rc, json.loads(out)
+
+    GOOD = "LANE        luna\nREASONING   high\nOBJECTIVE   add the roster service tests for the empty-team case\nFILES       src/rosterService.ts\n            src/__tests__/rosterService.test.ts\nINTERFACES  none\nCONSTRAINTS keep the Firestore pins\nVERIFY      npm test\n"
+
+    def test_good_spec_passes_clean(self):
+        rc, r = self.check(self.GOOD)
+        self.assertEqual((rc, r["ok"], r["errors"], r["warnings"], r["files"]), (0, True, [], [], ["src/rosterService.ts", "src/__tests__/rosterService.test.ts"]))
+
+    def test_hard_failures(self):
+        rc, r = self.check(self.GOOD.replace("VERIFY      npm test\n", ""))
+        self.assertEqual(rc, 2); self.assertTrue(any("missing sections: VERIFY" in e for e in r["errors"]))
+        rc, r = self.check(self.GOOD.replace("REASONING   high", "REASONING   ultra"))
+        self.assertEqual(rc, 2); self.assertTrue(any("not legal for luna" in e for e in r["errors"]))
+        rc, r = self.check(self.GOOD.replace("VERIFY      npm test", "VERIFY"))
+        self.assertEqual(rc, 2); self.assertTrue(any("VERIFY is empty" in e for e in r["errors"]))
+
+    def test_warnings_do_not_refuse(self):
+        rc, r = self.check(self.GOOD.replace("VERIFY      npm test", "VERIFY      xcodebuild test | grep -c PASS || true").replace("src/rosterService.ts", "src/"))
+        self.assertEqual((rc, r["ok"]), (0, True))
+        self.assertTrue(any("masked" in w for w in r["warnings"]))
+        self.assertTrue(any("directory" in w for w in r["warnings"]))
+
+    def test_files_resolved_against_worktree(self):
+        d, repo = temp_repo()
+        (repo / "src").mkdir()
+        rc, r = self.check(self.GOOD.replace("src/rosterService.ts", "src/new.ts").replace("src/__tests__/rosterService.test.ts", "nowhere/deep/x.ts"), str(repo))
+        self.assertEqual(rc, 2)
+        self.assertTrue(any("nowhere/deep/x.ts" in e for e in r["errors"]))
+        self.assertFalse(any("src/new.ts" in e for e in r["errors"]))
+        shutil.rmtree(d)
+
+
+class Analytics(unittest.TestCase):
+    """Wave 4 coverage pass: Antigravity verdicts and reported findings, live overlap flags, per-worktree Codex usage."""
+
+    def test_agy_results_and_review_findings(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import lane_run
+        d = Path(tempfile.mkdtemp())
+        (d / "agy.json").write_text(json.dumps({"status": "SUCCESS", "response": "prose", "structured_output": {"verdict": "fix-first", "findings": [{"claim": "a"}, {"claim": "b"}], "missing_information": ["x"]}}))
+        (d / "agy-2.json").write_text(json.dumps({"status": "SUCCESS", "response": json.dumps({"verdict": "ship", "findings": []})}))
+        (d / "review.md").write_text("Summary line.\n\n- [P1] Keep rows available — web/src/a.tsx:93-94\n  detail\n- [P2] Second — src/b.ts:10\n- a nit without a file\n1. [P3] third (src/c.py:4)\n")
+        a = lane_run.agy_results(d)
+        self.assertEqual((a["calls"], a["verdict"], a["findings_reported"], a["missing_information"]), (2, "ship", 2, 1))
+        self.assertEqual(lane_run.codex_review_findings(d), 3)
+        shutil.rmtree(d)
+
+    def test_end_marks_overlaps_on_both_rows(self):
+        d, repo = temp_repo()
+        for task, s, e in (("one", "2026-09-10T10:00:00+00:00", "2026-09-10T11:00:00+00:00"), ("two", "2026-09-10T10:30:00+00:00", "2026-09-10T11:30:00+00:00"), ("three", "2026-09-11T10:00:00+00:00", "2026-09-11T10:10:00+00:00")):
+            run([SCRIPTS / "lane_run.py", "ensure", "--task", task], cwd=repo)
+            (repo / ".git" / "tri-lane" / "bench-open" / f"{task}.json").unlink()
+            rc, out, err = run([SCRIPTS / "lane-log.py", "end", "--task", task, "--started-at", s, "--ended-at", e], cwd=repo)
+            self.assertEqual(rc, 0, err)
+        rows = {json.loads(l)["task"]: json.loads(l) for l in (repo / ".git" / "tri-lane" / "benchmark.jsonl").read_text().splitlines()}
+        self.assertEqual((rows["one"]["claude_overlap"], rows["two"]["claude_overlap"], rows["three"]["claude_overlap"]), (["two"], ["one"], []))
+        shutil.rmtree(d)
+
+    def test_codex_usage_by_worktree_cwd(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("uw", SCRIPTS / "usage-window.py")
+        uw = importlib.util.module_from_spec(spec); spec.loader.exec_module(uw)
+        root = Path(tempfile.mkdtemp()); wt = Path(tempfile.mkdtemp())
+        def session(name, cwd, tokens):
+            f = root / f"{name}.jsonl"
+            lines = [json.dumps({"timestamp": "2026-09-10T10:00:00Z", "type": "session_meta", "payload": {"cwd": str(cwd), "originator": "codex_exec"}}),
+                     json.dumps({"timestamp": "2026-09-10T10:05:00Z", "type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"input_tokens": tokens, "cached_input_tokens": tokens // 2, "output_tokens": 10, "total_tokens": tokens + 10}}}})]
+            f.write_text("\n".join(lines) + "\n")
+        session("a", wt, 1000); session("b", Path("/elsewhere"), 5000)
+        os.environ["TRI_LANE_CODEX_SESSIONS"] = str(root)
+        try:
+            since, until = uw.parse_ts("2026-09-10T09:00:00Z"), uw.parse_ts("2026-09-10T12:00:00Z")
+            self.assertEqual(uw.codex_usage(since, until, str(wt))["billable_tokens"], 1000 - 500 + 10)
+            self.assertEqual(uw.codex_usage(since, until)["billable_tokens"], (1000 - 500 + 10) + (5000 - 2500 + 10))
+            by = uw.codex_usage_by_cwd(since, until)
+            self.assertEqual(by[str(wt.resolve())]["billable_tokens"], 510)
+        finally:
+            del os.environ["TRI_LANE_CODEX_SESSIONS"]
+        shutil.rmtree(root); shutil.rmtree(wt)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,11 @@ What it enforces, in order:
                     Pass --unsandboxed-verify only when the architect has already read the diff.
   5. --commit    -> commit the lane's diff on its behalf (the lane cannot: worktree git metadata lives
                     outside its sandbox), so salvage and merge have a real commit (#53).
+  6. Evidence    -> the report is written to the task's run dir as report.json (earlier ones become
+                    report-<n>.json), every VERIFY command appends a record to verify.jsonl, and raw
+                    stdout/stderr land in verify-<n>.out/.err, full and separate. On timeout the partial
+                    output is kept and the process group is killed. A VERIFY piped through grep/tail/head
+                    is flagged `filtered` because its exit status may be masked (Wave 4, T43).
 
 Exit codes: 0 complete, 2 partial, 3 refused, 4 timeout/unavailable (via --status-hint).
 Python stdlib only.
@@ -34,6 +39,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 TMP_DIRNAME = ".tri-lane-tmp"  # per-worktree scratch for sandboxed VERIFY; never counted as a lane change
@@ -104,11 +110,44 @@ def needs_network(cmd: str) -> bool:
     return bool(_re.search(r"(?:^|[\s;&|(/])(gradlew?|gradle)\b", cmd))
 
 
-def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: list[str], network: bool = False) -> tuple[int, str, str]:
-    """Returns (exit, output, how)."""
+FILTER_RX = _re.compile(r"\|\s*(grep|tail|head|sed|awk|cut|sort|uniq|wc)\b|\|\|")
+
+
+def is_filtered(cmd: str) -> bool:
+    """A VERIFY whose exit status can be masked by a pipe or an `||` fallback (s2-flow-fix hid an xcodebuild failure behind grep)."""
+    return bool(FILTER_RX.search(cmd))
+
+
+def _run_capturing(argv, cwd: str, timeout: int, env=None, shell: bool = False) -> tuple[int, str, str, bool]:
+    """Run, keep stdout and stderr separate, kill the whole process group on timeout, keep partial output."""
+    p = subprocess.Popen(argv, cwd=cwd, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL,
+                         text=True, env=env, start_new_session=True)
+    try:
+        out, err = p.communicate(timeout=timeout)
+        return p.returncode, out or "", err or "", False
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(os.getpgid(p.pid), 15)
+        except Exception:
+            pass
+        try:
+            out, err = p.communicate(timeout=10)
+        except Exception:
+            try:
+                os.killpg(os.getpgid(p.pid), 9)
+            except Exception:
+                pass
+            out, err = p.communicate()
+        return 124, (out or "") + f"\n[timeout after {timeout}s; partial output kept]", err or "", True
+
+
+def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: list[str], network: bool = False) -> dict:
+    """Returns {exit, stdout, stderr, how, duration_s, timed_out, rewritten_command, sandbox}."""
+    original = cmd
     if not unsandboxed:
         cmd = gradle_safe(cmd)
     network = network or needs_network(cmd)
+    t0 = time.time()
     if not unsandboxed and shutil.which("codex"):
         # cwd is the worktree; codex sandbox treats cwd as the writable workspace. (-C would require --permission-profile.)
         # /tmp is excluded from the sandbox; TMPDIR points inside the worktree so test runners still have scratch space
@@ -123,17 +162,69 @@ def run_verify(cmd: str, wt: str, timeout: int, unsandboxed: bool, writable: lis
         if network:
             argv += ["-c", "sandbox_workspace_write.network_access=true"]
         argv += ["--", "sh", "-c", cmd]
-        try:
-            p = subprocess.run(argv, cwd=wt, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL, env=env)
-            rc, out = p.returncode, (p.stdout or "") + (p.stderr or "")
-        except subprocess.TimeoutExpired:
-            rc, out = 124, f"timeout after {timeout}s"
+        rc, out, err, timed_out = _run_capturing(argv, wt, timeout, env=env)
         shutil.rmtree(tmp, ignore_errors=True)
-        return rc, out, f"codex sandbox workspace-write, /tmp excluded, {'NETWORK OPEN (Gradle lock listener needs loopback; writes still confined)' if network else 'no network'}, writable: {writable or 'worktree only'}"
-    if not unsandboxed:
-        return 126, "codex binary not found; refusing to run VERIFY unsandboxed (pass --unsandboxed-verify to override)", "not run"
-    rc, out = sh(cmd, wt, timeout, shell=True)
-    return rc, out, "UNSANDBOXED (architect accepted the risk)"
+        how = f"codex sandbox workspace-write, /tmp excluded, {'NETWORK OPEN (Gradle lock listener needs loopback; writes still confined)' if network else 'no network'}, writable: {writable or 'worktree only'}"
+        sandbox = {"profile": "workspace-write", "network": network, "writable_roots": writable, "tmp_excluded": True}
+    elif not unsandboxed:
+        return {"exit": 126, "stdout": "", "stderr": "codex binary not found; refusing to run VERIFY unsandboxed (pass --unsandboxed-verify to override)",
+                "how": "not run", "duration_s": 0.0, "timed_out": False, "rewritten_command": cmd, "sandbox": None}
+    else:
+        rc, out, err, timed_out = _run_capturing(cmd, wt, timeout, shell=True)
+        how = "UNSANDBOXED (architect accepted the risk)"
+        sandbox = {"profile": "none", "network": True, "writable_roots": ["*"], "tmp_excluded": False}
+    return {"exit": rc, "stdout": out, "stderr": err, "how": how, "duration_s": round(time.time() - t0, 2), "timed_out": timed_out,
+            "rewritten_command": cmd if cmd != original else None, "sandbox": sandbox}
+
+
+def resolve_run_dir(wt: str, task: str | None, explicit: str | None) -> Path | None:
+    """The task's run dir: --run-dir, else <git-common-dir>/tri-lane/run/<task> with the task from the lane branch or the worktree name."""
+    if explicit:
+        p = Path(explicit)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import lane_run  # noqa: E402
+        t = task or lane_run.task_from_worktree(wt)
+        if not t:
+            return None
+        return lane_run.run_dir(t, cwd=wt)
+    except Exception:
+        return None
+
+
+def persist(rd: Path, report: dict, verified_full: list) -> dict:
+    """report.json (previous becomes report-<n>.json), verify.jsonl append, verify-<n>.out/.err. Returns paths."""
+    written = {"report": None, "verify": [], "verify_jsonl": None}
+    rd.mkdir(parents=True, exist_ok=True)
+    prev = rd / "report.json"
+    if prev.exists():
+        n = 1
+        while (rd / f"report-{n}.json").exists():
+            n += 1
+        prev.rename(rd / f"report-{n}.json")
+        report["attempt"] = n + 1
+    else:
+        report["attempt"] = 1
+    report["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    existing = [p for p in rd.glob("verify-*.out")]
+    idx = len(existing)
+    vj = rd / "verify.jsonl"
+    with open(vj, "a") as fh:
+        for v in verified_full:
+            idx += 1
+            so, se = rd / f"verify-{idx}.out", rd / f"verify-{idx}.err"
+            so.write_text(v["stdout"]); se.write_text(v["stderr"])
+            rec = {k: v[k] for k in ("command", "rewritten_command", "exit", "duration_s", "timed_out", "filtered", "how", "sandbox")}
+            rec.update({"cwd": report.get("WORKTREE"), "commit": report.get("COMMIT"), "attempt": report["attempt"], "at": report["generated_at"],
+                        "stdout_path": str(so), "stderr_path": str(se), "cache_key": None})
+            fh.write(json.dumps(rec) + "\n")
+            written["verify"].append(str(so))
+    written["verify_jsonl"] = str(vj)
+    prev.write_text(json.dumps(report, indent=2))
+    written["report"] = str(prev)
+    return written
 
 
 def main() -> int:
@@ -154,6 +245,9 @@ def main() -> int:
     ap.add_argument("--status-hint", choices=["timeout", "unavailable"], help="the wrapper already knows the lane hit its cap or was unavailable. A timeout with a non-empty diff is still evaluated; the overrun is recorded in GAPS")
     ap.add_argument("--tail", type=int, default=40, help="lines of verify output to keep (default 40)")
     ap.add_argument("--json", action="store_true", help="emit JSON instead of the text contract")
+    ap.add_argument("--task", help="task slug for the run dir (default: from the lane/<task> branch or the worktree name)")
+    ap.add_argument("--run-dir", help="where to persist report.json / verify.jsonl (default: <git-common-dir>/tri-lane/run/<task>)")
+    ap.add_argument("--no-persist", action="store_true", help="do not write report.json / verify.jsonl (tests of the pure contract)")
     args = ap.parse_args()
 
     wt = str(Path(args.worktree).resolve())
@@ -195,6 +289,7 @@ def main() -> int:
         lane_said = tail(Path(args.final).read_text(errors="ignore"), 3).strip()
 
     verified: list[dict] = []
+    verified_full: list[dict] = []
     out_of_scope = [p for p in touched if args.files and not in_scope(p, args.files)]
     exec_cfg = [p for p in touched if is_exec_config(p)]
 
@@ -228,11 +323,19 @@ def main() -> int:
             writable = []
             gaps.append(f"toolchain cache detection failed: {e}")
         for cmd in args.verify:
-            vrc, out, how = run_verify(cmd, wt, args.verify_timeout, args.unsandboxed_verify, writable, args.verify_network)
-            verified.append({"command": cmd, "exit": vrc, "how": how, "output_tail": tail(out, args.tail)})
-            if "NETWORK OPEN" in how:
+            v = run_verify(cmd, wt, args.verify_timeout, args.unsandboxed_verify, writable, args.verify_network)
+            v["command"] = cmd
+            v["filtered"] = is_filtered(cmd)
+            verified_full.append(v)
+            verified.append({"command": cmd, "exit": v["exit"], "how": v["how"], "duration_s": v["duration_s"], "timed_out": v["timed_out"],
+                             "filtered": v["filtered"], "output_tail": tail(v["stdout"] + ("\n" + v["stderr"] if v["stderr"] else ""), args.tail)})
+            if "NETWORK OPEN" in v["how"]:
                 gaps.append("VERIFY ran with the sandbox network open (Gradle lock listener); writes stayed confined. Read the diff for network use before trusting it")
-            if vrc != 0:
+            if v["filtered"]:
+                gaps.append(f"VERIFY `{cmd}` is piped through a filter or an || fallback; its exit status may be masked. Read verify-<n>.err")
+            if v["timed_out"]:
+                gaps.append(f"VERIFY `{cmd}` hit its {args.verify_timeout}s timeout; partial output kept")
+            if v["exit"] != 0:
                 status = "partial"
     commit_sha = None
     if args.commit and changed and status in ("complete", "partial", "timeout"):
@@ -259,7 +362,17 @@ def main() -> int:
         "LANE_SAID": lane_said or "(no final message captured)",
         "COMMIT": commit_sha,
         "GAPS": gaps,
+        "WORKTREE": wt,
     }
+    if not args.no_persist:
+        rd = resolve_run_dir(wt, args.task, args.run_dir)
+        if rd is None:
+            gaps.append("report not persisted: no run dir could be resolved (pass --task or --run-dir)")
+        else:
+            try:
+                report["PERSISTED"] = persist(rd, report, verified_full)
+            except Exception as e:  # evidence is additive; never turn a report into a crash
+                gaps.append(f"report not persisted: {e}")
     if args.json:
         print(json.dumps(report, indent=2))
     else:

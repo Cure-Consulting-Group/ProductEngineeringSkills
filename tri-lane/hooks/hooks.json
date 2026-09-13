@@ -1,5 +1,5 @@
 {
-  "description": "cure-tri-lane guard: refuses lane commands that would run unsandboxed. Command-type, no network, fails open on parse errors. Loads only where this plugin is installed.",
+  "description": "cure-tri-lane hooks: a PreToolUse guard that refuses lane commands running unsandboxed (command-type, no network, fails open), and a SessionStart line listing benchmark defect windows that need a check (local file read, silent when none, fails open). Loads only where this plugin is installed.",
   "hooks": {
     "PreToolUse": [
       {
@@ -8,6 +8,18 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-lane-command.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-log.py\" due --within 1 --quiet 2>/dev/null || true",
             "timeout": 5
           }
         ]

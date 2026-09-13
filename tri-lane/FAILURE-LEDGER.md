@@ -26,3 +26,4 @@ Every failure class the lanes have produced, when it was first seen, what closed
 | harness | Lane work left uncommitted; git metadata outside the sandbox | 2026-09-06 | `lane-report.py --commit` commits on the lane's behalf (1.9.2, #53) | closed |
 | model | Deletion-only diff for a spec file with nothing written back, reported as partial | 2026-09-06 | `refused`, VERIFY skipped, restore and resubmit (1.9.2, #53) | closed |
 | harness | `lane-worktree.py status` could not answer "what is live?" without a task | 2026-09-06 | `status` without `--task` lists every lane (1.9.2, #53) | closed |
+| harness | Benchmark never logged in production: `lane-log start/end` had to be typed and never was (0 of 142 tasks); `lane-report.py` printed its report and kept nothing | 2026-09-13 | Worktree lifecycle opens and closes the record; `report.json`, `verify.jsonl`, raw verify streams (1.10.0, Wave 4 T42/T43) | closed |

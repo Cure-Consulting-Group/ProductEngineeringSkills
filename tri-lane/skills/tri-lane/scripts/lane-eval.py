@@ -640,7 +640,54 @@ def cmd_compare(a) -> int:
     return 1 if regressions else 0
 
 
+def cmd_classify_production(a) -> int:
+    """T46: classify every production run dir (this repo, or --all-projects) and append to failures.jsonl,
+    idempotent by (project, task, attempt). Prints the cause histogram."""
+    from lane_failures import classify_run  # noqa: E402
+    import lane_run  # noqa: E402
+    rows, seen = [], set()
+    fl = log_or_default(a).parent / "failures.jsonl"
+    if fl.exists():
+        for line in fl.read_text().splitlines():
+            try:
+                r = json.loads(line)
+                if r.get("production"):
+                    seen.add((r.get("project"), r.get("task"), r.get("attempt")))
+            except Exception:
+                pass
+    hist: dict = {}
+    for proj, rd in lane_run.iter_run_dirs(all_projects=a.all_projects):
+        c = classify_run(rd)
+        attempt = 1
+        try:
+            attempt = int(json.loads((rd / "report.json").read_text()).get("attempt") or 1)
+        except Exception:
+            pass
+        key = (proj.name, c["task"], attempt)
+        label = c["cause"] or c["state"] or "unclassified"
+        hist[label] = hist.get(label, 0) + 1
+        if key in seen:
+            continue
+        rows.append({"ts": now_iso(), "production": True, "project": proj.name, "task": c["task"], "attempt": attempt, "run_dir": str(rd), **{k: c[k] for k in ("state", "status", "failure_class", "cause", "reason", "retryable", "evidence")}})
+    if rows and not a.dry_run:
+        fl.parent.mkdir(parents=True, exist_ok=True)
+        with open(fl, "a") as fh:
+            for r in rows:
+                fh.write(json.dumps(r) + "\n")
+    total = sum(hist.values())
+    print(json.dumps({"runs": total, "new_rows": len(rows), "histogram": dict(sorted(hist.items(), key=lambda kv: -kv[1])), "failures_log": str(fl)}, indent=2))
+    return 0
+
+
+def log_or_default(a) -> Path:
+    if getattr(a, "log", None):
+        return Path(a.log)
+    return git_common_dir() / "tri-lane" / "evals.jsonl"
+
+
 def cmd_classify(a) -> int:
+    if getattr(a, "production", False):
+        return cmd_classify_production(a)
     sys.path.insert(0, str(HERE))
     from lane_failures import classify  # noqa: E402
     gcd = git_common_dir()
@@ -790,7 +837,10 @@ def main() -> int:
     fl = sub.add_parser("failures", help="failure occurrences by class, and closed ledger classes that reappeared")
     fl.add_argument("--json", action="store_true")
     fl.set_defaults(fn=cmd_failures)
-    cl = sub.add_parser("classify", help="backfill state/failure_class on existing rows (idempotent)")
+    cl = sub.add_parser("classify", help="backfill state/failure_class on existing rows (idempotent); --production classifies run dirs by cause (T46)")
+    cl.add_argument("--production", action="store_true", help="classify production run dirs (report.json, verify.jsonl, stderr.log, final.md) into causes; appends to failures.jsonl")
+    cl.add_argument("--all-projects", action="store_true", help="with --production: every project under the Cure project roots")
+    cl.add_argument("--dry-run", action="store_true", help="with --production: print the histogram, write nothing")
     cl.set_defaults(fn=cmd_classify)
     s = sub.add_parser("results")
     s.add_argument("--json", action="store_true")

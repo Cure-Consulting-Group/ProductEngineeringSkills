@@ -27,7 +27,10 @@ import sys
 from pathlib import Path
 
 ARMS = ("manual", "tri-lane", "advisor-only", "tri-lane-lean")
-PROJECT_ROOTS = ("~/CureVault/projects", "/Volumes/CureVault/projects")
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+INCLUDE_OVERLAPS = False  # T47: rows whose Claude window overlaps another task's are excluded from Claude medians unless asked
+INCLUDE_BACKFILL = False  # backfilled rows carry no effort and an inferred model; they inform the dashboard, never the rule, unless asked
 
 
 def default_log() -> Path:
@@ -53,9 +56,10 @@ def load(log: Path) -> list:
 
 
 def load_all_projects() -> list:
-    """Every benchmark.jsonl under the known project roots (symlinked and physical paths deduplicated)."""
+    """Every benchmark.jsonl under the project roots (TRI_LANE_PROJECT_ROOTS or the defaults in lane_run)."""
+    import lane_run  # noqa: E402
     seen, rows = set(), []
-    for root in PROJECT_ROOTS:
+    for root in lane_run.project_roots():
         for log in Path(root).expanduser().glob("*/.git/tri-lane/benchmark.jsonl"):
             key = str(log.resolve())
             if key in seen:
@@ -78,9 +82,23 @@ def mean(xs):
 
 
 def codex_tokens(r) -> int:
-    """Billable analog: uncached input + output, from the lane events if present, else from Codex session logs."""
-    lane, logs = r.get("codex_lane") or {}, r.get("codex_logs") or {}
-    return int(lane.get("billable_tokens") or logs.get("billable_tokens") or lane.get("total_tokens") or logs.get("total_tokens") or 0)
+    """Billable analog: uncached input + output from the lane events. The account-wide figure from Codex session
+    logs (codex_account, formerly codex_logs) is not per task; it stands in only for the manual arm, which has no lanes."""
+    lane = r.get("codex_lane") or {}
+    wt = r.get("codex_worktree") or {}
+    acct = r.get("codex_account") or r.get("codex_logs") or {}
+    # the rollout log keyed by worktree cwd sees implementer and reviewer sessions alike; the event stream sees only the implementer
+    best = max(int(lane.get("billable_tokens") or 0), int(wt.get("billable_tokens") or 0))
+    if best:
+        return best
+    if r.get("arm") == "manual":
+        return int(acct.get("billable_tokens") or acct.get("total_tokens") or 0)
+    return 0
+
+
+def claude_rows(rs: list) -> list:
+    """Rows eligible for Claude medians: measured, and not overlapping another task's window (unless INCLUDE_OVERLAPS)."""
+    return [r for r in rs if (r.get("claude") or {}).get("billable_tokens") and (INCLUDE_OVERLAPS or not r.get("claude_overlap"))]
 
 
 _ROWS: list = []
@@ -113,6 +131,11 @@ def summarise(rows: list) -> dict:
                 d["tasks"] += 1
                 for k in ("confirmed", "disputed", "unverified"):
                     d[k] += int(f.get(k) or 0)
+        for r in rs:
+            for who, n in (r.get("findings_reported") or {}).items():
+                d = reviewers.setdefault(who, {"confirmed": 0, "disputed": 0, "unverified": 0, "tasks": 0})
+                d["reported"] = d.get("reported", 0) + int(n or 0)
+                d["tasks_reported"] = d.get("tasks_reported", 0) + 1
         for who, d in reviewers.items():
             tot = d["confirmed"] + d["disputed"] + d["unverified"]
             d["precision"] = round(d["confirmed"] / tot, 2) if tot else None
@@ -132,9 +155,14 @@ def summarise(rows: list) -> dict:
             "kinds": sorted({r.get("kind") or "" for r in rs}),
             "routes": {k: sum(1 for r in rs if r.get("route") == k) for k in sorted({r.get("route") or "" for r in rs})},
             "status": {k: sum(1 for r in rs if r.get("status") == k) for k in sorted({r.get("status") or "" for r in rs})},
-            "claude_billable_median": med([(r.get("claude") or {}).get("billable_tokens") for r in rs]),
-            "claude_cache_read_median": med([(r.get("claude") or {}).get("cache_read_input_tokens") for r in rs]),
-            "claude_messages_median": med([(r.get("claude") or {}).get("messages") for r in rs]),
+            "claude_billable_median": med([(r.get("claude") or {}).get("billable_tokens") for r in claude_rows(rs)]),
+            "claude_cache_read_median": med([(r.get("claude") or {}).get("cache_read_input_tokens") for r in claude_rows(rs)]),
+            "claude_messages_median": med([(r.get("claude") or {}).get("messages") for r in claude_rows(rs)]),
+            "claude_measured": len(claude_rows(rs)), "claude_overlapped": sum(1 for r in rs if r.get("claude_overlap")),
+            "backfilled": sum(1 for r in rs if r.get("backfilled")),
+            "advisor_coverage": {"reviewed": sum(1 for r in rs if r.get("advisor") and r.get("advisor") != "none"), "skipped": sum(1 for r in rs if r.get("advisor") == "none"), "missing": sum(1 for r in rs if not r.get("advisor"))},
+            "dispatches_mean": mean([r.get("dispatches") for r in rs]),
+            "causes": {k: sum(1 for r in rs if r.get("cause") == k) for k in sorted({r.get("cause") or "" for r in rs}) if k},
             "codex_tokens_median": med([codex_tokens(r) for r in rs]),
             "agy_tokens_median": med([(r.get("agy") or {}).get("total_tokens") for r in rs]),
             "elapsed_min_median": med([round((r.get("elapsed_seconds") or 0) / 60, 1) for r in rs]),
@@ -142,6 +170,8 @@ def summarise(rows: list) -> dict:
             "escalated_rate": mean([1 if r.get("escalated") else 0 for r in rs]),
             "escaped_defects_mean": mean([r.get("escaped_defects") for r in rs]),
             "advisor_verdicts": {k: sum(1 for r in rs if r.get("advisor") == k) for k in sorted({r.get("advisor") or "" for r in rs}) if k},
+            "agy_verdicts": {k: sum(1 for r in rs if r.get("agy_verdict") == k) for k in sorted({r.get("agy_verdict") or "" for r in rs}) if k},
+            "codex_worktree_measured": sum(1 for r in rs if (r.get("codex_worktree") or {}).get("billable_tokens")),
             "reviewers": reviewers,
             "pool_delta_mean": {k: mean(v) for k, v in pool.items()},
         }
@@ -149,9 +179,23 @@ def summarise(rows: list) -> dict:
 
 
 def decide(s: dict, claude_drop: float, max_slowdown: float) -> dict:
+    """The pre-registered rule over lifecycle-logged rows. Backfilled rows are excluded unless INCLUDE_BACKFILL:
+    they have no recorded effort and an inferred model, so they can never satisfy the fixed-model gate honestly."""
+    if not INCLUDE_BACKFILL and any(r.get("backfilled") for r in _ROWS):
+        live = [r for r in _ROWS if not r.get("backfilled")]
+        excluded = len(_ROWS) - len(live)
+        s = summarise(live) if live else {}
+        d = _decide(s, claude_drop, max_slowdown)
+        d["backfilled_excluded"] = excluded
+        d["note_backfill"] = f"{excluded} backfilled row(s) excluded from the rule (no effort recorded, model inferred); pass --include-backfill to count them"
+        return d
+    return _decide(s, claude_drop, max_slowdown)
+
+
+def _decide(s: dict, claude_drop: float, max_slowdown: float) -> dict:
     m, t = s.get("manual"), s.get("tri-lane")
     if not m or not t:
-        return {"verdict": "insufficient data", "reason": "need at least one task in both manual and tri-lane arms"}
+        return {"verdict": "insufficient data", "reason": "need at least one lifecycle-logged task in both manual and tri-lane arms"}
     checks = {}
     if m["claude_billable_median"] and t["claude_billable_median"] is not None:
         drop = 1 - t["claude_billable_median"] / m["claude_billable_median"]
@@ -181,6 +225,58 @@ def decide(s: dict, claude_drop: float, max_slowdown: float) -> dict:
     if t and t["reviewers"].get("agy") and t["reviewers"].get("codex"):
         extra["agy_vs_codex_confirmed_per_task"] = {"agy": t["reviewers"]["agy"]["confirmed_per_task"], "codex": t["reviewers"]["codex"]["confirmed_per_task"]}
     return {"verdict": verdict, "checks": checks, **extra}
+
+
+def proxy(pre: str, post: str, projects: list, until: str | None = None) -> dict:
+    """T49 part 1: Claude billable per merged commit per repository across two windows, from transcripts and
+    `git log --all`. A proxy for the pre-registered rule, never a substitute for the manual arm: work mix differs
+    between windows, review sessions inflate the post window, and commits count every branch."""
+    import importlib.util
+    from datetime import datetime, timezone
+    spec_u = importlib.util.spec_from_file_location("usage_window", HERE / "usage-window.py")
+    uw = importlib.util.module_from_spec(spec_u); spec_u.loader.exec_module(uw)
+    t_pre, t_post = uw.parse_ts(pre), uw.parse_ts(post)
+    t_end = uw.parse_ts(until) if until else datetime.now(timezone.utc)
+    out = {"windows": {"pre": [t_pre.isoformat(), t_post.isoformat()], "post": [t_post.isoformat(), t_end.isoformat()]}, "projects": {}, "confounds": [
+        "work mix differs between windows", "the post window includes review and documentation sessions",
+        "commits are counted on every branch (--all) and include lane and salvage commits", "Claude billable includes cache creation, which scales with context size",
+        "this is not the pre-registered rule; only the manual arm can return a verdict"]}
+    for proj in projects:
+        pj = Path(proj).expanduser()
+        u_pre, u_post = uw.claude_usage_multi(str(pj), [(t_pre, t_post), (t_post, t_end)])
+        def commits(a, b, scope):
+            # scope "all": every branch, which after adoption includes one commit per lane run and salvage;
+            # scope "branch": first-parent history of the checked-out branch, closer to "changes that landed"
+            args = ["git", "log", "--oneline", f"--since={a.isoformat()}", f"--until={b.isoformat()}"] + (["--all"] if scope == "all" else ["--first-parent", "HEAD"])
+            try:
+                r = subprocess.run(args, cwd=str(pj), capture_output=True, text=True, timeout=60)
+                return len([l for l in r.stdout.splitlines() if l.strip()])
+            except Exception:
+                return 0
+        def side(u, a, b):
+            ca, cb = commits(a, b, "all"), commits(a, b, "branch")
+            return {"claude_billable": u["billable_tokens"], "messages": u["messages"], "commits_all": ca, "commits_branch": cb,
+                    "per_commit_all": round(u["billable_tokens"] / ca) if ca else None, "per_commit_branch": round(u["billable_tokens"] / cb) if cb else None}
+        row = {"pre": side(u_pre, t_pre, t_post), "post": side(u_post, t_post, t_end)}
+        for k in ("all", "branch"):
+            a, b = row["pre"][f"per_commit_{k}"], row["post"][f"per_commit_{k}"]
+            if a and b:
+                row[f"per_commit_change_{k}"] = round(b / a - 1, 2)
+        out["projects"][pj.name] = row
+    return out
+
+
+def render_proxy_md(d: dict) -> str:
+    out = ["# Tri-Lane cost proxy: Claude billable per merged commit", "",
+           f"Windows: pre `{d['windows']['pre'][0][:10]}` to `{d['windows']['pre'][1][:10]}`; post `{d['windows']['post'][0][:10]}` to `{d['windows']['post'][1][:10]}`.", "",
+           "**Proxy, not the rule.** " + " ".join(c[0].upper() + c[1:] + "." for c in d["confounds"]), "",
+           "Two commit denominators, because the answer depends on it: *branch* counts first-parent commits on the checked-out branch (changes that landed); *all* counts every branch, which after adoption includes one commit per lane run and every salvage branch, so it flatters the post window.", "",
+           "| Repository | Claude billable, pre | Claude billable, post | Per branch commit, pre → post | Change | Per commit (all branches), pre → post | Change |", "|---|---:|---:|---|---:|---|---:|"]
+    f = lambda v: f"{v:,}" if isinstance(v, int) else ("—" if v is None else v)
+    pct = lambda ch: ("+" if ch and ch > 0 else "") + str(round(ch * 100)) + "%" if ch is not None else "—"
+    for name, r in d["projects"].items():
+        out.append(f"| {name} | {f(r['pre']['claude_billable'])} | {f(r['post']['claude_billable'])} | {f(r['pre']['per_commit_branch'])} ({r['pre']['commits_branch']}) → {f(r['post']['per_commit_branch'])} ({r['post']['commits_branch']}) | {pct(r.get('per_commit_change_branch'))} | {f(r['pre']['per_commit_all'])} ({r['pre']['commits_all']}) → {f(r['post']['per_commit_all'])} ({r['post']['commits_all']}) | {pct(r.get('per_commit_change_all'))} |")
+    return "\n".join(out)
 
 
 def md_table(s: dict) -> str:
@@ -234,7 +330,32 @@ def main() -> int:
     ap.add_argument("--max-slowdown", type=float, default=1.5, help="max elapsed ratio tri-lane / manual")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--html", help="write a one-page HTML report to this path")
+    ap.add_argument("--include-overlaps", action="store_true", help="count Claude tokens for tasks whose windows overlap another task's (double counts; default excludes them)")
+    ap.add_argument("--include-backfill", action="store_true", help="let backfilled rows (no effort, inferred model) count toward the decision rule")
+    ap.add_argument("--proxy", action="store_true", help="T49: Claude billable per merged commit per repo across two windows (--pre, --post); a proxy, not the rule")
+    ap.add_argument("--pre", help="ISO start of the pre-adoption window (with --proxy)")
+    ap.add_argument("--post", help="ISO start of the post-adoption window; the pre window ends here (with --proxy)")
+    ap.add_argument("--until", help="ISO end of the post window (default now)")
+    ap.add_argument("--projects", help="comma-separated repo paths (default: every project root child with a .git/tri-lane)")
     args = ap.parse_args()
+    global INCLUDE_OVERLAPS, INCLUDE_BACKFILL
+    INCLUDE_OVERLAPS = args.include_overlaps
+    INCLUDE_BACKFILL = args.include_backfill
+    if args.proxy:
+        if not (args.pre and args.post):
+            print("--proxy needs --pre and --post", file=sys.stderr)
+            return 2
+        import lane_run  # noqa: E402
+        projects = [p.strip() for p in args.projects.split(",")] if args.projects else [str(pj) for root in lane_run.project_roots() for pj in sorted(root.iterdir()) if (pj / ".git" / "tri-lane").exists()]
+        d = proxy(args.pre, args.post, projects, args.until)
+        if args.json:
+            print(json.dumps(d, indent=2))
+        else:
+            md = render_proxy_md(d)
+            print(md)
+            if args.html:
+                Path(args.html).write_text(render_html(md))
+        return 0
     log = Path(args.log) if args.log else default_log()
     rows = load_all_projects() if args.all_projects else load(log)
     if args.all_projects:

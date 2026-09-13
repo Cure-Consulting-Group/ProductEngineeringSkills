@@ -19,11 +19,14 @@ Exact commands, model slugs, timeouts, and failure signatures live in `lanes.md`
 
 ## Step 1: Declare the route
 
-Before the first tool call for a task, write one line:
+Before the first tool call for a task, write one line and record it:
 
 ```
 ROUTE: solo | delegate | audit | full — <one-sentence reason>
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-route.py" declare --task <slug> --route <route> --reason "<that sentence>" --kind <impl|security|infra|debug|refactor|docs>
 ```
+
+`declare` writes `route.json` in the task's run dir and opens the benchmark record; the log reads it at merge. Declare again when the route changes; the history is the escalation record.
 
 | Route | When | What runs |
 |---|---|---|
@@ -32,7 +35,7 @@ ROUTE: solo | delegate | audit | full — <one-sentence reason>
 | `audit` | Diff touches `firestore.rules`, `storage.rules`, a migration, an API shape, auth, billing, or CI; or the task failed twice | Codex correctness review + Antigravity system review, then advisor. |
 | `full` | Wide blast radius: both delegate and audit | Everything above. Declare why. |
 
-Routes escalate on observed risk. They never silently downgrade. If you started `solo` and the diff grew past one sentence, say so and re-declare.
+Routes escalate on observed risk. They never silently downgrade. If you started `solo` and the diff grew past one sentence, say so and declare again.
 
 **Shadow router.** Before writing the spec, ask the capability table what it would pick and record it: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-route.py" suggest --role implement|review|system-review --kind <kind> --risk <flags> --attempt <n> --task <slug>`. It writes the suggestion to the run dir; `lane-log end` logs it beside what you chose. You still choose. The table (`models.json`) carries dated benchmark sources and is overridden by the project's own log once a model has enough tasks of that kind. It becomes the default only after the shadow log shows it would have done better.
 
@@ -87,13 +90,15 @@ For every lane report:
 4. Label every review finding `Confirmed`, `Disputed`, or `Unverified` before acting. Adversarial reviewers over-state. Zero confirmed findings is a valid outcome.
 5. On any "stopped at its turn limit" or partial-result notification, `ls "$RUN"` before resuming. `codex-implementer`, `codex-reviewer`, and `antigravity-analyst` usually finished and burned their remaining turns on cleanup; the result is in the file. `cure-advisor` writes `advisor.md` first for the same reason. Resume only when the file is missing, and then say "stop reading, give the verdict from what you have".
 
-Fail once: corrected spec to the same lane. Fail twice: escalate (Luna to Sol, or Sol to yourself) and add `audit` if not already declared. Repetition is evidence of misclassification.
+Fail once: corrected spec to the same lane. Fail twice: escalate (Luna to Sol, or Sol to yourself) and add `audit` if not already declared. Repetition is evidence of misclassification. An environment failure is not an attempt: a cold cache, a denied sandbox write, an unavailable simulator, or a drained pool is repaired and retried on the same lane (`lane-route.py suggest --attempt 2 --cause infra` says so), and only a model failure advances the escalation counter. `lane_failures.py --run "$RUN"` names the cause from the run dir.
 
 ## Step 5: Advisor, then merge
 
 Consult `cure-advisor` at commitment boundaries (architecture choice, migration, API shape, refactor strategy, a debugging effort that has failed twice) and always once at the end of a deliverable. Give it the goal, the diff, the verification output, and `RUN`; it writes `$RUN/advisor.md` before it answers. Act on `fix-first` by sending a corrected spec to the lane and getting a new review; disagree with `rethink` only out loud, with the reason.
 
-Then merge from the lane branch (the report committed the diff there) to the integration branch, one task per commit, and remove the worktree with `lane-worktree.py remove`. It refuses while the lane is alive and pushes unmerged work to a salvage branch first. A `timeout` report means the wrapper stopped waiting; check `lane-worktree.py status` (no `--task`: every lane) before assuming the process is gone.
+Then merge from the lane branch (the report committed the diff there) to the integration branch, one task per commit, and remove the worktree with `lane-worktree.py remove --task <slug> --finding codex:C:D:U --finding agy:C:D:U --finding advisor:C:D:U`. It refuses while the lane is alive, pushes unmerged work to a salvage branch first, and then closes the task's benchmark record from the run dir: route (`route.json`), lane and status (`report.json`), advisor verdict (`advisor.md`), rework (`spec*.md`), dispatches and tokens (`events*.jsonl`, `agy*.json`). The `--finding` flags are your Step 4 labels; without them the row is logged `unlabeled` (add later with `lane-log.py update --task <slug> --finding …`). Read the one-line summary it prints.
+
+`remove` is also the advisor gate: a lane that left a diff does not leave without `$RUN/advisor.md`. Below the mandatory tier you may pass `--skip-advisor "<reason>"`; the skip is recorded and logged as `advisor: none`. The mandatory tier, where no skip is accepted: a Sol lane, a diff over 150 lines, any file outside FILES or executable config touched, or an audit-trigger path (`*.rules`, `migrations/`, `functions/`, `.github/workflows/`, auth, billing, payments). Doctrine already said "advisor once at the end"; observed compliance before the gate was 2 of 56 delegate tasks. A `timeout` report means the wrapper stopped waiting; check `lane-worktree.py status` (no `--task`: every lane) before assuming the process is gone.
 
 ## Safety rails (non-negotiable)
 
@@ -117,16 +122,17 @@ Then merge from the lane branch (the report committed the diff there) to the int
 
 ## Benchmark mode
 
-When the user is benchmarking (see `BENCHMARK.md` in the plugin root), every task is bracketed by two commands, and you run them, not the user:
+Every task logs itself (1.10.0): `lane-worktree.py add` opens the record, `lane-route.py declare` names the route, `lane-report.py` leaves `report.json` and `verify.jsonl`, and `lane-worktree.py remove` closes the record with the Claude, Codex, and Antigravity usage for the window. Nothing about logging is typed by hand on the tri-lane arm. What remains yours:
 
-- Before the first tool call: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane-log.py" start --task <id> --arm tri-lane --kind <impl|security|infra|debug|refactor>`
-- After merge or abandonment: `lane-log.py end --task <id> --route <route> --lane "<model> @ <rung>" --status <status> --advisor <verdict> --rework <n> --codex-events <file> --agy-json <file> --finding codex:C:D:U --finding agy:C:D:U --finding advisor:C:D:U`
+- `--kind` on `add` or `declare` (impl | security | infra | debug | refactor | docs), so tasks match across arms.
+- `--finding reviewer:C:D:U` on `remove`, the Confirmed / Disputed / Unverified labels from Step 4. Never estimate tokens; the scripts read the logs.
+- `lane-log.py update --task <id> --escaped-defects N` within seven days when a defect from a lane task surfaces in CI, staging, or use (`0` closes the window clean). The plugin's SessionStart hook prints any window that is due; the summary `remove` prints names the close date.
 
-`end` auto-discovers the run dir's events, agy JSON, and route suggestion, so the flags are only needed for files kept elsewhere. The Confirmed / Disputed / Unverified counts are your labels from Step 4. Report the one-line summary `end` prints. Never estimate tokens; the script reads the logs.
+The manual arm (`BENCHMARK.md`) has no worktree lifecycle, so there `lane-log.py start --task <id> --arm manual --kind <kind>` before the first prompt and `lane-log.py end --task <id> --route manual --status <status>` after merge are still typed.
 
-After `end`, regenerate the dashboard: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/benchmark-dashboard.py" --all-projects --out "$(git rev-parse --git-common-dir)/tri-lane/dashboard.html"` and tell the user the path.
+After `remove`, regenerate the dashboard: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/benchmark-dashboard.py" --all-projects --out "$(git rev-parse --git-common-dir)/tri-lane/dashboard.html"` and tell the user the path.
 
-Three rules while a benchmark is running: the session model and effort stay fixed for both arms (`start` records them; the report refuses a verdict if they vary); the lean-architect changes (Opus on routine days, explorer subagents, capped reports) are logged as `--arm tri-lane-lean`, never mixed into `tri-lane`; and `lane-log.py due` is checked at the start of every session so no seven-day defect window closes unrecorded.
+Three rules while a benchmark is running: the session model and effort stay fixed for both arms (the record captures them; the report refuses a verdict if they vary); the lean-architect changes (Opus on routine days, explorer subagents, capped reports) are logged as `--arm tri-lane-lean` (`TRI_LANE_ARM=tri-lane-lean` in the session environment), never mixed into `tri-lane`; and a due defect window is answered before new work starts.
 
 ## Maintenance
 
