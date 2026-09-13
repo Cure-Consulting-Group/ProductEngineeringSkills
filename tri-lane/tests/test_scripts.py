@@ -494,5 +494,166 @@ class Canary(unittest.TestCase):
         self.assertEqual(g["false_positives"], 1)
 
 
+class Evidence(unittest.TestCase):
+    """Wave 4 T43: the report and every VERIFY leave evidence in the run dir."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.wt = self.d / "wt"
+        git(["worktree", "add", "--detach", "-q", str(self.wt), "HEAD"], self.repo)
+        self.rd = self.d / "rundir"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def report(self, *args):
+        rc, out, err = run([SCRIPTS / "lane-report.py", "--worktree", self.wt, "--lane", "x", "--json", "--run-dir", self.rd, *args], cwd=self.repo)
+        return rc, json.loads(out)
+
+    def test_report_json_and_verify_records_are_written(self):
+        (self.wt / "README.md").write_text("changed\n")
+        rc, d = self.report("--files", "README.md", "--verify", "echo out-line; echo err-line 1>&2", "--unsandboxed-verify")
+        self.assertEqual(d["STATUS"], "complete")
+        rep = json.loads((self.rd / "report.json").read_text())
+        self.assertEqual(rep["STATUS"], "complete")
+        self.assertEqual(rep["attempt"], 1)
+        recs = [json.loads(l) for l in (self.rd / "verify.jsonl").read_text().splitlines()]
+        self.assertEqual(len(recs), 1)
+        self.assertEqual(recs[0]["exit"], 0)
+        self.assertFalse(recs[0]["filtered"])
+        self.assertEqual(Path(recs[0]["stdout_path"]).read_text().strip(), "out-line")
+        self.assertEqual(Path(recs[0]["stderr_path"]).read_text().strip(), "err-line")
+        # a second report archives the first
+        rc, d = self.report("--files", "README.md", "--verify", "true", "--unsandboxed-verify")
+        self.assertTrue((self.rd / "report-1.json").exists())
+        self.assertEqual(json.loads((self.rd / "report.json").read_text())["attempt"], 2)
+
+    def test_timeout_keeps_partial_output_and_flags_it(self):
+        (self.wt / "README.md").write_text("changed\n")
+        rc, d = self.report("--files", "README.md", "--verify", "echo partial; sleep 5; echo never", "--unsandboxed-verify", "--verify-timeout", "1")
+        v = d["VERIFIED"][0]
+        self.assertEqual(v["exit"], 124)
+        self.assertTrue(v["timed_out"])
+        self.assertIn("partial", v["output_tail"])
+        self.assertNotIn("never", v["output_tail"])
+        self.assertEqual(d["STATUS"], "partial")
+        rec = json.loads((self.rd / "verify.jsonl").read_text().splitlines()[0])
+        self.assertTrue(rec["timed_out"])
+        self.assertIn("partial", Path(rec["stdout_path"]).read_text())
+
+    def test_filtered_verify_is_flagged(self):
+        (self.wt / "README.md").write_text("changed\n")
+        rc, d = self.report("--files", "README.md", "--verify", "false | grep -c x || true", "--unsandboxed-verify")
+        self.assertTrue(d["VERIFIED"][0]["filtered"])
+        self.assertTrue(any("masked" in g for g in d["GAPS"]))
+
+
+class Lifecycle(unittest.TestCase):
+    """Wave 4 T42/T44/T45/T51: the worktree lifecycle opens and closes the benchmark record; routes and verdicts are files."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.gcd = self.repo / ".git" / "tri-lane"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def lw(self, *args, env=ENV):
+        return run([SCRIPTS / "lane-worktree.py", *args], cwd=self.repo, env=env)
+
+    def rows(self):
+        p = self.gcd / "benchmark.jsonl"
+        return [json.loads(l) for l in p.read_text().splitlines()] if p.exists() else []
+
+    def test_add_opens_record_and_remove_closes_it_with_no_flags(self):
+        rc, out, err = self.lw("add", "--task", "t", "--base", "main", "--kind", "impl")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(json.loads(out)["benchmark_record"], "opened")
+        rd = self.gcd / "run" / "t"
+        meta = json.loads((rd / "meta.json").read_text())
+        self.assertEqual(meta["kind"], "impl")
+        self.assertTrue((self.gcd / "bench-open" / "t.json").exists())
+        # a second add is idempotent
+        rc, out, err = self.lw("add", "--task", "t", "--base", "main")
+        self.assertEqual(json.loads((rd / "meta.json").read_text())["started_at"], meta["started_at"])
+        # declare a route, then re-declare (escalation)
+        rc, out, err = run([SCRIPTS / "lane-route.py", "declare", "--task", "t", "--route", "delegate", "--reason", "spec-determined"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        rc, out, err = run([SCRIPTS / "lane-route.py", "declare", "--task", "t", "--route", "audit", "--reason", "touched rules"], cwd=self.repo)
+        self.assertTrue(json.loads(out)["escalated"])
+        # the lane works, the report persists, two spec versions, an advisor verdict
+        wt = self.d / "wt" / "t"
+        (wt / "README.md").write_text("lane work\n")
+        (rd / "spec.md").write_text("LANE luna\n"); (rd / "spec-2.md").write_text("LANE luna\n")
+        (rd / "events.jsonl").write_text(json.dumps({"type": "thread.started"}) + "\n" + json.dumps({"type": "turn.completed", "usage": {"input_tokens": 100, "cached_input_tokens": 40, "output_tokens": 10, "total_tokens": 110}}) + "\n")
+        rc, out, err = run([SCRIPTS / "lane-report.py", "--worktree", wt, "--lane", "gpt-5.6-luna @ medium", "--base", "main", "--files", "README.md", "--verify", "true", "--unsandboxed-verify", "--commit", "--json"], cwd=self.repo)
+        self.assertEqual(json.loads(out)["STATUS"], "complete", err)
+        self.assertTrue((rd / "report.json").exists())
+        (rd / "advisor.md").write_text("# Advisor verdict — t\n\n```\nVERDICT   fix-first\n```\nBECAUSE x\n")
+        rc, out, err = self.lw("remove", "--task", "t", "--base", "main", "--no-push")
+        self.assertEqual(rc, 0, err)
+        logged = json.loads(out)["logged"]
+        self.assertTrue(logged["ok"], logged)
+        rows = self.rows()
+        self.assertEqual(len(rows), 1)
+        r = rows[0]
+        self.assertEqual((r["route"], r["lane"], r["status"], r["advisor"], r["rework"], r["dispatches"]), ("audit", "gpt-5.6-luna @ medium", "complete", "fix-first", 1, 1))
+        self.assertTrue(r["escalated"])
+        self.assertEqual(r["codex_lane"]["billable_tokens"], 70)
+        self.assertFalse(r["findings_labeled"])
+        self.assertEqual(r["verify"]["commands"], 1)
+        self.assertFalse((self.gcd / "bench-open" / "t.json").exists())
+        # labels can be added after the fact
+        rc, out, err = run([SCRIPTS / "lane-log.py", "update", "--task", "t", "--finding", "codex:2:1:0"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        self.assertTrue(self.rows()[0]["findings_labeled"])
+
+    def test_remove_survives_a_broken_log(self):
+        self.lw("add", "--task", "b", "--base", "main")
+        bad = dict(ENV, TRI_LANE_LOG=str(self.repo))  # a directory, not a file: lane-log must fail
+        rc, out, err = self.lw("remove", "--task", "b", "--base", "main", "--no-push", env=bad)
+        self.assertEqual(rc, 0, err)
+        d = json.loads(out)
+        self.assertFalse(d["logged"]["ok"])
+        self.assertFalse((self.d / "wt" / "b").exists())
+        self.assertTrue((self.gcd / "run" / "b" / "log-error.txt").exists())
+
+    def test_end_falls_back_to_meta_and_backfills_with_ended_at(self):
+        rc, out, err = run([SCRIPTS / "lane_run.py", "ensure", "--task", "m", "--kind", "docs"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        (self.gcd / "bench-open" / "m.json").unlink()  # no open start record: meta.json must carry it
+        rc, out, err = run([SCRIPTS / "lane-log.py", "end", "--task", "m", "--ended-at", "2026-09-10T12:00:00+00:00"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        r = self.rows()[-1]
+        self.assertTrue(r["backfilled"])
+        self.assertEqual(r["kind"], "docs")
+        self.assertEqual(r["ended_at"], "2026-09-10T12:00:00+00:00")
+        self.assertTrue(r["pools_after"].get("skipped"))
+
+    def test_due_quiet_is_silent_when_nothing_is_due_and_fails_open(self):
+        rc, out, err = run([SCRIPTS / "lane-log.py", "due", "--within", "1", "--quiet"], cwd=self.repo)
+        self.assertEqual((rc, out), (0, ""))
+        (self.gcd).mkdir(parents=True, exist_ok=True)
+        (self.gcd / "benchmark.jsonl").write_text("not json\n{\"task\": \"z\", \"ended_at\": \"2026-01-01T00:00:00+00:00\"}\n")
+        rc, out, err = run([SCRIPTS / "lane-log.py", "due", "--within", "1", "--quiet"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        self.assertIn("defect window for z closed", out)
+
+    def test_advisor_verdict_parser_accepts_production_variants(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import lane_run
+        cases = {"VERDICT   fix-first\n\nBECAUSE x": "fix-first",
+                 "# Advisor verdict — readiness-scope\n\n```\nVERDICT   fix-first\n```": "fix-first",
+                 "# Advisor verdict: SHIP\n\nNo deliverable blocker remains.": "ship",
+                 "VERDICT   fix-first (P0 §12.7) · rethink one premise (P1–P3)\nBECAUSE": "fix-first",
+                 "**VERDICT** rethink\n": "rethink",
+                 "some prose with no verdict": None}
+        for text, want in cases.items():
+            d = Path(tempfile.mkdtemp())
+            (d / "advisor.md").write_text(text)
+            self.assertEqual(lane_run.advisor_verdict(d), want, text)
+            shutil.rmtree(d)
+
+
 if __name__ == "__main__":
     unittest.main()

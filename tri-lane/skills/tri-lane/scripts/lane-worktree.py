@@ -2,13 +2,17 @@
 """lane-worktree: create and remove lane worktrees safely, so a live lane is never orphaned.
 
   add     git worktree add ../wt/<task> (branch lane/<task> from --base), or a detached read-only twin with --ro;
-          creates the run dir $(git rev-parse --git-common-dir)/tri-lane/run/<task>/ and prints paths as JSON
+          creates the run dir $(git rev-parse --git-common-dir)/tri-lane/run/<task>/, writes meta.json and opens
+          the task's benchmark record (lane-log start) on first sight, and prints paths as JSON (Wave 4, T42)
   lock    write run/<task>/lane.lock with the lane's pid and start time (wrappers call this before dispatch)
   unlock  remove the lock (wrappers call this after the report is produced)
   status  is the lane alive? lock present, pid alive, any codex/agy process with the worktree path in its args;
           without --task lists every lane (run dirs and worktrees) and exits 3 if any is alive
   remove  refuses while a lock is present and its pid is alive, or while a codex/agy process references the
-          worktree; otherwise pushes the branch as lane/<task>-salvage if it has unmerged commits, then removes.
+          worktree; otherwise pushes the branch as lane/<task>-salvage if it has unmerged commits, then removes,
+          then closes the task's benchmark record (lane-log end) from what the run dir holds: route, lane, status,
+          advisor verdict, rework, tokens. Pass --finding codex:C:D:U for your labels; --no-log to skip.
+          A failed log write never fails the removal: it lands in run/<task>/log-error.txt (T42).
           --force skips the liveness check but never the salvage push.
 
 Orphaning a live lane cost two runs in one session (HoopTrace, 3 Sep 2026). Python stdlib only.
@@ -30,6 +34,9 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
 
 
 def sh(cmd, cwd=None, timeout=120):
@@ -103,6 +110,7 @@ def cmd_add(a) -> int:
     wt = wt_path(a.task, a.ro)
     rd = run_dir(a.task)
     if wt.exists():
+        _ensure(a)
         print(json.dumps({"worktree": str(wt), "run_dir": str(rd), "note": "already exists; reused"}))
         return 0
     wt.parent.mkdir(parents=True, exist_ok=True)
@@ -118,8 +126,19 @@ def cmd_add(a) -> int:
     if rc != 0:
         print(out.strip(), file=sys.stderr)
         return 1
-    print(json.dumps({"worktree": str(wt), "worktree_physical": str(wt.resolve()), "branch": None if a.ro else f"lane/{a.task}", "run_dir": str(rd), "tmpdir": str(rd / "tmp")}))
+    ens = _ensure(a)
+    print(json.dumps({"worktree": str(wt), "worktree_physical": str(wt.resolve()), "branch": None if a.ro else f"lane/{a.task}", "run_dir": str(rd), "tmpdir": str(rd / "tmp"),
+                      "benchmark_record": "opened" if ens.get("created") else "already open"}))
     return 0
+
+
+def _ensure(a) -> dict:
+    """meta.json + lane-log start on first sight of the task. Bookkeeping never blocks a dispatch."""
+    try:
+        import lane_run  # noqa: E402
+        return lane_run.ensure(a.task, kind=getattr(a, "kind", None) or None, base=getattr(a, "base", None) or None, log=os.environ.get("TRI_LANE_LOG") or None)
+    except Exception as e:
+        return {"created": False, "error": str(e)[:200]}
 
 
 def cmd_lock(a) -> int:
@@ -198,8 +217,41 @@ def cmd_remove(a) -> int:
     lock = run_dir(a.task) / "lane.lock"
     if lock.exists():
         lock.unlink()
-    print(json.dumps({"removed": str(wt), "salvage_branch": salvage, "run_dir_kept": str(run_dir(a.task))}))
+    result = {"removed": str(wt), "salvage_branch": salvage, "run_dir_kept": str(run_dir(a.task))}
+    if not a.ro and not a.no_log:
+        result["logged"] = _close_record(a)
+    print(json.dumps(result))
     return 0
+
+
+def _close_record(a) -> dict:
+    """lane-log end, auto-discovered from the run dir. Any failure is written to run/<task>/log-error.txt and reported, never raised."""
+    rd = run_dir(a.task)
+    args = [sys.executable, str(HERE / "lane-log.py")]
+    if os.environ.get("TRI_LANE_LOG"):
+        args += ["--log", os.environ["TRI_LANE_LOG"]]
+    args += ["end", "--task", a.task]
+    for f in a.finding or []:
+        args += ["--finding", f]
+    if a.notes:
+        args += ["--notes", a.notes]
+    try:
+        rc, out = sh(args, cwd=str(repo_root()), timeout=300)
+        if rc == 0:
+            try:
+                s = json.loads(out[out.index("{"):])
+            except Exception:
+                s = {"raw": out.strip()[-400:]}
+            keep = ("task", "arm", "route", "lane", "status", "advisor", "rework", "dispatches", "findings", "claude_billable", "codex_billable", "agy_total", "defect_window_closes", "log")
+            return {"ok": True, **{k: s[k] for k in keep if k in s}}
+        (rd / "log-error.txt").write_text(out)
+        return {"ok": False, "error": out.strip()[-300:], "see": str(rd / "log-error.txt")}
+    except Exception as e:
+        try:
+            (rd / "log-error.txt").write_text(str(e))
+        except Exception:
+            pass
+        return {"ok": False, "error": str(e)[:300]}
 
 
 def main() -> int:
@@ -211,12 +263,17 @@ def main() -> int:
         s.add_argument("--ro", action="store_true", help="the read-only twin worktree (<task>-ro)")
         if name in ("add", "remove"):
             s.add_argument("--base", help="base ref (add: branch point; remove: what counts as merged; default HEAD)")
+        if name == "add":
+            s.add_argument("--kind", default="", help="impl | security | infra | debug | refactor | docs (recorded in meta.json and the benchmark row)")
         if name == "lock":
             s.add_argument("--pid", type=int, required=True)
             s.add_argument("--lane", default="")
         if name == "remove":
             s.add_argument("--force", action="store_true", help="skip the liveness check (never skips salvage)")
             s.add_argument("--no-push", action="store_true", help="create the salvage branch locally only")
+            s.add_argument("--no-log", action="store_true", help="do not close the benchmark record")
+            s.add_argument("--finding", action="append", help="reviewer:confirmed:disputed:unverified, your labels (repeatable); absent = unlabeled")
+            s.add_argument("--notes", default="", help="appended to the benchmark row")
         s.set_defaults(fn=fn)
     a = ap.parse_args()
     return a.fn(a)

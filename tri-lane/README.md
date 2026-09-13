@@ -44,6 +44,16 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Every task logs itself (1.10.0)
+
+Ten days of production (142 tasks, 8 repositories) produced no `benchmark.jsonl` anywhere: `lane-log.py start` and `end` were never typed, and `lane-report.py` printed its report without keeping it. So the pre-registered decision rule in `BENCHMARK.md` could not be evaluated, and the production review's verdict rested on token totals alone (`docs/TRI-LANE-CLAUDE-REVIEW-2026-09-13.md`). Now the lifecycle does the logging:
+
+- `lane-worktree.py add` (or `lane-route.py declare` / `suggest --task`) writes `meta.json` and opens the record; `lane-route.py declare --route … --reason …` is Step 1 of the doctrine and records escalations as an append-only history.
+- `lane-report.py` persists `report.json` (earlier attempts as `report-<n>.json`), one `verify.jsonl` record per VERIFY command, and the raw `verify-<n>.out/.err` streams, separate and complete. A timeout keeps the partial output and kills the whole process group; a command piped through `grep`/`tail`/`||` is flagged `filtered` because its exit status may be masked (the s2-flow-fix lesson).
+- `lane-worktree.py remove` closes the record from the run dir: route, lane, status, gaps, advisor verdict (first line of `advisor.md`), rework (`spec*.md` count), dispatches (`thread.started` events), Claude and Codex usage for the window. `--finding reviewer:C:D:U` carries your labels; absent labels are logged `unlabeled`, never zero. A failed log write never fails the removal (`run/<task>/log-error.txt`).
+- `lane-log.py end --ended-at` backfills; `lane-log.py update --finding` labels after the fact; the SessionStart hook prints any defect window that is due (`due --quiet`, local file only, silent when none).
+- Codex usage from session logs is account-wide, not per project; the row keeps it as `codex_account` and per-task Codex comes from lane event files only.
+
 ## Failures are results (1.9.0)
 
 Every non-complete run is classified into a fixed taxonomy by `lane_failures.py`: `infra` (our environment), `harness` (our wrapper), `quota` (our budget), `model` (the lane), `fixture` (the benchmark). Infra, harness, and quota failures are retried once automatically and never charged to the model; model failures score zero and are never retried, because a retry that succeeds is the rework the field benchmark exists to count. A heartbeat watcher on the Codex event stream kills a lane that makes no progress for three minutes (`TRI_LANE_STALL_SECONDS`) instead of waiting for the cap. `lane-eval.py results` prints a reliability block per lane (first-attempt success, failures by class, seconds to a result including failed attempts, wasted tokens, cost per point including waste); the dashboard shows it. Every occurrence lands in `.git/tri-lane/failures.jsonl`; `lane-eval.py failures` flags any class the ledger (`FAILURE-LEDGER.md`, `failure-ledger.json`) says is closed. `lane-eval.py classify` backfills existing logs.

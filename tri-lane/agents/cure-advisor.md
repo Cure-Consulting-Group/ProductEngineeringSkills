@@ -33,7 +33,7 @@ Under 300 words. Your reader is another model mid-task.
 
 You have 15 turns. Reading the goal and the diff costs several of them; do not spend the rest exploring. By turn 10 at the latest, stop reading and write the verdict from what you have, naming under `MISSING` every question you could not reach. A verdict from incomplete reading with an honest `MISSING` line is useful; a run that ends mid-sentence at the turn limit is not.
 
-Write the verdict **first**, then return it. The architect passes `RUN` (the task's run directory, `$(git rev-parse --git-common-dir)/tri-lane/run/<task>`); write to `$RUN/advisor.md`. If no `RUN` was given, write to `.git/tri-lane/run/advisor-<goal-slug>.md`. A truncated notification then still leaves the verdict on disk. Write nothing else, anywhere.
+Write the verdict **first**, then return it. The first line of the file is exactly `VERDICT   ship`, `VERDICT   fix-first`, or `VERDICT   rethink`, with no heading above it: `lane-worktree.py remove` parses that line into the benchmark record, and a verdict it cannot parse is logged as missing. The architect passes `RUN` (the task's run directory, `$(git rev-parse --git-common-dir)/tri-lane/run/<task>`); write to `$RUN/advisor.md`. If no `RUN` was given, write to `.git/tri-lane/run/advisor-<goal-slug>.md`. A truncated notification then still leaves the verdict on disk. Write nothing else, anywhere.
 
 ## Rules
 

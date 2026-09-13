@@ -72,7 +72,7 @@ export TMPDIR="$RUN/tmp"                 # codex, agy, node, python all honour i
 SPEC="$RUN/spec.md"; FINAL="$RUN/final.md"; EVENTS="$RUN/events.jsonl"; OUT="$RUN/agy.json"; REVIEW="$RUN/review.md"; ADVISOR="$RUN/advisor.md"
 ```
 
-The main repo's `.git` dir is on the project volume and outside every worktree root, so the sandbox cannot reach it, the files survive worktree removal, and `lane-log.py end` can read them. Never `mktemp -t`; never write to the Claude scratchpad under `/private/tmp` for anything a lane or the report needs. `lane-preflight.py` refuses to dispatch when the repo volume has under 1 GB free and warns when the system volume is low.
+The main repo's `.git` dir is on the project volume and outside every worktree root, so the sandbox cannot reach it, the files survive worktree removal, and the benchmark reads them. The run dir is the task's record (1.10.0): `meta.json` (written by `lane-worktree.py add` or `lane-route.py declare`, opens the benchmark record), `route.json` (declared routes, append-only), `spec.md`, `spec-2.md`, … (one per dispatch; rework = files − 1), `events*.jsonl`, `report.json` (latest `lane-report.py`; earlier ones `report-<n>.json`), `verify.jsonl` plus `verify-<n>.out/.err` (every VERIFY, raw and separate), `advisor.md` (first line `VERDICT …`), `agy*.json`. `lane-worktree.py remove` closes the record from these files. Never `mktemp -t`; never write to the Claude scratchpad under `/private/tmp` for anything a lane or the report needs. `lane-preflight.py` refuses to dispatch when the repo volume has under 1 GB free and warns when the system volume is low.
 
 ## Codex implementer
 

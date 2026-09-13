@@ -9,9 +9,12 @@
   list    print the log as a table
 
 `start` records the session model and effort from ~/.claude/settings.json so the benchmark's fixed-model
-rule is checkable. `end` auto-discovers events*.jsonl, agy*.json and route-suggestion.json in the task's
-run dir ($(git rev-parse --git-common-dir)/tri-lane/run/<task>/), so nothing is missed when flags are
-omitted. Set TRI_LANE_NO_POOLS=1 to skip the quota snapshots (tests, offline).
+rule is checkable. `end` auto-discovers everything the run dir holds ($(git rev-parse --git-common-dir)/tri-lane/run/<task>/):
+events*.jsonl, agy*.json, route-suggestion.json, route.json (declared route), report.json (lane, status, gaps),
+advisor.md (verdict), spec*.md (rework), so nothing is missed when flags are omitted; flags override.
+Neither command needs typing any more: `lane-worktree.py add` runs `start` and `remove` runs `end` (Wave 4, T42).
+`end` with no open start record falls back to meta.json's started_at, then --started-at. --ended-at backfills.
+Set TRI_LANE_NO_POOLS=1 to skip the quota snapshots (tests, offline).
 
 Log lives at $(git rev-parse --git-common-dir)/tri-lane/benchmark.jsonl (override with --log).
 Python stdlib only; reads agy and codex logs, never spends quota except one free `agy -p /usage`.
@@ -35,6 +38,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+ARMS = ["manual", "tri-lane", "advisor-only", "tri-lane-lean"]
 
 
 def sh(cmd, cwd=None, timeout=60):
@@ -204,17 +209,30 @@ def cmd_start(a) -> int:
 def cmd_end(a) -> int:
     log = log_path(a.log)
     sp = start_path(log, a.task)
+    try:
+        import lane_run  # noqa: E402
+        disc = lane_run.summary(a.task, rd=run_dir_for(log, a.task))
+        meta = disc.get("meta") or {}
+    except Exception as e:
+        disc, meta = {"_error": str(e)[:200]}, {}
     if not sp.exists():
-        if not a.started_at:
-            print(f"no open start record for task {a.task}; run `lane-log.py start --task {a.task}` first, or pass --started-at ISO to backfill from logs", file=sys.stderr)
+        started_at = a.started_at or meta.get("started_at")
+        if not started_at:
+            print(f"no open start record for task {a.task} and no meta.json; `lane-worktree.py add` opens one, or pass --started-at ISO to backfill from logs", file=sys.stderr)
             return 1
         rc, head = sh(["git", "rev-parse", "--short", "HEAD"])
-        rec = {"task": a.task, "arm": a.arm or "tri-lane", "kind": a.kind or "", "started_at": a.started_at, "project": str(Path.cwd().resolve()),
-               "head": head.strip(), "notes": "backfilled: no pools_before snapshot", "pools_before": {}}
+        rec = {"task": a.task, "arm": a.arm or meta.get("arm") or "tri-lane", "kind": a.kind or meta.get("kind") or "", "started_at": started_at,
+               "project": meta.get("project") or str(Path.cwd().resolve()), "head": meta.get("head") or head.strip(),
+               "notes": "backfilled from meta.json" if meta.get("started_at") and not a.started_at else "backfilled: no pools_before snapshot", "pools_before": {}}
+        rec.update(session_model() if not (a.model_hint or a.effort_hint) else {"model": a.model_hint, "effort": a.effort_hint})
         sp.write_text(json.dumps(rec))
     rec = json.loads(sp.read_text())
-    ended = now_iso()
+    ended = a.ended_at or now_iso()
     started = rec["started_at"]
+    if a.kind and not rec.get("kind"):
+        rec["kind"] = a.kind
+    if not rec.get("kind") and disc.get("kind"):
+        rec["kind"] = disc["kind"]
     elapsed = (datetime.fromisoformat(ended) - datetime.fromisoformat(started)).total_seconds()
 
     rc, out = sh([sys.executable, str(HERE / "usage-window.py"), "--since", started, "--until", ended, "--project", rec["project"]], timeout=180)
@@ -249,7 +267,14 @@ def cmd_end(a) -> int:
             print(f"bad --finding {spec!r}; expected reviewer:confirmed:disputed:unverified", file=sys.stderr)
             return 2
 
-    pools_after = snapshot_pools()
+    route = a.route or disc.get("route") or ""
+    lane = a.lane or disc.get("lane") or ""
+    status = a.status or disc.get("status") or ""
+    advisor = a.advisor or disc.get("advisor") or ("none" if disc.get("advisor_skip_reason") else "")
+    rework_n = a.rework if a.rework is not None else int(disc.get("rework") or 0)
+    escalated = bool(a.escalated or disc.get("escalated"))
+
+    pools_after = snapshot_pools() if not a.ended_at else {"captured_at": ended, "skipped": True, "reason": "backfill"}
     deltas = {}
     for k, v in pools_after.items():
         b = rec["pools_before"].get(k)
@@ -260,12 +285,16 @@ def cmd_end(a) -> int:
         **{k: rec[k] for k in ("task", "arm", "kind", "project", "head")},
         "started_at": started, "ended_at": ended, "elapsed_seconds": round(elapsed),
         "model": rec.get("model"), "effort": rec.get("effort"),
-        "route": a.route, "lane": a.lane, "status": a.status, "advisor": a.advisor,
-        "suggested": found["suggestion"], "suggestion_followed": (bool(found["suggestion"]) and found["suggestion"].get("lane") and found["suggestion"]["lane"] in (a.lane or "")) or None,
-        "rework": a.rework, "escalated": bool(a.escalated), "escaped_defects": 0, "window_checked_at": None,
-        "claude": usage.get("claude", {}), "codex_logs": usage.get("codex", {}),
+        "route": route, "route_reason": disc.get("route_reason"), "route_history": disc.get("route_history") or [],
+        "lane": lane, "status": status, "advisor": advisor, "advisor_skip_reason": disc.get("advisor_skip_reason"),
+        "suggested": found["suggestion"], "suggestion_followed": (bool(found["suggestion"]) and found["suggestion"].get("lane") and found["suggestion"]["lane"] in (lane or "")) or None,
+        "rework": rework_n, "dispatches": disc.get("dispatches"), "escalated": escalated, "escaped_defects": 0, "window_checked_at": None,
+        "gaps": disc.get("gaps") or [], "diff_lines": disc.get("diff_lines"), "verify": disc.get("verify"), "commit": disc.get("commit"),
+        "claude": usage.get("claude", {}), "codex_account": usage.get("codex", {}),
         "codex_lane": codex_lane, "agy": agy,
-        "findings": findings, "pools_before": rec["pools_before"], "pools_after": pools_after, "pool_deltas": deltas,
+        "findings": findings, "findings_labeled": bool(findings),
+        "pools_before": rec["pools_before"], "pools_after": pools_after, "pool_deltas": deltas,
+        "backfilled": bool(a.ended_at), "run_dir": disc.get("run_dir"),
         "notes": " ".join(x for x in (rec.get("notes"), a.notes) if x),
     }
     rows = read_log(log)
@@ -274,9 +303,14 @@ def cmd_end(a) -> int:
     sp.unlink()
     summary = {
         "task": a.task, "arm": rec["arm"], "model": rec.get("model"), "elapsed_min": round(elapsed / 60, 1),
-        "auto_discovered": {"codex_events": len(found["codex_events"]), "agy_json": len(found["agy_json"]), "suggestion": bool(found["suggestion"])},
+        "route": route, "lane": lane, "status": status, "advisor": advisor, "rework": rework_n, "dispatches": disc.get("dispatches"),
+        "findings": "labeled" if findings else "unlabeled (pass --finding reviewer:C:D:U to lane-worktree remove or lane-log update)",
+        "auto_discovered": {"codex_events": len(found["codex_events"]), "agy_json": len(found["agy_json"]), "suggestion": bool(found["suggestion"]),
+                             "report": bool(disc.get("has_report")), "route": bool(disc.get("route")), "advisor": bool(disc.get("advisor"))},
         "claude_billable": row["claude"].get("billable_tokens"), "claude_cache_read": row["claude"].get("cache_read_input_tokens"),
-        "codex_billable": codex_lane["billable_tokens"] or row["codex_logs"].get("billable_tokens"), "codex_total": codex_lane["total_tokens"] or row["codex_logs"].get("total_tokens"), "agy_total": agy["total_tokens"],
+        "codex_billable": codex_lane["billable_tokens"] or (row["codex_account"].get("billable_tokens") if rec["arm"] == "manual" else 0),
+        "codex_total": codex_lane["total_tokens"], "agy_total": agy["total_tokens"],
+        "defect_window_closes": (datetime.fromisoformat(ended) + timedelta(days=7)).date().isoformat(),
         "pool_deltas": deltas, "log": str(log),
     }
     print(json.dumps(summary, indent=2))
@@ -296,6 +330,14 @@ def cmd_update(a) -> int:
         r["window_checked_at"] = now_iso()
     if a.notes:
         r["notes"] = (r.get("notes", "") + " " + a.notes).strip()
+    for spec in a.finding or []:
+        try:
+            who, c, d, u = spec.split(":")
+            r.setdefault("findings", {})[who] = {"confirmed": int(c), "disputed": int(d), "unverified": int(u)}
+            r["findings_labeled"] = True
+        except ValueError:
+            print(f"bad --finding {spec!r}; expected reviewer:confirmed:disputed:unverified", file=sys.stderr)
+            return 2
     if a.set:
         for kv in a.set:
             k, v = kv.split("=", 1)
@@ -323,6 +365,11 @@ def cmd_due(a) -> int:
             rows.append({"task": r["task"], "arm": r.get("arm"), "window_closes": closes.date().isoformat(), "days": round(days, 1)})
     if a.json:
         print(json.dumps(rows, indent=2))
+    elif a.quiet:
+        # SessionStart hook form (T51): one line per due window, nothing at all when none are due
+        for r in rows:
+            state = "closed" if r["days"] <= 0 else f"closes in {r['days']}d"
+            print(f"tri-lane: defect window for {r['task']} {state}: lane-log.py update --task {r['task']} --escaped-defects N")
     else:
         for r in rows:
             state = "CLOSED" if r["days"] <= 0 else f"closes in {r['days']}d"
@@ -340,7 +387,8 @@ def cmd_list(a) -> int:
     print(f"{'task':22} {'arm':13} {'model':16} {'kind':9} {'route':9} {'status':9} {'min':>6} {'claude_bill':>11} {'codex':>9} {'agy':>9} {'conf':>4} {'esc':>3}")
     for r in rows:
         conf = sum(v.get("confirmed", 0) for v in (r.get("findings") or {}).values())
-        codex = (r.get("codex_lane") or {}).get("billable_tokens") or (r.get("codex_logs") or {}).get("billable_tokens") or (r.get("codex_logs") or {}).get("total_tokens") or 0
+        acct = r.get("codex_account") or r.get("codex_logs") or {}
+        codex = (r.get("codex_lane") or {}).get("billable_tokens") or (acct.get("billable_tokens") if r.get("arm") == "manual" else 0) or 0
         print(f"{r.get('task',''):22} {r.get('arm',''):13} {(r.get('model') or '?')[:16]:16} {(r.get('kind') or ''):9} {(r.get('route') or ''):9} {(r.get('status') or ''):9} "
               f"{round(r.get('elapsed_seconds',0)/60):>6} {(r.get('claude') or {}).get('billable_tokens',0):>11} {codex:>9} {(r.get('agy') or {}).get('total_tokens',0):>9} {conf:>4} {r.get('escaped_defects',0):>3}")
     print(f"{len(rows)} tasks in {log}")
@@ -354,7 +402,7 @@ def main() -> int:
 
     s = sub.add_parser("start", help="snapshot pools and clock before a task")
     s.add_argument("--task", required=True)
-    s.add_argument("--arm", required=True, choices=["manual", "tri-lane", "advisor-only"])
+    s.add_argument("--arm", required=True, choices=ARMS)
     s.add_argument("--kind", default="", help="impl | security | infra | debug | refactor | docs")
     s.add_argument("--model", help="override the session model recorded (default: ~/.claude/settings.json)")
     s.add_argument("--effort", help="override the session effort recorded")
@@ -365,18 +413,22 @@ def main() -> int:
     d = sub.add_parser("due", help="tasks whose 7-day defect window needs checking")
     d.add_argument("--within", type=float, default=0, help="also list windows closing within N days")
     d.add_argument("--json", action="store_true")
+    d.add_argument("--quiet", action="store_true", help="hook form: one line per due window, silent when none")
     d.set_defaults(fn=cmd_due)
 
     e = sub.add_parser("end", help="close a task and append the benchmark line")
     e.add_argument("--task", required=True)
-    e.add_argument("--started-at", help="backfill: ISO timestamp the task began (when `start` was not run). Pools_before will be empty")
-    e.add_argument("--arm", choices=["manual", "tri-lane", "advisor-only"], help="only with --started-at")
+    e.add_argument("--started-at", help="backfill: ISO timestamp the task began (when neither `start` nor `lane-worktree add` ran). Pools_before will be empty")
+    e.add_argument("--ended-at", help="backfill: ISO timestamp the task ended (default now). Marks the row backfilled and skips the pool snapshot")
+    e.add_argument("--arm", choices=ARMS, help="only with --started-at")
     e.add_argument("--kind", help="only with --started-at")
-    e.add_argument("--route", default="", help="solo | delegate | audit | full | manual")
-    e.add_argument("--lane", default="", help='as executed, e.g. "gpt-5.6-luna @ high"')
-    e.add_argument("--status", default="", help="complete | partial | refused | timeout | unavailable")
-    e.add_argument("--advisor", default="", help="ship | fix-first | rethink | none")
-    e.add_argument("--rework", type=int, default=0, help="spec corrections sent back")
+    e.add_argument("--model-hint", help="backfill: session model to record when no start record exists")
+    e.add_argument("--effort-hint", help="backfill: session effort to record when no start record exists")
+    e.add_argument("--route", default="", help="solo | delegate | audit | full | manual (default: run dir route.json)")
+    e.add_argument("--lane", default="", help='as executed, e.g. "gpt-5.6-luna @ high" (default: run dir report.json)')
+    e.add_argument("--status", default="", help="complete | partial | refused | timeout | unavailable (default: run dir report.json)")
+    e.add_argument("--advisor", default="", help="ship | fix-first | rethink | none (default: run dir advisor.md)")
+    e.add_argument("--rework", type=int, default=None, help="spec corrections sent back (default: spec*.md count - 1)")
     e.add_argument("--escalated", action="store_true", help="lane escalated (Luna to Sol, or to the architect)")
     e.add_argument("--codex-events", action="append", help="codex --json events file (repeatable)")
     e.add_argument("--agy-json", action="append", help="agy --output-format json file (repeatable)")
@@ -389,6 +441,7 @@ def main() -> int:
     u.add_argument("--escaped-defects", type=int)
     u.add_argument("--notes", default="")
     u.add_argument("--set", action="append", help="key=json-value (repeatable)")
+    u.add_argument("--finding", action="append", help="reviewer:confirmed:disputed:unverified (repeatable); label a row after the fact")
     u.set_defaults(fn=cmd_update)
 
     l = sub.add_parser("list", help="print the log")

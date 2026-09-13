@@ -10,7 +10,11 @@ Inputs: role, kind, risk flags, attempt number, expected diff size. The table's 
 is overridden by the project's own benchmark.jsonl once a model has `own_data_threshold` tasks of that
 kind with a lower rework or higher precision. Python stdlib only.
 
+`declare` writes the architect's route to the run dir as route.json (append-only, so a re-declaration
+records the escalation), which `lane-log end` reads. Step 1 of the doctrine is this command (Wave 4, T44).
+
 Examples:
+  python3 lane-route.py declare --task a4 --route delegate --reason "spec fully determines the outcome" --kind impl
   python3 lane-route.py suggest --role implement --kind payments --risk payments,concurrency --task a4
   python3 lane-route.py suggest --role review --kind android --risk auth
   python3 lane-route.py table
@@ -25,6 +29,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TABLE = HERE.parent / "models.json"
+sys.path.insert(0, str(HERE))
+ROUTES = ("solo", "delegate", "audit", "full", "manual", "advisor-only", "docs")
 
 
 def load_table() -> dict:
@@ -129,7 +135,22 @@ def main() -> int:
     s.add_argument("--task", help="write route-suggestion.json into this task's run dir (shadow mode)")
     s.add_argument("--json", action="store_true")
     sub.add_parser("table")
+    d = sub.add_parser("declare", help="record the declared route in the run dir (append-only)")
+    d.add_argument("--task", required=True)
+    d.add_argument("--route", required=True, choices=ROUTES)
+    d.add_argument("--reason", required=True, help="one sentence")
+    d.add_argument("--kind", default="", help="impl | security | infra | debug | refactor | docs")
     a = ap.parse_args()
+    if a.cmd == "declare":
+        import lane_run  # noqa: E402
+        ens = lane_run.ensure(a.task, kind=a.kind or None)
+        rd = Path(ens["run_dir"])
+        hist = lane_run.route_history(rd)
+        entry = {"route": a.route, "reason": a.reason, "kind": a.kind or ens.get("kind") or "", "at": lane_run.now_iso()}
+        hist.append(entry)
+        (rd / "route.json").write_text(json.dumps(hist, indent=2))
+        print(json.dumps({"declared": a.route, "task": a.task, "declarations": len(hist), "escalated": len({h.get("route") for h in hist}) > 1, "written": str(rd / "route.json")}, indent=2))
+        return 0
     if a.cmd == "table":
         t = load_table()
         print(f"updated {t['updated']}")
@@ -140,9 +161,13 @@ def main() -> int:
     out = suggest(a.role, a.kind, risk, a.attempt, a.diff_lines)
     out.update({"role": a.role, "kind": a.kind, "risk": sorted(risk), "attempt": a.attempt, "diff_lines": a.diff_lines})
     if a.task:
-        gcd = git_common_dir()
-        if gcd:
-            rd = gcd / "tri-lane" / "run" / a.task
+        try:
+            import lane_run  # noqa: E402
+            rd = Path(lane_run.ensure(a.task, kind=a.kind if a.kind != "impl" else None)["run_dir"])
+        except Exception:
+            gcd = git_common_dir()
+            rd = (gcd / "tri-lane" / "run" / a.task) if gcd else None
+        if rd:
             rd.mkdir(parents=True, exist_ok=True)
             (rd / "route-suggestion.json").write_text(json.dumps(out, indent=2))
             out["written"] = str(rd / "route-suggestion.json")

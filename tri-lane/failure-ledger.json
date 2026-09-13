@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-06",
+  "updated": "2026-09-13",
   "classes": [
     {
       "class": "infra",
@@ -153,6 +153,13 @@
       "signature": "status needs --task",
       "first_seen": "2026-09-06",
       "closed_by": "1.9.2 status lists all lanes (#53)",
+      "status": "closed"
+    },
+    {
+      "class": "harness",
+      "signature": "benchmark never logged in production: start/end typed by hand and never typed; report printed, not persisted",
+      "first_seen": "2026-09-13",
+      "closed_by": "1.10.0 worktree lifecycle opens/closes the record; report.json + verify.jsonl (Wave 4 T42/T43)",
       "status": "closed"
     }
   ]
