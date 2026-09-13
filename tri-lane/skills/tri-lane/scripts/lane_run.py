@@ -29,6 +29,39 @@ AUDIT_TRIGGERS = re.compile(
     r"(^|/)(firestore|storage|database)\.rules$|(^|/)migrations?/|(^|/)functions/|(^|/)\.github/workflows/|"
     r"(^|/)(auth|billing|payments?|stripe)[^/]*\.|/(auth|billing|payments?)/", re.I)
 MANDATORY_DIFF_LINES = 150
+DEFAULT_PROJECT_ROOTS = ("~/Documents/Cure-Consulting-Group", "~/CureVault/projects", "/Volumes/CureVault/projects")
+
+
+def project_roots() -> list:
+    """Directories whose immediate children are project checkouts. TRI_LANE_PROJECT_ROOTS (colon-separated) overrides."""
+    env = os.environ.get("TRI_LANE_PROJECT_ROOTS", "")
+    roots = [Path(x).expanduser() for x in (env.split(":") if env else DEFAULT_PROJECT_ROOTS) if x.strip()]
+    seen, out = set(), []
+    for r in roots:
+        if r.exists():
+            k = str(r.resolve())
+            if k not in seen:
+                seen.add(k); out.append(r.resolve())
+    return out
+
+
+def iter_run_dirs(all_projects: bool = False, cwd=None):
+    """Yield (project_root, run_dir) for every task run dir: this repo's, or every project under the roots."""
+    if not all_projects:
+        gcd = git_common_dir(cwd)
+        if gcd and (gcd / "tri-lane" / "run").exists():
+            root = gcd.parent
+            for d in sorted((gcd / "tri-lane" / "run").iterdir()):
+                if d.is_dir():
+                    yield root, d
+        return
+    for root in project_roots():
+        for proj in sorted(root.iterdir()):
+            runs = proj / ".git" / "tri-lane" / "run"
+            if proj.is_dir() and runs.exists():
+                for d in sorted(runs.iterdir()):
+                    if d.is_dir():
+                        yield proj, d
 
 
 def sh(cmd, cwd=None, timeout=60, env=None) -> tuple[int, str]:

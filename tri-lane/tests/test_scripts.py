@@ -655,5 +655,113 @@ class Lifecycle(unittest.TestCase):
             shutil.rmtree(d)
 
 
+class AdvisorGate(unittest.TestCase):
+    """Wave 4 T45: a lane diff does not leave the merge gate without advisor evidence or a recorded skip."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.gcd = self.repo / ".git" / "tri-lane"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def lw(self, *args):
+        return run([SCRIPTS / "lane-worktree.py", *args], cwd=self.repo)
+
+    def lane(self, task, lane="gpt-5.6-luna @ medium", lines=1, files=("README.md",)):
+        self.lw("add", "--task", task, "--base", "main")
+        wt = self.d / "wt" / task
+        for f in files:
+            (wt / f).parent.mkdir(parents=True, exist_ok=True)
+            (wt / f).write_text("x\n" * lines)
+        rc, out, err = run([SCRIPTS / "lane-report.py", "--worktree", wt, "--lane", lane, "--base", "main", *sum([["--files", f] for f in files], []), "--verify", "true", "--unsandboxed-verify", "--commit", "--json"], cwd=self.repo)
+        self.assertIn(json.loads(out)["STATUS"], ("complete", "partial"), err)
+        return self.gcd / "run" / task
+
+    def test_refuses_without_advisor_then_accepts_recorded_skip(self):
+        rd = self.lane("g")
+        rc, out, err = self.lw("remove", "--task", "g", "--base", "main", "--no-push")
+        self.assertEqual(rc, 4, out + err)
+        self.assertIn("no advisor verdict", err)
+        self.assertTrue((self.d / "wt" / "g").exists())
+        rc, out, err = self.lw("remove", "--task", "g", "--base", "main", "--no-push", "--skip-advisor", "trivial copy change")
+        self.assertEqual(rc, 0, err)
+        row = json.loads((self.gcd / "benchmark.jsonl").read_text().splitlines()[-1])
+        self.assertEqual(row["advisor"], "none")
+        self.assertEqual(row["advisor_skip_reason"], "trivial copy change")
+
+    def test_mandatory_tier_refuses_skip(self):
+        for task, kw in (("sol", {"lane": "gpt-5.6-sol @ max"}), ("big", {"lines": 200}), ("rules", {"files": ("firestore.rules",)})):
+            self.lane(task, **kw)
+            rc, out, err = self.lw("remove", "--task", task, "--base", "main", "--no-push", "--skip-advisor", "no")
+            self.assertEqual(rc, 4, f"{task}: {err}")
+            self.assertIn("mandatory", err)
+
+    def test_verdict_on_disk_passes_and_no_diff_needs_nothing(self):
+        rd = self.lane("v")
+        (rd / "advisor.md").write_text("VERDICT   ship\n")
+        self.assertEqual(self.lw("remove", "--task", "v", "--base", "main", "--no-push")[0], 0)
+        self.lw("add", "--task", "empty", "--base", "main")
+        self.assertEqual(self.lw("remove", "--task", "empty", "--base", "main", "--no-push")[0], 0)
+
+
+class Causes(unittest.TestCase):
+    """Wave 4 T46: production runs classify into causes; environment retries do not escalate."""
+
+    def test_classify_run_from_run_dir(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from lane_failures import classify_run
+        d = Path(tempfile.mkdtemp())
+        def mk(name, report=None, stderr="", final="", verify=None):
+            rd = d / name; rd.mkdir()
+            if report is not None:
+                (rd / "report.json").write_text(json.dumps(report))
+            if stderr:
+                (rd / "stderr.log").write_text(stderr)
+            if final:
+                (rd / "final.md").write_text(final)
+            if verify:
+                (rd / "verify-1.err").write_text(verify.get("err", "")); (rd / "verify-1.out").write_text(verify.get("out", ""))
+                (rd / "verify.jsonl").write_text(json.dumps({"exit": verify.get("exit", 1), "timed_out": verify.get("timed_out", False), "stderr_path": str(rd / "verify-1.err"), "stdout_path": str(rd / "verify-1.out")}) + "\n")
+            return rd
+        ok = {"STATUS": "complete", "TOUCHED": ["a"], "GAPS": []}
+        self.assertEqual(classify_run(mk("ok", ok))["state"], "complete")
+        self.assertEqual(classify_run(mk("scope", {"STATUS": "partial", "TOUCHED": ["a", "b"], "OUT_OF_SCOPE": ["b"], "GAPS": ["VERIFY not run"]}))["cause"], "scope-violation")
+        self.assertEqual(classify_run(mk("cache", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"err": "npm ERR! code ENOTCACHED"}))["cause"], "cache-miss")
+        self.assertEqual(classify_run(mk("sim", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"err": "CoreSimulator disconnected"}))["cause"], "service-unavailable")
+        self.assertEqual(classify_run(mk("sb", None, final="Blocked by the sandbox, so I made no edits."))["cause"], "refused-by-instruction")
+        self.assertEqual(classify_run(mk("tests", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"out": "Tests: 3 failed, 10 passed"}))["cause"], "test-failure")
+        self.assertEqual(classify_run(mk("to", {"STATUS": "partial", "TOUCHED": ["a"], "GAPS": []}, verify={"exit": 124, "timed_out": True}))["cause"], "build-timeout")
+        self.assertEqual(classify_run(mk("empty", {"STATUS": "refused", "TOUCHED": [], "GAPS": ["empty diff with clean exit"]}))["cause"], "empty-diff")
+        self.assertEqual(classify_run(mk("old"))["state"], "unclassified")
+        shutil.rmtree(d)
+
+    def test_environment_cause_does_not_escalate(self):
+        def s(*args):
+            rc, out, err = run([SCRIPTS / "lane-route.py", "suggest", *args]); return json.loads(out)
+        base = s("--role", "implement", "--kind", "impl")
+        env = s("--role", "implement", "--kind", "impl", "--attempt", "2", "--cause", "infra")
+        self.assertEqual((env["lane"], env["effort"]), (base["lane"], base["effort"]))
+        self.assertTrue(env["environment_retry"])
+        model = s("--role", "implement", "--kind", "impl", "--attempt", "2", "--cause", "model")
+        self.assertEqual(model["effort"], "xhigh")
+
+    def test_classify_production_writes_histogram(self):
+        d, repo = temp_repo()
+        rd = repo / ".git" / "tri-lane" / "run" / "p1"; rd.mkdir(parents=True)
+        (rd / "report.json").write_text(json.dumps({"STATUS": "complete", "TOUCHED": ["a"], "GAPS": [], "attempt": 1}))
+        rd2 = repo / ".git" / "tri-lane" / "run" / "p2"; rd2.mkdir()
+        (rd2 / "final.md").write_text("Blocked by the sandbox, so I made no edits.")
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", repo / ".git" / "tri-lane" / "evals.jsonl", "classify", "--production"], cwd=repo)
+        self.assertEqual(rc, 0, err)
+        h = json.loads(out)["histogram"]
+        self.assertEqual((h.get("complete"), h.get("refused-by-instruction")), (1, 1))
+        rows = [json.loads(l) for l in (repo / ".git" / "tri-lane" / "failures.jsonl").read_text().splitlines()]
+        self.assertEqual(len(rows), 2)
+        rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", repo / ".git" / "tri-lane" / "evals.jsonl", "classify", "--production"], cwd=repo)
+        self.assertEqual(json.loads(out)["new_rows"], 0)
+        shutil.rmtree(d)
+
+
 if __name__ == "__main__":
     unittest.main()

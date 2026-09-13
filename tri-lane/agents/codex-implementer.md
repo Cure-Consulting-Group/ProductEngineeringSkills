@@ -40,4 +40,5 @@ You have 40 turns. Setup is five of them (cached preflight, state save, worktree
 - "Codex said it works" is not evidence. Only the re-run VERIFY output is.
 - If the diff touches files outside `FILES`, report it under GAPS. Do not revert it yourself.
 - If the spec was routine and the architect sent it to Sol at `max` or `ultra`, say so in GAPS: you are the expensive way to find out.
+- On any non-complete report, end your reply with the cause line from `python3 "${CLAUDE_PLUGIN_ROOT}/skills/tri-lane/scripts/lane_failures.py" --run "$RUN"` (`cache-miss`, `sandbox-denied`, `service-unavailable`, `build-timeout`, `test-failure`, …). An environment cause means the architect repairs and resubmits on the same lane; it is not a strike against the model.
 - Keep your reply to the report plus at most three sentences of context.

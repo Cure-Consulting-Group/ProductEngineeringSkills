@@ -13,7 +13,10 @@
           then closes the task's benchmark record (lane-log end) from what the run dir holds: route, lane, status,
           advisor verdict, rework, tokens. Pass --finding codex:C:D:U for your labels; --no-log to skip.
           A failed log write never fails the removal: it lands in run/<task>/log-error.txt (T42).
-          --force skips the liveness check but never the salvage push.
+          Refuses (exit 4) when the lane left a diff and no advisor.md exists, unless --skip-advisor "<reason>";
+          the skip is recorded and logged as advisor: none. Sol lanes, diffs over 150 lines, out-of-scope or
+          exec-config touches, and audit-trigger paths cannot be skipped (T45).
+          --force skips the liveness check but never the salvage push or the advisor gate.
 
 Orphaning a live lane cost two runs in one session (HoopTrace, 3 Sep 2026). Python stdlib only.
 
@@ -191,6 +194,11 @@ def cmd_remove(a) -> int:
         print(json.dumps({"refused": str(wt), "reason": "lane appears to be running", "lock": info["lock"], "processes": info["processes"],
                           "hint": "wait for the lane report, or `lane-worktree.py status`; --force only if you have confirmed the process is dead"}, indent=2), file=sys.stderr)
         return 3
+    if not a.ro:
+        gate = _advisor_gate(a)
+        if gate:
+            print(json.dumps(gate, indent=2), file=sys.stderr)
+            return 4
     salvage = None
     if not a.ro and wt.exists():
         branch = f"lane/{a.task}"
@@ -222,6 +230,32 @@ def cmd_remove(a) -> int:
         result["logged"] = _close_record(a)
     print(json.dumps(result))
     return 0
+
+
+def _advisor_gate(a) -> dict | None:
+    """T45: a lane diff does not leave the gate without advisor evidence or an explicit, recorded skip.
+    Returns the refusal (to print) or None to proceed."""
+    try:
+        import lane_run  # noqa: E402
+        rd = run_dir(a.task)
+        rep = lane_run.latest_report(rd)
+        if not lane_run.has_lane_diff(rep):
+            return None  # nothing was merged from this lane; nothing to review
+        if lane_run.advisor_verdict(rd):
+            return None
+        why = lane_run.mandatory_advisor(rep)
+        reason = (getattr(a, "skip_advisor", None) or "").strip()
+        if reason and not why:
+            lane_run.write_meta(a.task, advisor_skip_reason=reason, advisor_skipped_at=lane_run.now_iso())
+            return None
+        if reason and why:
+            return {"refused": a.task, "reason": "advisor review is mandatory for this diff; --skip-advisor is not accepted", "because": why,
+                    "hint": "run cure-advisor with the goal, the diff, and RUN; it writes $RUN/advisor.md"}
+        return {"refused": a.task, "reason": "no advisor verdict on disk ($RUN/advisor.md) for a lane that left a diff",
+                "mandatory": why, "hint": "run cure-advisor first, or pass --skip-advisor \"<reason>\" (allowed only when `mandatory` is empty); the skip is logged"}
+    except Exception as e:  # the gate is a rail, not a trap: an internal error must not block a merge silently
+        print(f"lane-worktree: advisor gate skipped on internal error: {e}", file=sys.stderr)
+        return None
 
 
 def _close_record(a) -> dict:
@@ -272,6 +306,7 @@ def main() -> int:
             s.add_argument("--force", action="store_true", help="skip the liveness check (never skips salvage)")
             s.add_argument("--no-push", action="store_true", help="create the salvage branch locally only")
             s.add_argument("--no-log", action="store_true", help="do not close the benchmark record")
+            s.add_argument("--skip-advisor", default="", metavar="REASON", help="remove without an advisor verdict; recorded and logged as advisor: none. Refused for Sol lanes, diffs > 150 lines, scope or exec-config touches, audit-trigger paths")
             s.add_argument("--finding", action="append", help="reviewer:confirmed:disputed:unverified, your labels (repeatable); absent = unlabeled")
             s.add_argument("--notes", default="", help="appended to the benchmark row")
         s.set_defaults(fn=fn)

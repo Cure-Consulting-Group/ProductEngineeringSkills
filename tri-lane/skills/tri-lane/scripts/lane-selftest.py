@@ -7,8 +7,9 @@ Creates a throwaway git repo (never touches the user's checkouts), then checks:
   3. sandboxed VERIFY: write inside worktree ok, write to $HOME denied, /tmp denied   (skipped if codex missing)
   4. lane-worktree: add, lock, status=alive, remove refused, unlock, remove salvages unmerged work (no push)
   5. lane_toolchains: detects a gradle marker and resolves physical cache paths
-  6. benchmark record: `add` opened it, the report persisted report.json/verify.jsonl, `remove` closed it with
-     route, lane, status, and advisor verdict discovered from the run dir and no flag typed (Wave 4, T42/T43)
+  6. benchmark record: `add` opened it, the report persisted report.json/verify.jsonl, `remove` refused without an
+     advisor verdict on disk, then closed the record with route, lane, status, and verdict discovered from the
+     run dir and no flag typed (Wave 4, T42/T43/T45)
 
 Prints JSON; exit 0 when every check passed or was skipped for a documented reason, 1 otherwise.
 Run by `lane-preflight.py --self-test` and by CI. Python stdlib only.
@@ -121,6 +122,8 @@ def main() -> int:
         rd = repo / ".git" / "tri-lane" / "run" / "st"
         rec("lane-report persisted report.json and verify.jsonl", (rd / "report.json").exists() and (rd / "verify.jsonl").exists(), str(rd))
         sh([sys.executable, str(HERE / "lane-route.py"), "declare", "--task", "st", "--route", "delegate", "--reason", "selftest"], cwd=repo, env=env)
+        rc_g, out_g = sh([sys.executable, str(LW), "remove", "--task", "st", "--base", "main", "--no-push"], cwd=repo, env=env)
+        rec("lane-worktree refuses removal without an advisor verdict", rc_g == 4 and wt.exists() and "advisor" in out_g, "remove exit 4 (T45)")
         (rd / "advisor.md").write_text("VERDICT   ship\nBECAUSE selftest\n")
 
         # 4b. salvage on remove, which also closes the benchmark record

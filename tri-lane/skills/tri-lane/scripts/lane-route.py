@@ -79,8 +79,17 @@ def match(rule: dict, role: str, kind: str, risk: set, diff_lines: int) -> bool:
     return True
 
 
-def suggest(role: str, kind: str, risk: set, attempt: int, diff_lines: int) -> dict:
+ENV_CAUSES = {"infra", "harness", "quota"}
+
+
+def suggest(role: str, kind: str, risk: set, attempt: int, diff_lines: int, cause: str = "") -> dict:
     t = load_table()
+    if cause and cause in ENV_CAUSES and attempt > 1:
+        # T46: an environment failure (cache miss, sandbox denial, unavailable service, quota) is repaired and
+        # retried on the same lane; it never advances the capability escalation counter
+        out = suggest(role, kind, risk, 1, diff_lines)
+        out.update({"environment_retry": True, "cause": cause, "attempt_counted": 1, "basis": f"attempt {attempt} follows a {cause} failure: repair the environment and retry on the same lane; " + (out.get("basis") or "")})
+        return out
     if role == "implement" and attempt >= 3:
         e = t["escalation"]["attempt_3"]
         return {"rule": "escalation.attempt_3", **e, "shadow": False}
@@ -131,6 +140,7 @@ def main() -> int:
     s.add_argument("--kind", default="impl", help="impl | feature | strings | docs | config | android | ios | web | tests | ci | sre | infra | migration | build | debug | payments | ...")
     s.add_argument("--risk", default="", help="comma list: payments,auth,rules,security,concurrency,billing,api,migration,ci")
     s.add_argument("--attempt", type=int, default=1)
+    s.add_argument("--cause", default="", help="why the previous attempt failed: infra | harness | quota (environment: retry same lane) | model (escalate) | fixture")
     s.add_argument("--diff-lines", type=int, default=0, help="expected size of the change")
     s.add_argument("--task", help="write route-suggestion.json into this task's run dir (shadow mode)")
     s.add_argument("--json", action="store_true")
@@ -158,7 +168,7 @@ def main() -> int:
             print(f"{r['id']:28} {r['role']:14} {','.join(r['kinds']):40} risk={','.join(r['risk']) or '-':40} -> {r['lane']} @ {r['effort']}{'  [shadow]' if r.get('shadow') else ''}")
         return 0
     risk = {x.strip() for x in a.risk.split(",") if x.strip()}
-    out = suggest(a.role, a.kind, risk, a.attempt, a.diff_lines)
+    out = suggest(a.role, a.kind, risk, a.attempt, a.diff_lines, a.cause)
     out.update({"role": a.role, "kind": a.kind, "risk": sorted(risk), "attempt": a.attempt, "diff_lines": a.diff_lines})
     if a.task:
         try:

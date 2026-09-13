@@ -44,6 +44,13 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Advisor at the merge gate, failures by cause (1.11.0)
+
+- `lane-worktree.py remove` refuses (exit 4) when the lane left a diff and no `$RUN/advisor.md` exists. Below the mandatory tier `--skip-advisor "<reason>"` is accepted, recorded in `meta.json`, and logged as `advisor: none` with the reason, so coverage and skips are both measurable. Mandatory (no skip): Sol lanes, diffs over 150 lines, out-of-scope or executable-config touches, audit-trigger paths. This replaces the production review's proposal of a blanket mandate on every delegate task, which would have spent about 6.3M Claude tokens over ten days against 14.7M moved off Claude (`docs/TRI-LANE-CLAUDE-REVIEW-2026-09-13.md`, Q2).
+- `lane_failures.py` gains causes under the existing classes (`cache-miss`, `sandbox-denied`, `service-unavailable`, `build-timeout`, `test-failure`, `scope-violation`, `empty-diff`, `deletion-only`, `stall`, `refused-by-instruction`, `schema`, `quota`) and `classify_run(run_dir)` for production runs. `lane-eval.py classify --production [--all-projects]` walks every run dir, appends to `failures.jsonl` (idempotent), and prints the histogram. The Codex review's private-cache preparation lifecycle stays held until that histogram shows at least five `cache-miss` runs in thirty logged tasks.
+- `lane-route.py suggest --cause infra|harness|quota` answers an environment failure with "same lane, repair and retry" instead of advancing the capability escalation; only `--cause model` escalates.
+- Project roots for `--all-projects` come from `TRI_LANE_PROJECT_ROOTS` (colon-separated) or the defaults `~/Documents/Cure-Consulting-Group`, `~/CureVault/projects`, `/Volumes/CureVault/projects`.
+
 ## Every task logs itself (1.10.0)
 
 Ten days of production (142 tasks, 8 repositories) produced no `benchmark.jsonl` anywhere: `lane-log.py start` and `end` were never typed, and `lane-report.py` printed its report without keeping it. So the pre-registered decision rule in `BENCHMARK.md` could not be evaluated, and the production review's verdict rested on token totals alone (`docs/TRI-LANE-CLAUDE-REVIEW-2026-09-13.md`). Now the lifecycle does the logging:
