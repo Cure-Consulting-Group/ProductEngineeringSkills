@@ -202,6 +202,58 @@ def decide(s: dict, claude_drop: float, max_slowdown: float) -> dict:
     return {"verdict": verdict, "checks": checks, **extra}
 
 
+def proxy(pre: str, post: str, projects: list, until: str | None = None) -> dict:
+    """T49 part 1: Claude billable per merged commit per repository across two windows, from transcripts and
+    `git log --all`. A proxy for the pre-registered rule, never a substitute for the manual arm: work mix differs
+    between windows, review sessions inflate the post window, and commits count every branch."""
+    import importlib.util
+    from datetime import datetime, timezone
+    spec_u = importlib.util.spec_from_file_location("usage_window", HERE / "usage-window.py")
+    uw = importlib.util.module_from_spec(spec_u); spec_u.loader.exec_module(uw)
+    t_pre, t_post = uw.parse_ts(pre), uw.parse_ts(post)
+    t_end = uw.parse_ts(until) if until else datetime.now(timezone.utc)
+    out = {"windows": {"pre": [t_pre.isoformat(), t_post.isoformat()], "post": [t_post.isoformat(), t_end.isoformat()]}, "projects": {}, "confounds": [
+        "work mix differs between windows", "the post window includes review and documentation sessions",
+        "commits are counted on every branch (--all) and include lane and salvage commits", "Claude billable includes cache creation, which scales with context size",
+        "this is not the pre-registered rule; only the manual arm can return a verdict"]}
+    for proj in projects:
+        pj = Path(proj).expanduser()
+        u_pre, u_post = uw.claude_usage_multi(str(pj), [(t_pre, t_post), (t_post, t_end)])
+        def commits(a, b, scope):
+            # scope "all": every branch, which after adoption includes one commit per lane run and salvage;
+            # scope "branch": first-parent history of the checked-out branch, closer to "changes that landed"
+            args = ["git", "log", "--oneline", f"--since={a.isoformat()}", f"--until={b.isoformat()}"] + (["--all"] if scope == "all" else ["--first-parent", "HEAD"])
+            try:
+                r = subprocess.run(args, cwd=str(pj), capture_output=True, text=True, timeout=60)
+                return len([l for l in r.stdout.splitlines() if l.strip()])
+            except Exception:
+                return 0
+        def side(u, a, b):
+            ca, cb = commits(a, b, "all"), commits(a, b, "branch")
+            return {"claude_billable": u["billable_tokens"], "messages": u["messages"], "commits_all": ca, "commits_branch": cb,
+                    "per_commit_all": round(u["billable_tokens"] / ca) if ca else None, "per_commit_branch": round(u["billable_tokens"] / cb) if cb else None}
+        row = {"pre": side(u_pre, t_pre, t_post), "post": side(u_post, t_post, t_end)}
+        for k in ("all", "branch"):
+            a, b = row["pre"][f"per_commit_{k}"], row["post"][f"per_commit_{k}"]
+            if a and b:
+                row[f"per_commit_change_{k}"] = round(b / a - 1, 2)
+        out["projects"][pj.name] = row
+    return out
+
+
+def render_proxy_md(d: dict) -> str:
+    out = ["# Tri-Lane cost proxy: Claude billable per merged commit", "",
+           f"Windows: pre `{d['windows']['pre'][0][:10]}` to `{d['windows']['pre'][1][:10]}`; post `{d['windows']['post'][0][:10]}` to `{d['windows']['post'][1][:10]}`.", "",
+           "**Proxy, not the rule.** " + " ".join(c[0].upper() + c[1:] + "." for c in d["confounds"]), "",
+           "Two commit denominators, because the answer depends on it: *branch* counts first-parent commits on the checked-out branch (changes that landed); *all* counts every branch, which after adoption includes one commit per lane run and every salvage branch, so it flatters the post window.", "",
+           "| Repository | Claude billable, pre | Claude billable, post | Per branch commit, pre → post | Change | Per commit (all branches), pre → post | Change |", "|---|---:|---:|---|---:|---|---:|"]
+    f = lambda v: f"{v:,}" if isinstance(v, int) else ("—" if v is None else v)
+    pct = lambda ch: ("+" if ch and ch > 0 else "") + str(round(ch * 100)) + "%" if ch is not None else "—"
+    for name, r in d["projects"].items():
+        out.append(f"| {name} | {f(r['pre']['claude_billable'])} | {f(r['post']['claude_billable'])} | {f(r['pre']['per_commit_branch'])} ({r['pre']['commits_branch']}) → {f(r['post']['per_commit_branch'])} ({r['post']['commits_branch']}) | {pct(r.get('per_commit_change_branch'))} | {f(r['pre']['per_commit_all'])} ({r['pre']['commits_all']}) → {f(r['post']['per_commit_all'])} ({r['post']['commits_all']}) | {pct(r.get('per_commit_change_all'))} |")
+    return "\n".join(out)
+
+
 def md_table(s: dict) -> str:
     cols = [("tasks", "Tasks"), ("claude_billable_median", "Claude billable (med)"), ("claude_cache_read_median", "Claude cache read (med)"),
             ("codex_tokens_median", "Codex billable (med)"), ("agy_tokens_median", "Antigravity tokens (med)"), ("elapsed_min_median", "Elapsed min (med)"),
@@ -254,9 +306,29 @@ def main() -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--html", help="write a one-page HTML report to this path")
     ap.add_argument("--include-overlaps", action="store_true", help="count Claude tokens for tasks whose windows overlap another task's (double counts; default excludes them)")
+    ap.add_argument("--proxy", action="store_true", help="T49: Claude billable per merged commit per repo across two windows (--pre, --post); a proxy, not the rule")
+    ap.add_argument("--pre", help="ISO start of the pre-adoption window (with --proxy)")
+    ap.add_argument("--post", help="ISO start of the post-adoption window; the pre window ends here (with --proxy)")
+    ap.add_argument("--until", help="ISO end of the post window (default now)")
+    ap.add_argument("--projects", help="comma-separated repo paths (default: every project root child with a .git/tri-lane)")
     args = ap.parse_args()
     global INCLUDE_OVERLAPS
     INCLUDE_OVERLAPS = args.include_overlaps
+    if args.proxy:
+        if not (args.pre and args.post):
+            print("--proxy needs --pre and --post", file=sys.stderr)
+            return 2
+        import lane_run  # noqa: E402
+        projects = [p.strip() for p in args.projects.split(",")] if args.projects else [str(pj) for root in lane_run.project_roots() for pj in sorted(root.iterdir()) if (pj / ".git" / "tri-lane").exists()]
+        d = proxy(args.pre, args.post, projects, args.until)
+        if args.json:
+            print(json.dumps(d, indent=2))
+        else:
+            md = render_proxy_md(d)
+            print(md)
+            if args.html:
+                Path(args.html).write_text(render_html(md))
+        return 0
     log = Path(args.log) if args.log else default_log()
     rows = load_all_projects() if args.all_projects else load(log)
     if args.all_projects:

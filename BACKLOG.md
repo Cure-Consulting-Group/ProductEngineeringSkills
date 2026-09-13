@@ -8,6 +8,21 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 
 # Wave 4 (2026-09-13) — Tri-Lane v2: Measure Before Mandate
 
+**Execution status (2026-09-13, branch `feat/tri-lane-wave-4`):** T42, T43, T44, T45, T46, T47, T48, T49 (part 1), T50, T51 built and committed as tri-lane 1.10.0 → 1.13.0. Deviations:
+
+| Ticket | Status | Deviation |
+|---|---|---|
+| T43 | ✅ Done | As scoped; `filtered` also fires on `sed`/`awk`/`cut`/`sort`/`uniq`/`wc` |
+| T42 | ✅ Done | `TRI_LANE_ARM` env selects the arm for a session (lean-architect logging); `lane-log update --finding` labels after the fact |
+| T44 | ✅ Done | No turn metric existed in the scripts (only in the hand-made export); dispatches and rework added instead |
+| T51 | ✅ Done | SessionStart hook on `startup|resume`, `\|\| true`, 5 s |
+| T45 | ✅ Done | Parser fixture is the six verdict-line variants seen in production, not copies of the eleven files |
+| T46 | ✅ Done | First histogram over 142 run dirs (signature-only, pre-1.10.0): 0 `cache-miss`, 16 `sandbox-denied` (loopback), 7 `service-unavailable`; `docs/TRI-LANE-FAILURE-CAUSES-2026-09-13.md`. Cache lifecycle stays held. The dominant infra cause is sandbox loopback denial for emulators and test servers, the Gradle class again |
+| T47 | ✅ Done | 93 rows, not 142: 49 run dirs held only `tmp/` and carry no evidence. Antigravity's 8,802,380 Codex billable does not reproduce; every implementer event file sums to 9,075,260 (primary `events.jsonl` alone 8,503,703). Antigravity 5,883,080 reproduces exactly. 64 of 93 Claude windows overlap; 27 usable, tri-lane median 120,775 billable per task |
+| T48 | ✅ Done | Generated dashboard published as a separate artifact ("Tri-Lane Benchmark Log") rather than over the hand-built review page, which keeps the claim ledgers and plan |
+| T49 | ◐ Part 1 | Proxy script and `docs/TRI-LANE-COST-PROXY-2026-09-13.md` shipped. Sign depends on the commit denominator (branch-only vs all branches, since lane runs add commits); the manual arm is the only honest answer. **Part 2 needs a go decision** |
+| T50 | ✅ Done | Over 59 production specs: 0 refusals, 24 masked-VERIFY warnings (41%), 7 directory-FILES warnings. Higher value than scoped |
+
 Captured 2026-09-13 from three reads of the first ten days of Tri-Lane in production (142 tasks, 8 repositories): the Antigravity production review, the Codex review of its Section 5 agenda, and the Claude review (`docs/TRI-LANE-CLAUDE-REVIEW-2026-09-13.md`). Theme: **the doctrine ran, the benchmark did not.** Every token figure in the report recomputes, but the pre-registered decision rule in `tri-lane/BENCHMARK.md` was never evaluated because nothing it needs was logged: no repository has a `benchmark.jsonl`, `lane-log.py start/end` never ran, `lane-report.py` never persisted a report, routes and advisor verdicts live only in conversation. The report's "STRONG ADOPT" is therefore withdrawn as a verdict and kept as a hypothesis. This wave makes the measurement automatic, backfills what the run directories can still tell us, and enforces the two Section 5 gates in the one place that sees every merge.
 
 **Verified facts (2026-09-13; do not re-research):**

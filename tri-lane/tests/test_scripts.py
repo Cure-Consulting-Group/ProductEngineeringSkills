@@ -824,5 +824,61 @@ class Backfill(unittest.TestCase):
             self.assertIn(needle, html)
 
 
+class Proxy(unittest.TestCase):
+    """Wave 4 T49 part 1: the cost proxy runs on a repo with commits and no transcripts and reports its confounds."""
+
+    def test_proxy_shape(self):
+        d, repo = temp_repo()
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--proxy", "--pre", "2026-01-01T00:00:00Z", "--post", "2026-06-01T00:00:00Z", "--projects", str(repo), "--json"], cwd=repo)
+        self.assertEqual(rc, 0, err)
+        j = json.loads(out)
+        self.assertIn(repo.name, j["projects"])
+        self.assertIn("not the pre-registered rule", " ".join(j["confounds"]))
+        self.assertEqual(j["projects"][repo.name]["post"]["claude_billable"], 0)
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--proxy", "--pre", "2026-01-01T00:00:00Z", "--post", "2026-06-01T00:00:00Z", "--projects", str(repo)], cwd=repo)
+        self.assertIn("Proxy, not the rule", out)
+        shutil.rmtree(d)
+
+
+class Spec(unittest.TestCase):
+    """Wave 4 T50: the spec substance lint refuses only on hard failures and warns on masked VERIFY and directory FILES."""
+
+    def check(self, text, wt=None):
+        d = Path(tempfile.mkdtemp()); (d / "s.md").write_text(text)
+        args = [SCRIPTS / "lane-spec.py", "check", d / "s.md", "--json"] + (["--worktree", wt] if wt else [])
+        rc, out, err = run(args)
+        shutil.rmtree(d)
+        return rc, json.loads(out)
+
+    GOOD = "LANE        luna\nREASONING   high\nOBJECTIVE   add the roster service tests for the empty-team case\nFILES       src/rosterService.ts\n            src/__tests__/rosterService.test.ts\nINTERFACES  none\nCONSTRAINTS keep the Firestore pins\nVERIFY      npm test\n"
+
+    def test_good_spec_passes_clean(self):
+        rc, r = self.check(self.GOOD)
+        self.assertEqual((rc, r["ok"], r["errors"], r["warnings"], r["files"]), (0, True, [], [], ["src/rosterService.ts", "src/__tests__/rosterService.test.ts"]))
+
+    def test_hard_failures(self):
+        rc, r = self.check(self.GOOD.replace("VERIFY      npm test\n", ""))
+        self.assertEqual(rc, 2); self.assertTrue(any("missing sections: VERIFY" in e for e in r["errors"]))
+        rc, r = self.check(self.GOOD.replace("REASONING   high", "REASONING   ultra"))
+        self.assertEqual(rc, 2); self.assertTrue(any("not legal for luna" in e for e in r["errors"]))
+        rc, r = self.check(self.GOOD.replace("VERIFY      npm test", "VERIFY"))
+        self.assertEqual(rc, 2); self.assertTrue(any("VERIFY is empty" in e for e in r["errors"]))
+
+    def test_warnings_do_not_refuse(self):
+        rc, r = self.check(self.GOOD.replace("VERIFY      npm test", "VERIFY      xcodebuild test | grep -c PASS || true").replace("src/rosterService.ts", "src/"))
+        self.assertEqual((rc, r["ok"]), (0, True))
+        self.assertTrue(any("masked" in w for w in r["warnings"]))
+        self.assertTrue(any("directory" in w for w in r["warnings"]))
+
+    def test_files_resolved_against_worktree(self):
+        d, repo = temp_repo()
+        (repo / "src").mkdir()
+        rc, r = self.check(self.GOOD.replace("src/rosterService.ts", "src/new.ts").replace("src/__tests__/rosterService.test.ts", "nowhere/deep/x.ts"), str(repo))
+        self.assertEqual(rc, 2)
+        self.assertTrue(any("nowhere/deep/x.ts" in e for e in r["errors"]))
+        self.assertFalse(any("src/new.ts" in e for e in r["errors"]))
+        shutil.rmtree(d)
+
+
 if __name__ == "__main__":
     unittest.main()
