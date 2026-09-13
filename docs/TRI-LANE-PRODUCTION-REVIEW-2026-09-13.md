@@ -5,25 +5,25 @@
 **Scope**: 142 Tasks across 8 Production Repositories  
 **Observation Window**: September 4, 2026 – September 13, 2026 (~10 Days of Continuous Production Use)  
 **Evaluator**: Antigravity (Pair Programming / Systems Review)  
-**Dataset Artifact**: [`tri-lane/data/benchmark-tasks-2026-09-13.json`](file:///Users/rashadcureton/Documents/Cure-Consulting-Group/ProductEngineeringSkills/tri-lane/data/benchmark-tasks-2026-09-13.json)
+**Dataset Artifact**: [`tri-lane/data/benchmark-tasks-2026-09-13.json`](../tri-lane/data/benchmark-tasks-2026-09-13.json)
 
 ---
 
 ## 1. Executive Summary
 
-Since deploying the **Tri-Lane** multi-vendor orchestration doctrine ([`tri-lane`](file:///Users/rashadcureton/Documents/Cure-Consulting-Group/ProductEngineeringSkills/tri-lane/skills/tri-lane/SKILL.md)), the engineering studio has completed **142 tasks** across 8 core repositories. 
+Since deploying the **Tri-Lane** multi-vendor orchestration doctrine ([`tri-lane`](../tri-lane/skills/tri-lane/SKILL.md)), the engineering studio has completed **142 tasks** across 8 core repositories. 
 
 The core thesis of the Tri-Lane doctrine was tested in real conditions:
 > *Can dividing work across Claude (Architect & Advisor), Codex (Implementation & Correctness), and Antigravity (System Review & Deep Context) reduce Claude session exhaustion and cost while improving ship quality?*
 
 ### The Verdict: **STRONG ADOPT & REFINE**
 
-| Criterion (from [`BENCHMARK.md`](file:///Users/rashadcureton/Documents/Cure-Consulting-Group/ProductEngineeringSkills/tri-lane/BENCHMARK.md)) | Target | Measured Result | Status |
+| Criterion (from [`BENCHMARK.md`](../tri-lane/BENCHMARK.md)) | Target | Measured Result | Status |
 |---|---|---|---|
 | **Claude Billable Token Offload** | ≥ 33% drop | **~14.7M tokens shifted** out of Claude session context | **PASSED (Substantially Exceeded)** |
 | **Review Signal / Precision** | > 0 confirmed findings/task | **90.9% actionable catch rate** on advisor reviews (10/11 `fix-first`) | **PASSED** |
 | **Prompt Cache Efficiency (Codex)** | High reuse | **96.1%** cache hit ratio (215.1M cached vs 8.8M billable) | **PASSED** |
-| **Worktree Isolation Safety** | Zero tree corruption | **100%** compliance via [`lane-worktree.py`](file:///Users/rashadcureton/Documents/Cure-Consulting-Group/ProductEngineeringSkills/tri-lane/skills/tri-lane/scripts/lane-worktree.py); 0 live-tree overwrites | **PASSED** |
+| **Worktree Isolation Safety** | Zero tree corruption | **100%** compliance via [`lane-worktree.py`](../tri-lane/skills/tri-lane/scripts/lane-worktree.py); 0 live-tree overwrites | **PASSED** |
 | **Model Tiering Match** | Luna default, Sol for risk | **77.6% Luna / 22.4% Sol** distribution matches intent | **PASSED** |
 
 ---
