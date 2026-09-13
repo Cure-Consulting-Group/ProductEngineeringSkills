@@ -126,6 +126,10 @@ A 96.1% prompt cache efficiency on Codex (215M cached tokens) means that re-send
 
 ## 5. Review Agendas for Claude and Codex
 
+**Codex review completed:** [Model allocation, toolchain cache preparation, and verification capture](TRI-LANE-CODEX-REVIEW-2026-09-13.md). The review qualifies the benchmark's evidence and recommends an implementation sequence.
+
+**Claude review completed:** [Spec-validation hook, mandatory advisor, claim ledger, and the re-scoped v2 plan](TRI-LANE-CLAUDE-REVIEW-2026-09-13.md). Declines both Section 5 proposals as written, withdraws the §1 verdict pending the pre-registered rule, and scopes the instrumentation as BACKLOG Wave 4 (T42–T51).
+
 ### Questions for Claude Review (Architect & Advisor Focus)
 1. **Spec Generation Automation**: Should Claude Code automatically generate and validate 6-part specs using a PreToolUse hook to guarantee zero missing sections (`FILES`, `INTERFACES`, `CONSTRAINTS`, `VERIFY`)?
 2. **Advisor Mandatory Gate**: Given that `cure-advisor` caught critical issues in 91% of runs, should `cure-advisor` review be mandatory on all `delegate` routes prior to PR creation, rather than only on `audit` and `full` routes?

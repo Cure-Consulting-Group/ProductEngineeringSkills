@@ -1,8 +1,272 @@
 # BACKLOG
 
-Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime.
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates.
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
+
+---
+
+# Wave 4 (2026-09-13) — Tri-Lane v2: Measure Before Mandate
+
+Captured 2026-09-13 from three reads of the first ten days of Tri-Lane in production (142 tasks, 8 repositories): the Antigravity production review, the Codex review of its Section 5 agenda, and the Claude review (`docs/TRI-LANE-CLAUDE-REVIEW-2026-09-13.md`). Theme: **the doctrine ran, the benchmark did not.** Every token figure in the report recomputes, but the pre-registered decision rule in `tri-lane/BENCHMARK.md` was never evaluated because nothing it needs was logged: no repository has a `benchmark.jsonl`, `lane-log.py start/end` never ran, `lane-report.py` never persisted a report, routes and advisor verdicts live only in conversation. The report's "STRONG ADOPT" is therefore withdrawn as a verdict and kept as a hypothesis. This wave makes the measurement automatic, backfills what the run directories can still tell us, and enforces the two Section 5 gates in the one place that sees every merge.
+
+**Verified facts (2026-09-13; do not re-research):**
+- 58 `spec.md` files exist across the 8 repositories; all 58 carry all seven sections. The spec-validation hook (Section 5 Q1) would guard a 0-of-58 failure.
+- 56 Codex-only (delegate-shaped) tasks ran; 2 had an advisor review. 8 of the 11 advisor reviews examined documents, plans, an RFC, or a brand package.
+- 15 `cure-advisor` subagent transcripts: median 116,387 billable Claude tokens per review (input + cache creation + output). Blanket coverage of the 54 unreviewed delegate tasks ≈ 6.3M against 14.7M moved off Claude.
+- `codex exec` is one turn per dispatch; the four "2-turn" tasks hold one `thread.started` and an `error` event. Turn count carries no information about spec quality.
+- `usage-window.py` can recover Claude billable per project and window from local transcripts (subagents included). Codex usage from session logs is account-wide, not project-scoped; per-task Codex must come from lane event files.
+- `lane-report.py` writes nothing to `$RUN`; its report exists only in the subagent's reply. `lane-worktree.py remove` is the one call every merged lane passes through; `add` is the one call every dispatched lane passes through.
+- `tri-lane/` is versioned separately in `tri-lane/.claude-plugin/plugin.json` (1.9.2); `scripts/release.sh` does not touch it.
+
+## Release plan
+
+| Release (tri-lane) | Tickets | Theme |
+|---|---|---|
+| 1.10.0 | T43, T42, T44, T51 | Capture: every run leaves evidence; every task logs itself |
+| 1.11.0 | T45, T46 | Gates and causes: advisor at merge, failure taxonomy, retry separation |
+| 1.12.0 | T47, T48 | Backfill and honest dashboard |
+| follow-up | T49, T50 | Cost verdict (needs a go decision); spec substance lint |
+
+Held behind data (not tickets until the gate opens): Luna-at-high pin (Antigravity §6.2) needs outcomes per rung from T42/T47; private-cache preparation lifecycle (Codex §4) needs ≥ 5 `cache-miss` classifications in 30 logged tasks from T46; solo ceiling (Section 5 Q3) needs 30 logged routes from T44.
+
+**Definition of done for the wave:** every dispatched task lands in `benchmark.jsonl` with route, lane, status, advisor verdict, Claude and Codex tokens, and rework, with zero manual flags; `benchmark-report.py` can evaluate all three checks of the pre-registered rule from that data; the 142-task backfill exists with every inferred field marked; the Section 5 gates are enforced at `remove` and every skip is logged with a reason.
+
+---
+
+## T42 — Automatic start and end at the worktree lifecycle
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.10.0
+
+**Problem:** `lane-log.py start` must be typed before the first prompt and `end` after merge. In ten days of production neither was typed once. A measurement that depends on remembering a command at the two busiest moments of a task will not be taken.
+
+**Scope:**
+1. New shared module `lane_run.py`: `ensure(task, kind=None)` creates `$RUN`, writes `meta.json` (`task`, `started_at`, `base`, `kind`, `project`, `head`) on first creation only, and calls `lane-log start --arm tri-lane` idempotently (no-op if a start record exists).
+2. `lane-worktree.py add` and `lane-route.py suggest --task` call `ensure`. Both `--ro` (Antigravity) and writable lanes are covered.
+3. `lane-worktree.py remove` calls `lane-log end` after a successful removal, auto-discovering: `route.json` (T44), `report*.json` status (T43), `advisor.md` verdict (T45 parser), `events*.jsonl`, `agy*.json`, `route-suggestion.json`, rework count (T44). `--findings codex:C:D:U` remains the one manual input; absent findings are logged as `unlabeled`, never as zero.
+4. `lane-log end --ended-at ISO` for backfill (T47); `--started-at` already exists.
+5. `lane-log end` may not fail the removal: any exception is written to `$RUN/log-error.txt` and `remove` still exits 0 with the error in its JSON.
+6. SKILL.md Step 5 and Benchmark mode rewritten: the commands disappear from the doctrine; the architect's remaining duties are the route line (T44), the findings labels, and reading the one-line summary `remove` now prints.
+
+**Blast radius:** Medium. `add` and `remove` are on every lane's path; a bug here blocks dispatch. Hence item 5 and the self-test.
+
+**Acceptance:**
+- [ ] `lane-selftest.py` dispatch → report → remove produces exactly one `benchmark.jsonl` row with `claude.billable_tokens`, `codex_lane.billable_tokens`, `route`, `status`, `advisor`, `rework`, and no flags typed
+- [ ] Removing a worktree whose log write fails still removes and reports the failure
+- [ ] `tests/test_scripts.py::Worktree` covers add-creates-start-record, remove-appends-row, remove-with-broken-log
+- [ ] SKILL.md no longer instructs `lane-log.py start|end`
+
+**Effort:** ~1 day.
+
+---
+
+## T43 — Persist the lane report and verification evidence
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.10.0
+
+**Problem:** `lane-report.py` prints its report and exits. `STATUS`, `GAPS`, `OUT_OF_SCOPE`, and the VERIFY result exist only in a Sonnet subagent's reply, which is why `final_status` is populated on 2 of 142 exported records and no timeout, duration, or cause can be counted. The verify wrapper merges stdout and stderr, keeps a 40-line tail, and on timeout replaces all output with a one-line message (Codex review §6, verified).
+
+**Scope:**
+1. `lane-report.py` writes `$RUN/report.json` (the full report dict plus `generated_at`, `attempt`) on every run, `--json` or not. Repeat runs write `report-<n>.json`; `report.json` is always the latest.
+2. Every VERIFY command appends one record to `$RUN/verify.jsonl`: `command`, `rewritten_command` (Gradle rewrite), `cwd`, `commit`, `exit`, `duration_s`, `timed_out`, `sandbox` (profile, network flag, writable roots), `stdout_path`, `stderr_path`, `cache_key: null` (reserved).
+3. Raw stdout and stderr go to `$RUN/verify-<n>.out` and `.err`, full, separate. The text report keeps the tail. On timeout the partial output is preserved and the process group is killed (`start_new_session=True`, `os.killpg`).
+4. `STATUS` gains no new values; a VERIFY whose command pipes through `grep`, `tail`, `head`, or `||` is recorded with `filtered: true` and a GAPS line ("exit status may be masked").
+5. `events.jsonl` untouched; it is Codex's stream.
+
+**Blast radius:** Low. Additive files; the text contract is unchanged.
+
+**Acceptance:**
+- [ ] `tests/test_scripts.py::Report` gains: report.json written; verify.jsonl record per command; timeout keeps partial stdout; filtered command flagged
+- [ ] A real dispatch in the self-test leaves `report.json`, `verify.jsonl`, `verify-1.out`, `verify-1.err`
+- [ ] `lane-log end` (T42) reads `status` and `gaps` from `report.json`
+
+**Effort:** ~0.5 day.
+
+---
+
+## T44 — Route declaration and rework as files; retire the turn count
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.10.0
+
+**Problem:** SKILL.md Step 1 writes the route as one line of conversation. Nothing on disk records it, so 0 of 142 records carry a route and Section 5 Q3 (solo ceiling) cannot be evaluated. Rework is likewise conversational. The report's "median 1 turn" metric is structural (one `codex exec` = one turn) and must not stay on the dashboard.
+
+**Scope:**
+1. `lane-route.py declare --task <slug> --route solo|delegate|audit|full --reason "<one sentence>" [--kind <kind>]` writes `$RUN/route.json` as an append-only list (re-declaration records escalation history with timestamps). SKILL.md Step 1: the ROUTE line becomes this command; the conversation line stays for the reader.
+2. Spec versions: the implementer writes `spec.md` on the first dispatch and `spec-<n>.md` on resubmission, never overwriting. `rework = count(spec*.md) - 1`. `codex-implementer.md` step 3 updated.
+3. Dispatch count = `thread.started` events across `events*.jsonl`. Replaces "turns" everywhere: `lane-log`, `benchmark-report`, `benchmark-dashboard`, README.
+4. `lane-log end` (T42) reads route (latest declaration), escalation (`len(route.json) > 1`), and rework from these files; `--route`/`--rework` flags become overrides.
+
+**Blast radius:** Low.
+
+**Acceptance:**
+- [ ] `tests::Route` covers declare, re-declare, and the log reading the latest
+- [ ] Rework computed from spec files in the self-test resubmission path
+- [ ] No "turn" metric remains in dashboard or report output
+
+**Effort:** ~0.5 day.
+
+---
+
+## T45 — Advisor evidence at the merge gate (Section 5 Q2)
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.11.0
+
+**Problem:** The doctrine already mandates one advisor review per deliverable, including the delegate row. Observed compliance on Codex-only tasks: 2 of 56. The 91% fix-first figure comes from eleven self-selected commitment boundaries, eight of them documents; it says nothing about a routine Luna diff. A blanket mandate would cost ~116k Claude tokens per review (median of 15 transcripts), ~6.3M over the ten days against 14.7M offloaded. The PreToolUse hook cannot enforce it (Agent-tool call; PRs may go through the GitHub MCP tool). The worktree removal is the one gate every merged lane passes.
+
+**Scope:**
+1. `lane-worktree.py remove` refuses (exit 4) when the run has a lane commit (`report.json` with `COMMIT`) and no `$RUN/advisor.md`, unless `--skip-advisor "<reason>"` is passed. The skip is written to `meta.json` and logged by T42 as `advisor: none`, `advisor_skip_reason`.
+2. Mandatory tier (skip refused even with a reason): lane is Sol; diff over 150 lines (`CHANGES` stat); any `OUT_OF_SCOPE` or `EXEC_CONFIG_TOUCHED`; any path matching the audit triggers (`*.rules`, `migrations/`, `functions/`, `.github/workflows/`, auth, billing). Below that tier, skip with reason is allowed and counted.
+3. `cure-advisor.md`: the first line of `advisor.md` is exactly `VERDICT   ship|fix-first|rethink`; headings and prose follow. Parser in `lane_run.py` (`advisor_verdict(run)`), tolerant of the four heading variants seen in production.
+4. Dashboard (T48) shows the delegate-only fix-first rate and skip reasons. Decision point recorded here: revisit blanket coverage at 30 logged delegate tasks.
+
+**Blast radius:** Medium. Refuses merges. Hence the explicit skip and the tier boundaries written down.
+
+**Acceptance:**
+- [ ] `tests::Worktree` covers refuse-without-advisor, skip-with-reason logged, mandatory-tier refuses skip
+- [ ] Parser passes on all 11 production `advisor.md` files (fixture copies, verdict lines only)
+- [ ] SKILL.md Step 5 documents the tier and the skip
+
+**Effort:** ~0.5 day.
+
+---
+
+## T46 — Failure causes on production runs; environment retries separated from escalation
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.11.0
+
+**Problem:** `lane_failures.py` (1.9.0) classifies eval runs into infra / harness / quota / model / fixture. Production runs are never classified, so the Codex review's cache proposal cannot be sized: nobody knows how many of 57 runs stalled on a cold cache versus a denied simulator versus a failing test. `lane-route.py` escalates on attempt number alone, so an infra retry promotes Luna to Sol.
+
+**Scope:**
+1. `lane_failures.py` gains a `cause` sub-class under the existing classes: `cache-miss`, `sandbox-denied`, `service-unavailable`, `build-timeout`, `test-failure`, `scope-violation`, `empty-diff`, `deletion-only`, `stall`. Classified from `report.json`, `verify.jsonl`, `stderr.log`, and `final.md` signatures (the ones in `lanes.md` "Failure signatures").
+2. `lane-eval.py classify --production [--all-projects]` walks run directories and appends to `.git/tri-lane/failures.jsonl`; idempotent by `(task, attempt)`.
+3. `lane-route.py suggest --cause <class>`: `infra|harness|quota` causes do not advance the capability attempt; the suggestion says "environment retry, same lane". `codex-implementer.md` passes the cause on resubmission.
+4. `lane-eval.py failures` prints production and eval counts side by side.
+
+**Blast radius:** Low.
+
+**Acceptance:**
+- [ ] Backfill over the 57 existing production runs produces a cause histogram (committed to `docs/` as the wave's evidence)
+- [ ] `tests::Route` covers cause-gated escalation
+- [ ] Gate recorded: private-cache lifecycle (Codex §4) opens only at ≥ 5 `cache-miss` in 30 logged tasks
+
+**Effort:** ~1 day.
+
+---
+
+## T47 — Backfill the first 142 tasks; reproducible export
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.12.0
+
+**Problem:** The only dataset is a hand-built JSON with tokens and little else. The run directories still hold enough to reconstruct most of a benchmark row per task, and the transcripts hold Claude usage per window. Nothing reproducible produces either.
+
+**Scope:**
+1. `lane-log backfill --from-run-dirs [--all-projects]`: one row per run directory; `started_at` = earliest file mtime (`spec.md` where present), `ended_at` = latest of `final.md`, `review.md`, `advisor.md`, `agy.json`; route inferred (Codex only → delegate; Antigravity present → audit; both → full; neither → `advisor-only` or `docs`) and marked `route_inferred: true`; status from T46 classification; advisor from T45 parser; tokens from event files. Row carries `backfilled: true`.
+2. Claude usage via `usage-window.py` per row; where two rows' windows overlap in the same project the tokens are attributed to both and flagged `claude_overlap: [tasks]`; `benchmark-report` excludes overlapped rows from Claude medians by default (`--include-overlaps` to override).
+3. `lane-export.py --all-projects --out <json>` renders the per-task JSON the reports consume, from `benchmark.jsonl` only. `tri-lane/data/benchmark-tasks-<date>.json` is regenerated by it; the 2026-09-13 file is kept as the pre-instrumentation snapshot.
+4. Codex account-wide usage (`codex_logs`) is renamed `codex_account` in the row and never used for per-task figures.
+
+**Blast radius:** Low; writes only under `.git/tri-lane/`.
+
+**Acceptance:**
+- [ ] 142 backfilled rows across 8 repositories; every inferred field marked
+- [ ] Antigravity's headline figures reproduce from `lane-export.py` output (8,802,380 / 215,150,080 / 5,883,080)
+- [ ] `benchmark-report.py` runs on the backfill and returns "keep measuring" with the correct blockers named (no manual arm, open windows)
+
+**Effort:** ~1 day.
+
+---
+
+## T48 — Dashboard: population, coverage, and evidence gaps
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.12.0
+
+**Problem:** The generated dashboard has an honest "no data" state but no way to show *why* a headline is not a verdict. The 13 Sep artifact was hand-built; its panels belong in `benchmark-dashboard.py` so they regenerate.
+
+**Scope:**
+1. New panels: advisor reviews by target (code diff vs document, from presence of `report.json`/`events.jsonl`); advisor coverage per route with skip reasons (T45); projected cost of blanket coverage from measured advisor transcript cost (`usage-window.py --agent cure-advisor`, new filter on subagent transcripts by agent name); effort × lane matrix with the `models.json` default outlined; evidence-gap tiles (populated / total per field); Claude billable per task when present, "not recorded" when absent.
+2. Dispatches and rework replace turns (T44). Failure causes (T46) join the reliability block.
+3. Publish path documented: `--out` then Artifact republish to the existing Tri-Lane Benchmark URL.
+
+**Blast radius:** Low.
+
+**Acceptance:**
+- [ ] Renders from the T47 backfill and from an empty log (`tests::Dashboard`)
+- [ ] Every number on the 13 Sep hand-built artifact appears on the generated page
+
+**Effort:** ~1 day.
+
+---
+
+## T49 — The cost verdict: proxy now, manual arm on decision
+
+**Status:** Scoped (2026-09-13) — needs a go decision on part 2
+**Release:** follow-up
+
+**Problem:** The pre-registered rule compares tri-lane to a `manual` arm that does not exist because the fleet adopted the doctrine outright. A first proxy from transcripts (four repositories, 25 Aug–3 Sep vs 4–13 Sep) shows Claude billable per statledger commit rising from ~335k to ~482k and assistant messages quadrupling. It is confounded (work mix, review sessions in the post window, branch-only commit counts) but it is the only Claude-side number anyone has looked at, and it does not favour the report's verdict.
+
+**Scope:**
+1. `benchmark-report.py --proxy --pre <since> --post <since>`: Claude billable per merged commit per repository across two windows, from `usage-window.py` and `git log --all`, labeled "proxy, not the rule" in the output.
+2. The real arm, if approved: 8 `manual` tasks in statledger over one week, matched by `--kind` to the logged delegate mix, session model and effort frozen, `lane-log start --arm manual` (this one still has to be typed; no worktree lifecycle exists on the manual path). `benchmark-report.py` then returns its first verdict.
+3. `tri-lane-lean` arm logged separately when the wrapper agents are trimmed, per BENCHMARK.md.
+
+**Blast radius:** None to code; one week of measured work for part 2.
+
+**Acceptance:**
+- [ ] Proxy report committed under `docs/` with its confounds listed
+- [ ] Part 2 either scheduled with a date or explicitly declined here
+
+**Effort:** ~0.5 day for the script; one week of tasks for the arm.
+
+---
+
+## T50 — Spec substance lint (Section 5 Q1 alternative)
+
+**Status:** Scoped (2026-09-13) — lowest priority
+**Release:** follow-up
+
+**Problem:** The proposal to validate six-part specs in the PreToolUse hook guards a failure with 0 occurrences in 58 specs, cannot see substance, and puts a quality check in a fail-open safety rail. The failures the report attributes to specs (vague FILES, filtered VERIFY) are checkable, but not by a header regex.
+
+**Scope:**
+1. `lane-spec.py check <spec.md> --worktree <wt>`: seven sections present; every FILES path exists or its parent directory exists; REASONING legal for LANE (Luna has no `ultra`); VERIFY non-empty and not piped through `grep|tail|head` (warn) ; CONSTRAINTS non-empty; FILES entries that are bare directories (`src/`) warn.
+2. `codex-implementer.md` step 3 runs it; hard failures return `STATUS: refused` with the lint output; warnings go to GAPS.
+3. Not a hook. The guard hook keeps its single job.
+
+**Blast radius:** Low.
+
+**Acceptance:**
+- [ ] Zero refusals and a listed warning count on the 58 production specs (fixture copies, headers and FILES only)
+- [ ] `tests::Spec` covers each rule
+
+**Effort:** ~0.5 day.
+
+---
+
+## T51 — Defect windows surfaced at session start
+
+**Status:** Scoped (2026-09-13)
+**Release:** tri-lane 1.10.0
+
+**Problem:** SKILL.md says `lane-log.py due` is checked at the start of every session. It is doctrine only; no window was ever checked, so `escaped_defects` is zero by construction and the rule's second check passes vacuously.
+
+**Scope:**
+1. `tri-lane/hooks/hooks.json` gains a `SessionStart` command hook: `lane-log.py due --within 1 --quiet`, local file read only, timeout 5 s, fail-open, silent when nothing is due (per the repo's hook rules: no network, no per-tool-call noise).
+2. `lane-worktree.py remove` (T42) prints the window close date in its summary.
+3. SKILL.md Step 5: `update --escaped-defects N` is the architect's duty when a defect from a lane task surfaces in CI, staging, or use.
+
+**Blast radius:** Low; one quiet hook.
+
+**Acceptance:**
+- [ ] Hook verified fail-open with a missing log and a malformed one
+- [ ] A due window prints one line at session start; none prints nothing
+
+**Effort:** ~0.25 day.
 
 ---
 
