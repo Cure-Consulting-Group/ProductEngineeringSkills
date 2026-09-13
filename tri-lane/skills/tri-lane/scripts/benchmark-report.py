@@ -27,7 +27,9 @@ import sys
 from pathlib import Path
 
 ARMS = ("manual", "tri-lane", "advisor-only", "tri-lane-lean")
-PROJECT_ROOTS = ("~/CureVault/projects", "/Volumes/CureVault/projects")
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+INCLUDE_OVERLAPS = False  # T47: rows whose Claude window overlaps another task's are excluded from Claude medians unless asked
 
 
 def default_log() -> Path:
@@ -53,9 +55,10 @@ def load(log: Path) -> list:
 
 
 def load_all_projects() -> list:
-    """Every benchmark.jsonl under the known project roots (symlinked and physical paths deduplicated)."""
+    """Every benchmark.jsonl under the project roots (TRI_LANE_PROJECT_ROOTS or the defaults in lane_run)."""
+    import lane_run  # noqa: E402
     seen, rows = set(), []
-    for root in PROJECT_ROOTS:
+    for root in lane_run.project_roots():
         for log in Path(root).expanduser().glob("*/.git/tri-lane/benchmark.jsonl"):
             key = str(log.resolve())
             if key in seen:
@@ -78,9 +81,20 @@ def mean(xs):
 
 
 def codex_tokens(r) -> int:
-    """Billable analog: uncached input + output, from the lane events if present, else from Codex session logs."""
-    lane, logs = r.get("codex_lane") or {}, r.get("codex_logs") or {}
-    return int(lane.get("billable_tokens") or logs.get("billable_tokens") or lane.get("total_tokens") or logs.get("total_tokens") or 0)
+    """Billable analog: uncached input + output from the lane events. The account-wide figure from Codex session
+    logs (codex_account, formerly codex_logs) is not per task; it stands in only for the manual arm, which has no lanes."""
+    lane = r.get("codex_lane") or {}
+    acct = r.get("codex_account") or r.get("codex_logs") or {}
+    if lane.get("billable_tokens") or lane.get("total_tokens"):
+        return int(lane.get("billable_tokens") or lane.get("total_tokens") or 0)
+    if r.get("arm") == "manual":
+        return int(acct.get("billable_tokens") or acct.get("total_tokens") or 0)
+    return 0
+
+
+def claude_rows(rs: list) -> list:
+    """Rows eligible for Claude medians: measured, and not overlapping another task's window (unless INCLUDE_OVERLAPS)."""
+    return [r for r in rs if (r.get("claude") or {}).get("billable_tokens") and (INCLUDE_OVERLAPS or not r.get("claude_overlap"))]
 
 
 _ROWS: list = []
@@ -132,9 +146,14 @@ def summarise(rows: list) -> dict:
             "kinds": sorted({r.get("kind") or "" for r in rs}),
             "routes": {k: sum(1 for r in rs if r.get("route") == k) for k in sorted({r.get("route") or "" for r in rs})},
             "status": {k: sum(1 for r in rs if r.get("status") == k) for k in sorted({r.get("status") or "" for r in rs})},
-            "claude_billable_median": med([(r.get("claude") or {}).get("billable_tokens") for r in rs]),
-            "claude_cache_read_median": med([(r.get("claude") or {}).get("cache_read_input_tokens") for r in rs]),
-            "claude_messages_median": med([(r.get("claude") or {}).get("messages") for r in rs]),
+            "claude_billable_median": med([(r.get("claude") or {}).get("billable_tokens") for r in claude_rows(rs)]),
+            "claude_cache_read_median": med([(r.get("claude") or {}).get("cache_read_input_tokens") for r in claude_rows(rs)]),
+            "claude_messages_median": med([(r.get("claude") or {}).get("messages") for r in claude_rows(rs)]),
+            "claude_measured": len(claude_rows(rs)), "claude_overlapped": sum(1 for r in rs if r.get("claude_overlap")),
+            "backfilled": sum(1 for r in rs if r.get("backfilled")),
+            "advisor_coverage": {"reviewed": sum(1 for r in rs if r.get("advisor") and r.get("advisor") != "none"), "skipped": sum(1 for r in rs if r.get("advisor") == "none"), "missing": sum(1 for r in rs if not r.get("advisor"))},
+            "dispatches_mean": mean([r.get("dispatches") for r in rs]),
+            "causes": {k: sum(1 for r in rs if r.get("cause") == k) for k in sorted({r.get("cause") or "" for r in rs}) if k},
             "codex_tokens_median": med([codex_tokens(r) for r in rs]),
             "agy_tokens_median": med([(r.get("agy") or {}).get("total_tokens") for r in rs]),
             "elapsed_min_median": med([round((r.get("elapsed_seconds") or 0) / 60, 1) for r in rs]),
@@ -234,7 +253,10 @@ def main() -> int:
     ap.add_argument("--max-slowdown", type=float, default=1.5, help="max elapsed ratio tri-lane / manual")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--html", help="write a one-page HTML report to this path")
+    ap.add_argument("--include-overlaps", action="store_true", help="count Claude tokens for tasks whose windows overlap another task's (double counts; default excludes them)")
     args = ap.parse_args()
+    global INCLUDE_OVERLAPS
+    INCLUDE_OVERLAPS = args.include_overlaps
     log = Path(args.log) if args.log else default_log()
     rows = load_all_projects() if args.all_projects else load(log)
     if args.all_projects:

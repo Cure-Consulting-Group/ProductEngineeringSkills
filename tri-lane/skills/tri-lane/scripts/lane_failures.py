@@ -79,7 +79,7 @@ def classify_run(run_dir) -> dict:
             pth = v.get(k)
             if pth and os.path.exists(pth):
                 try:
-                    vtext += "\n" + open(pth, errors="ignore").read()[-4000:]
+                    vtext += "\n" + Path(pth).read_text(errors="ignore")[-4000:]
                 except OSError:
                     pass
     status = rep.get("STATUS")

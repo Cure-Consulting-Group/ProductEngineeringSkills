@@ -357,7 +357,7 @@ class Dashboard(unittest.TestCase):
         rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", log, "--out", out])
         self.assertEqual(rc, 0, se)
         html = out.read_text()
-        self.assertIn("<title>Tri-Lane Benchmark</title>", html)
+        self.assertIn("<title>Tri-Lane Benchmark Log</title>", html)
         self.assertNotIn("__DATA__", html)
         self.assertIn('"task": "t"', html)
         rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", d / "missing.jsonl", "--out", d / "empty.html"])
@@ -761,6 +761,67 @@ class Causes(unittest.TestCase):
         rc, out, err = run([SCRIPTS / "lane-eval.py", "--log", repo / ".git" / "tri-lane" / "evals.jsonl", "classify", "--production"], cwd=repo)
         self.assertEqual(json.loads(out)["new_rows"], 0)
         shutil.rmtree(d)
+
+
+class Backfill(unittest.TestCase):
+    """Wave 4 T47/T48: rows from run dirs with inferred fields marked; export reproduces totals; dashboard renders the new panels."""
+
+    def setUp(self):
+        self.d, self.repo = temp_repo()
+        self.gcd = self.repo / ".git" / "tri-lane"
+        self.runs = self.gcd / "run"
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def mk(self, task, spec=True, events=None, agy=False, advisor=None, final="done"):
+        rd = self.runs / task; rd.mkdir(parents=True)
+        if spec:
+            (rd / "spec.md").write_text("LANE        luna\nREASONING   high\nOBJECTIVE   do the thing\nFILES       src/a.py\n            src/b.py\nINTERFACES  none\nCONSTRAINTS none\nVERIFY      `pytest -q`\n")
+        if events is not None:
+            (rd / "events.jsonl").write_text(json.dumps({"type": "thread.started"}) + "\n" + json.dumps({"type": "turn.completed", "usage": {"input_tokens": events, "cached_input_tokens": events // 2, "output_tokens": 10, "total_tokens": events + 10}}) + "\n")
+        if agy:
+            (rd / "agy.json").write_text(json.dumps({"usage": {"input_tokens": 50, "output_tokens": 5, "thinking_tokens": 0, "cache_read_tokens": 0, "total_tokens": 55}, "duration_seconds": 3}))
+        if advisor:
+            (rd / "advisor.md").write_text(f"VERDICT   {advisor}\n")
+        (rd / "final.md").write_text(final)
+        return rd
+
+    def test_backfill_infers_marks_and_never_overwrites_live_rows(self):
+        self.mk("d1", events=100)
+        self.mk("a1", spec=False, agy=True, advisor="fix-first", final="review")
+        self.mk("f1", events=200, agy=True)
+        self.mk("blocked", events=0, final="Blocked by the sandbox, so I made no edits.")
+        live = {"task": "d1", "arm": "tri-lane", "route": "delegate", "status": "complete", "backfilled": False, "claude": {}, "codex_lane": {}, "agy": {}}
+        self.gcd.mkdir(parents=True, exist_ok=True)
+        (self.gcd / "benchmark.jsonl").write_text(json.dumps(live) + "\n")
+        rc, out, err = run([SCRIPTS / "lane-log.py", "backfill", "--from-run-dirs"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        rows = {json.loads(l)["task"]: json.loads(l) for l in (self.gcd / "benchmark.jsonl").read_text().splitlines()}
+        self.assertFalse(rows["d1"]["backfilled"])  # lifecycle row kept
+        self.assertEqual((rows["a1"]["route"], rows["a1"]["route_inferred"], rows["a1"]["advisor"]), ("audit", True, "fix-first"))
+        self.assertEqual((rows["f1"]["route"], rows["f1"]["lane"], rows["f1"]["codex_lane"]["billable_tokens"], rows["f1"]["agy"]["total_tokens"]), ("full", "gpt-5.6-luna @ high", 110, 55))
+        self.assertEqual(rows["f1"]["spec"]["files"], ["src/a.py", "src/b.py"])
+        self.assertEqual(rows["f1"]["spec"]["verify"], "pytest -q")
+        self.assertEqual((rows["blocked"]["cause"], rows["blocked"]["status_inferred"]), ("refused-by-instruction", True))
+        self.assertTrue(all(r["backfilled"] for k, r in rows.items() if k != "d1"))
+        # every backfilled window overlaps the others (same minute): flagged, and excluded from Claude medians by the report
+        self.assertTrue(rows["f1"]["claude_overlap"])
+        rc, out, err = run([SCRIPTS / "lane-log.py", "backfill", "--from-run-dirs"], cwd=self.repo)
+        self.assertEqual(len((self.gcd / "benchmark.jsonl").read_text().splitlines()), 4)  # idempotent
+        # export reproduces the totals
+        rc, out, err = run([SCRIPTS / "lane-export.py", "--summary", "--out", self.d / "x.json"], cwd=self.repo)
+        self.assertEqual(rc, 0, err)
+        s = json.loads(err)
+        # d1 is the live row (empty codex_lane); f1 = 200 - 100 + 10; blocked = 0 - 0 + 10
+        self.assertEqual((s["tasks"], s["codex_billable"], s["agy_tokens"], s["backfilled"]), (4, 110 + 10, 110, 3))
+        # dashboard renders the new panels from these rows
+        out_html = self.d / "dash.html"
+        rc, so, se = run([SCRIPTS / "benchmark-dashboard.py", "--log", self.gcd / "benchmark.jsonl", "--out", out_html, "--no-advisor-cost"], cwd=self.repo)
+        self.assertEqual(rc, 0, se)
+        html = out_html.read_text()
+        for needle in ('id="evidence"', 'id="c-advisor"', 'id="c-effort"', 'id="c-causes"', '"route_inferred": true', '"backfilled": true'):
+            self.assertIn(needle, html)
 
 
 if __name__ == "__main__":

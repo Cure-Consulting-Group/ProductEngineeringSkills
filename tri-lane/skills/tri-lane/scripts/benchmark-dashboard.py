@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
 
 
 def load_report_module():
@@ -34,7 +35,7 @@ def slim(rows: list) -> list:
     for r in rows:
         c = r.get("claude") or {}
         x = r.get("codex_lane") or {}
-        xl = r.get("codex_logs") or {}
+        xl = (r.get("codex_account") or r.get("codex_logs") or {}) if r.get("arm") == "manual" else {}
         a = r.get("agy") or {}
         f = r.get("findings") or {}
         out.append({
@@ -50,12 +51,18 @@ def slim(rows: list) -> list:
             "pool_deltas": r.get("pool_deltas") or {},
             "suggested": (r.get("suggested") or {}).get("lane") if r.get("suggested") else None, "followed": r.get("suggestion_followed"),
             "notes": (r.get("notes") or "")[:240],
+            "dispatches": r.get("dispatches") or 0, "cause": r.get("cause") or "", "backfilled": bool(r.get("backfilled")),
+            "route_inferred": bool(r.get("route_inferred")), "status_inferred": bool(r.get("status_inferred")),
+            "overlap": len(r.get("claude_overlap") or []), "claude_measured": bool(c.get("billable_tokens")),
+            "has_report": bool(r.get("commit") or (r.get("verify") or {}).get("commands") or r.get("gaps")),
+            "code": bool(x.get("calls") or r.get("commit")), "labeled": bool(r.get("findings_labeled")),
+            "skip_reason": r.get("advisor_skip_reason") or "",
         })
     out.sort(key=lambda t: t.get("ended") or "")
     return out
 
 
-TEMPLATE = r"""<title>Tri-Lane Benchmark</title>
+TEMPLATE = r"""<title>Tri-Lane Benchmark Log</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{--bg:#F3F5F7;--bg-2:#E9EDF1;--surface:#FFFFFF;--ink:#16202A;--ink-2:#4A5661;--ink-3:#7A8791;--line:#CFD6DC;--line-2:#B8C1C9;--grid:#E3E8EC;
@@ -120,7 +127,7 @@ details.eng>summary::before{content:"▸ ";}details.eng[open]>summary::before{co
 </style>
 <div class="wrap">
 <header>
-  <div><div class="eyebrow">Cure Consulting Group · cure-tri-lane · benchmark</div><h1>Tri-Lane Benchmark</h1></div>
+  <div><div class="eyebrow">Cure Consulting Group · cure-tri-lane · generated from benchmark.jsonl</div><h1>Tri-Lane Benchmark Log</h1></div>
   <div class="meta" id="meta"></div>
 </header>
 <section class="glance">
@@ -131,6 +138,13 @@ details.eng>summary::before{content:"▸ ";}details.eng[open]>summary::before{co
 <details class="eng"><summary>Details for engineers: decision rule, arms, findings, precision, routing, quotas, canary matrix, every task</summary>
 <div class="verdict"><div class="v"><div class="k">Decision rule</div><div class="t" id="verdict"></div></div><div class="checks" id="checks"></div></div>
 <div class="tiles" id="tiles"></div>
+<div class="tiles" id="evidence"></div>
+<div class="grid">
+  <figure id="c-advisor"><h4>Advisor coverage by route</h4><p class="sub">Reviewed, skipped with a recorded reason, or missing. Doctrine mandates one review per deliverable; before the merge gate (1.11.0) compliance on delegate was 2 of 56.</p><div class="legend"><span><i style="background:var(--s1)"></i>fix-first</span><span><i style="background:var(--s2)"></i>ship</span><span><i style="background:var(--s3)"></i>rethink</span><span><i style="background:var(--ink-3)"></i>skipped, reason logged</span><span><i style="background:var(--line-2)"></i>missing</span></div><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
+  <figure id="c-advisor-target"><h4>What the advisor reviewed, and what a blanket mandate would cost</h4><p class="sub">Code diffs versus documents and plans; the projected cost uses the measured median billable tokens per advisor transcript.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
+  <figure id="c-effort"><h4>Effort rung by lane</h4><p class="sub">What the architect chose. The outlined cell is the capability table's default for routine implementation.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
+  <figure id="c-causes"><h4>Failures by cause</h4><p class="sub">From failures.jsonl (production rows). Environment causes are repaired and retried on the same lane; model causes count against the lane.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
+</div>
 <div class="grid">
   <figure id="c-arms" class="wide"><h4>Arms compared</h4><p class="sub">Medians per task. One panel per measure, because the units differ.</p><div class="legend" id="arm-legend"></div><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
   <figure id="c-timeline" class="wide"><h4>Claude billable tokens per task, in order run</h4><p class="sub">Colour is the arm. Hover for the task.</p><div class="legend" id="tl-legend"></div><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
@@ -143,7 +157,7 @@ details.eng>summary::before{content:"▸ ";}details.eng[open]>summary::before{co
   <figure id="c-reliability" class="wide"><h4>Reliability: failures are results</h4><p class="sub">Per lane: how often the first attempt succeeded, failures by class (model failures score zero; infra, harness, and quota failures are retried once and charged to us), seconds to a result including failed attempts, tokens wasted on attempts that produced nothing, and cost per point with that waste included.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
   <figure id="c-canary" class="wide"><h4>Canary suite: fixed tasks × lanes</h4><p class="sub">Mean score per cell from evals.jsonl; darker is better. Hover for pass count and grader detail. These numbers drive routing, not adoption.</p><button class="tbtn">table</button><div class="chart"></div><div class="tview hidden"></div></figure>
 </div>
-<div class="tbl"><table id="tasks"><thead><tr><th>Task</th><th>Project</th><th>Arm</th><th>Kind</th><th>Route</th><th>Lane</th><th>Model</th><th>Status</th><th>Advisor</th><th>Min</th><th>Claude billable</th><th>Codex billable</th><th>Antigravity</th><th>Confirmed</th><th>Rework</th><th>Escaped</th><th>Window</th></tr></thead><tbody></tbody></table></div>
+<div class="tbl"><table id="tasks"><thead><tr><th>Task</th><th>Project</th><th>Arm</th><th>Kind</th><th>Route</th><th>Lane</th><th>Model</th><th>Status</th><th>Advisor</th><th>Min</th><th>Claude billable</th><th>Codex billable</th><th>Antigravity</th><th>Confirmed</th><th>Rework</th><th>Dispatches</th><th>Cause</th><th>Escaped</th><th>Window</th></tr></thead><tbody></tbody></table></div>
 </details>
 </div>
 <script>
@@ -209,10 +223,60 @@ const DATA = __DATA__;
     ["Confirmed findings",conf,"across "+T.length+" tasks"],
     ["Reviewer precision",prec==null?"—":prec+"%",`${allF[0]} / ${allF[1]} / ${allF[2]} C/D/U`],
     ["Escaped defects",esc,due+" windows unchecked"],
-    ["Claude billable, tri-lane median",tl.length?fmt(med(tl.map(t=>t.claude_billable))):"—",mn.length?"manual "+fmt(med(mn.map(t=>t.claude_billable))):"no manual arm yet"],
+    ["Claude billable, tri-lane median",(S["tri-lane"]&&S["tri-lane"].claude_billable_median)?fmt(S["tri-lane"].claude_billable_median):"not recorded",mn.length?"manual "+fmt(med(mn.map(t=>t.claude_billable))):(S["tri-lane"]?`${S["tri-lane"].claude_measured} measured, ${S["tri-lane"].claude_overlapped} overlapped`:"no manual arm yet")],
     ["Advisor fix-first",T.filter(t=>t.advisor==="fix-first").length+" / "+T.filter(t=>t.advisor).length,"verdicts that changed the outcome"],
     ["Rework per task",T.length?(T.reduce((a,t)=>a+t.rework,0)/T.length).toFixed(2):"—","corrected specs sent back"],
   ].map(([k,v,s])=>`<div><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+
+  // evidence gap tiles (T48): what fraction of rows carry each field the decision rule needs
+  (function(){const n=T.length; const pct=(k)=>n?`${k} / ${n}`:"—";
+    const routes=T.filter(t=>t.route&&!t.route_inferred).length, status=T.filter(t=>t.status&&!t.status_inferred).length, adv=T.filter(t=>t.advisor).length;
+    const claude=T.filter(t=>t.claude_measured).length, overl=T.filter(t=>t.overlap).length, labeled=T.filter(t=>t.labeled).length, checked=T.filter(t=>t.window_checked).length, backf=T.filter(t=>t.backfilled).length;
+    document.getElementById("evidence").innerHTML=[
+      ["Routes declared",pct(routes),`${T.filter(t=>t.route_inferred).length} inferred from files`],
+      ["Status from a report",pct(status),`${T.filter(t=>t.status_inferred).length} inferred from signatures`],
+      ["Advisor verdict on disk",pct(adv),`${T.filter(t=>t.advisor==="none").length} skipped with a reason`],
+      ["Claude tokens measured",pct(claude),overl?`${overl} overlap another task; excluded from medians`:"no overlapping windows"],
+      ["Findings labeled",pct(labeled),"Confirmed / Disputed / Unverified typed by the architect"],
+      ["Defect windows checked",pct(checked),`${n-checked} open or unchecked`],
+      ["Rows backfilled",pct(backf),"timestamps from file mtimes; not lifecycle-logged"],
+    ].map(([k,v,s])=>`<div><div class="k">${k}</div><div class="v" style="font-size:22px">${v}</div><div class="s">${s}</div></div>`).join("");})();
+
+  // advisor coverage by route
+  (function(){const fig=document.getElementById("c-advisor"); if(!T.length){empty(fig,"no tasks");return;}
+    const routes=[...new Set(T.map(t=>t.route||"(none)"))].sort(); const cat=t=>t.advisor==="fix-first"?0:t.advisor==="ship"?1:t.advisor==="rethink"?2:t.advisor==="none"?3:4; const cols=[css("--s1"),css("--s2"),css("--s3"),css("--ink-3"),css("--line-2")]; const names=["fix-first","ship","rethink","skipped","missing"];
+    const W=560,rowH=34,L=110,R=40,H=routes.length*rowH+26; const s=svg(fig,W,H,"Advisor coverage per route"); const max=Math.max(...routes.map(r=>T.filter(t=>(t.route||"(none)")===r).length),1); const x=v=>L+v*(W-L-R)/max;
+    routes.forEach((r,i)=>{const y=8+i*rowH; const rows=T.filter(t=>(t.route||"(none)")===r); el("text",{x:L-8,y:y+16,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=r; let acc=0;
+      [0,1,2,3,4].forEach(c=>{const v=rows.filter(t=>cat(t)===c).length; if(!v)return; const rc=el("rect",{x:x(acc)+(acc?2:0),y:y+3,width:Math.max(0,x(acc+v)-x(acc)-(acc?2:0)),height:20,fill:cols[c]},s); hover(rc,fig,`${r} · ${names[c]}: ${v} of ${rows.length}`); acc+=v;});
+      el("text",{x:x(acc)+6,y:y+17,"font-size":"11",fill:css("--ink-2")},s).textContent=`${rows.filter(t=>cat(t)<3).length}/${rows.length} reviewed`;});
+    table(fig,["Route","Tasks","fix-first","ship","rethink","skipped","missing"],routes.map(r=>{const rows=T.filter(t=>(t.route||"(none)")===r);return [r,rows.length,...[0,1,2,3,4].map(c=>rows.filter(t=>cat(t)===c).length)];}));})();
+
+  // advisor target + blanket cost
+  (function(){const fig=document.getElementById("c-advisor-target"); const rev=T.filter(t=>t.advisor&&t.advisor!=="none"); const A=DATA.advisor_cost||{};
+    if(!rev.length){empty(fig,"no advisor verdicts logged");return;}
+    const code=rev.filter(t=>t.code).length, docs=rev.length-code; const unrev=T.filter(t=>t.code&&!(t.advisor&&t.advisor!=="none")).length; const med=A.billable_median||0; const proj=unrev*med;
+    const offload=T.reduce((a,t)=>a+t.codex_billable+t.agy_total,0);
+    const W=560,H=150; const s=svg(fig,W,H,"Advisor review targets and projected blanket cost"); const rows=[["Reviews on code diffs",code,css("--s2"),`${code}`],["Reviews on documents / plans",docs,css("--s1"),`${docs}`]]; const max=Math.max(code,docs,1);
+    rows.forEach(([lab,v,c,txt],i)=>{const y=10+i*30; el("text",{x:0,y:y+14,"font-size":"11.5",fill:css("--ink")},s).textContent=lab; const r=el("rect",{x:210,y:y,width:(W-260)*v/max,height:20,fill:c},s); hover(r,fig,`${lab}: ${v}`); el("text",{x:210+(W-260)*v/max+6,y:y+14,"font-size":"11",fill:css("--ink-2")},s).textContent=txt;});
+    const y2=82; const maxT=Math.max(offload,proj,1);
+    [["Tokens moved off Claude",offload,css("--s2")],["Blanket advisor cost, projected",proj,css("--s1")]].forEach(([lab,v,c],i)=>{const y=y2+i*30; el("text",{x:0,y:y+14,"font-size":"11.5",fill:css("--ink")},s).textContent=lab; const r=el("rect",{x:210,y:y,width:(W-260)*v/maxT,height:20,fill:c},s); hover(r,fig,`${lab}: ${fmt(v)}${i?` = ${unrev} unreviewed code tasks × ${fmt(med)} median per review (${A.transcripts||0} transcripts)`:""}`); el("text",{x:210+(W-260)*v/maxT+6,y:y+14,"font-size":"11",fill:css("--ink-2")},s).textContent=v?fmt(v):(i?"no advisor transcripts measured":"0");});
+    table(fig,["Measure","Value"],[["Reviews on code diffs",code],["Reviews on documents / plans",docs],["Code tasks without a review",unrev],["Median billable per advisor transcript",med||"—"],["Advisor transcripts measured",A.transcripts||0],["Projected blanket cost",proj||"—"],["Codex + Antigravity tokens (offload)",offload]]);})();
+
+  // effort × lane matrix
+  (function(){const fig=document.getElementById("c-effort"); const rows=T.filter(t=>t.lane&&t.lane.includes(" @ ")); if(!rows.length){empty(fig,"no lane strings logged");return;}
+    const rungs=["low","medium","high","xhigh","max","ultra"]; const lanes=[...new Set(rows.map(t=>t.lane.split(" @ ")[0]))].sort(); const cell=(l,r)=>rows.filter(t=>t.lane.split(" @ ")[0]===l&&t.lane.split(" @ ")[1]===r).length;
+    const W=560,L=130,T0=24,rowH=32,colW=(W-L)/rungs.length,H=T0+lanes.length*rowH+6; const s=svg(fig,W,H,"Effort rung by lane"); const maxC=Math.max(...lanes.flatMap(l=>rungs.map(r=>cell(l,r))),1);
+    rungs.forEach((r,j)=>el("text",{x:L+j*colW+colW/2,y:16,"text-anchor":"middle","font-size":"11",fill:css("--ink-2")},s).textContent=r);
+    const mix=(hex,alpha)=>{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${alpha})`;};
+    lanes.forEach((l,i)=>{const y=T0+i*rowH; el("text",{x:L-8,y:y+20,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=l.replace("gpt-5.6-","").replace("gemini-3.8-flash-high","gemini flash");
+      rungs.forEach((r,j)=>{const v=cell(l,r); const x=L+j*colW+2; const isDefault=l==="gpt-5.6-luna"&&r==="medium"; const rc=el("rect",{x,y:y+2,width:colW-4,height:rowH-4,fill:v?mix(css("--s2"),0.15+0.85*v/maxC):css("--bg-2"),stroke:isDefault?css("--ink"):"none","stroke-width":isDefault?2:0},s); hover(rc,fig,`${l} @ ${r}: ${v} task${v===1?"":"s"}${isDefault?" (models.json default for routine implementation)":""}`); if(v)el("text",{x:x+(colW-4)/2,y:y+20,"text-anchor":"middle","font-size":"11.5",fill:v/maxC>0.55?css("--surface"):css("--ink")},s).textContent=v;});});
+    table(fig,["Lane",...rungs],lanes.map(l=>[l,...rungs.map(r=>cell(l,r))]));})();
+
+  // failure causes
+  (function(){const fig=document.getElementById("c-causes"); const C=DATA.causes||{}; const keys=Object.keys(C).filter(k=>k!=="complete"&&k!=="unclassified").sort((a,b)=>C[b]-C[a]); if(!keys.length){empty(fig,"no classified failures — python3 lane-eval.py classify --production");return;}
+    const W=560,rowH=28,L=170,R=40,H=keys.length*rowH+10; const s=svg(fig,W,H,"Failures by cause"); const max=Math.max(...keys.map(k=>C[k]),1); const env=new Set(["cache-miss","sandbox-denied","service-unavailable","quota","schema","refused-by-instruction","build-timeout"]);
+    keys.forEach((k,i)=>{const y=6+i*rowH; el("text",{x:L-8,y:y+15,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=k; const r=el("rect",{x:L,y:y+2,width:(W-L-R)*C[k]/max,height:18,fill:env.has(k)?css("--s3"):css("--s1")},s); hover(r,fig,`${k}: ${C[k]} (${env.has(k)?"environment or harness: retry same lane":"model: counts against the lane"})`); el("text",{x:L+(W-L-R)*C[k]/max+6,y:y+15,"font-size":"11",fill:css("--ink-2")},s).textContent=C[k];});
+    table(fig,["Cause","Runs","Class"],keys.map(k=>[k,C[k],env.has(k)?"environment / harness":"model"]).concat([["complete",C.complete||0,"—"],["unclassified",C.unclassified||0,"pre-1.10.0, no report"]]));})();
 
   // arms compared: small multiples
   (function(){const fig=document.getElementById("c-arms"); if(armsPresent.length<1){empty(fig,"no tasks");return;}
@@ -231,7 +295,7 @@ const DATA = __DATA__;
     const W=1160,H=230,L=70,R=20,Tp=14,B=36; const s=svg(fig,W,H,"Claude billable tokens per task in run order, coloured by arm");
     const max=Math.max(...T.map(t=>t.claude_billable),1); const y=v=>Tp+(H-Tp-B)*(1-v/max); const gw=(W-L-R)/T.length;
     for(let g=0;g<=4;g++){const v=max*g/4;el("line",{x1:L,y1:y(v),x2:W-R,y2:y(v),stroke:css("--grid")},s);el("text",{x:L-8,y:y(v)+4,"text-anchor":"end","font-size":"11",fill:css("--ink-3")},s).textContent=fmt(v);}
-    T.forEach((t,i)=>{const cx=L+i*gw+gw/2; el("line",{x1:cx,y1:y(t.claude_billable),x2:cx,y2:y(0),stroke:ARMC[t.arm]||css("--s4"),"stroke-width":"2"},s); const c=el("circle",{cx,cy:y(t.claude_billable),r:6,fill:ARMC[t.arm]||css("--s4"),stroke:css("--surface"),"stroke-width":"2"},s); hover(c,fig,`${t.task} (${t.arm}, ${t.route}) · ${t.claude_billable.toLocaleString()} billable · ${t.claude_msgs} msgs · ${t.elapsed_min} min`); el("text",{x:cx,y:H-20,"text-anchor":"middle","font-size":"11",fill:css("--ink")},s).textContent=t.task.length>16?t.task.slice(0,15)+"…":t.task; el("text",{x:cx,y:H-7,"text-anchor":"middle","font-size":"10",fill:css("--ink-3")},s).textContent=(t.ended||"").slice(5,10);});
+    T.forEach((t,i)=>{const cx=L+i*gw+gw/2; el("line",{x1:cx,y1:y(t.claude_billable),x2:cx,y2:y(0),stroke:ARMC[t.arm]||css("--s4"),"stroke-width":"2"},s); const c=el("circle",{cx,cy:y(t.claude_billable),r:6,fill:ARMC[t.arm]||css("--s4"),stroke:css("--surface"),"stroke-width":"2"},s); hover(c,fig,`${t.task} (${t.arm}, ${t.route}) · ${t.claude_measured?t.claude_billable.toLocaleString()+" billable":"Claude not recorded"}${t.overlap?" · overlaps "+t.overlap+" task(s), excluded from medians":""} · ${t.claude_msgs} msgs · ${t.elapsed_min} min`); el("text",{x:cx,y:H-20,"text-anchor":"middle","font-size":"11",fill:css("--ink")},s).textContent=t.task.length>16?t.task.slice(0,15)+"…":t.task; el("text",{x:cx,y:H-7,"text-anchor":"middle","font-size":"10",fill:css("--ink-3")},s).textContent=(t.ended||"").slice(5,10);});
     el("line",{x1:L,y1:y(0),x2:W-R,y2:y(0),stroke:css("--line-2")},s);
     table(fig,["Task","Arm","Ended","Claude billable","Cache read","Messages","Elapsed min"],T.map(t=>[t.task,t.arm,(t.ended||"").slice(0,10),t.claude_billable.toLocaleString(),t.claude_cache.toLocaleString(),t.claude_msgs,t.elapsed_min]));})();
 
@@ -291,9 +355,9 @@ const DATA = __DATA__;
 
   // task table with sort
   (function(){const tb=document.querySelector("#tasks tbody"); const cell=(v,num)=>`<td class="${num?'num':''}">${v}</td>`;
-    const rowHtml=t=>`<tr>${cell(t.task)}${cell(t.project)}<td><span class="arm">${t.arm}</span></td>${cell(t.kind)}${cell(t.route)}${cell(t.lane)}${cell((t.model||"?")+(t.effort?" @ "+t.effort:""))}${cell(t.status)}${cell(t.advisor)}${cell(t.elapsed_min,1)}${cell(t.claude_billable.toLocaleString(),1)}${cell(t.codex_billable.toLocaleString(),1)}${cell(t.agy_total.toLocaleString(),1)}${cell(Object.values(t.findings).reduce((a,f)=>a+f[0],0),1)}${cell(t.rework,1)}${cell(t.escaped,1)}<td>${t.window_checked?'<span class="pill good">checked</span>':'<span class="pill warn">open</span>'}</td></tr>`;
+    const rowHtml=t=>`<tr>${cell(t.task)}${cell(t.project)}<td><span class="arm">${t.arm}</span></td>${cell(t.kind)}${cell(t.route)}${cell(t.lane)}${cell((t.model||"?")+(t.effort?" @ "+t.effort:""))}${cell(t.status)}${cell(t.advisor)}${cell(t.elapsed_min,1)}${cell(t.claude_billable.toLocaleString(),1)}${cell(t.codex_billable.toLocaleString(),1)}${cell(t.agy_total.toLocaleString(),1)}${cell(Object.values(t.findings).reduce((a,f)=>a+f[0],0),1)}${cell(t.rework,1)}${cell(t.dispatches,1)}${cell(t.cause||"")}${cell(t.escaped,1)}<td>${t.window_checked?'<span class="pill good">checked</span>':'<span class="pill warn">open</span>'}</td></tr>`;
     let rows=T.slice(); const render=()=>tb.innerHTML=rows.map(rowHtml).join(""); render();
-    const keys=["task","project","arm","kind","route","lane","model","status","advisor","elapsed_min","claude_billable","codex_billable","agy_total","confirmed","rework","escaped","window_checked"];
+    const keys=["task","project","arm","kind","route","lane","model","status","advisor","elapsed_min","claude_billable","codex_billable","agy_total","confirmed","rework","dispatches","cause","escaped","window_checked"];
     document.querySelectorAll("#tasks th").forEach((th,i)=>{let asc=true; th.addEventListener("click",()=>{const k=keys[i]; rows.sort((a,b)=>{const va=k==="confirmed"?Object.values(a.findings).reduce((x,f)=>x+f[0],0):a[k]; const vb=k==="confirmed"?Object.values(b.findings).reduce((x,f)=>x+f[0],0):b[k]; return (va>vb?1:va<vb?-1:0)*(asc?1:-1);}); asc=!asc; render();});});})();
 
   document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const f=b.closest("figure");const c=f.querySelector(".chart"),t=f.querySelector(".tview");const showT=t.classList.contains("hidden");t.classList.toggle("hidden",!showT);c.classList.toggle("hidden",showT);b.textContent=showT?"chart":"table";}));
@@ -311,11 +375,12 @@ def main() -> int:
     ap.add_argument("--max-slowdown", type=float, default=1.5)
     ap.add_argument("--open", action="store_true", help="open the file after writing (macOS)")
     ap.add_argument("--json", action="store_true", help="also print the embedded data as JSON")
+    ap.add_argument("--no-advisor-cost", action="store_true", help="skip the transcript scan for the advisor per-review cost (tests, offline)")
     a = ap.parse_args()
 
     br = load_report_module()
     if a.all_projects:
-        rows, source = br.load_all_projects(), "all projects under ~/CureVault/projects"
+        rows, source = br.load_all_projects(), "all projects under " + ", ".join(str(r) for r in __import__("lane_run").project_roots())
     else:
         log = Path(a.log) if a.log else br.default_log()
         rows, source = br.load(log), str(log)
@@ -357,7 +422,40 @@ def main() -> int:
         reliability = le._reliability(eval_rows)
     except Exception:
         reliability = {}
-    data = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "source": source, "tasks": slim(rows), "arms": summary, "decision": decision, "canary": canary, "reliability": reliability}
+    # production failure causes (T46) from every failures.jsonl next to a benchmark log, plus this repo's
+    causes: dict = {}
+    seen_f = set()
+    for lp in list(seen) + [str((Path(a.log).parent if a.log else br.default_log().parent) / "failures.jsonl")]:
+        fp = Path(lp).parent / "failures.jsonl" if not str(lp).endswith("failures.jsonl") else Path(lp)
+        if str(fp) in seen_f or not fp.exists():
+            continue
+        seen_f.add(str(fp))
+        for line in fp.read_text().splitlines():
+            try:
+                f = json.loads(line)
+            except Exception:
+                continue
+            if not f.get("production"):
+                continue
+            k = f.get("cause") or f.get("state") or "unclassified"
+            causes[k] = causes.get(k, 0) + 1
+    # advisor per-review cost (T48): median billable tokens per cure-advisor subagent transcript across the projects logged
+    advisor_cost: dict = {"transcripts": 0, "billable_median": None}
+    if not a.no_advisor_cost:
+        try:
+            spec_u = importlib.util.spec_from_file_location("usage_window", HERE / "usage-window.py")
+            uw = importlib.util.module_from_spec(spec_u); spec_u.loader.exec_module(uw)
+            projects = sorted({r.get("project") for r in rows if r.get("project")})
+            since = uw.parse_ts(min((r.get("started_at") for r in rows if r.get("started_at")), default="2026-01-01T00:00:00+00:00"))
+            bills = []
+            for pj in projects:
+                bills += [x["billable_tokens"] for x in uw.agent_transcript_costs(pj, "cure-advisor", since, datetime.now(timezone.utc))]
+            bills.sort()
+            advisor_cost = {"transcripts": len(bills), "billable_median": bills[len(bills) // 2] if bills else None, "billable_mean": round(sum(bills) / len(bills)) if bills else None}
+        except Exception as e:
+            advisor_cost["error"] = str(e)[:120]
+    data = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "source": source, "tasks": slim(rows), "arms": summary, "decision": decision, "canary": canary, "reliability": reliability,
+            "causes": causes, "advisor_cost": advisor_cost}
     html = TEMPLATE.replace("__DATA__", json.dumps(data))
     out = Path(a.out).expanduser()
     out.write_text(html)

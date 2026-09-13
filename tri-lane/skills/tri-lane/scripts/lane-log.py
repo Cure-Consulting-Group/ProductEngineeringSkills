@@ -251,10 +251,11 @@ def cmd_end(a) -> int:
             agy["calls"] += 1
             for k in ("input_tokens", "output_tokens", "thinking_tokens", "cache_read_tokens", "total_tokens"):
                 agy[k] += u.get(k, 0)
-    codex_lane = {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "reasoning_output_tokens": 0, "total_tokens": 0, "billable_tokens": 0, "calls": 0}
+    codex_lane = {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "reasoning_output_tokens": 0, "total_tokens": 0, "billable_tokens": 0, "calls": 0, "by_file": {}}
     for f in codex_files:
         u = parse_codex_events(f)
         codex_lane["calls"] += 1
+        codex_lane["by_file"][Path(f).name] = u.get("billable_tokens", 0)
         for k in ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens", "total_tokens", "billable_tokens"):
             codex_lane[k] += u.get(k, 0)
 
@@ -314,6 +315,148 @@ def cmd_end(a) -> int:
         "pool_deltas": deltas, "log": str(log),
     }
     print(json.dumps(summary, indent=2))
+    return 0
+
+
+def parse_spec(rd: Path) -> dict:
+    """LANE / REASONING / OBJECTIVE / FILES / VERIFY from spec.md (the first version), for rows that predate report.json."""
+    p = rd / "spec.md"
+    if not p.exists():
+        return {}
+    out, section, files = {}, None, []
+    import re
+    for line in p.read_text(errors="ignore").splitlines():
+        m = re.match(r"^\s*(LANE|REASONING|OBJECTIVE|FILES|INTERFACES|CONSTRAINTS|VERIFY)\b\s*[:\-—]?\s*(.*)$", line)
+        if m:
+            section = m.group(1)
+            rest = m.group(2).strip()
+            if section == "LANE":
+                out["lane"] = (rest.split() or [""])[0].lower()
+            elif section == "REASONING":
+                out["reasoning"] = (rest.split() or [""])[0].lower()
+            elif section == "OBJECTIVE":
+                out["objective"] = rest[:240]
+            elif section == "VERIFY":
+                out["verify"] = rest.strip("`")
+            elif section == "FILES" and rest:
+                files.append(rest.strip("`- "))
+            continue
+        if section == "FILES" and line.strip():
+            s = line.strip().lstrip("-*• ").strip("`")
+            if s and " " not in s.split("(")[0].strip():
+                files.append(s.split("(")[0].strip())
+        elif section == "VERIFY" and line.strip() and not out.get("verify"):
+            out["verify"] = line.strip().strip("`")
+        elif section == "OBJECTIVE" and line.strip() and len(out.get("objective", "")) < 240:
+            out["objective"] = (out.get("objective", "") + " " + line.strip())[:240].strip()
+    if files:
+        out["files"] = files[:40]
+    return out
+
+
+def infer_route(rd: Path, disc: dict, codex_calls: int, agy_calls: int) -> str:
+    if disc.get("route"):
+        return disc["route"]
+    if codex_calls and agy_calls:
+        return "full"
+    if agy_calls:
+        return "audit"
+    if codex_calls:
+        return "delegate"
+    if disc.get("advisor"):
+        return "advisor-only"
+    return "docs"
+
+
+def cmd_backfill(a) -> int:
+    """T47: one benchmark row per run dir that has none, from what the run dir holds. Inferred fields are marked.
+    Never overwrites a row the lifecycle wrote; re-runs replace only rows it wrote itself."""
+    import importlib.util
+    import lane_run  # noqa: E402
+    from lane_failures import classify_run  # noqa: E402
+    spec_u = importlib.util.spec_from_file_location("usage_window", HERE / "usage-window.py")
+    uw = importlib.util.module_from_spec(spec_u); spec_u.loader.exec_module(uw)
+    projects: dict = {}
+    for proj, rd in lane_run.iter_run_dirs(all_projects=a.all_projects):
+        projects.setdefault(proj, []).append(rd)
+    total_written, report = 0, {}
+    for proj, rds in projects.items():
+        log = Path(a.log) if (a.log and not a.all_projects) else (proj / ".git" / "tri-lane" / "benchmark.jsonl")
+        existing = read_log(log)
+        live = {r["task"] for r in existing if not r.get("backfilled")}
+        drafts, windows = [], []
+        for rd in rds:
+            task = rd.name
+            if task in live:
+                continue
+            files = [p for p in rd.rglob("*") if p.is_file() and "tmp" not in p.relative_to(rd).parts]
+            if not files:
+                continue
+            mt = {p: datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc) for p in files}
+            spec_files = [p for p in files if p.name.startswith("spec")]
+            started = min(mt[p] for p in (spec_files or files))
+            end_files = [p for p in files if p.name.split(".")[0] in ("final", "review", "advisor", "agy", "report", "verify") or p.name.startswith(("final", "review", "advisor", "agy", "report", "events"))]
+            ended = max(mt[p] for p in (end_files or files))
+            if ended - started < timedelta(minutes=1):
+                ended = started + timedelta(minutes=1)  # file mtimes can sit microseconds apart; a task is never shorter than a minute
+            disc = lane_run.summary(task, rd=rd)
+            found = {"codex_events": sorted(str(p) for p in rd.glob("*events*.jsonl")), "agy_json": sorted(str(p) for p in rd.glob("agy*.json"))}
+            agy = {"input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0, "cache_read_tokens": 0, "total_tokens": 0, "calls": 0}
+            for f in found["agy_json"]:
+                u = parse_agy_json(f)
+                if u:
+                    agy["calls"] += 1
+                    for k in ("input_tokens", "output_tokens", "thinking_tokens", "cache_read_tokens", "total_tokens"):
+                        agy[k] += u.get(k, 0)
+            codex_lane = {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "reasoning_output_tokens": 0, "total_tokens": 0, "billable_tokens": 0, "calls": 0, "by_file": {}}
+            for f in found["codex_events"]:
+                u = parse_codex_events(f)
+                codex_lane["calls"] += 1
+                codex_lane["by_file"][Path(f).name] = u.get("billable_tokens", 0)  # events.jsonl = implementer; review-events.jsonl = reviewer
+                for k in ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens", "total_tokens", "billable_tokens"):
+                    codex_lane[k] += u.get(k, 0)
+            spec = parse_spec(rd)
+            cls = classify_run(rd)
+            lane = disc.get("lane") or (f"gpt-5.6-{spec['lane']} @ {spec.get('reasoning') or '?'}" if spec.get("lane") in ("luna", "sol") else (f"gemini-3.8-flash-high" if agy["calls"] and not codex_lane["calls"] else ""))
+            status = disc.get("status") or (cls["state"] if cls.get("cause") else ("complete" if codex_lane["calls"] and cls["state"] == "unclassified" else (cls["state"] or "")))
+            sugg = None
+            try:
+                sugg = json.loads((rd / "route-suggestion.json").read_text())
+            except Exception:
+                pass
+            row = {
+                "task": task, "arm": (disc.get("meta") or {}).get("arm") or "tri-lane", "kind": disc.get("kind") or "", "project": str(proj), "head": (disc.get("meta") or {}).get("head") or "",
+                "started_at": started.isoformat(), "ended_at": ended.isoformat(), "elapsed_seconds": round((ended - started).total_seconds()),
+                "model": None, "effort": None,
+                "route": infer_route(rd, disc, codex_lane["calls"], agy["calls"]), "route_inferred": not disc.get("route"), "route_history": disc.get("route_history") or [],
+                "lane": lane, "status": status, "status_inferred": not disc.get("status"), "cause": cls.get("cause"), "evidence_grade": cls.get("evidence_grade"),
+                "advisor": disc.get("advisor") or "", "advisor_skip_reason": disc.get("advisor_skip_reason"),
+                "suggested": sugg, "suggestion_followed": (bool(sugg) and sugg.get("lane") and sugg["lane"] in lane) or None,
+                "rework": disc.get("rework") or 0, "dispatches": disc.get("dispatches") or 0, "escalated": bool(disc.get("escalated")),
+                "escaped_defects": 0, "window_checked_at": None,
+                "gaps": disc.get("gaps") or [], "diff_lines": disc.get("diff_lines"), "verify": disc.get("verify"), "commit": disc.get("commit"),
+                "spec": spec, "codex_lane": codex_lane, "agy": agy, "codex_account": {},
+                "findings": {}, "findings_labeled": False, "pools_before": {}, "pools_after": {}, "pool_deltas": {},
+                "backfilled": True, "run_dir": str(rd), "notes": "backfilled from run dir; timestamps from file mtimes",
+            }
+            drafts.append(row)
+            windows.append((started, ended))
+        if not drafts:
+            report[proj.name] = {"written": 0, "kept_live": len(live)}
+            continue
+        usages = uw.claude_usage_multi(str(proj), windows)
+        for row, u in zip(drafts, usages):
+            row["claude"] = u
+        for i, row in enumerate(drafts):
+            s1, e1 = windows[i]
+            row["claude_overlap"] = sorted(d["task"] for j, d in enumerate(drafts) if j != i and windows[j][0] <= e1 and s1 <= windows[j][1])
+        if not a.dry_run:
+            keep = [r for r in existing if not r.get("backfilled") or r["task"] not in {d["task"] for d in drafts}]
+            write_log(log, keep + drafts)
+        total_written += len(drafts)
+        report[proj.name] = {"written": len(drafts), "kept_live": len(live), "overlapped": sum(1 for d in drafts if d["claude_overlap"]),
+                             "claude_measured": sum(1 for d in drafts if d["claude"].get("billable_tokens")), "log": str(log)}
+    print(json.dumps({"rows": total_written, "dry_run": bool(a.dry_run), "projects": report}, indent=2))
     return 0
 
 
@@ -443,6 +586,12 @@ def main() -> int:
     u.add_argument("--set", action="append", help="key=json-value (repeatable)")
     u.add_argument("--finding", action="append", help="reviewer:confirmed:disputed:unverified (repeatable); label a row after the fact")
     u.set_defaults(fn=cmd_update)
+
+    b = sub.add_parser("backfill", help="T47: one row per run dir with none, inferred fields marked; never overwrites lifecycle rows")
+    b.add_argument("--from-run-dirs", action="store_true", required=True, help="the only source today")
+    b.add_argument("--all-projects", action="store_true", help="every project under the Cure project roots (each writes its own benchmark.jsonl)")
+    b.add_argument("--dry-run", action="store_true")
+    b.set_defaults(fn=cmd_backfill)
 
     l = sub.add_parser("list", help="print the log")
     l.add_argument("--json", action="store_true")

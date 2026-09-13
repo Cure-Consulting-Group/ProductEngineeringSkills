@@ -92,6 +92,112 @@ def claude_usage(project: str, since: datetime, until: datetime) -> dict:
     return tot
 
 
+def _claude_files(project: str):
+    home = Path.home() / ".claude" / "projects"
+    candidates = [home / project_slug(project)]
+    name = Path(project).resolve().name
+    candidates += [p for p in home.glob(f"*-{name}") if p not in candidates]
+    for root in candidates:
+        if root.exists():
+            yield from root.rglob("*.jsonl")
+
+
+def _is_agent_transcript(f: Path, agent: str) -> bool:
+    """A subagent transcript whose opening mentions the agent (frontmatter name or heading)."""
+    if "subagents" not in f.parts and not f.name.startswith("agent-"):
+        return False
+    try:
+        with open(f, errors="ignore") as fh:
+            head = fh.read(8000)
+    except OSError:
+        return False
+    needle = agent.lower()
+    return needle in head.lower() or needle.replace("-", " ") in head.lower()
+
+
+def claude_usage_multi(project: str, windows: list, agent: str | None = None) -> list:
+    """One pass over the project's transcripts; returns one usage dict per (since, until) window, in order.
+    A message inside several windows is counted in each (overlap is the caller's to flag). `agent` restricts
+    the scan to subagent transcripts for that agent (e.g. cure-advisor) so a per-review cost can be measured."""
+    tots = [{"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0, "messages": 0, "files_scanned": 0} for _ in windows]
+    if not windows:
+        return tots
+    lo = min(w[0] for w in windows)
+    for f in _claude_files(project):
+        try:
+            if datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc) < lo:
+                continue
+        except OSError:
+            continue
+        if agent and not _is_agent_transcript(f, agent):
+            continue
+        touched = set()
+        with open(f, errors="ignore") as fh:
+            for line in fh:
+                if '"usage"' not in line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except Exception:
+                    continue
+                if d.get("type") != "assistant" or not d.get("timestamp"):
+                    continue
+                try:
+                    t = parse_ts(d["timestamp"])
+                except Exception:
+                    continue
+                u = (d.get("message") or {}).get("usage") or {}
+                for i, (since, until) in enumerate(windows):
+                    if since <= t <= until:
+                        touched.add(i)
+                        tt = tots[i]
+                        tt["messages"] += 1
+                        for k in ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens"):
+                            tt[k] += int(u.get(k) or 0)
+                        tt["thinking_tokens"] += int(((u.get("output_tokens_details") or {}).get("thinking_tokens")) or 0)
+        for i in touched:
+            tots[i]["files_scanned"] += 1
+    for tt in tots:
+        tt["billable_tokens"] = tt["input_tokens"] + tt["cache_creation_input_tokens"] + tt["output_tokens"]
+    return tots
+
+
+def agent_transcript_costs(project: str, agent: str, since: datetime, until: datetime) -> list:
+    """Billable tokens per subagent transcript for `agent` (one number per review), for a median per-review cost."""
+    out = []
+    for f in _claude_files(project):
+        if not _is_agent_transcript(f, agent):
+            continue
+        try:
+            if datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc) < since:
+                continue
+        except OSError:
+            continue
+        bill, n, last = 0, 0, None
+        with open(f, errors="ignore") as fh:
+            for line in fh:
+                if '"usage"' not in line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except Exception:
+                    continue
+                if d.get("type") != "assistant":
+                    continue
+                u = (d.get("message") or {}).get("usage") or {}
+                bill += int(u.get("input_tokens") or 0) + int(u.get("cache_creation_input_tokens") or 0) + int(u.get("output_tokens") or 0)
+                n += 1
+                last = d.get("timestamp") or last
+        if n and last:
+            try:
+                if not (since <= parse_ts(last) <= until):
+                    continue
+            except Exception:
+                pass
+            out.append({"file": str(f), "billable_tokens": bill, "messages": n, "ended_at": last})
+    return out
+
+
 def codex_usage(since: datetime, until: datetime) -> dict:
     root = Path.home() / ".codex" / "sessions"
     keys = ("input_tokens", "cached_input_tokens", "cache_write_input_tokens", "output_tokens", "reasoning_output_tokens", "total_tokens")
@@ -149,11 +255,25 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--since", required=True, help="ISO timestamp (UTC if no offset)")
     ap.add_argument("--until", help="ISO timestamp; default now")
+    ap.add_argument("--agent", help="restrict the Claude scan to subagent transcripts for this agent (e.g. cure-advisor); prints per-transcript costs too")
     ap.add_argument("--project", default=os.getcwd(), help="repo path whose Claude sessions to count (default cwd)")
     ap.add_argument("--json", action="store_true", help="JSON output (always on)")
     args = ap.parse_args()
     since = parse_ts(args.since)
     until = parse_ts(args.until) if args.until else datetime.now(timezone.utc)
+    if args.agent:
+        per = agent_transcript_costs(args.project, args.agent, since, until)
+        bills = sorted(x["billable_tokens"] for x in per)
+        out = {
+            "since": since.isoformat(), "until": until.isoformat(), "project": str(Path(args.project).resolve()), "agent": args.agent,
+            "claude": claude_usage_multi(args.project, [(since, until)], agent=args.agent)[0],
+            "transcripts": len(per),
+            "billable_median": bills[len(bills) // 2] if bills else None,
+            "billable_mean": round(sum(bills) / len(bills)) if bills else None,
+            "per_transcript": per,
+        }
+        print(json.dumps(out, indent=2))
+        return 0
     out = {
         "since": since.isoformat(),
         "until": until.isoformat(),
