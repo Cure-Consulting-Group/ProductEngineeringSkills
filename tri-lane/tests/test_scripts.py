@@ -333,6 +333,20 @@ class Log(unittest.TestCase):
         rc, out, _ = self.ll("due", "--within", "8", "--json")
         self.assertEqual(json.loads(out), [])
 
+    def test_session_model_reads_effort_from_model_settings(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ll", SCRIPTS / "lane-log.py")
+        ll = importlib.util.module_from_spec(spec); spec.loader.exec_module(ll)
+        home = Path(tempfile.mkdtemp()); (home / ".claude").mkdir()
+        (home / ".claude" / "settings.json").write_text(json.dumps({"model": "claude-fable-5-1[1m]", "modelSettings": {"claude-fable-5-1": {"effortLevel": "xhigh"}}}))
+        real = Path.home
+        Path.home = staticmethod(lambda: home)
+        try:
+            self.assertEqual(ll.session_model(), {"model": "claude-fable-5-1[1m]", "effort": "xhigh"})
+        finally:
+            Path.home = real
+            shutil.rmtree(home)
+
     def test_backfilled_rows_do_not_enter_the_rule(self):
         self.ll("start", "--task", "a", "--arm", "manual", "--model", "m1", "--effort", "e")
         self.ll("end", "--task", "a", "--route", "manual", "--status", "complete")

@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -114,7 +115,11 @@ def session_model() -> dict:
     try:
         s = json.loads((Path.home() / ".claude" / "settings.json").read_text())
         out["model"] = s.get("model")
-        out["effort"] = s.get("effortLevel") or s.get("effort") or s.get("reasoningEffort") or (s.get("env") or {}).get("CLAUDE_CODE_EFFORT_LEVEL")
+        # effort lives per model under modelSettings (settings.json, 2026-09): {"modelSettings": {"claude-fable-5-1": {"effortLevel": "xhigh"}}};
+        # the model string may carry a context suffix like "[1m]" that the modelSettings key does not
+        base = re.sub(r"\[[^\]]*\]$", "", s.get("model") or "")
+        per_model = ((s.get("modelSettings") or {}).get(base) or {}).get("effortLevel")
+        out["effort"] = per_model or s.get("effortLevel") or s.get("effort") or (s.get("env") or {}).get("CLAUDE_CODE_EFFORT_LEVEL")
     except Exception:
         pass
     return out

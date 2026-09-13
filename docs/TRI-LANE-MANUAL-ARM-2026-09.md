@@ -15,7 +15,7 @@
 
 **Before the first task (readiness):**
 1. Merge PR #58 and update the plugin where it is installed: `claude plugin update cure-tri-lane@cure` at user scope and in each project that pins it (initiated-recruiting and this repo pin 1.9.2 at project scope). Until then the projects run 1.9.2, which logs nothing.
-2. Confirm the session model and effort you will freeze: `python3 -c 'import json;s=json.load(open("$HOME/.claude/settings.json"));print(s.get("model"),s.get("effortLevel"))'`. Both arms must record the same pair for the week.
+2. Confirm the session model and effort you will freeze: `python3 $S/lane-log.py start --task probe --arm manual && python3 $S/lane-log.py end --task probe --route manual --status refused --notes probe` prints them (today: `claude-fable-5-1[1m]` at `xhigh`, from `modelSettings` in `settings.json`). Both arms must record the same pair for the week; `/model` changes break the freeze.
 3. The tri-lane side of the rule counts only lifecycle-logged rows (the backfill has no effort recorded, so it cannot satisfy the fixed-model gate; `--include-backfill` overrides, dishonestly). Eight tri-lane tasks must also land in the same week under the same model, in statledger or elsewhere. At the ten-day pace (57 Codex tasks) that is not the constraint.
 
 **Frozen for the week:** session model and effort as they are today (`~/.claude/settings.json`; the record captures them, and `benchmark-report.py` refuses a verdict if they vary between arms). No Codex or Antigravity lanes on these eight; Codex used by hand in another terminal is allowed and is picked up from the account logs (`codex_account`), which is the one place that figure is legitimate.
