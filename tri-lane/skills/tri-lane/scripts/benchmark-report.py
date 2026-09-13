@@ -84,9 +84,12 @@ def codex_tokens(r) -> int:
     """Billable analog: uncached input + output from the lane events. The account-wide figure from Codex session
     logs (codex_account, formerly codex_logs) is not per task; it stands in only for the manual arm, which has no lanes."""
     lane = r.get("codex_lane") or {}
+    wt = r.get("codex_worktree") or {}
     acct = r.get("codex_account") or r.get("codex_logs") or {}
-    if lane.get("billable_tokens") or lane.get("total_tokens"):
-        return int(lane.get("billable_tokens") or lane.get("total_tokens") or 0)
+    # the rollout log keyed by worktree cwd sees implementer and reviewer sessions alike; the event stream sees only the implementer
+    best = max(int(lane.get("billable_tokens") or 0), int(wt.get("billable_tokens") or 0))
+    if best:
+        return best
     if r.get("arm") == "manual":
         return int(acct.get("billable_tokens") or acct.get("total_tokens") or 0)
     return 0
@@ -127,6 +130,11 @@ def summarise(rows: list) -> dict:
                 d["tasks"] += 1
                 for k in ("confirmed", "disputed", "unverified"):
                     d[k] += int(f.get(k) or 0)
+        for r in rs:
+            for who, n in (r.get("findings_reported") or {}).items():
+                d = reviewers.setdefault(who, {"confirmed": 0, "disputed": 0, "unverified": 0, "tasks": 0})
+                d["reported"] = d.get("reported", 0) + int(n or 0)
+                d["tasks_reported"] = d.get("tasks_reported", 0) + 1
         for who, d in reviewers.items():
             tot = d["confirmed"] + d["disputed"] + d["unverified"]
             d["precision"] = round(d["confirmed"] / tot, 2) if tot else None
@@ -161,6 +169,8 @@ def summarise(rows: list) -> dict:
             "escalated_rate": mean([1 if r.get("escalated") else 0 for r in rs]),
             "escaped_defects_mean": mean([r.get("escaped_defects") for r in rs]),
             "advisor_verdicts": {k: sum(1 for r in rs if r.get("advisor") == k) for k in sorted({r.get("advisor") or "" for r in rs}) if k},
+            "agy_verdicts": {k: sum(1 for r in rs if r.get("agy_verdict") == k) for k in sorted({r.get("agy_verdict") or "" for r in rs}) if k},
+            "codex_worktree_measured": sum(1 for r in rs if (r.get("codex_worktree") or {}).get("billable_tokens")),
             "reviewers": reviewers,
             "pool_delta_mean": {k: mean(v) for k, v in pool.items()},
         }

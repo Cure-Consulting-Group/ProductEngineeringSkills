@@ -119,7 +119,7 @@ def claude_usage_multi(project: str, windows: list, agent: str | None = None) ->
     """One pass over the project's transcripts; returns one usage dict per (since, until) window, in order.
     A message inside several windows is counted in each (overlap is the caller's to flag). `agent` restricts
     the scan to subagent transcripts for that agent (e.g. cure-advisor) so a per-review cost can be measured."""
-    tots = [{"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0, "messages": 0, "files_scanned": 0} for _ in windows]
+    tots = [{"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0, "messages": 0, "files_scanned": 0, "output_tokens_by_model": {}} for _ in windows]
     if not windows:
         return tots
     lo = min(w[0] for w in windows)
@@ -155,6 +155,8 @@ def claude_usage_multi(project: str, windows: list, agent: str | None = None) ->
                         for k in ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens"):
                             tt[k] += int(u.get(k) or 0)
                         tt["thinking_tokens"] += int(((u.get("output_tokens_details") or {}).get("thinking_tokens")) or 0)
+                        m = (d.get("message") or {}).get("model") or "unknown"
+                        tt["output_tokens_by_model"][m] = tt["output_tokens_by_model"].get(m, 0) + int(u.get("output_tokens") or 0)
         for i in touched:
             tots[i]["files_scanned"] += 1
     for tt in tots:
@@ -198,21 +200,43 @@ def agent_transcript_costs(project: str, agent: str, since: datetime, until: dat
     return out
 
 
-def codex_usage(since: datetime, until: datetime) -> dict:
-    root = Path.home() / ".codex" / "sessions"
+def _codex_root() -> Path:
+    return Path(os.environ.get("TRI_LANE_CODEX_SESSIONS") or (Path.home() / ".codex" / "sessions"))
+
+
+def _session_cwd(f: Path) -> str | None:
+    """The `cwd` from the session_meta line (first line of a codex rollout), resolved to its physical path."""
+    try:
+        with open(f, errors="ignore") as fh:
+            head = fh.readline()
+        d = json.loads(head)
+        cwd = (d.get("payload") or {}).get("cwd")
+        return str(Path(cwd).resolve()) if cwd else None
+    except Exception:
+        return None
+
+
+def codex_usage(since: datetime, until: datetime, cwd: str | None = None) -> dict:
+    """Codex usage from session logs in the window. Account-wide by default; `cwd` restricts it to sessions whose
+    session_meta cwd is that directory (a lane worktree), which is how reviewer-lane usage is attributed: the
+    `codex exec review` event stream reports zero usage, the rollout log does not."""
+    root = _codex_root()
     keys = ("input_tokens", "cached_input_tokens", "cache_write_input_tokens", "output_tokens", "reasoning_output_tokens", "total_tokens")
     tot = {k: 0 for k in keys}
     sessions = 0
     latest_rl = None
     latest_rl_ts = None
+    want = str(Path(cwd).resolve()) if cwd else None
     if not root.exists():
-        return {**tot, "sessions": 0, "weekly_used_percent": None}
+        return {**tot, "sessions": 0, "weekly_used_percent": None, "cwd": want}
     for f in root.rglob("*.jsonl"):
         try:
             if datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc) < since:
                 # still useful for the latest rate limit if nothing newer exists; skip for speed
                 continue
         except OSError:
+            continue
+        if want and _session_cwd(f) != want:
             continue
         before = None
         last_in = None
@@ -244,10 +268,57 @@ def codex_usage(since: datetime, until: datetime) -> dict:
             sessions += 1
             for k in keys:
                 tot[k] += int(last_in.get(k) or 0) - int((before or {}).get(k) or 0)
-    out = {**tot, "sessions": sessions}
+    out = {**tot, "sessions": sessions, "cwd": want}
     out["billable_tokens"] = tot["input_tokens"] - tot["cached_input_tokens"] + tot["output_tokens"]
     out["weekly_used_percent"] = latest_rl.get("used_percent") if latest_rl else None
     out["weekly_resets_at"] = datetime.fromtimestamp(latest_rl["resets_at"], tz=timezone.utc).isoformat() if latest_rl and latest_rl.get("resets_at") else None
+    return out
+
+
+def codex_usage_by_cwd(since: datetime, until: datetime) -> dict:
+    """{physical cwd: usage} for every codex session in the window, one pass (backfill uses this per project)."""
+    root = _codex_root()
+    keys = ("input_tokens", "cached_input_tokens", "cache_write_input_tokens", "output_tokens", "reasoning_output_tokens", "total_tokens")
+    out: dict = {}
+    if not root.exists():
+        return out
+    for f in root.rglob("*.jsonl"):
+        try:
+            if datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc) < since:
+                continue
+        except OSError:
+            continue
+        cwd = _session_cwd(f)
+        if not cwd:
+            continue
+        before, last_in = None, None
+        with open(f, errors="ignore") as fh:
+            for line in fh:
+                if '"token_count"' not in line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except Exception:
+                    continue
+                ts = d.get("timestamp")
+                usage = (((d.get("payload") or {}).get("info")) or {}).get("total_token_usage") or {}
+                if not ts or not usage:
+                    continue
+                try:
+                    t = parse_ts(ts)
+                except Exception:
+                    continue
+                if t < since:
+                    before = usage
+                elif t <= until:
+                    last_in = usage
+        if last_in:
+            acc = out.setdefault(cwd, {k: 0 for k in keys} | {"sessions": 0})
+            acc["sessions"] += 1
+            for k in keys:
+                acc[k] += int(last_in.get(k) or 0) - int((before or {}).get(k) or 0)
+    for acc in out.values():
+        acc["billable_tokens"] = acc["input_tokens"] - acc["cached_input_tokens"] + acc["output_tokens"]
     return out
 
 
@@ -257,6 +328,7 @@ def main() -> int:
     ap.add_argument("--until", help="ISO timestamp; default now")
     ap.add_argument("--agent", help="restrict the Claude scan to subagent transcripts for this agent (e.g. cure-advisor); prints per-transcript costs too")
     ap.add_argument("--project", default=os.getcwd(), help="repo path whose Claude sessions to count (default cwd)")
+    ap.add_argument("--codex-cwd", help="count only codex sessions whose cwd is this directory (a lane worktree)")
     ap.add_argument("--json", action="store_true", help="JSON output (always on)")
     args = ap.parse_args()
     since = parse_ts(args.since)
@@ -279,7 +351,7 @@ def main() -> int:
         "until": until.isoformat(),
         "project": str(Path(args.project).resolve()),
         "claude": claude_usage(args.project, since, until),
-        "codex": codex_usage(since, until),
+        "codex": codex_usage(since, until, args.codex_cwd),
     }
     print(json.dumps(out, indent=2))
     return 0

@@ -880,5 +880,54 @@ class Spec(unittest.TestCase):
         shutil.rmtree(d)
 
 
+class Analytics(unittest.TestCase):
+    """Wave 4 coverage pass: Antigravity verdicts and reported findings, live overlap flags, per-worktree Codex usage."""
+
+    def test_agy_results_and_review_findings(self):
+        sys.path.insert(0, str(SCRIPTS))
+        import lane_run
+        d = Path(tempfile.mkdtemp())
+        (d / "agy.json").write_text(json.dumps({"status": "SUCCESS", "response": "prose", "structured_output": {"verdict": "fix-first", "findings": [{"claim": "a"}, {"claim": "b"}], "missing_information": ["x"]}}))
+        (d / "agy-2.json").write_text(json.dumps({"status": "SUCCESS", "response": json.dumps({"verdict": "ship", "findings": []})}))
+        (d / "review.md").write_text("Summary line.\n\n- [P1] Keep rows available — web/src/a.tsx:93-94\n  detail\n- [P2] Second — src/b.ts:10\n- a nit without a file\n1. [P3] third (src/c.py:4)\n")
+        a = lane_run.agy_results(d)
+        self.assertEqual((a["calls"], a["verdict"], a["findings_reported"], a["missing_information"]), (2, "ship", 2, 1))
+        self.assertEqual(lane_run.codex_review_findings(d), 3)
+        shutil.rmtree(d)
+
+    def test_end_marks_overlaps_on_both_rows(self):
+        d, repo = temp_repo()
+        for task, s, e in (("one", "2026-09-10T10:00:00+00:00", "2026-09-10T11:00:00+00:00"), ("two", "2026-09-10T10:30:00+00:00", "2026-09-10T11:30:00+00:00"), ("three", "2026-09-11T10:00:00+00:00", "2026-09-11T10:10:00+00:00")):
+            run([SCRIPTS / "lane_run.py", "ensure", "--task", task], cwd=repo)
+            (repo / ".git" / "tri-lane" / "bench-open" / f"{task}.json").unlink()
+            rc, out, err = run([SCRIPTS / "lane-log.py", "end", "--task", task, "--started-at", s, "--ended-at", e], cwd=repo)
+            self.assertEqual(rc, 0, err)
+        rows = {json.loads(l)["task"]: json.loads(l) for l in (repo / ".git" / "tri-lane" / "benchmark.jsonl").read_text().splitlines()}
+        self.assertEqual((rows["one"]["claude_overlap"], rows["two"]["claude_overlap"], rows["three"]["claude_overlap"]), (["two"], ["one"], []))
+        shutil.rmtree(d)
+
+    def test_codex_usage_by_worktree_cwd(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("uw", SCRIPTS / "usage-window.py")
+        uw = importlib.util.module_from_spec(spec); spec.loader.exec_module(uw)
+        root = Path(tempfile.mkdtemp()); wt = Path(tempfile.mkdtemp())
+        def session(name, cwd, tokens):
+            f = root / f"{name}.jsonl"
+            lines = [json.dumps({"timestamp": "2026-09-10T10:00:00Z", "type": "session_meta", "payload": {"cwd": str(cwd), "originator": "codex_exec"}}),
+                     json.dumps({"timestamp": "2026-09-10T10:05:00Z", "type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"input_tokens": tokens, "cached_input_tokens": tokens // 2, "output_tokens": 10, "total_tokens": tokens + 10}}}})]
+            f.write_text("\n".join(lines) + "\n")
+        session("a", wt, 1000); session("b", Path("/elsewhere"), 5000)
+        os.environ["TRI_LANE_CODEX_SESSIONS"] = str(root)
+        try:
+            since, until = uw.parse_ts("2026-09-10T09:00:00Z"), uw.parse_ts("2026-09-10T12:00:00Z")
+            self.assertEqual(uw.codex_usage(since, until, str(wt))["billable_tokens"], 1000 - 500 + 10)
+            self.assertEqual(uw.codex_usage(since, until)["billable_tokens"], (1000 - 500 + 10) + (5000 - 2500 + 10))
+            by = uw.codex_usage_by_cwd(since, until)
+            self.assertEqual(by[str(wt.resolve())]["billable_tokens"], 510)
+        finally:
+            del os.environ["TRI_LANE_CODEX_SESSIONS"]
+        shutil.rmtree(root); shutil.rmtree(wt)
+
+
 if __name__ == "__main__":
     unittest.main()

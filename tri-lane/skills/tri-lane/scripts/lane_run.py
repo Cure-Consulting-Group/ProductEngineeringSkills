@@ -262,6 +262,52 @@ def has_lane_diff(report: dict | None) -> bool:
     return bool(report) and report.get("STATUS") in ("complete", "partial", "timeout") and bool(report.get("TOUCHED"))
 
 
+FINDING_RX = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s*(?:\[?P[0-4]\]?|\*\*|`)?", re.M)
+FILE_LINE_RX = re.compile(r"[\w./\-]+\.[a-z]{1,5}:\d+")
+
+
+def agy_results(rd: Path) -> dict:
+    """Verdict and reported-finding count from every agy*.json (structured_output, else a JSON `response`)."""
+    out = {"calls": 0, "verdicts": [], "findings_reported": 0, "missing_information": 0}
+    files = list(Path(rd).glob("agy*.json"))
+    try:
+        files.sort(key=lambda f: f.stat().st_mtime)  # the latest call's verdict wins; names (agy.json, agy2.json, agy-final.json) do not sort by time
+    except OSError:
+        files.sort()
+    for f in files:
+        d = read_json(f)
+        if not isinstance(d, dict):
+            continue
+        out["calls"] += 1
+        so = d.get("structured_output")
+        if not isinstance(so, dict):
+            try:
+                so = json.loads(d.get("response") or "")
+            except Exception:
+                so = None
+        if isinstance(so, dict):
+            v = so.get("verdict")
+            if v:
+                out["verdicts"].append(str(v).lower())
+            out["findings_reported"] += len(so.get("findings") or [])
+            out["missing_information"] += len(so.get("missing_information") or [])
+    out["verdict"] = out["verdicts"][-1] if out["verdicts"] else None
+    return out
+
+
+def codex_review_findings(rd: Path) -> int:
+    """Reported findings in review*.md: bullet or numbered lines that name a file:line or a P-level."""
+    n = 0
+    for f in sorted(Path(rd).glob("review*.md")):
+        try:
+            for line in f.read_text(errors="ignore").splitlines():
+                if FINDING_RX.match(line) and (FILE_LINE_RX.search(line) or re.search(r"\[?P[0-4]\]?", line)):
+                    n += 1
+        except OSError:
+            pass
+    return n
+
+
 def summary(task: str, cwd=None, rd=None) -> dict:
     """Everything the benchmark row can learn from the run dir without a human. `rd` overrides the run dir
     (lane-log passes the one next to its --log so the two never disagree)."""
@@ -272,14 +318,19 @@ def summary(task: str, cwd=None, rd=None) -> dict:
     rt = latest_route(rd)
     hist = route_history(rd)
     vr = verify_records(rd)
+    sugg = read_json(rd / "route-suggestion.json", {}) or {}
+    agy = agy_results(rd)
     return {
+        "worktree": m.get("worktree"),
+        "agy_verdict": agy["verdict"], "agy_calls": agy["calls"],
+        "findings_reported": {k: v for k, v in (("codex", codex_review_findings(rd)), ("agy", agy["findings_reported"])) if v},
         "run_dir": str(rd),
         "meta": m,
         "route": (rt or {}).get("route"),
         "route_reason": (rt or {}).get("reason"),
         "route_history": [{"route": h.get("route"), "at": h.get("at")} for h in hist],
         "escalated": len({h.get("route") for h in hist}) > 1,
-        "kind": m.get("kind") or (rt or {}).get("kind") or "",
+        "kind": m.get("kind") or (rt or {}).get("kind") or (sugg.get("kind") if sugg.get("kind") not in (None, "", "impl") else "") or "",
         "lane": (rep or {}).get("LANE"),
         "status": (rep or {}).get("STATUS"),
         "gaps": (rep or {}).get("GAPS") or [],

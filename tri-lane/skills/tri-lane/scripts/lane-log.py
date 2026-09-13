@@ -240,6 +240,13 @@ def cmd_end(a) -> int:
         usage = json.loads(out)
     except Exception:
         usage = {"claude": {}, "codex": {}}
+    codex_wt = {}
+    if meta.get("worktree"):
+        rc_w, out_w = sh([sys.executable, str(HERE / "usage-window.py"), "--since", started, "--until", ended, "--project", rec["project"], "--codex-cwd", meta["worktree"]], timeout=180)
+        try:
+            codex_wt = json.loads(out_w).get("codex") or {}
+        except Exception:
+            codex_wt = {}
 
     found = discover_run_files(log, a.task)
     agy_files = list(a.agy_json or []) + [f for f in found["agy_json"] if f not in (a.agy_json or [])]
@@ -291,15 +298,17 @@ def cmd_end(a) -> int:
         "suggested": found["suggestion"], "suggestion_followed": (bool(found["suggestion"]) and found["suggestion"].get("lane") and found["suggestion"]["lane"] in (lane or "")) or None,
         "rework": rework_n, "dispatches": disc.get("dispatches"), "escalated": escalated, "escaped_defects": 0, "window_checked_at": None,
         "gaps": disc.get("gaps") or [], "diff_lines": disc.get("diff_lines"), "verify": disc.get("verify"), "commit": disc.get("commit"),
-        "claude": usage.get("claude", {}), "codex_account": usage.get("codex", {}),
-        "codex_lane": codex_lane, "agy": agy,
-        "findings": findings, "findings_labeled": bool(findings),
+        "claude": usage.get("claude", {}), "codex_account": usage.get("codex", {}), "codex_worktree": codex_wt,
+        "codex_lane": codex_lane, "agy": agy, "agy_verdict": disc.get("agy_verdict"),
+        "findings": findings, "findings_labeled": bool(findings), "findings_reported": disc.get("findings_reported") or {},
         "pools_before": rec["pools_before"], "pools_after": pools_after, "pool_deltas": deltas,
         "backfilled": bool(a.ended_at), "run_dir": disc.get("run_dir"),
         "notes": " ".join(x for x in (rec.get("notes"), a.notes) if x),
     }
     rows = read_log(log)
-    rows = [r for r in rows if r.get("task") != a.task] + [row]
+    rows = [r for r in rows if r.get("task") != a.task]
+    row["claude_overlap"] = mark_overlaps(rows, row)
+    rows.append(row)
     write_log(log, rows)
     sp.unlink()
     summary = {
@@ -316,6 +325,30 @@ def cmd_end(a) -> int:
     }
     print(json.dumps(summary, indent=2))
     return 0
+
+
+def _window(r):
+    try:
+        return datetime.fromisoformat(r["started_at"]), datetime.fromisoformat(r["ended_at"])
+    except Exception:
+        return None
+
+
+def mark_overlaps(rows: list, row: dict) -> list:
+    """Tasks in the same project whose Claude windows intersect this one. Updates the older rows' lists too, so
+    both sides know: a lane that ran while another was open cannot own its transcript tokens."""
+    w = _window(row)
+    if not w:
+        return []
+    hits = []
+    for r in rows:
+        if r.get("project") != row.get("project") or r.get("task") == row.get("task"):
+            continue
+        v = _window(r)
+        if v and v[0] <= w[1] and w[0] <= v[1]:
+            hits.append(r["task"])
+            r["claude_overlap"] = sorted(set(r.get("claude_overlap") or []) | {row["task"]})
+    return sorted(hits)
 
 
 def parse_spec(rd: Path) -> dict:
@@ -435,8 +468,9 @@ def cmd_backfill(a) -> int:
                 "rework": disc.get("rework") or 0, "dispatches": disc.get("dispatches") or 0, "escalated": bool(disc.get("escalated")),
                 "escaped_defects": 0, "window_checked_at": None,
                 "gaps": disc.get("gaps") or [], "diff_lines": disc.get("diff_lines"), "verify": disc.get("verify"), "commit": disc.get("commit"),
-                "spec": spec, "codex_lane": codex_lane, "agy": agy, "codex_account": {},
-                "findings": {}, "findings_labeled": False, "pools_before": {}, "pools_after": {}, "pool_deltas": {},
+                "spec": spec, "codex_lane": codex_lane, "agy": agy, "agy_verdict": disc.get("agy_verdict"), "codex_account": {},
+                "findings": {}, "findings_labeled": False, "findings_reported": disc.get("findings_reported") or {},
+                "pools_before": {}, "pools_after": {}, "pool_deltas": {},
                 "backfilled": True, "run_dir": str(rd), "notes": "backfilled from run dir; timestamps from file mtimes",
             }
             drafts.append(row)
@@ -445,8 +479,14 @@ def cmd_backfill(a) -> int:
             report[proj.name] = {"written": 0, "kept_live": len(live)}
             continue
         usages = uw.claude_usage_multi(str(proj), windows)
+        by_cwd = uw.codex_usage_by_cwd(min(w[0] for w in windows), max(w[1] for w in windows))
+        wt_root = (proj.parent / "wt").resolve()
         for row, u in zip(drafts, usages):
             row["claude"] = u
+            top = sorted((u.get("output_tokens_by_model") or {}).items(), key=lambda kv: -kv[1])
+            if top and top[0][0] != "unknown":
+                row["model"], row["model_inferred"] = top[0][0], True
+            row["codex_worktree"] = by_cwd.get(str(wt_root / row["task"]), {})
         for i, row in enumerate(drafts):
             s1, e1 = windows[i]
             row["claude_overlap"] = sorted(d["task"] for j, d in enumerate(drafts) if j != i and windows[j][0] <= e1 and s1 <= windows[j][1])

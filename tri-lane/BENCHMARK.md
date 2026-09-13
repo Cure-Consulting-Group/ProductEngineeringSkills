@@ -61,7 +61,10 @@ For the `manual` arm the same two commands work; Codex and Antigravity use is pi
 | `claude.billable_tokens` | input + cache creation + output, from transcripts | The number the flow exists to cut. Cache reads are reported separately because they are cheap and huge. |
 | `claude.messages` | count of assistant messages | Turns. A lean architect has fewer. |
 | `codex_lane.*` / `codex_account.*` | lane events files (per file in `by_file`) / Codex session logs | Volume that left the Claude pool. `billable_tokens` (uncached input + output) is the figure comparable to Claude's; `total_tokens` includes re-read context like Claude's cache reads. `codex_account` is account-wide, not per task; it stands in only for the manual arm. |
-| `agy.*` | agy JSON usage | Includes the ~14.5k floor per call; batching shows here. |
+| `codex_worktree.*` | Codex rollout logs whose session cwd is the lane worktree | Implementer and reviewer sessions together; the reviewer's event stream reports zero, so this is the only place reviewer cost appears. |
+| `agy.*`, `agy_verdict` | agy JSON usage and `structured_output` | Includes the ~14.5k floor per call; batching shows here. The verdict and reported-finding count come from the schema output. |
+| `findings_reported.<reviewer>` | agy findings array; review.md bullets naming a file:line or P-level | What the reviewers said, before you labeled it. Precision = confirmed / reported once `findings` are typed. |
+| `claude_overlap` | window intersection with other rows in the project | Tokens in an overlapped window belong to more than one task; excluded from Claude medians unless `--include-overlaps`. |
 | `pool_deltas` | before/after percentages | Real budget effect per pool. Compare each pool to its own ceiling, never token totals across vendors. |
 | `elapsed_seconds` | start to end | Every measured multi-agent flow was slower. Know by how much. |
 | `route`, `lane`, `status` | what you declared and what happened | Does solo-default hold; do specs get `refused`. |

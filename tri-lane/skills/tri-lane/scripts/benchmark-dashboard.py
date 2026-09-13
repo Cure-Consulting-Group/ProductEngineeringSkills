@@ -57,6 +57,8 @@ def slim(rows: list) -> list:
             "has_report": bool(r.get("commit") or (r.get("verify") or {}).get("commands") or r.get("gaps")),
             "code": bool(x.get("calls") or r.get("commit")), "labeled": bool(r.get("findings_labeled")),
             "skip_reason": r.get("advisor_skip_reason") or "",
+            "reported": r.get("findings_reported") or {}, "agy_verdict": r.get("agy_verdict") or "",
+            "codex_wt": (r.get("codex_worktree") or {}).get("billable_tokens") or 0,
         })
     out.sort(key=lambda t: t.get("ended") or "")
     return out
@@ -311,7 +313,9 @@ const DATA = __DATA__;
 
   // precision
   (function(){const fig=document.getElementById("c-precision"); const rev={}; T.forEach(t=>{for(const k in t.findings){rev[k]=rev[k]||[0,0,0];t.findings[k].forEach((v,i)=>rev[k][i]+=v);}});
-    const names={codex:"Codex review",agy:"Antigravity",advisor:"Advisor"}; const keys=Object.keys(rev); if(!keys.length){empty(fig,"no findings logged");return;}
+    const names={codex:"Codex review",agy:"Antigravity",advisor:"Advisor"}; const keys=Object.keys(rev);
+    const rep={}; T.forEach(t=>{for(const k in (t.reported||{})){rep[k]=(rep[k]||0)+t.reported[k];}});
+    if(!keys.length){const rk=Object.keys(rep); empty(fig, rk.length?`no labels yet — reviewers reported ${rk.map(k=>`${rep[k]} (${names[k]||k})`).join(", ")} findings; label with lane-worktree remove --finding reviewer:C:D:U or lane-log update --finding`:"no findings logged");return;}
     const W=560,rowH=34,L=130,R=90,H=keys.length*rowH+26; const s=svg(fig,W,H,"Reviewer precision as confirmed share"); const max=Math.max(...keys.map(k=>rev[k].reduce((a,b)=>a+b,0)),1); const x=v=>L+v*(W-L-R)/max; const cols=[css("--ink"),css("--ink-3"),css("--line-2")];
     keys.forEach((k,i)=>{const y=8+i*rowH; el("text",{x:L-8,y:y+16,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=names[k]||k; let acc=0; ["Confirmed","Disputed","Unverified"].forEach((lab,j)=>{const v=rev[k][j]; if(!v)return; const r=el("rect",{x:x(acc)+(acc?2:0),y:y+3,width:Math.max(0,x(acc+v)-x(acc)-(acc?2:0)),height:20,fill:cols[j]},s); hover(r,fig,`${names[k]||k} · ${lab}: ${v}`); acc+=v;}); const tot=rev[k].reduce((a,b)=>a+b,0); el("text",{x:x(acc)+6,y:y+17,"font-size":"11",fill:css("--ink-2")},s).textContent=tot?Math.round(100*rev[k][0]/tot)+"% precision":"";});
     table(fig,["Reviewer","Confirmed","Disputed","Unverified","Precision"],keys.map(k=>{const t=rev[k].reduce((a,b)=>a+b,0);return [names[k]||k,...rev[k],t?(rev[k][0]/t).toFixed(2):"—"];}));})();

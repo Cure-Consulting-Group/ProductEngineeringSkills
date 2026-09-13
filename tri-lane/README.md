@@ -44,6 +44,16 @@ python3 "$(claude plugin path cure-tri-lane 2>/dev/null || echo ~/.claude/plugin
 
 On 2 Sep 2026, during design testing, Antigravity in plan mode reverted an uncommitted working tree because the machine's `agy` settings auto-approve every tool. The tree was restored from a diff saved beforehand. Hence: no lane ever touches a live tree, sandbox flags are explicit and hook-enforced, and the diff is saved before any cross-vendor run.
 
+## Analytics coverage pass (1.14.0)
+
+Every field the decision rule, the report, and the dashboard consume is now produced by the lifecycle or the backfill, and the ones that cannot be are named:
+
+- **Reviewer usage.** The `codex exec review` event stream reports zero usage, so the reviewer lane was invisible. Codex rollout logs carry the session `cwd`; `lane-worktree add` records the worktree path in `meta.json`, and `end` attributes every Codex session run in that worktree to the task (`codex_worktree`), implementer and reviewer alike. The report takes the larger of the event-stream and rollout figures. Backfill does the same in one pass per project (`codex_usage_by_cwd`).
+- **Antigravity verdicts and reported findings.** `agy*.json` `structured_output` (or a JSON `response`) yields `agy_verdict` and a reported-finding count; `review*.md` bullets that name a file:line or a P-level yield the Codex count. Rows carry `findings_reported` next to the architect's `findings` labels, so the precision panel can say "reported, unlabeled" instead of showing nothing.
+- **Overlap on live rows.** `end` marks `claude_overlap` on the new row and on the older rows it overlaps, not only in the backfill.
+- **Kind and model when nobody typed them.** Kind falls back to the shadow router's `--kind`; backfilled rows infer the Claude model from the transcript window (`model_inferred: true`), so the fixed-model check can run on them.
+- **Still not measurable, by construction:** effort for backfilled rows (not in transcripts); Confirmed/Disputed/Unverified labels (a judgment, typed by the architect); escaped defects before someone checks the window.
+
 ## The cost proxy and the spec lint (1.13.0)
 
 - `benchmark-report.py --proxy --pre <iso> --post <iso> [--until <iso>] [--projects a,b]`: Claude billable per commit per repository across two windows, from transcripts and `git log`, with two commit denominators (first-parent on the checked-out branch, and every branch) because the sign of the answer depends on which one you pick: after adoption every lane run adds commits. Its output is labeled a proxy and lists its confounds; only the manual arm (`BENCHMARK.md`) returns a verdict. `docs/TRI-LANE-COST-PROXY-2026-09-13.md` is the first run.

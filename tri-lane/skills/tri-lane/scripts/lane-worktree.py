@@ -130,6 +130,12 @@ def cmd_add(a) -> int:
         print(out.strip(), file=sys.stderr)
         return 1
     ens = _ensure(a)
+    try:
+        import lane_run  # noqa: E402
+        if not a.ro:
+            lane_run.write_meta(a.task, worktree=str(wt.resolve()))  # codex session logs key usage by cwd; this is how reviewer-lane usage is attributed
+    except Exception:
+        pass
     print(json.dumps({"worktree": str(wt), "worktree_physical": str(wt.resolve()), "branch": None if a.ro else f"lane/{a.task}", "run_dir": str(rd), "tmpdir": str(rd / "tmp"),
                       "benchmark_record": "opened" if ens.get("created") else "already open"}))
     return 0
