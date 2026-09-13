@@ -114,7 +114,7 @@ def session_model() -> dict:
     try:
         s = json.loads((Path.home() / ".claude" / "settings.json").read_text())
         out["model"] = s.get("model")
-        out["effort"] = s.get("effortLevel")
+        out["effort"] = s.get("effortLevel") or s.get("effort") or s.get("reasoningEffort") or (s.get("env") or {}).get("CLAUDE_CODE_EFFORT_LEVEL")
     except Exception:
         pass
     return out

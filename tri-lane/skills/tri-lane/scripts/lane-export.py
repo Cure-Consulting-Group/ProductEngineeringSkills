@@ -45,6 +45,7 @@ def export_row(r: dict) -> dict:
         "route": r.get("route") or "", "route_inferred": bool(r.get("route_inferred")), "escalated": bool(r.get("escalated")),
         "lane": ("luna" if "luna" in (model or "") else "sol" if "sol" in (model or "") else model) if model else None,
         "model": model, "reasoning": rung,
+        "session_model": r.get("model"), "session_effort": r.get("effort"),
         "objective": sp.get("objective"), "files": sp.get("files") or [], "verify_cmd": sp.get("verify"),
         "status": r.get("status") or "", "status_inferred": bool(r.get("status_inferred")), "cause": r.get("cause"),
         "gaps": r.get("gaps") or [],

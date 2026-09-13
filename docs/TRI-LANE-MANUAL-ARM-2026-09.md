@@ -13,12 +13,17 @@
 | `security` | 1 | Firestore rules, auth, or privacy path |
 | `debug` | 1 | A reproducible bug with a failing test to turn green |
 
+**Before the first task (readiness):**
+1. Merge PR #58 and update the plugin where it is installed: `claude plugin update cure-tri-lane@cure` at user scope and in each project that pins it (initiated-recruiting and this repo pin 1.9.2 at project scope). Until then the projects run 1.9.2, which logs nothing.
+2. Confirm the session model and effort you will freeze: `python3 -c 'import json;s=json.load(open("$HOME/.claude/settings.json"));print(s.get("model"),s.get("effortLevel"))'`. Both arms must record the same pair for the week.
+3. The tri-lane side of the rule counts only lifecycle-logged rows (the backfill has no effort recorded, so it cannot satisfy the fixed-model gate; `--include-backfill` overrides, dishonestly). Eight tri-lane tasks must also land in the same week under the same model, in statledger or elsewhere. At the ten-day pace (57 Codex tasks) that is not the constraint.
+
 **Frozen for the week:** session model and effort as they are today (`~/.claude/settings.json`; the record captures them, and `benchmark-report.py` refuses a verdict if they vary between arms). No Codex or Antigravity lanes on these eight; Codex used by hand in another terminal is allowed and is picked up from the account logs (`codex_account`), which is the one place that figure is legitimate.
 
 **Per task, typed (the manual arm has no worktree lifecycle):**
 
 ```bash
-S="$HOME/.claude/plugins/cache/cure/cure-tri-lane/1.13.0/skills/tri-lane/scripts"   # or $CLAUDE_PLUGIN_ROOT/skills/tri-lane/scripts
+S="$HOME/.claude/plugins/cache/cure/cure-tri-lane/1.14.0/skills/tri-lane/scripts"   # or $CLAUDE_PLUGIN_ROOT/skills/tri-lane/scripts
 python3 $S/lane-log.py start --task m-01 --arm manual --kind impl          # before the first prompt
 # ... do the task the old way ...
 python3 $S/lane-log.py end   --task m-01 --route manual --status complete  # when merged or abandoned

@@ -30,6 +30,7 @@ ARMS = ("manual", "tri-lane", "advisor-only", "tri-lane-lean")
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 INCLUDE_OVERLAPS = False  # T47: rows whose Claude window overlaps another task's are excluded from Claude medians unless asked
+INCLUDE_BACKFILL = False  # backfilled rows carry no effort and an inferred model; they inform the dashboard, never the rule, unless asked
 
 
 def default_log() -> Path:
@@ -178,9 +179,23 @@ def summarise(rows: list) -> dict:
 
 
 def decide(s: dict, claude_drop: float, max_slowdown: float) -> dict:
+    """The pre-registered rule over lifecycle-logged rows. Backfilled rows are excluded unless INCLUDE_BACKFILL:
+    they have no recorded effort and an inferred model, so they can never satisfy the fixed-model gate honestly."""
+    if not INCLUDE_BACKFILL and any(r.get("backfilled") for r in _ROWS):
+        live = [r for r in _ROWS if not r.get("backfilled")]
+        excluded = len(_ROWS) - len(live)
+        s = summarise(live) if live else {}
+        d = _decide(s, claude_drop, max_slowdown)
+        d["backfilled_excluded"] = excluded
+        d["note_backfill"] = f"{excluded} backfilled row(s) excluded from the rule (no effort recorded, model inferred); pass --include-backfill to count them"
+        return d
+    return _decide(s, claude_drop, max_slowdown)
+
+
+def _decide(s: dict, claude_drop: float, max_slowdown: float) -> dict:
     m, t = s.get("manual"), s.get("tri-lane")
     if not m or not t:
-        return {"verdict": "insufficient data", "reason": "need at least one task in both manual and tri-lane arms"}
+        return {"verdict": "insufficient data", "reason": "need at least one lifecycle-logged task in both manual and tri-lane arms"}
     checks = {}
     if m["claude_billable_median"] and t["claude_billable_median"] is not None:
         drop = 1 - t["claude_billable_median"] / m["claude_billable_median"]
@@ -316,14 +331,16 @@ def main() -> int:
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--html", help="write a one-page HTML report to this path")
     ap.add_argument("--include-overlaps", action="store_true", help="count Claude tokens for tasks whose windows overlap another task's (double counts; default excludes them)")
+    ap.add_argument("--include-backfill", action="store_true", help="let backfilled rows (no effort, inferred model) count toward the decision rule")
     ap.add_argument("--proxy", action="store_true", help="T49: Claude billable per merged commit per repo across two windows (--pre, --post); a proxy, not the rule")
     ap.add_argument("--pre", help="ISO start of the pre-adoption window (with --proxy)")
     ap.add_argument("--post", help="ISO start of the post-adoption window; the pre window ends here (with --proxy)")
     ap.add_argument("--until", help="ISO end of the post window (default now)")
     ap.add_argument("--projects", help="comma-separated repo paths (default: every project root child with a .git/tri-lane)")
     args = ap.parse_args()
-    global INCLUDE_OVERLAPS
+    global INCLUDE_OVERLAPS, INCLUDE_BACKFILL
     INCLUDE_OVERLAPS = args.include_overlaps
+    INCLUDE_BACKFILL = args.include_backfill
     if args.proxy:
         if not (args.pre and args.post):
             print("--proxy needs --pre and --post", file=sys.stderr)

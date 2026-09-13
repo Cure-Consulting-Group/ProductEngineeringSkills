@@ -333,6 +333,20 @@ class Log(unittest.TestCase):
         rc, out, _ = self.ll("due", "--within", "8", "--json")
         self.assertEqual(json.loads(out), [])
 
+    def test_backfilled_rows_do_not_enter_the_rule(self):
+        self.ll("start", "--task", "a", "--arm", "manual", "--model", "m1", "--effort", "e")
+        self.ll("end", "--task", "a", "--route", "manual", "--status", "complete")
+        self.ll("start", "--task", "b", "--arm", "tri-lane", "--model", "m1", "--effort", "e")
+        self.ll("end", "--task", "b", "--route", "delegate", "--status", "complete")
+        with open(self.log, "a") as f:
+            f.write(json.dumps({"task": "old", "arm": "tri-lane", "backfilled": True, "model": "claude-opus-5", "effort": None, "started_at": "2026-09-01T00:00:00+00:00", "ended_at": "2026-09-01T01:00:00+00:00", "claude": {}, "codex_lane": {}, "agy": {}}) + "\n")
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--log", self.log, "--json"], cwd=self.repo)
+        d = json.loads(out)["decision"]
+        self.assertEqual(d["backfilled_excluded"], 1)
+        self.assertTrue(d["checks"]["model_frozen"]["pass"], d["checks"]["model_frozen"])
+        rc, out, err = run([SCRIPTS / "benchmark-report.py", "--log", self.log, "--json", "--include-backfill"], cwd=self.repo)
+        self.assertFalse(json.loads(out)["decision"]["checks"]["model_frozen"]["pass"])
+
     def test_report_blocks_on_model_freeze_and_windows(self):
         self.ll("start", "--task", "a", "--arm", "manual", "--model", "m1", "--effort", "e")
         self.ll("end", "--task", "a", "--route", "manual", "--status", "complete")
