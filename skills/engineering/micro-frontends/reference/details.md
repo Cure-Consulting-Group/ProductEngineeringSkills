@@ -1,139 +1,35 @@
 # micro-frontends: detailed reference
 
-> Reference material for the `micro-frontends` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+Implementation detail for `micro-frontends`, read when writing routing config, shared auth, an event bus, or the URL ownership map. Monorepo setup (workspaces, Turborepo/Nx, remote cache) lives in `monorepo-navigator`.
 
-## Contents
-- Step 4: Monorepo Management
-- Step 7: State and Routing
-
-## Step 4: Monorepo Management
-
-### Turborepo Setup
-```json
-// turbo.json
-{
-  "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local"],
-  "pipeline": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
-    },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
-    "test": {
-      "dependsOn": ["^build"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "type-check": {
-      "dependsOn": ["^build"]
-    }
-  }
-}
-```
-
-### Workspace Configuration
-```json
-// package.json (root)
-{
-  "name": "project-monorepo",
-  "private": true,
-  "workspaces": ["apps/*", "packages/*"],
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "type-check": "turbo run type-check",
-    "clean": "turbo run clean && rm -rf node_modules"
-  },
-  "devDependencies": {
-    "turbo": "^2.0.0"
-  }
-}
-```
-
-### Build Caching
-```
-Turborepo caches build outputs based on file hashes.
-Remote caching shares cache across CI and developers.
-
-# Enable Vercel Remote Cache (free for Vercel users)
-npx turbo login
-npx turbo link
-
-# Or self-hosted cache (S3/GCS)
-# Set TURBO_REMOTE_CACHE_SIGNATURE_KEY and TURBO_API/TURBO_TOKEN
-
-Expected impact:
-  - Local rebuilds: 80-95% cache hit rate (only rebuild changed packages)
-  - CI builds: 60-80% cache hit rate (rebuild only affected apps)
-  - Build time reduction: 3-10x for incremental changes
-
-Cache rules:
-  - turbo.json pipeline.build.outputs defines what gets cached
-  - globalDependencies defines what invalidates ALL caches
-  - Per-task inputs can be customized for fine-grained invalidation
-```
-
-### Nx Alternative
-```
-Use Nx instead of Turborepo when:
-  ✅ Need built-in code generators (nx generate)
-  ✅ Want affected-only testing (nx affected:test)
-  ✅ Need module boundary enforcement (ESLint rules)
-  ✅ Larger monorepo (>20 packages) — Nx has better graph analysis
-
-// nx.json
-{
-  "targetDefaults": {
-    "build": { "dependsOn": ["^build"], "cache": true },
-    "test": { "cache": true },
-    "lint": { "cache": true }
-  },
-  "affected": { "defaultBase": "main" }
-}
-
-// Enforce module boundaries (prevent circular deps)
-// .eslintrc.json
-{
-  "rules": {
-    "@nx/enforce-module-boundaries": ["error", {
-      "depConstraints": [
-        { "sourceTag": "scope:app", "onlyDependOnLibsWithTags": ["scope:shared", "scope:ui"] },
-        { "sourceTag": "scope:ui", "onlyDependOnLibsWithTags": ["scope:shared"] },
-        { "sourceTag": "scope:shared", "onlyDependOnLibsWithTags": ["scope:shared"] }
-      ]
-    }]
-  }
-}
-```
-
-## Step 7: State and Routing
+## State and Routing
 
 ### Cross-App Navigation
 ```typescript
-// Option 1: URL-based routing (recommended for strong isolation)
-// Each app owns a set of routes. Navigation = standard links.
+// Option 1: Next.js multi-zones (route-level split, self-hosted or any host)
+// Zone app: next.config.ts
+const nextConfig = { assetPrefix: '/checkout-static' };   // unique per zone; default zone needs none
 
-// Host app rewrites in next.config.js or vercel.json:
-{
-  "rewrites": [
-    { "source": "/checkout/:path*", "destination": "https://checkout.example.com/:path*" },
-    { "source": "/dashboard/:path*", "destination": "https://dashboard.example.com/:path*" }
-  ]
+// Host app: next.config.ts — rewrite the zone's pages AND its static assets
+async rewrites() {
+  return [
+    { source: '/checkout', destination: `${process.env.CHECKOUT_ORIGIN}/checkout` },
+    { source: '/checkout/:path+', destination: `${process.env.CHECKOUT_ORIGIN}/checkout/:path+` },
+    { source: '/checkout-static/:path+', destination: `${process.env.CHECKOUT_ORIGIN}/checkout-static/:path+` },
+  ];
 }
+// Gotchas (Next.js multi-zones guide, 2026):
+//  - Cross-zone links use <a>, not <Link> — <Link> prefetches/soft-navigates and breaks across zones.
+//  - Cross-zone navigation is a hard page load; keep pages visited together in one zone.
+//  - Server Actions need experimental.serverActions.allowedOrigins = ['<user-facing domain>'].
+//  - Use proxy.ts instead of rewrites only for dynamic routing (e.g. flag-driven migration).
+// On Vercel, prefer Vercel Microfrontends: routing lives in microfrontends.json, not rewrites.
 
 // User sees: example.com/checkout/cart → served by checkout app
 // User sees: example.com/dashboard → served by dashboard app
 // Shared header/footer loaded as shared component or edge-side include
 
-// Option 2: Monorepo shared router (recommended for package-based approach)
-// Single Next.js app with route groups per team:
+// Option 2: No split — one Next.js app, route groups owned per team (CODEOWNERS on each group):
 app/
   (marketing)/        → Team A owns
     page.tsx
@@ -149,12 +45,12 @@ app/
 
 ### Shared Auth State
 ```typescript
-// Auth MUST be shared across all micro-frontends.
-// Never ask users to log in per-app.
+// One sign-in for all zones; each zone still verifies the session server-side.
 
 // Option 1: Shared cookie (same domain)
 // Set auth cookie on .example.com — accessible by all subdomains
-// JWT token verified at edge middleware (see /edge-computing skill)
+// Verified server-side in each zone (layouts, Server Actions, Route Handlers) — proxy.ts may
+// redirect early but must not be the only check (see nextjs-feature-scaffold)
 
 // Option 2: Shared auth package (monorepo)
 // packages/auth/

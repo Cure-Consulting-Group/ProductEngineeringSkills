@@ -52,7 +52,7 @@ When the brief asks for browser verification, use the chrome-devtools-mcp plugin
 
 - Always `--mode plan --sandbox`. Never `--mode accept-edits`, `-y`, `--yolo`, `--approval-mode`, or `--dangerously-skip-permissions`. The plugin hook refuses all of them.
 - If `$WT_RO` is empty or equals the main checkout, stop and report `unavailable`.
-- Never point `--add-dir` at the main checkout or the implementation worktree.
+- Always pass `--add-dir "$WT_RO"`: headless agy has no workspace without it and reviews nothing (agy 1.2.9). Never point it at the main checkout or the implementation worktree.
 - Default to `flash`. Use `pro` only when the brief says the whole repository must be read at once.
 - Batch: one call with the full brief beats several small calls. Each call carries ~14.5k tokens of fixed overhead.
 - Return the verdict verbatim. The architect labels findings; you do not.

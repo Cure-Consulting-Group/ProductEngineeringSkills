@@ -1,13 +1,13 @@
 # technology-radar: detailed reference
 
-> Reference material for the `technology-radar` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read when generating a first radar for Cure Consulting Group (Step 5 of the `technology-radar` skill). It is a starting draft, not current truth: confirm every entry against the dependency scan, and replace the illustrative dates and targets with real ones.
 
 ## Contents
 - Step 5: Default Radar for Cure Consulting Group
 
 ## Step 5: Default Radar for Cure Consulting Group
 
-Pre-populate based on the portfolio tech stack defined in CLAUDE.md and README.md.
+Pre-populate from PORTFOLIO.md and the dependency scan; drop any entry the scan doesn't confirm. "Antigravity" below is Cure's IDE product, not Google Antigravity (the agent runtime).
 
 ### ADOPT
 
@@ -40,8 +40,8 @@ Tailwind CSS
   Ring: Adopt | Quadrant: Languages & Frameworks
   Products: Vendly (Web), The Initiated (Web), Antigravity (Web)
   Since: 2023-Q2
-  Rationale: Utility-first CSS eliminates style drift across products. Consistent design
-  tokens via tailwind.config. Smaller CSS bundles than component libraries. Fast iteration.
+  Rationale: Utility-first CSS eliminates style drift across products. Tailwind v4 is
+  CSS-first: design tokens map in via `@theme` in CSS (no tailwind.config). Fast iteration.
   Owner: Frontend Lead
 
 Firebase (Firestore, Cloud Functions v2, Auth)
@@ -116,27 +116,27 @@ Trunk-Based Development
   Rationale: Short-lived branches (<1 day) reduce merge conflicts and enable continuous
   delivery. Feature flags decouple deploy from release. Proven to improve DORA metrics.
   Owner: Engineering Lead
+
+Claude API / Anthropic SDK
+  Ring: Adopt | Quadrant: Platforms
+  Products: Antigravity (Cure IDE), Autograph, and Cure's agent tooling
+  Since: [quarter adopted]
+  Rationale: Default LLM provider for agentic, coding, and long-document features; this
+  skill library itself is Claude-first. Pin exact model IDs per feature and re-check
+  them against Anthropic's current model list each quarter.
+  Owner: AI Lead
 ```
 
 ### TRIAL
 
 ```
-Claude API / Anthropic SDK
-  Ring: Trial | Quadrant: Platforms
-  Products: Antigravity
-  Since: 2024-Q2
-  Rationale: Strong reasoning capabilities for complex AI features. Evaluate against
-  OpenAI and Gemini for cost, latency, and output quality. Trial in Antigravity's
-  AI assistant feature before portfolio-wide decision.
-  Success criteria: <2s p95 latency, <$0.01/request avg, user satisfaction >4.2/5
-  Owner: AI Lead
-
 Gemini API
   Ring: Trial | Quadrant: Platforms
   Products: The Initiated
   Since: 2024-Q3
-  Rationale: Google-native AI with strong multimodal support. Evaluate for content
-  generation features. Firebase integration is seamless. Compare pricing vs Claude/OpenAI.
+  Rationale: Google-native AI with strong multimodal support, reachable through Firebase
+  AI Logic. Evaluate for content generation; compare cost and quality against Claude on
+  the same eval set. Confirm current model IDs before use.
   Success criteria: Multimodal accuracy >90%, cost <OpenAI equivalent, stable API
   Owner: AI Lead
 
@@ -144,9 +144,9 @@ OpenAI API
   Ring: Trial | Quadrant: Platforms
   Products: Vendly
   Since: 2024-Q1
-  Rationale: Most mature AI API ecosystem. Evaluate GPT-4o for product description
-  generation and search. Compare against Claude and Gemini on same tasks to make
-  portfolio-wide AI provider decision by Q4.
+  Rationale: Evaluate OpenAI's current models for product-description generation and
+  search, against Claude and Gemini on the same eval set. Confirm current model IDs
+  and prices before use; don't carry model names over from old radars.
   Success criteria: Output quality parity with Claude, function calling reliability >99%
   Owner: AI Lead
 
@@ -168,6 +168,15 @@ Turborepo
   component libraries across web products. Could reduce CI build times by 40-60%.
   Success criteria: CI build time reduction >40%, DX improvement (team survey)
   Owner: Platform Engineer
+
+Server Actions for mutations (React 19)
+  Ring: Trial | Quadrant: Techniques
+  Products: [web product trialing it]
+  Since: [quarter]
+  Rationale: React 19 is stable and Server Components are already Adopt via the App
+  Router. Trial Server Actions as the default for form mutations in place of API routes;
+  success = less client code with auth and validation checked in every action.
+  Owner: Frontend Lead
 ```
 
 ### ASSESS
@@ -178,9 +187,10 @@ React Native / Kotlin Multiplatform (KMP)
   Products: None (research only)
   Since: 2025-Q1
   Rationale: Cross-platform could reduce development cost for new products. KMP shares
-  business logic while keeping native UI. React Native shares UI but has bridge overhead.
-  Neither proven in our portfolio yet. Research for potential new product in 2026.
-  Researcher: Mobile Lead | Next review: 2025-Q2
+  business logic while keeping native UI. React Native shares UI; its New Architecture
+  (bridgeless, default since 0.76) removed the old bridge overhead. Neither proven in our
+  portfolio yet.
+  Researcher: Mobile Lead | Next review: [next quarter]
 
 Supabase
   Ring: Assess | Quadrant: Platforms
@@ -189,7 +199,7 @@ Supabase
   Rationale: Open-source Firebase alternative with PostgreSQL. Better relational data
   support, row-level security, real-time subscriptions. Evaluate as alternative for
   products that outgrow Firestore's document model limitations.
-  Researcher: Backend Lead | Next review: 2025-Q2
+  Researcher: Backend Lead | Next review: [next quarter]
 
 Deno
   Ring: Assess | Quadrant: Platforms
@@ -198,25 +208,18 @@ Deno
   Rationale: Secure-by-default TypeScript runtime. Native TypeScript support without build
   step. Built-in test runner, linter, formatter. Evaluate as Node.js replacement for
   Cloud Functions or standalone services.
-  Researcher: Platform Engineer | Next review: 2025-Q3
+  Researcher: Platform Engineer | Next review: [next quarter]
 
 Edge Functions (Vercel / Cloudflare Workers)
   Ring: Assess | Quadrant: Platforms
   Products: None (research only)
   Since: 2025-Q1
-  Rationale: Sub-10ms cold starts, global distribution, lower latency than Cloud Functions.
-  Evaluate for latency-sensitive API routes (auth, personalization, geolocation).
-  Limited runtime (no Node.js APIs, size limits) may constrain usage.
-  Researcher: Frontend Lead | Next review: 2025-Q2
+  Rationale: Global distribution for latency-sensitive routes (auth, personalization,
+  geolocation). Vercel now defaults functions and proxy.ts to the Node.js runtime; the
+  Edge runtime is limited (no full Node APIs, size limits). Confirm current platform
+  guidance with the edge-computing skill before trialing.
+  Researcher: Frontend Lead | Next review: [next quarter]
 
-Server Components + Server Actions (React 19)
-  Ring: Assess | Quadrant: Techniques
-  Products: None (research only)
-  Since: 2025-Q1
-  Rationale: Server Actions could replace API routes for mutations. Streaming SSR improves
-  perceived performance. Evaluate stability and DX as React 19 matures. Already partially
-  used via Next.js App Router but not fully leveraging Server Actions.
-  Researcher: Frontend Lead | Next review: 2025-Q2
 ```
 
 ### HOLD
@@ -229,7 +232,7 @@ LiveData (Android)
   Rationale: StateFlow + Compose is the modern standard. LiveData requires lifecycle
   observation boilerplate and doesn't compose well with coroutines. No new screens
   should use LiveData.
-  Migration: Replace with StateFlow/SharedFlow. Effort: M (Vendly). Target: 2025-Q2.
+  Migration: Replace with StateFlow/SharedFlow. Effort: M (Vendly). Target: [quarter].
   Owner: Android Lead
 
 UIKit (iOS)
@@ -238,7 +241,7 @@ UIKit (iOS)
   Since: 2024-Q1 (moved from Adopt)
   Rationale: SwiftUI is the Adopt standard. UIKit screens cannot use @Observable,
   previews, or navigation stack. Maintaining both UI frameworks doubles the mental model.
-  Migration: Rewrite screens in SwiftUI. Effort: L (Vendly), S (Autograph). Target: 2025-Q3.
+  Migration: Rewrite screens in SwiftUI. Effort: L (Vendly), S (Autograph). Target: [quarter].
   Owner: iOS Lead
 
 Pages Router (Next.js)
@@ -247,7 +250,7 @@ Pages Router (Next.js)
   Since: 2024-Q2 (moved from Adopt)
   Rationale: App Router is the Adopt standard. Pages Router cannot use Server Components,
   streaming, or parallel routes. Maintaining both routers complicates the codebase.
-  Migration: Move remaining routes to app/. Effort: M (Antigravity). Target: 2025-Q2.
+  Migration: Move remaining routes to app/. Effort: M (Antigravity). Target: [quarter].
   Owner: Frontend Lead
 
 Jest
@@ -257,7 +260,7 @@ Jest
   Rationale: Vitest is faster (native ESM, Vite-powered), compatible with Jest API,
   and aligns with our Vite/Next.js toolchain. Jest's CJS-first architecture causes
   configuration headaches with ESM dependencies.
-  Migration: Swap jest.config for vitest.config, update imports. Effort: S per product. Target: 2025-Q2.
+  Migration: Swap jest.config for vitest.config, update imports. Effort: S per product. Target: [quarter].
   Owner: Frontend Lead
 
 Express.js
@@ -267,7 +270,7 @@ Express.js
   Rationale: Cloud Functions v2 or Next.js API routes are the standard for new endpoints.
   Express adds an unnecessary abstraction layer when running inside Cloud Functions.
   Standalone Express servers require separate hosting and scaling.
-  Migration: Move endpoints to Cloud Functions v2 or Next.js API routes. Effort: L (Autograph). Target: 2025-Q3.
+  Migration: Move endpoints to Cloud Functions v2 or Next.js API routes. Effort: L (Autograph). Target: [quarter].
   Owner: Backend Lead
 
 XML Layouts (Android)
@@ -277,6 +280,6 @@ XML Layouts (Android)
   Rationale: Jetpack Compose is the Adopt standard. XML layouts cannot use Compose state
   management, previews, or animation APIs without interop bridges. Maintaining both
   layout systems slows feature development.
-  Migration: Rewrite screens in Compose. Effort: L (Vendly). Target: 2025-Q4.
+  Migration: Rewrite screens in Compose. Effort: L (Vendly). Target: [quarter].
   Owner: Android Lead
 ```

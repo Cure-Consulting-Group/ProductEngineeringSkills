@@ -1,89 +1,39 @@
-# E2E CI, Visual Regression & Flake Management
+# E2E CI, Visual Regression, Performance & Flakes
 
-> Reference for the `e2e-testing` skill. CI integration, visual regression, and flaky-test handling.
+> Read when setting up the E2E CI job, visual baselines, performance assertions, or diagnosing a
+> flaky test in the `e2e-testing` skill. Retry counts and quarantine limits are owned by the
+> `testing-strategy` skill — this file covers mechanics only.
 
-## Contents
-- Step 6: Visual Regression
-- Step 7: CI Integration
-- Step 8: Flaky Test Management
+## Visual Regression
 
-## Step 6: Visual Regression
+Baselines live in the repo (versioned with the code, diffed in the PR). Use a hosted service
+(Percy, Chromatic, Applitools) only when screenshot volume makes the repo unwieldy.
 
-### Snapshot Baseline Management
+| Platform | Tool |
+|----------|------|
+| Web | Playwright `toHaveScreenshot()` — per-browser, per-OS baselines |
+| Android | Paparazzi (JVM, no device) or Roborazzi (Robolectric) |
+| iOS | swift-snapshot-testing |
 
-```
-Store baselines in the repo (e2e/__snapshots__/ or equivalent).
-Advantages: versioned with code, diff in PR, no external dependency.
+Tolerance: start at `maxDiffPixelRatio: 0.001`; text-heavy screens up to 0.005; never above 0.01
+— past that you stop catching regressions. Freeze animations and mask dynamic content (dates,
+avatars) instead of raising tolerance.
 
-For large teams or many screenshots, consider external services:
-  - Percy (BrowserStack)
-  - Chromatic (Storybook)
-  - Applitools
-```
+Baselines render differently per OS: generate them in the same container/OS image CI uses (e.g. the
+official Playwright Docker image), never from a developer's Mac. Regenerate only in a dedicated
+workflow (`npx playwright test --update-snapshots`), commit as
+`chore: update visual baselines for <feature>`, and review the images in the PR diff.
 
-### Threshold Configuration
-
-```
-Pixel diff tolerance:
-  - Default: 0.1% (catches real changes, ignores anti-aliasing)
-  - Text-heavy screens: 0.5% (font rendering varies slightly)
-  - Animation-present screens: skip or use a specific frame
-
-Never set tolerance above 1% — at that point you're not catching regressions.
-```
-
-### Platform-Specific Tools
-
-| Platform | Tool | Approach |
-|----------|------|----------|
-| Web | Playwright `toHaveScreenshot()` | Built-in, per-browser baselines |
-| Android | Paparazzi (JVM, no device) | Compose/View rendering to PNG |
-| Android | Roborazzi (Robolectric-based) | Screenshot + Compose preview |
-| iOS | swift-snapshot-testing | View/controller snapshot to PNG |
-
-### CI Integration for Visual Regression
+## CI Job (GitHub Actions)
 
 ```yaml
-# Playwright visual regression in CI
-- run: npx playwright test --update-snapshots  # Only in dedicated "update baseline" workflow
-- run: npx playwright test                      # Normal run — fails on diff
-
-# On failure, upload comparison artifacts
-- uses: actions/upload-artifact@v4
-  if: failure()
-  with:
-    name: visual-diffs
-    path: e2e/test-results/
-```
-
-### Update Workflow
-
-```
-When visual changes are intentional:
-  1. Run tests locally to see diffs
-  2. Review diffs — confirm they match the design
-  3. Run: npx playwright test --update-snapshots (or platform equivalent)
-  4. Commit updated baselines with message: "chore: update visual baselines for [feature]"
-  5. PR reviewers verify the baseline images in the diff
-```
-
-## Step 7: CI Integration
-
-### GitHub Actions Workflow Template
-
-```yaml
-name: E2E Tests
+name: E2E
 on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 6 * * *'  # Nightly at 6 AM UTC
-  workflow_dispatch:       # Manual trigger
-
-env:
-  BASE_URL: ${{ vars.STAGING_URL }}
-  TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
-  TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
+    - cron: '0 6 * * *'   # nightly full suite
+  workflow_dispatch:
 
 jobs:
   e2e:
@@ -93,161 +43,77 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1/4, 2/4, 3/4, 4/4]
-
+    env:
+      BASE_URL: ${{ vars.STAGING_URL }}
+      TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: 'npm' }
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: 'npm' }   # Node 24 = active LTS; 20 is EOL
       - run: npm ci
       - run: npx playwright install --with-deps
-
-      - name: Run E2E tests
-        run: npx playwright test --shard=${{ matrix.shard }}
-
-      - name: Upload test artifacts on failure
-        uses: actions/upload-artifact@v4
+      - run: npx playwright test --shard=${{ matrix.shard }} ${{ github.event_name == 'pull_request' && '--grep @smoke' || '' }}
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: e2e-artifacts-${{ matrix.shard }}
+          name: e2e-artifacts-${{ strategy.job-index }}
           path: |
-            e2e/test-results/
+            test-results/
             playwright-report/
           retention-days: 7
-
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-${{ matrix.shard }}
-          path: playwright-report/
-          retention-days: 14
 ```
 
-### Execution Strategy
+Action majors verified 2026-09-23 (checkout, setup-node, upload-artifact all at v7); pin to a
+commit SHA if the repo's CI rules require it (see the `ci-cd-pipeline` skill). For failure
+notifications, use the team's chat webhook action — confirm its current major and inputs before use.
 
-```
-PR to main:        Run smoke tests (tagged @smoke) — fast feedback
-Nightly:           Run full suite — all browsers, all journeys
-Pre-release:       Run full suite + visual regression + performance E2E
-Manual trigger:    Run specific test file or tag via workflow_dispatch input
-```
+Cadence: PR → `@smoke`; nightly → full suite, all browsers; pre-release → full + visual +
+performance; manual → specific file or tag.
 
-### Retry Policy
+Artifacts on failure: screenshot, trace (open with `npx playwright show-trace`), video, console
+and network logs. Link them in the PR.
 
-```
-Retries: 1 in CI, 0 locally
-  - If a test fails on retry, it is a real failure — investigate
-  - If a test only passes on retry, it is flaky — fix it (see Step 8)
-  - Never set retries > 1 — that hides flakiness
-```
+## Performance in E2E
 
-### Artifact Upload
-
-```
-On failure, always upload:
-  - Screenshots (every failed assertion gets one)
-  - Videos (recorded on first retry)
-  - Traces (Playwright trace viewer — shows every network request, DOM snapshot)
-  - Logs (console output, network errors)
-```
-
-### Performance Budgets in E2E
+Lab numbers from CI runners are noisy; use E2E perf assertions as smoke alarms with generous
+budgets, and take real Core Web Vitals (LCP, CLS, INP) from field data (RUM/CrUX) — the
+`performance-review` skill owns budgets.
 
 ```typescript
-// Assert performance in E2E tests
-test('home page loads within budget', async ({ page }) => {
+test('home renders within budget', async ({ page }) => {
   await page.goto('/');
-
-  const timing = await page.evaluate(() => {
-    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    return {
-      domContentLoaded: nav.domContentLoadedEventEnd - nav.startTime,
-      load: nav.loadEventEnd - nav.startTime,
-    };
-  });
-
-  expect(timing.domContentLoaded).toBeLessThan(2000); // < 2s
-  expect(timing.load).toBeLessThan(3000);              // < 3s
-});
-
-test('button interaction is responsive', async ({ page }) => {
-  const start = Date.now();
-  await page.getByRole('button', { name: 'Submit' }).click();
-  await page.waitForResponse('**/api/submit');
-  const duration = Date.now() - start;
-
-  expect(duration).toBeLessThan(100); // < 100ms to respond
+  await expect(page.getByRole('main')).toBeVisible();
+  const lcp = await page.evaluate(() => new Promise<number>((resolve) => {
+    new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      resolve(entries[entries.length - 1].startTime);
+    }).observe({ type: 'largest-contentful-paint', buffered: true });
+  }));
+  expect(lcp).toBeLessThan(2500);
 });
 ```
 
-### Slack/Webhook Notification
+For interaction latency, load the `web-vitals` library's `onINP` in the page, script the
+interactions, and read the reported value on `visibilitychange` — don't time `click()` +
+`waitForResponse()` with `Date.now()`, which measures the network, not responsiveness.
 
-```yaml
-# Add to nightly workflow, after test job
-notify:
-  needs: e2e
-  if: failure()
-  runs-on: ubuntu-latest
-  steps:
-    - uses: slackapi/slack-github-action@v1
-      with:
-        payload: |
-          {
-            "text": "E2E nightly suite failed. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
-          }
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-```
+## Flaky Tests
 
-## Step 8: Flaky Test Management
+Detection: track per-test pass rate over the last 20 runs from the CI JSON reporter; a test that
+passes only on retry is flaky by definition.
 
-### Detection
+Root causes:
 
-```
-Track pass rate over the last 20 runs per test:
-  - 100% pass rate = stable
-  - 95-99% pass rate = warning — investigate soon
-  - < 95% pass rate = flaky — quarantine immediately
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Intermittent timeout | Waiting on the wrong thing | Wait on a specific element/URL/response; no sleeps, no `networkidle` |
+| Fails with others, passes alone | State leakage | Unique data per test; reset in `beforeEach` |
+| Fails on CI only | Animations, slower CPU, OS fonts | Disable animations; baselines from the CI image |
+| Intermittent on network calls | Real third-party dependency | Mock it with `page.route` |
+| One browser/device only | Platform rendering or timing | Fix the app or scope the test; don't skip silently |
+| Element intermittently missing | Race in the app itself | Fix the app — sometimes the test is right |
 
-Use Playwright's built-in last-run tracking or build a simple dashboard
-from CI artifacts (test-results.json).
-```
-
-### Quarantine
-
-```
-Quarantined tests:
-  - Mark with @Skip (Playwright: test.skip()) or @Ignore (JUnit)
-  - Always include a linked ticket: test.skip('Flaky: JIRA-1234')
-  - Maximum 5 quarantined tests at any time — if you hit 5, stop adding
-    features and fix flaky tests
-  - Review quarantine list weekly in standup
-```
-
-### Root Causes Checklist
-
-| Symptom | Root Cause | Fix |
-|---------|-----------|-----|
-| Test sometimes times out | Missing explicit wait | Add `waitFor()` for the specific element/condition |
-| Test fails when run with others but passes alone | State leakage between tests | Isolate test data, reset state in beforeEach |
-| Test fails on CI but passes locally | Animation or transition timing | Disable animations in test config |
-| Test fails intermittently on network calls | Real network dependency | Mock the external service |
-| Test fails on specific browser/device | Platform-specific rendering | Add platform-specific assertion or skip |
-| Element not found intermittently | Race condition in rendering | Wait for specific condition, not arbitrary sleep |
-
-### Zero Tolerance Policy
-
-```
-Flaky tests are bugs. Treat them with the same urgency as production bugs.
-
-Never:
-  - Increase retry count to make flaky tests pass
-  - Add arbitrary sleep() calls instead of proper waits
-  - Blame "CI environment" without investigating
-  - Leave quarantined tests for more than one sprint
-
-Always:
-  - Investigate root cause using trace/video artifacts
-  - Fix the test or fix the app (sometimes the app has a race condition)
-  - Add the fix to the root causes checklist for the team
-```
+Quarantine mechanics: `test.fixme()` (Playwright) / `@Ignore` (JUnit) with a linked ticket in the
+reason string, reviewed weekly. How many may be quarantined and for how long:
+`testing-strategy`.

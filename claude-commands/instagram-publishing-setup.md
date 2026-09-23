@@ -2,7 +2,9 @@
 
 Stand up **programmatic Instagram publishing for one brand**, end to end: Meta developer app → permissions → token → media hosting → publishing, immediate or scheduled.
 
-Written from a real setup that took a full session of dead ends. Every trap below cost time; none of them are in Meta's docs in a form you'd find before hitting them.
+Written from a real setup that took a full session of dead ends. Every trap below cost time; none of them are in Meta's docs in a form you'd find before hitting them. Done when the reuse checklist at the bottom is all ticked and the bundled checker is green.
+
+**API version.** Examples use `v26.0`, the current Graph API version on 2026-09-23 (released 2026-07-29; versions stay callable ~2 years — [changelog](https://developers.facebook.com/docs/graph-api/changelog)). Keep the version in one variable (`IG_GRAPH_VERSION` for the checker) and check the changelog before pinning a new integration.
 
 ## When to use this
 
@@ -75,7 +77,7 @@ Back at **API setup with Instagram login → Generate access tokens → Add acco
 - **It is masked behind a "Show" toggle.** If you "can't see the token," it is there — use the **Copy** button, which puts it on the clipboard without ever rendering it.
 
 > ### 🔒 Never paste a token into a chat, a commit, a log, or a command argument
-> Pipe it straight from the clipboard into your secret store:
+> Pipe it straight from the clipboard into your secret store (macOS `pbpaste`; Linux `xclip -selection clipboard -o` or `wl-paste`):
 > ```bash
 > pbpaste | gcloud secrets versions add IG_ACCESS_TOKEN \
 >   --project=<PROJECT_ID> --data-file=-
@@ -86,7 +88,7 @@ Back at **API setup with Instagram login → Generate access tokens → Add acco
 
 ```bash
 TOKEN="$(gcloud secrets versions access latest --secret=IG_ACCESS_TOKEN --project=<PROJECT_ID>)"
-curl -s -H "Authorization: Bearer ${TOKEN}" "https://graph.instagram.com/v23.0/me?fields=id,username,account_type"
+curl -s -H "Authorization: Bearer ${TOKEN}" "https://graph.instagram.com/${IG_GRAPH_VERSION:-v26.0}/me?fields=id,username,account_type"
 ```
 
 > ### ⚠️ Use the ID `/me` returns — not the one on the setup page
@@ -96,7 +98,7 @@ Expect `"account_type":"BUSINESS"`. Then check quota:
 
 ```bash
 curl -s -H "Authorization: Bearer ${TOKEN}" \
-  "https://graph.instagram.com/v23.0/<IG_USER_ID>/content_publishing_limit"
+  "https://graph.instagram.com/${IG_GRAPH_VERSION:-v26.0}/<IG_USER_ID>/content_publishing_limit"
 ```
 
 Docs say 100 posts/24h; third parties say 25. **Trust this endpoint, not either number.**
@@ -104,7 +106,7 @@ Docs say 100 posts/24h; third parties say 25. **Trust this endpoint, not either 
 Or run the bundled checker, which does all of the above read-only and never prints the token:
 
 ```bash
-python3 scripts/verify_publishing_setup.py --project <GCP_PROJECT> --bucket <MEDIA_BUCKET>
+python3 <skill-dir>/scripts/verify_publishing_setup.py --project <GCP_PROJECT> --bucket <MEDIA_BUCKET>
 ```
 
 ## Phase 6 — Media hosting
@@ -117,7 +119,8 @@ Instagram fetches `video_url` / `image_url` **itself**, at container-creation ti
 > ### ⚠️ Instagram accepts **JPEG only** for images
 > PNG fails at container creation with an error that never mentions the format. Convert first:
 > ```bash
-> sips -s format jpeg -s formatOptions 90 card.png --out card.jpg
+> sips -s format jpeg -s formatOptions 90 card.png --out card.jpg   # macOS
+> magick card.png -quality 90 card.jpg                             # Linux/any (ImageMagick 7)
 > ```
 
 Format rules: reels 9:16 MP4; feed images JPEG, 4:5 (1080×1350) is safe.
@@ -165,6 +168,8 @@ Needs **only the token** — no app secret. Run weekly so several failures are s
 
 ## Scripts
 
+`<skill-dir>` is the directory containing this SKILL.md (in Claude Code: `${CLAUDE_PLUGIN_ROOT}/skills/marketing/instagram-publishing-setup`).
+
 | Script | Purpose |
 |---|---|
 | `scripts/verify_publishing_setup.py` | Read-only end-to-end check of one brand's setup: secret readable, token valid, account type publishable, publishing quota reachable, bucket private. Never publishes and never prints the token. `--json` for CI. |
@@ -172,7 +177,7 @@ Needs **only the token** — no app secret. Run weekly so several failures are s
 The checker holds itself to the rule above: the token reaches `curl` through a config file on **stdin**, never argv, so it stays out of `ps` on shared and CI machines. Error text is redacted before it is printed, because the refresh endpoint carries the token in its query string and an API that echoes the request back would otherwise put it in your CI log. Hold anything you build to the same line.
 
 ```bash
-python3 scripts/verify_publishing_setup.py --project <GCP_PROJECT> \
+python3 <skill-dir>/scripts/verify_publishing_setup.py --project <GCP_PROJECT> \
   [--secret IG_ACCESS_TOKEN] [--bucket <MEDIA_BUCKET>] [--check-refresh] [--json]
 ```
 
@@ -197,7 +202,7 @@ Exit codes: `0` all checks passed, `1` a check failed, `2` bad input. Safe to ga
 - **Facebook scheduling** — use Business Suite. Its **bulk uploader is reels-only and Facebook-only**; FB *photos* and all Instagram scheduling cannot go through it.
 - **Stories, carousels, comments** — different endpoints.
 - **Publishing to accounts you don't own** — that needs App Review and Business Verification.
-- **Caption and content strategy** — use `/product-marketing`.
+- **Caption and content strategy** — use the product-marketing skill.
 
 ## Reuse checklist for a new brand
 

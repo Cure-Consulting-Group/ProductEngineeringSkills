@@ -1,475 +1,103 @@
 ---
 name: incident-response
-description: "Create incident runbooks, severity classification, on-call procedures, post-mortems, and escalation paths"
-when_to_use: "Use when creating incident runbooks, severity classification, on-call procedures, or post-mortem templates. NOT for DR planning (use disaster-recovery)."
+description: "Guides live production incidents; builds on-call runbooks, severity levels, and post-mortems. Use when something is down or degraded now, or when setting up on-call, escalation, or a post-mortem."
+when_to_use: "NOT for backup/failover planning (use disaster-recovery) or delivery-metric baselines (use dora-metrics)."
 argument-hint: "[incident-or-system]"
 context: fork
+metadata:
+  verified: 2026-09-23
 ---
 
 # Incident Response
 
+**Outcome depends on the mode Step 1 picks:**
+- **Live incident** — a severity call, the next 1–3 mitigation actions with exact commands, and the next status message. Done when the service is restored and a post-mortem owner is named. **Write no files and scaffold no code during a live incident**: every minute spent generating artifacts extends user impact, and unreviewed code shipped mid-incident is a common cause of a second outage.
+- **Post-mortem** — a blameless write-up with a timeline and Prevent/Detect/Mitigate/Process actions. Done when every action has an owner and a date.
+- **Build on-call** — runbooks, rotation, escalation matrix, and templates for a system. Done when a new on-call engineer could follow them unaided.
+
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
+- Recent changes (the first suspect in most incidents): !`git log --since="3 days ago" --oneline 2>/dev/null | head -10 || echo "(not a git repo)"`
+- Existing runbooks: !`ls docs/runbooks/ docs/post-mortems/ 2>/dev/null | head -10 || echo "(none)"`
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+## Step 1: Classify the Mode
 
-Use this context to tailor all output to the actual project.
+| Mode | Signal | Go to |
+|---|---|---|
+| Live incident | "down", "errors spiking", "users can't…", alert firing now | Step 3 → Step 4 |
+| Post-mortem | Incident is resolved; user wants the write-up | Step 5 |
+| Build on-call | Runbooks, rotation, escalation, templates, tooling | Step 6 + Code/Artifact Generation |
 
-Structured incident response framework for production systems. Use during active incidents, when building on-call procedures, and when conducting post-mortems. Covers Firebase, mobile, web, and API infrastructure.
+Within a live incident, also classify the type — it decides the first move:
 
-## Step 1: Classify the Incident Type
-
-| Type | Indicators | Initial Response |
-|------|-----------|-----------------|
-| Production Outage | Service unreachable, 5xx errors, health checks failing | Page on-call, open incident channel, start status page update |
-| Security Breach | Unauthorized access, data exfiltration, compromised credentials | Page security lead, isolate affected systems, preserve logs |
-| Data Loss | Missing records, corrupted data, failed backups, replication lag | Stop writes to affected system, assess backup state, page DBA/infra |
-| Performance Degradation | Latency spikes, timeout increases, queue backlog, high error rate | Check dashboards, identify bottleneck, consider rollback |
-| Third-Party Failure | Vendor API errors, DNS issues, CDN outage, payment processor down | Confirm vendor status page, activate fallback, notify customers |
+| Type | First move |
+|---|---|
+| Outage / degradation after a deploy or flag change | Roll back or flag off before diagnosing |
+| Security breach (leaked key, unauthorized access) | Rotate/revoke credentials, isolate, **preserve logs** before cleanup; page security lead |
+| Data loss / corruption | Stop writes to the affected collection or service; do not "fix forward" over evidence; check PITR/backup state (see disaster-recovery) |
+| Capacity / performance | Find the bottleneck; scale or shed load |
+| Third-party (Stripe, Vercel, GCP, APNs/FCM) | Confirm on the vendor status page; activate fallback; tell customers it's upstream |
 
 ## Step 2: Gather Context
 
-1. **Affected system** -- which services, endpoints, or platforms are impacted (Firebase, Cloud Functions, mobile apps, web app)?
-2. **Severity** -- how many users are affected and what is the business impact (revenue, data integrity, security)?
-3. **Timeline** -- when did the issue start, when was it detected, what changed recently (deploys, config changes, traffic spikes)?
-4. **Users impacted** -- total affected users, percentage of traffic, geographic scope, specific customer segments?
-5. **Current state** -- is the issue ongoing, intermittent, or resolved? Is the blast radius growing?
-6. **Recent changes** -- last deployment timestamp, feature flag changes, infrastructure modifications, dependency updates?
+Ask only what isn't already known: what users see, when it started (impact start, not alert time), what changed recently (deploys, flags, config, dependency bumps, traffic), how many users/which segments, and whether the blast radius is growing. In a live incident, ask at most two questions before recommending a first action.
 
-## Step 3: Severity Classification Framework
+## Step 3: Severity (Cure thresholds)
 
-### SEV1 -- Critical (Complete Outage)
-```
-Impact:        Service fully down, data loss active, security breach confirmed
-Users:         >50% of users affected OR any data breach
-Examples:      Firebase project unreachable, production database corruption,
-               leaked credentials, payment processing completely down
-Response time: Immediately (within 5 minutes of detection)
-Escalation:    Engineering lead + CTO + all available engineers
-Communication: Status page updated within 15 minutes, customer email within 1 hour
-Cadence:       Updates every 30 minutes until resolved
-Bridge:        Open dedicated Slack channel (#incident-YYYY-MM-DD-short-desc)
-               and Google Meet / Zoom war room
-```
+| Sev | Impact | Respond | Escalate | Comms |
+|---|---|---|---|---|
+| SEV1 | Service down, active data loss, or **any** confirmed breach; >50% users | ≤5 min | On-call → eng lead (10 min) → CTO (15 min) | Status page ≤15 min, customer email ≤1 h, updates every 30 min; dedicated channel `#incident-YYYY-MM-DD-slug` + call bridge |
+| SEV2 | Core flow broken (auth, checkout, sync) or 10–50% users | ≤15 min | On-call → team lead (30 min) → eng lead at 1 h | Status page ≤30 min; customer comms if >1 h; hourly updates |
+| SEV3 | Non-critical feature broken, workaround exists, <10% users | ≤1 h business hours | Owning team | Internal thread; updates every 4 h |
+| SEV4 | Cosmetic, staging, or internal tooling | Next business day | Backlog | Ticket only |
 
-### SEV2 -- High (Major Degradation)
-```
-Impact:        Core feature broken, significant performance degradation
-Users:         10-50% of users affected OR key business flow broken
-Examples:      Auth failures for subset of users, Cloud Functions cold start
-               timeouts, mobile app crash loop on specific OS version,
-               Stripe webhook failures
-Response time: Within 15 minutes of detection
-Escalation:    Engineering lead + team owning affected service
-Communication: Status page updated within 30 minutes, customer comm if >1 hour
-Cadence:       Updates every 1 hour until resolved
-Bridge:        Slack incident channel
+When unsure between two levels, pick the higher and downgrade later — under-declaring delays the people who can fix it. Payments/Stripe incidents escalate to the CEO as exec sponsor; everything else to the CTO.
+
+## Step 4: Live Incident — Mitigate First
+
+Mitigation order: roll back → disable via feature flag / Remote Config → scale or shed load → maintenance mode → fail over → block abusive traffic (Cloud Armor/WAF). Diagnose root cause after impact stops.
+
+Cure stack rollback commands (confirm project/site/service names before running; each changes production):
+
+```bash
+# Firebase Hosting — restore a known-good version to live
+firebase hosting:clone <SITE_ID>@<VERSION_ID> <SITE_ID>:live
+# Cloud Functions v2 / Cloud Run — shift traffic back to the previous revision
+gcloud run revisions list --service=<svc> --region=<region> --limit=5
+gcloud run services update-traffic <svc> --region=<region> --to-revisions=<prev-revision>=100
+# Vercel — promote the previous production deployment
+vercel rollback <deployment-url-or-id>
 ```
 
-### SEV3 -- Medium (Minor Degradation)
-```
-Impact:        Non-critical feature broken, workaround available
-Users:         <10% of users affected, no revenue impact
-Examples:      Analytics pipeline delayed, non-critical API slow,
-               push notifications delayed, image upload failures on one platform
-Response time: Within 1 hour during business hours
-Escalation:    Team owning affected service
-Communication: Internal Slack update, no customer communication unless asked
-Cadence:       Updates every 4 hours until resolved
-Bridge:        Thread in team Slack channel
-```
+Gotchas:
+- Mobile builds can't be rolled back in the stores — use Remote Config kill switches or a forced minimum version; halt a staged rollout in Play Console / App Store Connect.
+- Firestore has no capacity knob. Errors under load are usually hotspotting (sequential IDs, ramp faster than the 500/50/5 rule), transaction contention, or security-rule failures — check those, not "scale up".
+- A Cloud Functions redeploy from `main` is not a rollback if `main` contains the bad change; shift traffic to the old revision instead.
+- After `vercel rollback`, production domains stop auto-assigning to new deploys until you `vercel promote` the fixed deployment — note it in the incident log.
+- Rotate secrets in Secret Manager / 1Password and redeploy consumers; revoking alone breaks the running service.
 
-### SEV4 -- Low (Minor Issue)
-```
-Impact:        Cosmetic issue, minor bug, non-user-facing system degraded
-Users:         Minimal or no user impact
-Examples:      CI/CD pipeline slow, staging environment down,
-               log ingestion delayed, non-critical cron job failed
-Response time: Next business day
-Escalation:    Add to sprint backlog
-Communication: Internal ticket only
-Cadence:       Standard ticket updates
-Bridge:        None -- track in issue tracker
-```
+After each action, give the next status update text (read the Communication templates section of `reference/details.md` when drafting customer-facing or leadership messages). Record timestamps as you go — they become the post-mortem timeline and the MTTR input.
 
-### Escalation Paths
+## Step 5: Post-Mortem
 
-```
-SEV1 Flow:
-  Detector → On-Call Engineer (5 min) → Engineering Lead (10 min)
-    → CTO (15 min) → All Hands if needed (30 min)
+Blameless: systems and decisions, not people. Required for SEV1/SEV2 (draft within 48 h, review within 5 business days), encouraged for SEV3. Read the Post-mortem template section of `reference/details.md` when writing one. Every post-mortem has at least one action in each category — **Prevent, Detect, Mitigate, Process** — each with an owner and due date in the issue tracker; repeat incidents (same root cause) are the headline metric.
 
-SEV2 Flow:
-  Detector → On-Call Engineer (15 min) → Team Lead (30 min)
-    → Engineering Lead if not resolved in 1 hour
+Metric definitions (MTTR, MTTD, MTTA, impact start vs. detection) are owned by `dora-metrics` — use its definitions so incident reports and delivery metrics agree. Cure response targets: MTTD < 5 min (SEV1) / < 15 min (SEV2); MTTA < 5 min for SEV1/SEV2; restore < 1 h (SEV1) / < 4 h (SEV2); false-positive page rate < 10%.
 
-SEV3 Flow:
-  Detector → Team Channel → Team Lead triages within 1 hour
+## Step 6: On-Call Setup
 
-SEV4 Flow:
-  Detector → Create ticket → Prioritize in next sprint planning
-```
+- Rotation: 1-week primary + secondary, ≥2 people, no back-to-back weeks, 15-min handoff reviewing open issues and recent deploys; auto-escalate to secondary after 10 min unacknowledged.
+- Escalation matrix (primary → secondary → exec): Firebase/GCP: platform eng → eng lead → CTO · Android/iOS: platform lead → mobile team → CTO · Web/Next.js: frontend lead → full-stack → CTO · API/Functions: backend lead → platform eng → CTO · Payments/Stripe: backend lead → eng lead → CEO · Auth/security: security lead → eng lead → CTO.
+- Access checked at onboarding, not during the incident: pager app, GCP/Firebase consoles (Viewer; production Editor via just-in-time grant), Sentry/Crashlytics, dashboards, status-page admin, Stripe dashboard, 1Password emergency vault, vendor status pages bookmarked.
+- One runbook per top failure mode, each with: symptoms, dashboards, first three commands, rollback, owner. Read the Runbook phases section of `reference/details.md` when writing runbooks.
 
-## Step 4: Incident Runbook Template
+## Code/Artifact Generation
 
-See [reference/details.md](reference/details.md) (section “Step 4: Incident Runbook Template”) for full detail.
+Applies only when Step 1 classified the request as **Build on-call** (or a post-mortem the user wants saved). Never during a live incident. Match existing formats in `docs/runbooks/` if present. Write only what was asked:
 
-## Step 5: On-Call Procedures
+1. `docs/runbooks/<failure-mode>.md` — one per failure mode named.
+2. `docs/post-mortems/template.md` and/or the filled post-mortem.
+3. On request only: pager-webhook function, Slack Block Kit announcement JSON, status-page update script.
 
-### Rotation Schedule
-```
-Structure:
-  - Primary on-call: 1 week rotation (Monday 10AM → Monday 10AM)
-  - Secondary on-call: backup, escalation target
-  - Minimum 2 people in rotation per team
-  - No back-to-back weeks
-  - Handoff meeting: 15 min at rotation start (review open issues, recent deploys)
-
-Expectations:
-  - Acknowledge alerts within 5 minutes (SEV1/SEV2)
-  - Acknowledge alerts within 15 minutes (SEV3)
-  - Laptop and internet access required (no airplane mode)
-  - Response SLA: 15 minutes to begin investigation
-  - If unreachable after 10 minutes → auto-escalate to secondary
-```
-
-### Escalation Matrix
-```
-┌─────────────────────┬───────────────────┬──────────────────┬──────────────┐
-│ System              │ Primary           │ Secondary        │ Exec Sponsor │
-├─────────────────────┼───────────────────┼──────────────────┼──────────────┤
-│ Firebase / GCP      │ Platform Engineer │ Engineering Lead │ CTO          │
-│ Mobile (Android)    │ Android Lead      │ Mobile Team      │ CTO          │
-│ Mobile (iOS)        │ iOS Lead          │ Mobile Team      │ CTO          │
-│ Web / Next.js       │ Frontend Lead     │ Full-Stack Team  │ CTO          │
-│ API / Cloud Funcs   │ Backend Lead      │ Platform Engineer│ CTO          │
-│ Payments / Stripe   │ Backend Lead      │ Engineering Lead │ CEO          │
-│ Auth / Security     │ Security Lead     │ Engineering Lead │ CTO          │
-│ Data / Analytics    │ Data Engineer     │ Platform Engineer│ CTO          │
-└─────────────────────┴───────────────────┴──────────────────┴──────────────┘
-```
-
-### On-Call Tooling Checklist
-```
-Required access (verify during onboarding):
-  - [ ] PagerDuty / Opsgenie account with push notifications enabled
-  - [ ] GCP Console access (Viewer minimum, Editor for production)
-  - [ ] Firebase Console access (all projects)
-  - [ ] Slack desktop + mobile installed, #incidents channel joined
-  - [ ] GitHub access to all production repositories
-  - [ ] CI/CD pipeline access (GitHub Actions / Cloud Build)
-  - [ ] Status page admin access (Statuspage.io / Instatus)
-  - [ ] Sentry / Crashlytics access
-  - [ ] Datadog / Grafana / Cloud Monitoring dashboards bookmarked
-  - [ ] VPN configured and tested
-  - [ ] Production database read access (Firestore, Cloud SQL)
-  - [ ] Stripe Dashboard access (for payment incidents)
-  - [ ] 1Password / secrets vault access for emergency credentials
-
-Required bookmarks:
-  - Production dashboards (latency, error rate, throughput)
-  - Deployment pipeline status page
-  - Firebase Console → all production projects
-  - GCP Console → Error Reporting, Cloud Logging
-  - Runbook repository (this document)
-  - Vendor status pages (Firebase, GCP, Stripe, Vercel, Cloudflare)
-```
-
-## Step 6: Communication Templates
-
-### Internal Status Update
-```
-Subject: [SEV-X] [System Name] — [Status: Investigating/Mitigated/Resolved]
-
-Current Status: [Investigating / Identified / Mitigated / Resolved]
-Started: [YYYY-MM-DD HH:MM UTC]
-Duration: [X hours Y minutes]
-Impact: [Description of user-facing impact]
-Affected: [Systems, users, regions]
-
-What happened:
-  [Brief factual description of the incident]
-
-What we've done:
-  [Actions taken so far]
-
-Next steps:
-  [What we're doing next, ETA if known]
-
-Next update: [Time of next scheduled update]
-Incident Commander: [Name]
-```
-
-### Customer Communication -- Active Incident
-```
-Subject: Service Disruption — [Feature/System Name]
-
-We're currently experiencing issues with [feature/system] that may affect
-your ability to [specific user action].
-
-Our engineering team identified the issue at [time] and is actively
-working on a resolution.
-
-What's affected:
-  - [Specific feature or workflow]
-
-What's NOT affected:
-  - [Reassure about unaffected systems]
-
-We'll provide an update within [timeframe]. For urgent issues, contact
-[support channel].
-
-We apologize for the inconvenience.
-```
-
-### Customer Communication -- Resolved
-```
-Subject: Resolved — [Feature/System Name] Service Disruption
-
-The issue affecting [feature/system] has been resolved as of [time UTC].
-
-What happened:
-  [Brief, non-technical explanation]
-
-Duration: [start time] to [end time] ([total duration])
-
-Impact:
-  [What users experienced]
-
-What we're doing to prevent recurrence:
-  - [Action item 1]
-  - [Action item 2]
-
-If you continue experiencing issues, please contact [support channel].
-
-We apologize for the disruption and thank you for your patience.
-```
-
-### Stakeholder Briefing (for CEO/Leadership)
-```
-Subject: Incident Briefing — [SEV-X] [System] — [Date]
-
-TLDR: [One sentence summary. Include revenue impact if applicable.]
-
-Timeline:
-  [HH:MM] Issue began
-  [HH:MM] Detected by [method]
-  [HH:MM] Engineering engaged
-  [HH:MM] Root cause identified
-  [HH:MM] Mitigated
-  [HH:MM] Fully resolved
-
-Business Impact:
-  - Users affected: [number/percentage]
-  - Revenue impact: [estimated $ or "none"]
-  - Data impact: [any data loss or breach — yes/no]
-  - SLA impact: [any SLA violations — yes/no]
-
-Root Cause: [One paragraph, non-technical]
-
-Prevention: [Top 2-3 action items with owners and deadlines]
-```
-
-## Step 7: Post-Mortem Template
-
-```
-POST-MORTEM: [Incident Title]
-Date: [YYYY-MM-DD]
-Severity: [SEV-1/2/3/4]
-Author: [Name]
-Status: [Draft / In Review / Final]
-
-SUMMARY
-  [2-3 sentence description of what happened, impact, and resolution]
-
-TIMELINE (all times UTC)
-  [HH:MM] — [Event: what happened]
-  [HH:MM] — [Event: alert fired / user report]
-  [HH:MM] — [Event: engineer paged]
-  [HH:MM] — [Event: investigation started]
-  [HH:MM] — [Event: root cause identified]
-  [HH:MM] — [Event: mitigation applied]
-  [HH:MM] — [Event: incident resolved]
-  [HH:MM] — [Event: monitoring confirmed stable]
-
-DETECTION
-  How was the incident detected? [Alert / Customer report / Internal testing]
-  Time to detect (TTD): [duration from start to detection]
-  Could we have detected it faster? [Yes/No — explain]
-
-ROOT CAUSE
-  [Technical explanation of what caused the incident. Be specific.
-   Include code references, configuration errors, or infrastructure
-   issues. This is NOT a blame statement — focus on systems, not people.]
-
-CONTRIBUTING FACTORS
-  - [Factor 1: e.g., missing monitoring on the affected endpoint]
-  - [Factor 2: e.g., deploy happened Friday afternoon with no staged rollout]
-  - [Factor 3: e.g., no integration test for the affected code path]
-
-IMPACT
-  Duration: [total time from start to resolution]
-  Users affected: [number and percentage]
-  Revenue impact: [$X or estimated]
-  Data impact: [any data loss, corruption, or exposure]
-  SLA impact: [any SLA breaches, credits owed]
-
-WHAT WENT WELL
-  - [Thing that worked: e.g., alerting fired within 2 minutes]
-  - [Thing that worked: e.g., rollback process was smooth]
-  - [Thing that worked: e.g., team coordination in Slack was effective]
-
-WHAT WENT WRONG
-  - [Problem: e.g., no runbook for this failure mode]
-  - [Problem: e.g., escalation took 30 minutes because pager was misconfigured]
-  - [Problem: e.g., customer communication was delayed by 2 hours]
-
-ACTION ITEMS
-  ┌────┬──────────────────────────────────────┬──────────┬────────────┬──────────┐
-  │ #  │ Action                               │ Priority │ Owner      │ Due Date │
-  ├────┼──────────────────────────────────────┼──────────┼────────────┼──────────┤
-  │ 1  │ [Prevent: fix root cause]            │ P0       │ [Name]     │ [Date]   │
-  │ 2  │ [Detect: add monitoring/alert]       │ P1       │ [Name]     │ [Date]   │
-  │ 3  │ [Mitigate: improve rollback speed]   │ P1       │ [Name]     │ [Date]   │
-  │ 4  │ [Process: update runbook]            │ P2       │ [Name]     │ [Date]   │
-  │ 5  │ [Test: add integration/load test]    │ P2       │ [Name]     │ [Date]   │
-  └────┴──────────────────────────────────────┴──────────┴────────────┴──────────┘
-
-  Action item categories (every post-mortem should have at least one of each):
-    - Prevent: eliminate the root cause
-    - Detect: catch it faster next time
-    - Mitigate: reduce blast radius or recovery time
-    - Process: improve human response procedures
-
-LESSONS LEARNED
-  [What did this incident teach us about our systems, processes, or assumptions?
-   This section should inform architectural decisions and team practices going forward.]
-
-POST-MORTEM REVIEW
-  Reviewed by: [Names]
-  Review date: [Date]
-  Follow-up date for action items: [Date — typically 2 weeks out]
-```
-
-### Post-Mortem Process
-```
-Rules:
-  - Blameless: focus on systems and processes, not individuals
-  - Required for all SEV1 and SEV2 incidents
-  - Optional but encouraged for SEV3
-  - Draft due within 48 hours of resolution
-  - Review meeting within 5 business days
-  - Action items tracked in issue tracker with due dates
-  - Action item completion reviewed in engineering standup
-```
-
-## Step 8: Incident Metrics
-
-### Key Metrics to Track
-
-```
-MTTD (Mean Time to Detect):
-  Definition: Time from incident start to first detection (alert or human)
-  Target: <5 minutes for SEV1, <15 minutes for SEV2
-  Measure: Timestamp of first symptom → timestamp of first alert/report
-  Improve: Better monitoring, tighter alert thresholds, synthetic monitoring
-
-MTTR (Mean Time to Resolve):
-  Definition: Time from detection to full resolution
-  Target: <1 hour for SEV1, <4 hours for SEV2
-  Measure: Timestamp of detection → timestamp of confirmed resolution
-  Improve: Better runbooks, faster rollbacks, automated remediation
-
-MTTA (Mean Time to Acknowledge):
-  Definition: Time from alert firing to engineer acknowledging
-  Target: <5 minutes for SEV1/SEV2
-  Measure: PagerDuty/Opsgenie acknowledgment timestamps
-  Improve: Pager configuration, on-call hygiene, escalation policies
-
-MTBF (Mean Time Between Failures):
-  Definition: Average time between incidents for a given system
-  Target: Increasing quarter over quarter
-  Measure: Track per-system, per-severity
-  Improve: Address root causes from post-mortems, invest in reliability
-
-Incident Frequency by Severity:
-  Track monthly:
-    - Total incidents per severity level
-    - Incidents per system/service
-    - Incidents by root cause category
-    - Repeat incidents (same root cause)
-  Target: Decreasing trend, zero repeat incidents
-```
-
-### Metrics Dashboard
-```
-Recommended tooling:
-  - Datadog / Grafana for real-time operational dashboards
-  - PagerDuty Analytics for on-call and response metrics
-  - Google Sheets or Notion for monthly incident tracking
-  - BigQuery for long-term incident data analysis
-
-Monthly review checklist:
-  - [ ] Total incidents by severity (trend vs. prior months)
-  - [ ] MTTD, MTTA, MTTR averages by severity
-  - [ ] Top 3 systems by incident count
-  - [ ] Open action items from post-mortems (% completion)
-  - [ ] On-call load distribution (pages per person)
-  - [ ] False positive alert rate (target: <10%)
-  - [ ] Repeat incident rate (target: 0%)
-
-Quarterly reliability report:
-  - MTBF trend per critical system
-  - Incident cost estimate (engineer hours * hourly cost + revenue impact)
-  - SLA compliance percentage
-  - Top action item themes (monitoring, testing, process, architecture)
-  - Reliability investment recommendations for next quarter
-```
-
-### Incident Report Output
-
-```
-INCIDENT RESPONSE REPORT
-System: [NAME]
-Date: [TODAY]
-Prepared by: [NAME]
-
-INCIDENT SUMMARY
-┌──────────────────────┬────────────────────────────────────┐
-│ Field                │ Value                              │
-├──────────────────────┼────────────────────────────────────┤
-│ Incident Type        │ [From Step 1 classification]       │
-│ Severity             │ [SEV-1/2/3/4]                      │
-│ Status               │ [Active / Mitigated / Resolved]    │
-│ Duration             │ [HH:MM]                            │
-│ Users Affected       │ [Number / Percentage]              │
-│ Revenue Impact       │ [$X / None]                        │
-│ Root Cause           │ [Brief description]                │
-│ Resolution           │ [Brief description]                │
-└──────────────────────┴────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Severity classification completed
-  - [ ] Incident runbook followed / created
-  - [ ] Communication sent (internal + external as needed)
-  - [ ] Post-mortem drafted (required for SEV1/SEV2)
-  - [ ] Action items created with owners and due dates
-  - [ ] Metrics recorded
-  - [ ] On-call procedures updated if gaps found
-```
-
-## Code Generation (Required)
-
-Generate incident management artifacts using Write:
-
-1. **Runbook template**: `docs/runbooks/template.md` with the standard Cure format
-2. **Post-mortem template**: `docs/post-mortems/template.md`
-3. **PagerDuty webhook**: `functions/src/incident-webhook.ts` (Cloud Function that creates incident records)
-4. **Slack notification**: Generate Slack Block Kit JSON for incident announcements
-5. **Status page update script**: `scripts/update-status.sh`
-
-Before generating, Glob for existing runbooks and post-mortems to match format.
+Match length to the need; no filler sections or restated summaries.

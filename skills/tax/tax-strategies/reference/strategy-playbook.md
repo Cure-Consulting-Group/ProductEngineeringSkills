@@ -16,7 +16,7 @@ contested; expect scrutiny, consider disclosure).
   ineligible shareholders); Form 2553 within 2 months 15 days; **actual payroll
   with withholding and 941s**; reasonable compensation supported by a study.
 - **Quantification**: (Net profit − reasonable wage) × 15.3% up to the wage base
-  `[constants]` $184,500 (2026), then × 2.9% (+0.9% over the Additional Medicare
+  `[constants]` $184,500 (2026; verified 2026-09-23, SSA 2026 COLA fact sheet), then × 2.9% (+0.9% over the Additional Medicare
   threshold). Net of payroll admin cost (~$1,500–3,000/yr) and lost §199A W-2 wage
   base effects.
 - **Trap**: Understating the wage is the #1 S-corp audit issue. The IRS
@@ -46,16 +46,16 @@ contested; expect scrutiny, consider disclosure).
 - **Requirements** (all must hold):
   - **C corporation**, domestic, at original issuance to the taxpayer (not
     purchased from another holder)
-  - **Gross assets ≤ $75M** (indexed annually — confirm for the tax year via the
-    `constants` binding) (OBBBA, from $50M) at all times before and immediately
-    after issuance — `VERIFY`
+  - **Gross assets ≤ $75M** for stock issued after 2025-07-04 (OBBBA, from $50M;
+    indexed after 2026) at all times before and immediately after issuance
   - **Active business test**: ≥80% of assets used in a **qualified** trade or
     business. §1202(e)(3) **disqualifies**: health, law, engineering,
     architecture, accounting, actuarial science, performing arts, consulting,
     athletics, financial services, brokerage, and any business whose principal
     asset is the reputation or skill of its employees.
   - **Holding period**: post-2025-07-04 stock — 50% at 3 years, 75% at 4 years,
-    100% at 5 years. Pre-2025-07-05 stock — 100% at 5 years only. `VERIFY`
+    100% at 5 years. Pre-2025-07-05 stock — 100% at 5 years only. (Tiers, caps,
+    and gross-assets test verified 2026-09-23 against 26 U.S.C. §1202.)
   - **Cap**: greater of **$15M** (OBBBA, indexed after 2026; $10M for older
     stock) or **10× aggregate adjusted basis**.
 - **Critical structural implication**: a **consulting, health, law, accounting,
@@ -158,8 +158,8 @@ contested; expect scrutiny, consider disclosure).
 - **Deadline**: a plan may be adopted after year end, by the return due date, and
   receive employer contributions for that year (SECURE Act §201). For a **sole
   proprietor or single-member LLC in the plan's first year**, employee deferrals
-  may also be made up to the return due date (SECURE 2.0 §317; commentators read
-  this as the unextended due date — confirm). Otherwise deferral elections must be
+  may also be made up to the return due date **without extensions** (SECURE 2.0
+  §317; verified 2026-09-23, Senate HELP section-by-section). Otherwise deferral elections must be
   in place under the plan's terms by year end.
 - **Elective deferrals do not reduce SE tax** — §1402 net earnings are computed
   before them. The saving is income tax only.
@@ -243,8 +243,8 @@ contested; expect scrutiny, consider disclosure).
 - Model it through the `salt` binding before the election date.
 
 ### E2. SALT cap phase-down management — **Conservative**
-- The OBBBA cap phases down 30% of MAGI over `[constants]` ~$505,000 (2026) to a
-  $10,000 floor. Between the threshold and the floor there is an effective
+- The OBBBA cap ($40,400 for 2026) phases down by 30% of MAGI over `[constants]`
+  $505,000 (2026; statutory, verified 2026-09-23, §164(b)(7)) to a $10,000 floor. Between the threshold and the floor there is an effective
   **marginal rate spike**. Managing MAGI across the threshold (timing income,
   retirement contributions, charitable bunching) is worth real money in that band.
 

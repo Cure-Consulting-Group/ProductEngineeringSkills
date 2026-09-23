@@ -1,225 +1,85 @@
 # Testing Strategy
 
-Defines testing standards, pyramid ratios, and patterns for every platform. Write tests that catch real bugs, not tests that test the framework.
+**Outcome:** a testing strategy for the named project or feature — current state, the gaps that matter, per-platform stack, coverage gates, CI wiring, and flaky-test policy. Done when every layer that holds business logic has a named test type, a coverage gate, and a CI stage. Match length to the need; no filler sections or restated summaries.
+
+This skill is the **library's source of truth for coverage thresholds and CI retry policy**. Other skills (sdlc, e2e-testing, scaffolds, rules) link here instead of restating numbers.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Stack manifest: !`head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || head -20 Package.swift 2>/dev/null || head -20 pyproject.toml 2>/dev/null || echo "(none detected)"`
+- Coverage/test config: !`ls jest.config* vitest.config* playwright.config* pytest.ini .nycrc* 2>/dev/null | head -5 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Automated Test Coverage Analysis
+| Request | Output |
+|---|---|
+| New project, no tests | Full strategy: stack, pyramid, gates, CI stages |
+| Existing project, "what are we missing" | Current-state audit (Step 2) + ranked gap list |
+| Single feature | Test list per layer for that feature; skip the project-wide sections |
+| "Tests are flaky / CI is slow" | Flaky-test policy + CI stage split only |
 
-Before defining strategy, analyze current testing state:
+## Step 2: Gather Current State (existing projects)
 
-1. **Test File Count**: Use Glob to count:
-   - Source files: `**/*.kt` `**/*.swift` `**/*.ts` `**/*.tsx` (excluding node_modules, build)
-   - Test files: `**/*Test.*` `**/*Spec.*` `**/*.test.*` `**/*.spec.*`
-   - Calculate ratio: test files / source files
-2. **Test Framework Detection**: Grep for:
-   - `describe|it|test|expect` → Jest/Vitest
-   - `@Test|@ParameterizedTest` → JUnit5
-   - `XCTestCase|func test` → XCTest
-   - `pytest|def test_` → pytest
-3. **Coverage Config**: Glob for existing coverage configs:
-   - `jest.config*`, `vitest.config*`, `jacoco*`, `.nycrc*`
-4. **Missing Test Patterns**: Grep for source files without corresponding tests:
-   - Find all ViewModels, UseCases, Repositories and check for matching test files
-5. **Disabled Tests**: Grep for:
-   - `@Ignore|@Disabled|.skip|xit|xdescribe|@pytest.mark.skip`
+Measure before recommending:
 
-Report current coverage state before recommending strategy.
+1. **Ratio** — count source vs test files (`*Test.*`, `*Spec.*`, `*.test.*`, `*.spec.*`, `test_*.py`), excluding `node_modules`, `build`, `.next`, generated code.
+2. **Frameworks** — detect from config and imports, not keyword greps: `vitest`/`jest` in the manifest, `org.junit.jupiter` / `io.mockk` in Gradle, `import Testing` / `XCTestCase`, `pytest` in pyproject. (A grep for `it(`/`test(` matches nearly every file.)
+3. **Coverage config** — existing thresholds in `vitest.config*`, `jest.config*`, JaCoCo, `.nycrc*`, `pyproject` `[tool.coverage]`.
+4. **Untested units** — ViewModels, use cases, reducers, repositories, Cloud Functions handlers with no matching test file.
+5. **Disabled tests** — `@Disabled`, `@Ignore`, `.skip`, `xit`, `xdescribe`, `@pytest.mark.skip`. Each one is quarantine debt; count them.
 
-## Testing Pyramid (Default Ratios)
+Report current state first, then the strategy.
 
-```
-        ╱ E2E ╲          5%  — Critical user journeys only
-       ╱ Integ ╲        20%  — Cross-layer wiring, API contracts
-      ╱  Unit   ╲       75%  — Business logic, pure functions, state
-```
+## Step 3: Pyramid (default ratios)
 
-## Step 1: Classify What Needs Testing
+Unit ~75% · Integration ~20% · E2E ~5% (critical journeys only: sign-up, purchase, core loop). Test behavior, not framework internals — no tests of React rendering, Hilt injection, or SDK behavior. Integration tests own cross-layer wiring, auth gates, and payment flows; don't re-cover unit scenarios there.
 
-| Layer | What to Test | What NOT to Test |
-|-------|-------------|-----------------|
-| Domain/Business Logic | Use cases, validation, state machines, calculations | Framework internals, third-party library behavior |
-| Data/Repository | API mapping, caching logic, error transformation | Raw HTTP client behavior, Firebase SDK internals |
-| Presentation/UI | User interactions, state rendering, navigation | Pixel-perfect layout, animation timing |
-| Integration | Cross-layer data flow, auth gates, payment flows | Already-covered unit scenarios |
-| E2E | Sign up, purchase, core feature loop | Every permutation — only critical paths |
+## Step 4: Platform Stack (Cure defaults)
 
-## Step 2: Platform Standards
+| Platform | Runner / mocking | UI / E2E | Coverage tool | Naming |
+|---|---|---|---|---|
+| Android (Kotlin) | JUnit 5, MockK, Turbine + `TestDispatcher` for Flows | Compose test rule; Espresso only for legacy views | JaCoCo / Kover | `login_invalidEmail_showsError()` |
+| iOS (Swift) | Swift Testing (`@Test`) for new code, XCTest for existing; protocol-based fakes, no mocking library | XCUITest | Xcode coverage | `test_login_invalidEmail_showsError()` |
+| Next.js / React | Vitest, React Testing Library, MSW for network | Playwright (see e2e-testing) | Vitest v8 | `it('shows error when email is invalid')` |
+| Firebase Functions | Vitest or Jest against the Emulator Suite; `@firebase/rules-unit-testing` | — | Vitest v8 / Istanbul | every security rule has an allow and a deny test |
+| Python | pytest, pytest-asyncio, fakes over `unittest.mock` | — | coverage.py | `test_login_invalid_email_shows_error` |
 
-### Android (Kotlin)
-```
-Runner:      JUnit 5
-Mocking:     MockK
-Assertions:  Truth / Kotest matchers
-Coroutines:  Turbine (Flow testing), TestDispatcher
-UI:          ComposeTestRule, Espresso (legacy views)
-Coverage:    JaCoCo, minimum 70% on business logic
+Layout: Android `src/test/` (JVM) vs `src/androidTest/` (instrumented); web tests co-located per feature, E2E in `e2e/` at the root.
 
-Naming: `fun methodName_condition_expectedResult()`
-  Example: `fun login_invalidEmail_showsError()`
+Cure testing conventions the model should apply without being asked:
+- **Fakes over mocks.** Mocks only for slow, side-effecting (email, charge), or interaction-verification cases.
+- **Test data builders** with defaults (`aUser(email = …)`) instead of inline construction.
+- **Error paths are mandatory** for anything that can fail: invalid input, dependency failure, auth expired, empty/boundary, timeout/cancellation.
+- Stripe/webhook handlers are tested with a real signature over the raw body, in the emulator.
 
-File structure:
-  src/test/          — unit tests (JVM, no Android framework)
-  src/androidTest/   — instrumented tests (Compose UI, Espresso)
-```
+## Step 5: Coverage Gates (source of truth)
 
-### iOS (Swift)
-```
-Runner:      XCTest / Swift Testing (@Test macro)
-Mocking:     Protocol-based fakes (no mocking library needed)
-TCA:         TestStore with exhaustive assertions
-Async:       XCTestExpectation, async/await test functions
-UI:          XCUITest for E2E, ViewInspector for SwiftUI unit
-Coverage:    Xcode built-in, minimum 70% on business logic
+| Scope | Gate |
+|---|---|
+| **New or changed code in a PR** (diff coverage) | **≥80%** — CI fails below this |
+| Domain/business logic, state (ViewModel/reducer/store), mappers/parsers, validation | ≥80% |
+| Repositories, navigation, error-handling paths | ≥60% |
+| Whole-project line coverage | Ratchet: never decreases PR over PR; no fixed number |
+| Excluded | Generated code (Hilt/DI modules, build config), pure layout, third-party wrappers |
 
-Naming: `func test_methodName_condition_expectedResult()`
-  Example: `func test_login_invalidEmail_showsError()`
-```
+Why 80% on new code: it is the Cure standard stated in the plugin's compaction hook ("80% coverage minimum on new code") and gates the code a PR author controls. A whole-project floor punishes legacy repos and gets gamed; the ratchet plus diff gate raises coverage without that. This replaces the earlier 70%-per-platform figures, which contradicted the 80% layer rule. Implement with the tool's diff mode (e.g. `diff-cover`, Codecov/Coveralls patch status, Kover/JaCoCo with a changed-files filter).
 
-### Next.js / React (TypeScript)
-```
-Runner:      Vitest
-Components:  React Testing Library (@testing-library/react)
-API Mocks:   MSW (Mock Service Worker)
-E2E:         Playwright
-Coverage:    v8/istanbul via Vitest, minimum 70% on lib/
+## Step 6: CI Stages
 
-Naming: `it('does X when Y')`
-  Example: `it('shows error message when email is invalid')`
+| Trigger | Runs |
+|---|---|
+| Every PR | Lint + type check · unit tests (all platforms) · diff-coverage gate · integration tests when `data/`, `api/`, `functions/`, or rules changed |
+| Merge to main / release branch | Full integration + E2E critical journeys |
+| Nightly | Full E2E matrix, visual regression |
 
-File structure:
-  __tests__/[feature]/   — co-located with feature
-  e2e/                   — Playwright tests at project root
-```
+## Step 7: Retry and Flaky-Test Policy (source of truth)
 
-### Firebase Cloud Functions (TypeScript)
-```
-Runner:      Jest or Vitest
-Emulator:    Firebase Emulator Suite for integration tests
-Rules:       @firebase/rules-unit-testing
-Coverage:    minimum 80% on business logic functions
-
-Test with emulator for:
-  - Firestore security rules (every rule = a test)
-  - Callable functions (auth context, input validation)
-  - Webhook handlers (Stripe signature verification)
-```
-
-## Step 3: What Makes a Good Test
-
-```
-✅ Tests behavior, not implementation
-✅ Fails when the feature is broken
-✅ Passes when the feature works
-✅ Readable — the test name IS the specification
-✅ Fast — unit tests < 1s each
-✅ Independent — no test depends on another test's state
-
-❌ Tests framework internals (React renders, Hilt injection)
-❌ Mirrors implementation (1:1 mock of every dependency)
-❌ Flaky (passes sometimes, fails sometimes)
-❌ Slow (>5s for a unit test)
-❌ Requires manual setup (database, network, specific device)
-```
-
-## Step 4: Test Patterns
-
-### Arrange-Act-Assert (AAA)
-```
-// Every test follows this structure:
-// 1. ARRANGE — set up inputs, mocks, initial state
-// 2. ACT     — call the function / trigger the interaction
-// 3. ASSERT  — verify the output / state change
-```
-
-### Fake Over Mock
-```
-Prefer fakes (real implementations with controlled data) over mocks.
-Fakes test behavior. Mocks test wiring.
-
-Use mocks only when:
-  - The real dependency is slow (network, database)
-  - You need to verify a specific interaction (was X called with Y?)
-  - The dependency has side effects (sending email, charging card)
-```
-
-### Test Data Builders
-```
-// Don't construct test objects inline — use builders:
-fun aUser(
-  id: String = "user-1",
-  name: String = "Test User",
-  email: String = "test@example.com",
-) = User(id = id, name = name, email = email)
-
-// Readable, reusable, easy to override one field
-```
-
-### Error Path Testing
-```
-Every function that can fail needs tests for:
-  1. Happy path (works correctly)
-  2. Invalid input (bad data)
-  3. Dependency failure (network error, auth expired)
-  4. Edge cases (empty list, null, boundary values)
-  5. Timeout/cancellation (async operations)
-```
-
-## Step 5: Coverage Rules
-
-```
-Must cover (>= 80%):
-  - Business logic / domain layer
-  - State management (ViewModel, Reducer, store)
-  - Data transformation (mappers, parsers, formatters)
-  - Validation logic
-
-Should cover (>= 60%):
-  - Repository layer (data fetching + caching)
-  - Navigation logic
-  - Error handling paths
-
-Can skip:
-  - Generated code (Hilt modules, build configs)
-  - Pure UI layout (test visually, not programmatically)
-  - Third-party library wrappers (test your code, not theirs)
-```
-
-## Step 6: CI Integration
-
-```yaml
-# Every PR runs:
-- Lint check
-- Unit tests (all platforms)
-- Coverage report (fail if below threshold)
-- Integration tests (if touched files in data/ or api/)
-- E2E tests (nightly or on release branch only — too slow for every PR)
-```
-
-## Flaky Test Policy
-
-```
-Flaky test detected?
-  1. Quarantine immediately (move to @Ignore/@Skip with TODO)
-  2. File a bug ticket with reproduction steps
-  3. Fix within current sprint (do not let quarantine list grow)
-  4. Never: retry flaky tests in CI to make them pass
-```
+- **Unit and integration tests: 0 retries in CI.** A retry hides a real race.
+- **E2E: at most 1 retry in CI** (Playwright `retries: process.env.CI ? 1 : 0`, trace/video `on-first-retry`). A test that passes only on retry is **flaky**, reported as such, and enters quarantine — it is never counted as a clean pass. Locally, 0 retries.
+- **Quarantine:** move to skip with a ticket link and owner; fix within the current sprint. The quarantine list is reviewed at every sprint boundary and must not grow two sprints running.
 
 ## Verification Contract (Cure standard)
 
-A change is "done" when the affected flow has been exercised end-to-end and the
-behavior observed — not when unit tests pass. Green tests on a broken flow is
-the classic false-done. Before reporting success: run the real entry point
-(app, endpoint, CLI, screen), drive the changed path with realistic input, and
-state what you observed. If the flow cannot be exercised, say so explicitly
-instead of substituting test results.
+A change is "done" when the affected flow has been exercised end-to-end and the behavior observed — not when unit tests pass. Green tests on a broken flow is the classic false-done. Run the real entry point (app, endpoint, CLI, screen), drive the changed path with realistic input, and state what you observed. If the flow cannot be exercised, say so explicitly instead of substituting test results.

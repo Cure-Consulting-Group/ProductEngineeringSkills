@@ -12,15 +12,20 @@ Usage:
   python3 verify_publishing_setup.py --project my-gcp-project --check-refresh
 
 Exit codes: 0 all checks passed, 1 a check failed, 2 bad input.
+Env: IG_GRAPH_VERSION overrides the Graph API version (default v26.0).
 """
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
 import urllib.parse
 
-GRAPH = "https://graph.instagram.com/v23.0"
+# Graph API version: override with IG_GRAPH_VERSION. v26.0 was current on 2026-09-23
+# (https://developers.facebook.com/docs/graph-api/changelog); each version lives ~2 years.
+GRAPH_VERSION = os.environ.get("IG_GRAPH_VERSION", "v26.0")
+GRAPH = f"https://graph.instagram.com/{GRAPH_VERSION}"
 REFRESH_URL = "https://graph.instagram.com/refresh_access_token"
 TIMEOUT = 20
 

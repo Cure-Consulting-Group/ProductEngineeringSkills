@@ -61,9 +61,7 @@ def dora_tier(median_hours: float) -> str:
     if median_hours < 1:
         return "Elite"
     if median_hours < 24:
-        return "High"
-    if median_hours < 24 * 7:
-        return "Medium"
+        return "High/Medium"  # DORA 2024: both clusters recover in <1 day
     return "Low"
 
 

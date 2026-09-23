@@ -1,457 +1,101 @@
 # Design System
 
-Build and maintain cross-platform design systems with design tokens as the single source of truth. Covers token architecture, component libraries for Android (Compose), iOS (SwiftUI), and Web (React/Tailwind), documentation and playground setup, governance processes, and cross-platform consistency rules. A design system is not a component library -- it is the shared language between design and engineering.
+**Outcome:** a working component library pipeline — design-studio's tokens compiled to every platform,
+components cataloged (Storybook / Showkase / SwiftUI catalog), and a governance process consuming
+teams can follow. Done when tokens build from one source on CI, every component has a catalog entry
+with its states, and the contribution/versioning rules are written down. Match length to the need;
+no filler sections or restated summaries.
+
+**Boundary.** design-studio owns token *content*, tiers (primitive → semantic → component), and the
+format: W3C Design Tokens (DTCG) JSON with `$value`/`$type` (design-studio ships the starter schema, w3c_token_schema.json).
+This skill consumes that file; it never introduces a second token format. If no tokens exist yet,
+run design-studio first (Step 6 "Systemise") or ask the user to.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Token files: !`ls design/tokens.json tokens.json tokens/*.json 2>/dev/null | head -4 | grep . || echo "(no token file)"`
+- Catalog tooling: !`grep -m3 -oE '"(storybook|@storybook/[a-z-]+|style-dictionary)": *"[^"]+"' package.json 2>/dev/null | grep . || echo "(no Storybook/Style Dictionary in package.json)"`
+- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Step 1: Classify the Design System Need
-
-| Need | Scope | Typical Trigger |
-|------|-------|-----------------|
-| Greenfield | Build a design system from scratch for a new product or org | New product launch, rebrand, first multi-platform effort |
-| Unify Existing | Consolidate inconsistent UI across platforms into a single system | Visual inconsistencies, designer/engineer friction, scaling team |
-| Add Platform | Extend an existing design system to a new platform (e.g., add iOS to existing web system) | Launching on a new platform, cross-platform product expansion |
-| Token Migration | Move from hardcoded values to design tokens without changing the visual output | Tech debt cleanup, theme support, dark mode initiative |
+| Need | Deliver |
+|---|---|
+| Greenfield library | Token pipeline + catalog per platform + governance doc |
+| Unify existing UI | Inventory of divergent components, mapping to canonical names, migration order |
+| Add a platform | Token transform + catalog + parity table for the new platform |
+| Token migration (hard-coded → tokens) | Codemod/grep plan, no visual change, before/after screenshots |
+| Governance only | Contribution, review, versioning, deprecation rules |
+| Question / review | An answer or findings; no files |
 
 ## Step 2: Gather Context
 
-1. **Platforms** -- which platforms need to be supported (Android, iOS, Web, all three)? Which is the primary platform?
-2. **Existing components** -- is there an existing component library, even informal? What framework (Compose, SwiftUI, React, Vue)?
-3. **Brand guidelines** -- does a brand guide exist with colors, typography, spacing rules? Or are we defining this from scratch?
-4. **Design tool** -- what does the design team use (Figma, Sketch, Adobe XD)? Are there existing Figma components?
-5. **Team size** -- how many designers and engineers will use and contribute to the system? Is there a dedicated design systems team?
-6. **Accessibility requirements** -- what WCAG level is required (AA minimum, AAA target)? Any platform-specific requirements?
-7. **Theme requirements** -- light/dark mode? Multiple brand themes? White-label support?
+Ask only for what is missing: platforms and the primary one, existing components (and framework),
+where tokens live, who contributes (dedicated DS team or federated), theme needs (light/dark,
+white-label), distribution (npm, Maven, SPM), and the design tool (Figma library?).
 
-## Step 3: Design Token Architecture
+## Step 3: Token Build Pipeline (Cure defaults)
 
-### Token Hierarchy
+- Source: design-studio's DTCG `tokens.json`, versioned in the design-system package, reviewed like code.
+- Build with **Style Dictionary v4+** (reads DTCG `$value` natively; don't mix DTCG and legacy `value` files in one instance). Newer DTCG 2025.10 features are partially supported — confirm the current release before relying on them.
+- Outputs: Web → CSS custom properties, mapped into Tailwind v4 with `@theme` in CSS (there is no `tailwind.config.ts` in v4); Android → Kotlin `ColorScheme`/typography objects; iOS → Swift `Color`/`Font` extensions or asset catalog colors.
+- Themes swap **semantic** tokens only; primitives never change per theme. A component that works in light mode must work in dark without code changes.
+- Android: `dynamicLightColorScheme(context)` / `dynamicDarkColorScheme(context)` (API 31+) only if the brand allows dynamic color; otherwise the generated scheme.
+- CI: token change → rebuild → contrast + lint (design-studio's `tokens_lint.py`, `contrast_check.py`) → publish platform packages.
 
-```
-Tokens follow a three-level hierarchy. Never skip levels.
+## Step 4: Component Library per Platform
 
-Level 1 — Global tokens (raw values)
-  The complete palette of available values. Not used directly in components.
-  Examples:
-    color.blue.500:     #3B82F6
-    color.gray.100:     #F3F4F6
-    font.size.16:       16
-    spacing.4:          4
-    radius.8:           8
+Canonical names are identical on every platform (`PrimaryButton`, `TextInput`, `ContentCard`,
+`BottomSheet`); only interaction feel is native (ripple / highlight / hover). Read
+`reference/details.md` when scaffolding the Compose, SwiftUI, or React (shadcn/Radix + cva) library
+code — it holds the theme wrapper, a reference button, and package layout per platform.
 
-Level 2 — Alias tokens (semantic meaning)
-  Map global tokens to semantic purpose. These change between themes.
-  Examples:
-    color.primary:          {color.blue.500}
-    color.surface:          {color.gray.100}       // light theme
-    color.surface:          {color.gray.900}       // dark theme
-    color.text.primary:     {color.gray.900}       // light theme
-    color.text.primary:     {color.gray.50}        // dark theme
-    font.size.body:         {font.size.16}
-    spacing.component.gap:  {spacing.4}
+| Component | Compose | SwiftUI | React |
+|---|---|---|---|
+| PrimaryButton | `Button` (M3) | `Button` + style | `<Button>` (cva) |
+| TextInput | `OutlinedTextField` | `TextField` | `<Input>` |
+| BottomSheet | `ModalBottomSheet` | `.sheet()` | `<Sheet>` (Radix Dialog) |
+| Dialog | `AlertDialog` | `.alert()` | `<Dialog>` (Radix) |
+| Toast | `Snackbar` | custom overlay | `<Toast>` (Sonner) |
 
-Level 3 — Component tokens (component-specific)
-  Map alias tokens to specific component properties. Optional but powerful.
-  Examples:
-    button.primary.background:    {color.primary}
-    button.primary.text:          {color.text.on-primary}
-    button.border-radius:         {radius.8}
-    card.padding:                 {spacing.component.gap}
-    input.border.color:           {color.border.default}
-```
+Parity bugs (fix, don't document): different color for the same semantic token, different
+spacing/radius for the same component, dark mode missing on one platform, accessibility working
+on one platform only. Expected differences: system fonts, navigation pattern, haptics, gestures.
 
-### Token Categories
+## Step 5: Catalogs
 
-```
-Category        Token Examples                          Notes
-──────────────────────────────────────────────────────────────────
-Color           primary, secondary, surface, error,     Must pass WCAG AA contrast
-                text.primary, text.secondary,           ratios for text/background
-                border, divider, overlay                combinations
-
-Typography      font.family (sans, serif, mono)         Use system fonts where
-                font.size (xs through 3xl)              possible for performance.
-                font.weight (regular, medium, bold)     Define type scale with
-                line-height (tight, normal, relaxed)    consistent ratios.
-                letter-spacing (tight, normal, wide)
-
-Spacing         4, 8, 12, 16, 20, 24, 32, 40, 48,     8pt grid system.
-                56, 64, 80, 96                          All spacing values are
-                                                        multiples of 4.
-
-Elevation       shadow.sm, shadow.md, shadow.lg,        Platform-specific
-                shadow.xl                               implementation (Android
-                                                        elevation, CSS box-shadow)
-
-Motion          duration.fast (150ms)                   Respect prefers-reduced-
-                duration.normal (300ms)                 motion on web. Follow
-                duration.slow (500ms)                   platform conventions
-                easing.standard, easing.decelerate      (Material Motion, UIKit
-                easing.accelerate                       spring animations).
-
-Breakpoints     sm (640px), md (768px), lg (1024px),    Web only. Mobile uses
-                xl (1280px), 2xl (1536px)               adaptive layout breakpoints
-                                                        built into platform.
-
-Border Radius   none (0), sm (4), md (8), lg (12),     Use consistently. Do not
-                xl (16), full (9999)                    mix rounded and sharp
-                                                        corners in the same context.
-```
-
-### Token Format and Tooling
-
-```
-Source of truth: tokens.json (or tokens.yaml)
-  Store in dedicated design-system repo or monorepo package.
-  Versioned, reviewed, and released like code.
-
-Example tokens.json:
-{
-  "color": {
-    "global": {
-      "blue": {
-        "50":  { "value": "#EFF6FF" },
-        "500": { "value": "#3B82F6" },
-        "900": { "value": "#1E3A8A" }
-      }
-    },
-    "alias": {
-      "primary":    { "value": "{color.global.blue.500}" },
-      "on-primary": { "value": "{color.global.white}" }
-    }
-  },
-  "spacing": {
-    "1": { "value": "4px" },
-    "2": { "value": "8px" },
-    "3": { "value": "12px" },
-    "4": { "value": "16px" }
-  }
-}
-
-Platform transforms (Style Dictionary):
-  - Web:     CSS custom properties (--color-primary: #3B82F6)
-  - Android: Kotlin object / XML resource (ColorPrimary = Color(0xFF3B82F6))
-  - iOS:     Swift Color extension (Color.primary = Color(hex: 0x3B82F6))
-
-Build pipeline:
-  tokens.json → Style Dictionary → platform-specific output files
-  Run on CI: tokens change → rebuild → publish platform packages
-```
-
-### Dark Mode and Theme Variants
-
-```
-Theme architecture:
-  Each theme is a complete set of alias tokens.
-  Global tokens do NOT change between themes.
-  Only alias tokens (Level 2) swap values.
-
-  themes/
-    light.json    — alias token values for light mode
-    dark.json     — alias token values for dark mode
-    brand-a.json  — alias token values for white-label brand A (if applicable)
-
-Implementation per platform:
-  Web:     CSS custom properties on :root and [data-theme="dark"]
-           Or Tailwind dark: variant with class strategy
-  Android: MaterialTheme with dynamicColorScheme / custom ColorScheme
-           isSystemInDarkTheme() for automatic switching
-  iOS:     Color assets with light/dark variants in Asset Catalog
-           Or @Environment(\.colorScheme) for programmatic switching
-
-Rule: Never hardcode color values in components. Always reference tokens.
-      A component that works in light mode must work in dark mode without
-      code changes — only token values change.
-```
-
-## Step 4: Component Library Per Platform
-
-See [reference/details.md](reference/details.md) (section “Step 4: Component Library Per Platform”) for full detail.
-
-## Step 5: Documentation and Playground
-
-### Web — Storybook
-
-```
-Setup:
-  npx storybook@latest init
-  Configure for React + Tailwind
-  Deploy to Chromatic or Vercel for team access
-
-Story structure per component:
-  ComponentName.stories.tsx:
-    - Default (primary variant, no props)
-    - All Variants (visual grid of all variant + size combinations)
-    - Interactive (with args/controls for live editing)
-    - Accessibility (with a11y addon checks visible)
-    - Dark Mode (wrapped in dark theme provider)
-
-Required Storybook addons:
-  @storybook/addon-a11y          — automated accessibility checks
-  @storybook/addon-designs       — embed Figma frames
-  @storybook/addon-interactions  — test user flows
-  storybook-dark-mode            — theme toggle
-```
-
-### Android — Showkase
-
-```kotlin
-// Add Showkase for component catalog
-// build.gradle.kts
-dependencies {
-    implementation("com.airbnb.android:showkase:1.0.3")
-    ksp("com.airbnb.android:showkase-processor:1.0.3")
-}
-
-// Annotate components
-@ShowkaseComposable(name = "Primary Button", group = "Buttons")
-@Composable
-fun PrimaryButtonPreview() {
-    AppTheme {
-        PrimaryButton(text = "Click me", onClick = {})
-    }
-}
-
-// Showkase browser activity is auto-generated
-// Launch in debug builds for component browsing
-```
-
-### iOS — SwiftUI Previews Catalog
-
-```swift
-// Create a dedicated preview catalog target
-// DesignSystemCatalog/CatalogApp.swift
-@main
-struct CatalogApp: App {
-    var body: some Scene {
-        WindowGroup {
-            NavigationStack {
-                List {
-                    Section("Buttons") {
-                        NavigationLink("Primary Button") { ButtonCatalog() }
-                    }
-                    Section("Cards") {
-                        NavigationLink("Content Card") { CardCatalog() }
-                    }
-                    // ... all components
-                }
-                .navigationTitle("Design System")
-            }
-        }
-    }
-}
-
-// DesignSystemCatalog/ButtonCatalog.swift
-struct ButtonCatalog: View {
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Primary Button").font(.headline)
-                PrimaryButton(title: "Default", action: {})
-                PrimaryButton(title: "Loading", action: {}, isLoading: true)
-                PrimaryButton(title: "Disabled", action: {}, isEnabled: false)
-            }
-            .padding()
-        }
-    }
-}
-```
-
-### Component Documentation Requirements
-
-```
-Every component must document:
-  1. Name and description
-  2. Props/parameters with types and defaults
-  3. Variants (visual examples of each)
-  4. Accessibility notes:
-     - Minimum touch target (48x48dp Android, 44x44pt iOS)
-     - Screen reader behavior (what is announced)
-     - Keyboard navigation (web)
-     - Color contrast compliance
-  5. Usage examples (code snippets)
-  6. Do/Don't examples:
-     DO: Use PrimaryButton for the main action on a screen
-     DON'T: Use more than one PrimaryButton per screen section
-     DO: Provide loading state for async actions
-     DON'T: Disable the button without explaining why (use helper text)
-```
+- **Web — Storybook 10** (requires Node 20.19+ or 22.12+; verified 2026-09-23 against the Storybook migration guide). `npx storybook@latest init`. Controls, actions, viewport, backgrounds, and interactions are in core since Storybook 9 — don't install `@storybook/addon-interactions` or `addon-essentials`. Add `@storybook/addon-a11y` and `@storybook/addon-themes` (the maintained light/dark switcher; the old `storybook-dark-mode` package doesn't support 9+). `@storybook/addon-designs` for Figma embeds. Deploy to Chromatic or a Vercel preview.
+- Stories per component: default, all variants × sizes, interactive (args), every state (loading, disabled, error), dark theme.
+- **Android — Showkase** (`com.airbnb.android:showkase` + `showkase-processor` via KSP; 1.0.5 is the latest seen, Aug 2025 — confirm before pinning). Annotate previews with `@ShowkaseComposable`; debug builds only.
+- **iOS — catalog app target** listing each component's states, plus `#Preview` blocks per component; snapshot-test the catalog.
+- Each component documents: API with defaults, variants, a11y notes (touch target 48dp Android / 44pt iOS / 24px web AA minimum; what the screen reader announces; keyboard behavior), and one do/don't pair.
 
 ## Step 6: Governance
 
-### Contribution Process
+- Contribution: RFC issue (problem, platforms, Figma frame) → design review against tokens and WCAG AA → implementation on every required platform with stories/previews and tests → DS-owner code review for cross-platform API parity → release.
+- Versioning is semver: PATCH fix/a11y, MINOR new component/variant/token, MAJOR removed or renamed component, token, or prop.
+- Deprecate before removing: mark deprecated for at least one minor release with a migration note; remove only in the next major. Never ship a release that breaks dark mode or accessibility.
+- Federated teams (no dedicated DS team): one named owner per platform; nothing merges without an owner review.
 
-```
-1. Propose: Open an issue/RFC describing the new component or token change
-   - What problem does it solve?
-   - Which platforms need it?
-   - Figma design attached (required)
+## Step 7: Code/Artifact Generation
 
-2. Design review: Design lead approves visual design and token usage
-   - Follows token hierarchy (no hardcoded values)
-   - Meets accessibility requirements (WCAG AA minimum)
-   - Consistent with existing component patterns
+Applies when Step 1 calls for building (greenfield, add platform, token migration). First read
+existing theme/token code (paths like `**/theme/**`, `**/tokens/**`, `**/designsystem/**`) and extend
+rather than replace. Write only what the classification needs:
 
-3. Implementation: Build on all required platforms
-   - Must include: component code, tests, documentation, stories/previews
-   - Must pass: accessibility checks, visual regression tests
+1. Style Dictionary config reading the DTCG token file, with the platform targets in use.
+2. Web: generated `tokens.css` + a `theme.css` with `@theme inline`.
+3. Android: generated theme object + `AppTheme` wrapper; iOS: generated `DesignTokens.swift`.
+4. Catalog setup for each platform in scope, with one fully-worked component as the pattern.
+5. `CONTRIBUTING.md` (or a DS section) with the Step 6 rules.
 
-4. Code review: Design system team reviews
-   - API consistency across platforms (same props/behavior)
-   - Token usage (no magic numbers)
-   - Accessibility (screen reader, touch targets, contrast)
+Deliver the requested artifacts; don't restyle adjacent screens.
 
-5. Release: Merge and publish new version
-   - Update changelog
-   - Bump version (semver)
-   - Notify consuming teams
-```
+## Step 8: Output Summary
 
-### Versioning and Breaking Changes
-
-```
-Semantic versioning (MAJOR.MINOR.PATCH):
-  PATCH: bug fix, accessibility improvement, internal refactor
-  MINOR: new component, new variant, new token (backward compatible)
-  MAJOR: removed component, changed API, renamed token
-
-Breaking change policy:
-  - Deprecate first, remove in next major version
-  - Minimum 1 release cycle deprecation notice
-  - Provide migration guide for all breaking changes
-  - Never break dark mode or accessibility in any release
-```
-
-## Step 7: Cross-Platform Consistency Rules
-
-### Shared Naming Conventions
-
-```
-Components use the SAME name across all platforms:
-  PrimaryButton   (not CTA, ActionButton, MainButton)
-  ContentCard     (not InfoCard, DataCard, ItemCard)
-  TextInput       (not TextField, InputField, EditText)
-  BottomSheet     (not Modal, Drawer, ActionSheet)
-
-Tokens use the SAME name across all platforms:
-  color.primary   (not brandColor, accentColor, mainColor)
-  spacing.md      (not spacing.medium, spacing.3, gap.16)
-  font.size.body  (not font.size.16, fontSize.regular, textSize.normal)
-
-Exceptions (platform-appropriate deviations):
-  Navigation: Tabs (Android/iOS) vs Sidebar (Web desktop) — OK
-  Selection: Switch (Android) vs Toggle (iOS) — use platform name
-  System UI: follows platform conventions (Android nav bar, iOS home indicator)
-```
-
-### Equivalent Components Across Platforms
-
-```
-┌──────────────────┬─────────────────────┬──────────────────┬──────────────────┐
-│ Component        │ Android (Compose)   │ iOS (SwiftUI)    │ Web (React)      │
-├──────────────────┼─────────────────────┼──────────────────┼──────────────────┤
-│ PrimaryButton    │ Button + Material3  │ Button bordered  │ <Button>         │
-│ TextInput        │ OutlinedTextField   │ TextField        │ <Input>          │
-│ ContentCard      │ Card + Material3    │ Custom View      │ <Card>           │
-│ BottomSheet      │ ModalBottomSheet    │ .sheet()         │ <Sheet> (Radix)  │
-│ Dialog           │ AlertDialog         │ .alert()         │ <Dialog> (Radix) │
-│ TopBar           │ TopAppBar           │ .navigationTitle │ <Header>         │
-│ LoadingSpinner   │ CircularProgress    │ ProgressView     │ <Spinner>        │
-│ Avatar           │ Custom Composable   │ Custom View      │ <Avatar>         │
-│ Badge            │ Badge + Material3   │ Custom View      │ <Badge>          │
-│ Toast            │ Snackbar            │ Custom overlay   │ <Toast> (Sonner) │
-└──────────────────┴─────────────────────┴──────────────────┴──────────────────┘
-
-Rule: Same visual weight, same semantic meaning, platform-native interaction patterns.
-      A PrimaryButton should LOOK the same across platforms (same color, same radius)
-      but FEEL native (Material ripple on Android, highlight on iOS, hover on Web).
-```
-
-### Platform-Appropriate Deviations
-
-```
-These differences are EXPECTED and CORRECT:
-  - Typography: SF Pro (iOS), Roboto (Android), Inter/system (Web)
-  - Navigation: Bottom tabs (mobile) vs sidebar (web desktop)
-  - Interactions: ripple (Android), highlight (iOS), hover (Web)
-  - System UI: status bar, navigation bar, safe areas — follow platform
-  - Haptics: available on mobile, not on web
-  - Gestures: swipe-to-dismiss, pull-to-refresh — platform patterns
-
-These differences are BUGS and must be fixed:
-  - Different colors for the same semantic token across platforms
-  - Different spacing/padding for equivalent components
-  - Different border radius for the same component type
-  - Missing dark mode support on any platform
-  - Accessibility works on one platform but not others
-```
-
-## Code Generation (Required)
-
-You MUST generate actual token and config files using the Write tool:
-
-1. **Tokens**: `tokens/tokens.json` — Style Dictionary format with color, spacing, typography, elevation
-2. **CSS**: `tokens/variables.css` — CSS custom properties generated from tokens
-3. **Tailwind**: Update `tailwind.config.ts` with token values
-4. **Android**: `tokens/Theme.kt` — Compose MaterialTheme with token values
-5. **iOS**: `tokens/DesignTokens.swift` — Swift extension with Color/Font/Spacing
-6. **Style Dictionary**: `style-dictionary.config.json` — build configuration
-
-Before generating, Read existing theme files (Glob for `**/theme/**`, `**/tokens/**`, `**/designSystem/**`) and extend rather than replace.
-
-## Cross-References
-
-- `/product-design` — for design principles, platform guidelines, and Figma handoff standards
-- `/accessibility-audit` — for WCAG contrast ratio verification and screen reader compliance
-- `/android-feature-scaffold` — for Compose component implementation patterns
-- `/ios-architect` — for SwiftUI component and theme implementation patterns
-- `/nextjs-feature-scaffold` — for React/Tailwind component and token usage patterns
-
-## Step 8: Output
-
-```
-DESIGN SYSTEM PLAN
-Project: [NAME]
-Date: [TODAY]
-Prepared by: [NAME]
-Platforms: [Android / iOS / Web]
-
-SYSTEM SUMMARY
-┌──────────────────────┬────────────────────────────────────┐
-│ Field                │ Value                              │
-├──────────────────────┼────────────────────────────────────┤
-│ Design System Need   │ [From Step 1 classification]       │
-│ Platforms            │ [List]                             │
-│ Token Count          │ [Global / Alias / Component]       │
-│ Component Count      │ [Number per platform]              │
-│ Theme Support        │ [Light / Dark / Custom]            │
-│ Accessibility Level  │ [WCAG AA / AAA]                    │
-│ Documentation        │ [Storybook / Showkase / Catalog]   │
-│ Distribution         │ [npm / Maven / SPM]                │
-└──────────────────────┴────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Design token architecture (global, alias, component levels)
-  - [ ] Token source file (tokens.json) with Style Dictionary config
-  - [ ] Component library scaffold per platform
-  - [ ] Theme support (light + dark mode minimum)
-  - [ ] Documentation/playground setup
-  - [ ] Governance process and contribution guide
-  - [ ] Cross-platform consistency rules
-
-CROSS-REFERENCES:
-  - /product-design — for design principles and platform guidelines
-  - /android-design-expert — for Android-specific Material Design 3 patterns
-  - /ios-design-expert — for iOS-specific Human Interface Guidelines
-  - /web-design-expert — for web-specific design patterns
-  - /accessibility-audit — for WCAG compliance verification
-```
+Close with a short table: classification, platforms, token source and build command, catalog per
+platform and where it's deployed, distribution channel per platform, open parity gaps, and what was
+not done. Related skills: accessibility-audit (contrast and screen-reader verification),
+android-feature-scaffold / ios-architect / nextjs-feature-scaffold (feature code that consumes the library).

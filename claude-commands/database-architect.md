@@ -1,303 +1,106 @@
 # Database Architect
 
-Designs production-grade database schemas, migration plans, indexing strategies, and query optimizations across Firestore, PostgreSQL, SQLite/Room, and Redis. Every recommendation considers data volume, access patterns, consistency requirements, and Cure Consulting Group's Firebase-first but multi-database approach.
+**Outcome:** a data design the team can implement — engine choice with the reason, schema (ER diagram or collection tree), access-pattern → index table, and versioned migration files with a down path. Done when every listed access pattern maps to an index or a justified scan, and every schema change is reversible or has a documented manual reversal. For query tuning, done = before/after `EXPLAIN` (or Firestore query explain) showing the change.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Schema files: !`find . -maxdepth 4 -path "*/node_modules" -prune -o \( -name "*.sql" -o -name "schema.prisma" -o -name "firestore.indexes.json" -o -name "*Entity.kt" \) -print 2>/dev/null | head -8 || echo "(none)"`
+- Stack manifest: !`head -25 package.json 2>/dev/null || head -25 build.gradle.kts 2>/dev/null || echo "(none detected)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Core Principle: Right Database for the Right Job
-
-```
-Firestore       →  Real-time sync, mobile-first, denormalized documents
-PostgreSQL      →  Relational data, complex queries, ACID transactions
-SQLite/Room     →  Local mobile storage, offline-first, structured cache
-Redis           →  Caching layer, session storage, rate limiting, pub/sub
-```
-
-**Hard rules:**
-- Default to Firestore unless the use case explicitly requires relational queries or local-only storage
-- Never store secrets, API keys, or PII in unencrypted local databases
-- All schemas must include `createdAt` and `updatedAt` timestamps
-- All migrations must be reversible or have a documented rollback plan
-- Database access goes through repository interfaces — no direct SDK usage in domain or presentation layers
-
-## Step 1: Classify the Database Need
-
-| Request | Primary Output | Action |
-|---------|---------------|--------|
-| Schema design | Collection/table structure + relationships | Design schema |
-| Migration planning | Versioned migration scripts + rollback plan | Plan migration |
-| Query optimization | EXPLAIN analysis + rewrite recommendations | Optimize queries |
-| Indexing strategy | Index definitions + maintenance plan | Define indexes |
-| Database selection | Comparison matrix + recommendation | Evaluate databases |
-| Full data layer | All of the above | Generate everything |
+| Request | Output |
+|---|---|
+| Engine selection | Decision with the deciding access patterns and the rejected option's failure mode |
+| Schema design | ER diagram / collection tree + field types + access-pattern table |
+| Indexing | Index table: query → index → justification |
+| Slow query | Plan analysis + rewrite or index, before/after numbers |
+| Schema migration | Versioned up/down files (data movement → `data-migration`) |
+| Review of an existing design | Findings with severity; no files |
 
 ## Step 2: Gather Context
 
-Before generating, confirm:
-1. **Feature name** — e.g., "Order Management", "User Profiles"
-2. **Current database** — existing database(s) in use, or greenfield?
-3. **Data volume** — hundreds / thousands / millions / billions of records?
-4. **Access patterns** — read-heavy, write-heavy, or balanced? Real-time needs?
-5. **Consistency requirements** — eventual consistency acceptable, or strong consistency required?
-6. **Hosting environment** — Firebase/GCP, AWS, self-hosted, mobile-local?
-7. **Existing schema** — any current tables/collections to integrate with?
-8. **Compliance needs** — GDPR, HIPAA, data residency requirements?
+Ask only what the repo doesn't show: top 5 access patterns (who reads what, how often, sorted how), volume now and in 12 months, write hot spots, consistency needs (money, inventory → strong), hosting constraints, and residency/HIPAA needs.
 
-## Step 3: Database Selection Guide
+## Step 3: Engine Choice (Cure defaults)
 
-### Firestore
-- **Best for:** real-time sync, mobile-first apps, denormalized data, serverless backends
-- **Sweet spot:** <10M documents per collection, fan-out read patterns
-- **Strengths:** automatic scaling, offline persistence, real-time listeners, zero server management
-- **Limitations:** no cross-document joins, server-side aggregation limited to count/sum/avg, 1 MiB document size limit, ~1 sustained write/sec per document (shard hot counters — Firebase "distributed counters" guide); ramp new collections from 500 ops/sec, +50% every 5 min (500/50/5 rule)
-- **Choose when:** the app needs real-time updates, mobile offline support, or rapid prototyping
+- **Firestore** is the default for Cure mobile/web apps: real-time listeners, offline cache, no servers. Choose **PostgreSQL** (Cloud SQL, or Supabase when the client already uses it) when you need joins across many entities, ad-hoc reporting, multi-row transactions over large sets, or strict relational integrity — typically billing ledgers and back-office analytics. Many Cure products run both: Firestore for app state, PostgreSQL/BigQuery for reporting via export.
+- **Room / SQLite / SwiftData** only for on-device storage; sync design belongs to `offline-first`.
+- **Redis (Memorystore)** only as cache, rate-limit store, or ephemeral queue — never the system of record.
 
-### PostgreSQL
-- **Best for:** relational data, complex queries, ACID transactions, reporting/analytics
-- **Sweet spot:** structured data with relationships, complex WHERE/JOIN/GROUP BY queries
-- **Strengths:** full SQL, ACID compliance, rich indexing (B-tree, GIN, GiST), JSONB for semi-structured data, mature ecosystem
-- **Limitations:** requires server management (unless using managed services), manual scaling, no built-in real-time sync
-- **Choose when:** data is inherently relational, complex queries are needed, or strong consistency is non-negotiable
+Firestore limits that decide designs (verified 2026-09-23, firebase.google.com/docs/firestore/quotas): 1 MiB per document; ~1 sustained write/sec per document (shard counters); new collections ramp from 500 ops/sec, +50% every 5 min (500/50/5); `in`/`array-contains-any` take up to 30 values; server aggregations are `count()`, `sum()`, `average()` only — anything else is a precomputed field; up to 100 databases per project (named databases for tenant or residency isolation).
 
-### SQLite / Room
-- **Best for:** local mobile storage, offline-first apps, structured local cache
-- **Sweet spot:** local data persistence on Android/iOS, sync queues, app configuration
-- **Strengths:** zero network latency, works offline, full SQL locally, Room provides compile-time query verification
-- **Limitations:** single-writer, no built-in sync, local to device only
-- **Choose when:** the app needs structured local storage, offline-first behavior, or a sync outbox pattern
+## Step 4: Schema Rules
 
-### Redis
-- **Best for:** caching layer, session storage, rate limiting, pub/sub messaging
-- **Sweet spot:** high-frequency reads, TTL-based expiration, real-time counters
-- **Strengths:** sub-millisecond latency, built-in data structures (sets, sorted sets, streams), pub/sub, TTL
-- **Limitations:** in-memory (limited by RAM), not a primary data store, data loss risk without persistence config
-- **Choose when:** you need a caching layer, rate limiter, session store, or real-time leaderboard
+**Firestore**
+- Model from queries backwards: one query should need one collection read. Denormalize read-mostly data; list every copy of a denormalized field in the design and name the Function that keeps it in sync.
+- Subcollection when children are unbounded (>~1k), need independent queries, or have different access rules; array only for small bounded sets.
+- IDs: Auth UID for user docs, auto-ID for entities, slug for known-key lookups. Avoid monotonically increasing IDs or timestamp-prefixed IDs on high-write collections — they create hotspots; put the time in a field and index it.
+- Every document has `createdAt`/`updatedAt` server timestamps and a `schemaVersion` integer once the collection has migrated once.
 
-## Step 4: Schema Design Patterns
+**PostgreSQL**
+- 3NF by default; denormalize only with a measured reason. `snake_case`, plural tables, `_id` FKs, `timestamptz` everywhere, `bigint` or UUIDv7 keys (time-ordered, index-friendly).
+- `JSONB` for truly open attributes only; if you filter on a key, promote it to a column or add a GIN/expression index.
+- Prefer `CHECK` constraints or lookup tables over `ENUM` types for values that will change (enum value removal is painful).
+- Partition by range (time) or list (tenant) above ~100M rows or when you need cheap retention drops.
 
-### Firestore Document Modeling
-- **Document modeling:** one document per logical entity; embed related data when read together
-- **Subcollection strategy:** use subcollections when child entities exceed 10k items, need independent queries, or have different access control
-- **Denormalization rules:** duplicate data that is read frequently but written rarely; accept write complexity for read performance
-- **Reference patterns:** store document path strings for cross-collection references; resolve at read time
-- **Fan-out writes:** when denormalized data changes, use Cloud Functions or batched writes to update all copies
-- **Document ID conventions:** Auth UID for user docs, auto-ID for most entities, slug for human-readable lookups, date-prefixed for time-series
+**Room (Android)** — explicit `Migration(from, to)` for every version bump, `exportSchema = true` with schemas committed so `MigrationTestHelper` can test them; never `fallbackToDestructiveMigration()` in release builds (it wipes user data).
 
-### PostgreSQL Schema Design
-- **Normalization:** default to 3NF; denormalize only with measured performance justification
-- **Junction tables:** for all many-to-many relationships; include `created_at` and metadata columns
-- **JSON columns:** use `JSONB` for truly dynamic/schemaless attributes; never for data that needs indexing or joins
-- **ENUMs:** use PostgreSQL `CREATE TYPE ... AS ENUM` for fixed-value columns; prefer check constraints for values that may change
-- **Partitioning:** partition tables >100M rows by range (date) or list (tenant); use declarative partitioning
-- **Naming conventions:** `snake_case` for all identifiers, plural table names, `_id` suffix for foreign keys
+## Step 5: Indexes
 
-### SQLite / Room
-- **Entity relationships:** use `@Relation` and `@Embedded` annotations; define `ForeignKey` constraints explicitly
-- **Type converters:** create `@TypeConverter` for dates, enums, and complex types; register globally in the database class
-- **Migration path:** define `Migration(fromVersion, toVersion)` for every schema change; never use `fallbackToDestructiveMigration()` in production
-- **Embedded vs referenced:** embed value objects (address, coordinates); reference entities with foreign keys
+- Composite order: equality columns, then range, then sort. `(a, b, c)` serves `a`, `a,b`, `a,b,c` — not `b,c`.
+- PostgreSQL: covering indexes with `INCLUDE`; partial indexes for hot subsets (`WHERE status = 'active'`); `CREATE INDEX CONCURRENTLY` on live tables (not inside a transaction). Find unused indexes with `pg_stat_user_indexes`, slow queries with `pg_stat_statements`.
+- Firestore: single-field indexes are automatic; composite indexes live in `firestore.indexes.json` and must be committed, not clicked in the console. Add single-field exemptions for large strings, arrays, and maps you never query (saves write cost and avoids the index-entry limit); exempt monotonically increasing fields on high-write collections from ascending indexes to avoid hotspots.
 
-## Step 5: Migration Planning
+## Step 6: Query Fixes
 
-### Versioned Migrations
-- Every schema change gets a numbered migration file (e.g., `V001__create_users_table.sql`)
-- Migrations are immutable once deployed — never edit a released migration
-- Use a migration tool: Flyway or Liquibase for PostgreSQL, Room `Migration` objects for SQLite, Firestore migration scripts as Cloud Functions
+- **N+1:** Firestore `getAll(...refs)` in chunks or an `in` query (≤30); SQL `JOIN` or `= ANY(:ids)`; Room `@Transaction` + `@Relation`.
+- **Pagination:** cursor/keyset (`startAfter(lastDoc)`; `WHERE (created_at, id) < (:lastCreatedAt, :lastId) ORDER BY created_at DESC, id DESC LIMIT 20`). `OFFSET` only for admin views under ~100k rows.
+- **PostgreSQL diagnosis:** `EXPLAIN (ANALYZE, BUFFERS)`; look for seq scans on large tables, row-estimate misses of 10×+ (run `ANALYZE`, consider extended statistics), and sorts spilling to disk. Pool connections (PgBouncer or the Cloud SQL connector) — serverless functions exhaust connections fast.
+- **Firestore diagnosis:** Query Explain (`explain({ analyze: true })`) shows index use and read counts; a query reading far more documents than it returns needs a better index or a restructured collection.
 
-### Rollback Strategy
-- Every migration must have a corresponding rollback script or a documented manual reversal procedure
-- For additive changes (new column, new table): rollback = drop the addition
-- For destructive changes (drop column, rename): copy data first, keep old column during transition period, drop in a later migration
-- Test rollback scripts in staging before deploying the forward migration to production
+## Step 7: Schema Migrations
 
-### Zero-Downtime Migration Patterns
-1. **Expand-Contract pattern:** add new column → backfill → update app to write both → update app to read new → drop old column
-2. **Dual-write period:** write to both old and new schemas during transition
-3. **Shadow tables:** create new table structure, sync data, swap references atomically
-4. **Feature flags:** gate new schema reads behind feature flags; roll back by disabling the flag
+- Versioned, immutable files: Flyway `V{NNN}__{desc}.sql` with a matching `U{NNN}__{desc}.sql` undo file. Undo migrations are a Flyway paid-edition feature; on Community edition write the reverse as a new forward `V` migration and keep it tested. Liquibase rollback blocks are the alternative.
+- Destructive changes use expand-contract (add → dual-write → backfill → switch reads → drop later). Column drops ship at least one release after the code stops reading them.
+- `ALTER TABLE` that rewrites the table or takes `ACCESS EXCLUSIVE` on a large table needs a plan: `lock_timeout`, `NOT VALID` constraints validated separately, concurrent index builds.
+- Anything that moves or backfills existing data → `data-migration`. Backups, PITR, and cross-region failover → `disaster-recovery`.
 
-### Data Backfill Scripts
-- Write idempotent backfill scripts that can be re-run safely
-- Process in batches (1000–5000 rows per batch) to avoid locking and memory issues
-- Log progress and support resumption from the last processed ID
-- Run backfills during low-traffic windows; monitor database load during execution
+Template:
 
-### Testing Migrations
-- Test every migration against a snapshot of production data (anonymized if necessary)
-- Verify both forward migration and rollback
-- Measure migration execution time on production-scale data
-- Include migration tests in CI pipeline
-
-## Step 6: Indexing Strategy
-
-### General Principles
-- Index columns that appear in `WHERE`, `JOIN`, `ORDER BY`, and `GROUP BY` clauses
-- Avoid over-indexing — each index slows writes and consumes storage
-- Review and drop unused indexes quarterly
-
-### Composite Indexes
-- Column order matters: place equality conditions first, then range conditions, then sort columns
-- A composite index on `(a, b, c)` supports queries on `(a)`, `(a, b)`, and `(a, b, c)` but not `(b, c)` alone
-
-### Covering Indexes
-- Include all columns needed by a query in the index to enable index-only scans
-- PostgreSQL: use `INCLUDE` clause for non-key columns in the index
-
-### Firestore Indexes
-- **Automatic indexes:** Firestore auto-indexes every field; no action needed for single-field queries
-- **Composite indexes:** required for queries with multiple `where` clauses or `where` + `orderBy` on different fields; define in `firestore.indexes.json`
-- **Exempt fields:** exempt large string/array fields from automatic indexing to save costs
-
-### PostgreSQL EXPLAIN ANALYZE
-- Run `EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)` on every slow query
-- Look for: sequential scans on large tables, nested loop joins on large sets, high buffer reads
-- Target: all frequent queries should use index scans or bitmap index scans
-- Monitor with `pg_stat_user_indexes` for unused indexes and `pg_stat_statements` for slow queries
-
-### Index Maintenance
-- Schedule `REINDEX` or `pg_repack` for heavily updated tables
-- Monitor index bloat with `pgstattuple` extension
-- For Firestore, review composite index usage in the Firebase console and remove unused indexes
-
-## Step 7: Query Optimization
-
-### N+1 Detection
-- Identify loops that issue one query per iteration — replace with batch reads or joins
-- Firestore: use `whereIn` (max 30 values) or `getAll()` for batch document fetches
-- PostgreSQL: use `JOIN` or `WHERE IN` subqueries; use `EXISTS` over `IN` for large subquery results
-- Room: use `@Transaction` with `@Relation` to load parent + children in one call
-
-### Batch Reads
-- Firestore: batch reads with `getAll()` (max 500 documents); for larger sets, paginate
-- PostgreSQL: use `ANY(ARRAY[...])` for parameterized batch lookups; limit batch size to 1000
-
-### Pagination Patterns
-- **Cursor-based (preferred):** use `startAfter(lastDocument)` in Firestore, `WHERE id > :lastId ORDER BY id LIMIT :pageSize` in SQL; stable under concurrent writes
-- **Offset-based (use sparingly):** `OFFSET` + `LIMIT` in SQL; degrades on large offsets; acceptable for admin/backoffice UIs with <100k rows
-
-### Denormalization Trade-offs
-- Denormalize when read frequency is 10x+ write frequency for the same data
-- Track all locations of denormalized data in documentation
-- Use Cloud Functions (Firestore) or database triggers (PostgreSQL) to keep copies in sync
-- Monitor for data drift — schedule periodic consistency checks
-
-### Read Replicas
-- Route read-heavy analytics and reporting queries to read replicas
-- Accept replication lag (typically <1s for PostgreSQL streaming replication)
-- Never route writes to read replicas
-- Use connection pooling (PgBouncer) to manage replica connections efficiently
-
-## Step 8: Backup & Disaster Recovery
-
-### Automated Backups
-- **Firestore:** enable daily automated exports to Cloud Storage; use `gcloud firestore export`
-- **PostgreSQL:** configure continuous WAL archiving + daily `pg_dump` base backups; retain 30 days minimum
-- **SQLite/Room:** back up database file on app update and before migrations; sync to cloud storage for critical data
-- **Redis:** enable RDB snapshots + AOF persistence; schedule `BGSAVE` during low-traffic periods
-
-### Point-in-Time Recovery
-- **PostgreSQL:** configure WAL archiving for PITR; test recovery to a specific timestamp quarterly
-- **Firestore:** use timestamped exports; restore by importing a specific export
-- Document Recovery Time Objective (RTO) and Recovery Point Objective (RPO) for each database
-
-### Export Strategies
-- Maintain automated export pipelines to BigQuery or data warehouse for analytics
-- Export anonymized datasets for development and testing environments
-- Version export scripts alongside migration scripts
-
-### Cross-Region Replication
-- **Firestore:** use multi-region locations (`nam5`, `eur3`) for automatic cross-region replication
-- **PostgreSQL:** configure streaming replication to a secondary region; automate failover with Patroni or Cloud SQL HA
-- **Redis:** use Redis Sentinel or Redis Cluster for cross-region replication and automatic failover
-- Test failover procedures quarterly; document runbooks for manual failover
-
-## Step 9: Output Templates
-
-For every database architecture recommendation, deliver:
-
-1. **Schema diagram** — ASCII or Mermaid ER diagram showing entities, relationships, and cardinality
-2. **Migration script** — versioned, idempotent SQL/script with rollback counterpart
-3. **Index recommendations** — table of recommended indexes with justification and expected query improvement
-4. **Performance report** — baseline metrics, identified bottlenecks, optimization results with before/after EXPLAIN output
-
-### Schema Diagram Format
-```
-[Collection/Table] ──── 1:N ────→ [Collection/Table]
-       │
-       └──── 1:1 ────→ [Collection/Table]
-```
-
-### Migration Script Template
 ```sql
--- Migration: V{NNN}__{description}.sql
--- Author: {name}
--- Date: {date}
--- Description: {what and why}
-
-BEGIN;
-
--- Forward migration
-{SQL statements}
-
--- Verification
-{SELECT count or validation query}
-
-COMMIT;
-
--- Rollback: V{NNN}__rollback__{description}.sql
+-- V042__add_orders_status_idx.sql  (undo: U042__add_orders_status_idx.sql)
+SET lock_timeout = '5s';
+CREATE INDEX CONCURRENTLY IF NOT EXISTS orders_status_created_idx
+  ON orders (status, created_at DESC);
 ```
 
-### Index Recommendation Table
-```
-| Table/Collection | Index Name | Columns | Type | Justification |
-|-----------------|------------|---------|------|---------------|
-| | | | | |
-```
+`CONCURRENTLY` cannot run inside a transaction: keep it alone in its own migration and, in Flyway, mark that script non-transactional (script config `executeInTransaction=false`) if your version doesn't detect it.
 
-### Performance Report Template
-```
-## Query: {description}
-- Before: {execution time, scan type}
-- After: {execution time, scan type}
-- Improvement: {percentage}
-- Changes applied: {index added, query rewritten, etc.}
-```
+## Code/Artifact Generation
 
-## Code Generation (Required)
+Applies only when Step 1 calls for building a schema, index set, or migration (not reviews, selection questions, or diagnosis-only requests). Read existing schema files first and match their tool and naming.
 
-Generate actual schema files using Write:
+Produce only what the stack uses: SQL migrations (up + undo/reverse), `firestore.indexes.json` entries, Room `@Entity` + `Migration`, SwiftData `@Model`, or `schema.prisma` if Prisma is present. Deliver the requested schema; don't refactor repositories or add unrequested layers.
 
-1. **PostgreSQL DDL**: `migrations/{timestamp}_create_{table}.sql` — CREATE TABLE with indexes, constraints
-2. **Firestore indexes**: `firestore.indexes.json` — composite index definitions
-3. **Room entities** (Android): `data/local/entities/{Table}Entity.kt` — Room @Entity classes
-4. **SwiftData models** (iOS): `Models/{Table}.swift` — @Model classes
-5. **Prisma schema** (Web): `prisma/schema.prisma` — if Prisma is detected
-6. **Migration runner**: `scripts/run-migration.sh` — applies migrations safely with rollback
+Match length to the need; no filler sections or restated summaries.
 
-Before generating, Glob for existing schema files and Read them. Grep for current query patterns to suggest missing indexes.
+## Current Defaults (verified 2026-09-23)
 
-## Tech Stack Defaults
+| Component | Default | Source |
+|---|---|---|
+| Firebase Android | BoM 34.x (34.19.0 on 2026-09-09); no `-ktx` artifacts since BoM 34.0.0 | firebase.google.com/support/release-notes/android |
+| PostgreSQL | 18 for new projects (17 acceptable where the host lags); 14 reaches EOL 2026-11-12 | postgresql.org/support/versioning |
+| Room | 2.8.x with KSP (requires Kotlin 2.x + KSP2) | developer.android.com/jetpack/androidx/releases/room |
+| Flyway | Current major 13.x; undo requires a paid edition | documentation.red-gate.com (Flyway release notes) |
+| Redis | Managed Memorystore; confirm engine (Redis vs Valkey) and version with the client's GCP project before use | — |
 
-```yaml
-firestore: Firebase BOM 33.x, offline persistence enabled
-postgresql: PostgreSQL 16, managed via Cloud SQL or Supabase
-sqlite_android: Room 2.6.x, KSP annotation processing
-redis: Redis 7.x, managed via Memorystore or Upstash
-migration_tools:
-  postgresql: Flyway 10.x or Liquibase 4.x
-  sqlite: Room auto-migration + manual Migration objects
-  firestore: Custom Cloud Functions for data migrations
-monitoring:
-  postgresql: pg_stat_statements, pgBadger, Cloud SQL Insights
-  firestore: Firebase Console, Cloud Monitoring
-  redis: Redis INFO, Slowlog
-```
+## Related skills
+
+- `data-migration` — backfills, ETL, cutover, rollback of existing data.
+- `firebase-architect` — Firestore security rules, Functions, App Check.
+- `offline-first` — Room/SwiftData sync and conflict resolution.
+- `disaster-recovery` — backups, PITR, failover.
+- `migration-validator` agent — review of a specific migration file.

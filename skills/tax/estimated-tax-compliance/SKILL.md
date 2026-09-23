@@ -1,19 +1,23 @@
 ---
 name: estimated-tax-compliance
-description: Manage estimated payments, withholding, and filing compliance — §6654/§6655 safe harbors, quarterly computation, the annualized income method, and the multi-entity due-date calendar. Use when computing or timing estimates, avoiding an underpayment penalty, or adjusting withholding.
+description: "Computes quarterly estimated tax, safe harbors, and withholding. Use when sizing or timing 1040-ES or corporate estimates, avoiding an underpayment penalty, or changing a W-4."
+when_to_use: "NOT for annual return deadlines or information returns (tax-preparation)."
 argument-hint: "[quarter-or-entity]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Estimated Tax & Ongoing Compliance
 
-Estimated tax is the most mechanical thing in this skill library and one of the
-most commonly botched, because it has to be right **four times a year** with
-incomplete information.
+Mechanical, and commonly botched because it has to be right **four times a
+year** on incomplete information. **Done when** each taxpayer has a safe-harbor
+target, a per-quarter amount and date, and a cure plan for any shortfall already
+incurred. Start from the nearest hard date: read it off the current year's IRS
+calendar, not memory. `reference/safe-harbor-worksheet.md` has worked
+computations and the penalty-cure decision tree; read it when computing.
 
-**Resolve the nearest hard date before anything else.** Quarterly installments
-and entity due dates move with the calendar — read them off
-`reference/safe-harbor-worksheet.md` and the current year's IRS calendar rather
-than assuming the one you remember.
+## Disclaimer
+This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Never make a payment: payments are the taxpayer's act after review.
 
 ## The core rule
 
@@ -55,7 +59,8 @@ is \$500.
 
 ## 2026 due dates
 
-From the `constants` binding for 2026:
+Statutory dates with 2026 weekend shifts applied (checked 2026-09-23); for
+another year, use the `constants` binding or the IRS calendar:
 
 | Quarter | Income period | Due |
 |---|---|---|
@@ -144,11 +149,6 @@ Beyond estimates, these recur and carry their own penalties:
 
 Payroll deposits are never a cash-flow lever. §6672 pierces the entity, attaches
 personally, and survives bankruptcy.
-
-## Reference files
-
-- `reference/safe-harbor-worksheet.md` — worked computations for both regimes,
-  the annualized method, and the penalty cure decision tree.
 
 ## Related skills
 

@@ -1,167 +1,36 @@
-# dora-metrics: detailed reference
+# dora-metrics: reference
 
-> Reference material for the `dora-metrics` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+Read the section you need: **SPACE** when running a developer-experience survey or a team-health check;
+**Data Collection** when the team wants continuous collection instead of a one-off baseline.
+Metric definitions and benchmarks live in SKILL.md (the source of truth).
 
-## Contents
-- Step 3: DORA Four Key Metrics
-- Step 5: Data Collection Automation
+## SPACE
 
-## Step 3: DORA Four Key Metrics
+SPACE (Forsgren et al., 2021) supplements DORA with satisfaction, performance, activity,
+communication, and efficiency. Cure uses a quarterly anonymous 5-question survey:
 
-### Metric 1: Deployment Frequency
+1. "I can ship changes to production with confidence" (1–5)
+2. "Our development tools and CI/CD work well" (1–5)
+3. "Code review is timely and valuable" (1–5)
+4. "I spend most of my time on meaningful work, not toil" (1–5)
+5. "I would recommend this engineering team to a friend" (0–10, eNPS)
 
-```
-Definition: How often the team deploys to production.
+Flag a >10% quarter-over-quarter drop on any item. Cure working targets (team-level, not individual):
 
-Measurement:
-  Count production deployments per time period (day, week, month).
-  Include: all production releases (features, fixes, config changes)
-  Exclude: staging/dev deploys, rollbacks (count separately)
+| Signal | Target |
+|---|---|
+| Time to first review | < 4 business hours |
+| PR cycle time | < 24 h standard, < 4 h hotfix |
+| Review rounds | ≤ 2 average (higher → PRs too big or standards unclear) |
+| Full CI pipeline | < 10 min |
+| Laptop → first commit (new engineer) | < 1 day |
+| Toil | < 20% of time |
+| IC meeting load | ≤ 2 h/day |
 
-Performance tiers (from DORA research):
-  Elite:    On-demand, multiple deploys per day
-  High:     Between once per day and once per week
-  Medium:   Between once per week and once per month
-  Low:      Between once per month and once every six months
+Activity counts (PRs, commits, reviews) are for team capacity and trend only — a drop can mean
+vacation, deep work, onboarding, or debt paydown.
 
-How to measure with GitHub Actions:
-  - Count workflow runs on main/production branch with deployment status "success"
-  - Tag deployments with metadata (team, service, type)
-  - Query via GitHub API:
-    GET /repos/{owner}/{repo}/actions/runs?branch=main&status=success
-
-Targets by team type:
-  Product team (web/mobile):  High minimum, Elite target
-  Platform/infra team:        Medium minimum, High target
-  Early-stage startup:        High minimum (ship fast, fix fast)
-  Regulated industry:         Medium acceptable if change process is heavy
-
-Common blockers:
-  - Manual QA gates before every release
-  - Monolithic architecture requiring full regression
-  - Fear of breaking production (fix with feature flags + canary deploys)
-  - Long-lived branches (fix with trunk-based development)
-```
-
-### Metric 2: Lead Time for Changes
-
-```
-Definition: Time from first commit to running in production.
-
-Measurement:
-  Start: timestamp of first commit in a PR/branch
-  End: timestamp of production deployment containing that commit
-  Report: median and p95 (not average -- outliers skew it)
-
-Breakdown (identify bottleneck):
-  Code time:    first commit → PR opened
-  Review time:  PR opened → PR approved
-  Merge time:   PR approved → PR merged
-  Deploy time:  PR merged → production deployment
-
-Performance tiers:
-  Elite:    Less than one day
-  High:     Between one day and one week
-  Medium:   Between one week and one month
-  Low:      Between one month and six months
-
-How to measure:
-  GitHub API + deployment tracking:
-    - PR created_at, merged_at timestamps
-    - Deployment timestamp from GitHub Actions / deploy workflow
-    - Calculate: deployment_timestamp - first_commit_timestamp
-
-  Tools that automate this:
-    - LinearB, Sleuth, DX, Swarmia, Faros AI
-    - Or build custom with GitHub webhooks + BigQuery
-
-Bottleneck analysis:
-  If code time is high:     Developer is context-switching, stories too large
-  If review time is high:   Not enough reviewers, PRs too large, async review culture
-  If merge time is high:    Approval process too heavy, merge conflicts, CI too slow
-  If deploy time is high:   Manual deployment, infrequent release trains, staging bottleneck
-```
-
-### Metric 3: Mean Time to Restore (MTTR)
-
-```
-Definition: Time from production incident detection to resolution.
-
-Measurement:
-  Start: incident detected (alert fired or user report)
-  End: service restored to normal operation
-  Report: median across all incidents per severity
-
-Performance tiers:
-  Elite:    Less than one hour
-  High:     Less than one day
-  Medium:   Less than one week
-  Low:      More than one week (or unknown -- you're not tracking)
-
-How to measure:
-  PagerDuty / Opsgenie:
-    - incident.created_at → incident.resolved_at
-    - Filter by severity level
-    - Export via API for dashboard integration
-
-  Manual tracking:
-    - Maintain incident log (Notion, Google Sheet, Linear)
-    - Record: detection time, acknowledgment time, resolution time
-    - Calculate MTTR monthly
-
-Improvement levers:
-  Detection speed:   Better monitoring, tighter alert thresholds, synthetic checks
-  Triage speed:      Runbooks, on-call training, clear escalation paths
-  Resolution speed:  One-click rollback, feature flags, automated remediation
-  Prevention:        Post-mortem action items, testing, canary deployments
-
-Track separately:
-  MTTD (Mean Time to Detect): incident start → detection
-  MTTA (Mean Time to Acknowledge): detection → engineer engaged
-  MTTR (Mean Time to Resolve): detection → resolution
-```
-
-### Metric 4: Change Failure Rate
-
-```
-Definition: Percentage of deployments that cause a failure in production.
-
-Measurement:
-  Numerator:   deployments that result in degraded service, rollback,
-               hotfix, or incident within 24 hours of deploy
-  Denominator: total production deployments
-  Report:      percentage, tracked monthly
-
-Performance tiers:
-  Elite:    0-15%
-  High:     16-30%
-  Medium:   31-45%
-  Low:      46-60%+
-
-How to measure:
-  Option A (automated):
-    - Tag each deployment with a unique ID
-    - If an incident is opened within 24 hours and linked to a deploy → failure
-    - If a rollback workflow runs within 24 hours → failure
-    - Calculate: failures / total deploys
-
-  Option B (manual):
-    - After each deploy, on-call engineer marks pass/fail
-    - Weekly review of deployment log
-    - Calculate monthly
-
-What counts as a failure:
-  YES: rollback, hotfix, incident caused by deploy, degraded performance
-  NO: planned maintenance, config change with expected brief disruption,
-      incident caused by external factors (vendor outage)
-
-Improvement levers:
-  Pre-deploy:    Better testing, staging validation, canary deployment
-  At deploy:     Feature flags, gradual rollout, automated smoke tests
-  Post-deploy:   Fast rollback capability, monitoring, alerting
-```
-
-## Step 5: Data Collection Automation
+## Data Collection
 
 ### GitHub Actions Deployment Tracking
 
@@ -193,7 +62,7 @@ jobs:
             }'
 
       - name: Calculate lead time
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9  # pin by SHA per rules/cicd.md
         with:
           script: |
             const sha = context.payload.workflow_run.head_sha;
@@ -208,6 +77,7 @@ jobs:
 
             if (prs.length > 0) {
               const pr = prs[0];
+              // PR created_at approximates first commit; fetch the PR commits for the exact start
               const firstCommitTime = new Date(pr.created_at);
               const leadTimeHours = (deployTime - firstCommitTime) / (1000 * 60 * 60);
               console.log(`Lead time: ${leadTimeHours.toFixed(1)} hours`);
@@ -231,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Record PR metrics
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9  # pin by SHA per rules/cicd.md
         with:
           script: |
             const pr = context.payload.pull_request;

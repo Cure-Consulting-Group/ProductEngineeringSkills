@@ -6,7 +6,7 @@ get made: someone asks "what should this company do before year end," not "where
 does §41(h) apply."
 
 This file is the method for building that per-entity playbook. Write the result
-into the project's `.claude/tax-profile.md` — not here. The facts belong to the
+into the project's tax profile (`.claude/tax-profile.md` in Claude Code) — not here. The facts belong to the
 taxpayer; the method belongs to the library.
 
 ## Build order

@@ -26,12 +26,12 @@ Re-probe on every minor release of any runtime — these move monthly.
 |---|---|
 | Reads `name` + `description` only. `when_to_use`, `argument-hint`, `allowed-tools`, `disallowed-tools`, `context: fork` silently ignored | MEASURED |
 | **`disable-model-invocation: true` ignored** — skill listed and fired implicitly. Codex equivalent: sidecar `agents/openai.yaml` → `policy.allow_implicit_invocation: false` (hidden from listing, `$name` still works) | MEASURED |
-| Listing budget `skills.max_context_tokens` default 2% of context; **with our 103 skills every description is cut to ~110 chars** (mean 108). At 60k budget, full text | MEASURED |
+| Listing budget `skills.max_context_tokens` default 2% of context; **with our 103 skills every description is cut to ~110 chars** (mean 108). Explicit values are **capped at 10000**; full text arrives at ≥8000 (T55) — recommend 10000 | MEASURED |
 | Domain nesting `skills/{domain}/{name}` discovered; plugin namespaces as `cure-product-engineering:<name>` | MEASURED |
 | `` !`cmd` `` rendered literally, never executed; `$ARGUMENTS`/`$0` not substituted; `\$0.15` shows the backslash | MEASURED |
 | Invalid-YAML frontmatter → skill silently dropped (`stitch-design`) | MEASURED |
 | Our plugin is **not installed** on this machine (`codex plugin list` has no `cure` marketplace) | MEASURED |
-| Plugin root `hooks/hooks.json` is auto-loaded without a manifest field (hash-trust gated). Ours assumes Claude env vars / prompt hooks — would misfire | DOCUMENTED + MEASURED (warp plugin); ours UNKNOWN |
+| Plugin root `hooks/hooks.json` is auto-loaded unless the manifest defines `hooks`. Unfenced, ours ran SessionStart ×4 / UserPromptSubmit / Stop and warned about unsupported prompt hooks every run. `"hooks": {"hooks": {}}` fences; `[]` does **not** (treated as undefined) | MEASURED (T55) |
 | Default system prompt forbids spawning sub-agents unless user/AGENTS.md/skill asks | MEASURED |
 | No per-skill tool restriction; enforcement only via `sandbox_mode`, permission profiles, custom agent TOML `sandbox_mode`, or PreToolUse deny hook | DOCUMENTED |
 | GPT-5.6 guidance: outcome over steps; ALWAYS/NEVER/MUST only for true invariants; contradictory rules hurt more than missing detail; explicit stop rules + success criteria | DOCUMENTED https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6 |
@@ -61,6 +61,14 @@ sibling `reference/` and `scripts/` reachable; `--mode plan --sandbox` still exe
 
 Gemini 3 guidance (DOCUMENTED): direct language, avoid emphatic/over-persuasive phrasing, context first
 and instructions last, delimit with headings/XML.
+
+### agy 1.2.9 addendum (T56, measured 2026-09-23)
+
+- Flat plugin from `scripts/export-antigravity.py`: `agy plugin validate` OK (103 skills, 4 agents); `agy plugin install` lands at `~/.gemini/config/plugins/cure/` with `skills/`, `agents/`, `rules/`.
+- `/skills` lists 103/103 as `cure:<name>` (zero model turns); `/agents` lists the 4 personas (format `agents/<name>/agent.md`, frontmatter `name`, `description`, `skills:`).
+- Workspace plugins at `<ws>/.agents/plugins/<name>/` load. Same workspace: 17 skills listed without `--add-dir`, 120 with it.
+- Model run (plan + sandbox + `--add-dir`) activated `cure:dora-metrics`, read `reference/details.md`, saw 9 model-decision `cure-style-*` rules; tree unchanged.
+- Not re-measured on 1.2.9: whether `disable-model-invocation` skills are hidden from the model prompt (1.2.8: yes); whether personas actually scope skills; glob-rule firing.
 
 ## Cross-runtime rule that falls out of all three
 

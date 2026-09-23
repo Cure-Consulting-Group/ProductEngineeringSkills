@@ -1,7 +1,7 @@
 # Penalty Map
 
-Rates are statutory. Indexed dollar amounts marked `VERIFY` — confirm the
-current-year figure before quoting it.
+Rates are statutory. Indexed amounts are dated to their revenue procedure;
+anything marked "confirm before use" was not checked against primary text.
 
 ## Taxpayer penalties
 
@@ -17,8 +17,8 @@ current-year figure before quoting it.
 | **Economic substance failure** | §6662(b)(6), (i) | 20% disclosed / **40% undisclosed** | §7701(o) failure | **NO — strict liability** | Reduces 40%→20% only |
 | **Fraud** | §6663 | **75%** | Intentional wrongdoing, clear and convincing evidence | No | No |
 | **Reportable transaction understatement** | §6662A | 20% / 30% undisclosed | Listed or reportable transaction | Limited | Yes |
-| **Failure to disclose reportable transaction** | §6707A | Up to $100k individual / $200k entity `VERIFY` | No Form 8886 | No | n/a — this IS the disclosure penalty |
-| **Frivolous return** | §6702 | $5,000 `VERIFY` | Frivolous position | No | No |
+| **Failure to disclose reportable transaction** | §6707A | 75% of the tax decrease, min $5k individual / $10k entity; max $100k / $200k for listed, $10k / $50k otherwise — confirm before use | No Form 8886 | No | n/a — this IS the disclosure penalty |
+| **Frivolous return** | §6702 | $5,000 (statutory, not indexed) | Frivolous position | No | No |
 
 **Interest** (§6601) runs on tax and penalties from the original due date, and it
 compounds daily. It is not a penalty and is essentially never abated.
@@ -49,15 +49,17 @@ in-house.
 
 ## Preparer penalties
 
-Applicable when preparing for compensation. Amounts are indexed — `VERIFY`.
+Applicable when preparing for compensation. §6694 amounts are statutory and not
+indexed; §6695 amounts are indexed (figures below: returns filed in 2027,
+verified 2026-09-23, Rev. Proc. 2025-32 §4.54).
 
 | Penalty | Section | Amount | Trigger |
 |---|---|---|---|
-| **Unreasonable position** | §6694(a) | Greater of $1,000 or 50% of income derived `VERIFY` | Position without substantial authority (or reasonable basis + disclosure), and the preparer knew or should have known |
-| **Willful or reckless conduct** | §6694(b) | Greater of $5,000 or 75% of income derived `VERIFY` | Willful understatement or reckless disregard |
-| **Failure to sign / furnish copy / retain / furnish PTIN** | §6695(a)–(d) | Per return `VERIFY` | Each is a separate failure |
-| **Negotiating a refund check** | §6695(f) | Per check | Absolute prohibition |
-| **Due diligence — EITC/CTC/AOTC/HoH** | §6695(g) | **Per credit, per return** `VERIFY` | Form 8867 and worksheets not completed |
+| **Unreasonable position** | §6694(a) | Greater of $1,000 or 50% of income derived | Position without substantial authority (or reasonable basis + disclosure), and the preparer knew or should have known |
+| **Willful or reckless conduct** | §6694(b) | Greater of $5,000 or 75% of income derived | Willful understatement or reckless disregard |
+| **Failure to sign / furnish copy / retain / furnish PTIN** | §6695(a)–(d) | $65 per return, max $33,000 per year | Each is a separate failure |
+| **Negotiating a refund check** | §6695(f) | $665 per check | Absolute prohibition |
+| **Due diligence — EITC/CTC/AOTC/HoH** | §6695(g) | **$665 per credit, per return** | Form 8867 and worksheets not completed |
 | **Aiding and abetting understatement** | §6701 | Per document | Knowingly aiding an understatement |
 | **Promoting abusive shelters** | §6700 | 50% of gross income derived | Promotion |
 
@@ -66,14 +68,17 @@ Applicable when preparing for compensation. Amounts are indexed — `VERIFY`.
 ## Information return penalties — §6721 / §6722
 
 **Per form, and the recipient copy and the IRS copy are separate failures.**
-Amounts tier by lateness and are indexed (`VERIFY`):
+Amounts tier by lateness and are indexed. Returns required to be filed in 2027
+(verified 2026-09-23, Rev. Proc. 2025-32 §4.57–4.58):
 
-| Timing | Approximate posture |
+| Timing | Per return |
 |---|---|
-| Corrected within 30 days | Lowest tier |
-| Corrected by August 1 | Middle tier |
-| After August 1 or never | Highest tier |
+| Corrected within 30 days | $60 |
+| Corrected by August 1 | $130 |
+| After August 1 or never | $340 |
 | **Intentional disregard** | Substantially higher, **no annual cap** |
+
+Annual caps differ for payers with ≤ $5M average gross receipts.
 
 An entity issuing 1099-NECs late to several contractors multiplies quickly. The
 mitigation is process, not argument: **W-9 before first payment**, and a January

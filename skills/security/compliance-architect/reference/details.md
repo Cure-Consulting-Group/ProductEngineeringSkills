@@ -1,6 +1,6 @@
 # compliance-architect: detailed reference
 
-> Reference material for the `compliance-architect` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read when writing client-side storage code, Firestore rules for regulated collections, or the role-claim function for the `compliance-architect` skill.
 
 ## Contents
 - Step 6: Platform-Specific Compliance Patterns
@@ -10,32 +10,30 @@
 ### Android
 
 ```kotlin
-// EncryptedSharedPreferences for CONFIDENTIAL/RESTRICTED local data
-val masterKey = MasterKey.Builder(context)
-    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+// androidx.security:security-crypto (EncryptedSharedPreferences) is deprecated since 1.1.0 (2025).
+// Use a Tink AEAD whose keyset is wrapped by an Android Keystore master key, and persist with DataStore.
+AeadConfig.register()
+val aead: Aead = AndroidKeysetManager.Builder()
+    .withSharedPref(context, "tink_keyset", "tink_prefs")   // stores only the Keystore-wrapped keyset
+    .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
+    .withMasterKeyUri("android-keystore://cure_master_key")
     .build()
+    .keysetHandle
+    .getPrimitive(RegistryConfiguration.get(), Aead::class.java)
+// Encrypt values before writing to DataStore; bind ciphertext to the key name as associated data.
+val ciphertext = aead.encrypt(plaintext, "consent_state".toByteArray())
 
-val securePrefs = EncryptedSharedPreferences.create(
-    context,
-    "secure_prefs",
-    masterKey,
-    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-)
-
-// Room database encryption with SQLCipher
-val passphrase = SecureRandom().let { random ->
-    ByteArray(32).also { random.nextBytes(it) }
-}
-val factory = SupportFactory(passphrase)
+// Room encryption with SQLCipher (net.zetetic:sqlcipher-android): derive the passphrase once,
+// store it encrypted with the Tink AEAD above — never regenerate per launch.
+val factory = SupportOpenHelperFactory(passphrase)
 Room.databaseBuilder(context, AppDatabase::class.java, "app.db")
     .openHelperFactory(factory)
     .build()
 
-// COPPA: disable analytics for child accounts
+// COPPA: analytics and crash identifiers off for child accounts unless the parent consented
 if (user.isUnder13) {
-    FirebaseAnalytics.getInstance(context).setAnalyticsCollectionEnabled(false)
-    FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
+    Firebase.analytics.setAnalyticsCollectionEnabled(false)
+    Firebase.crashlytics.isCrashlyticsCollectionEnabled = false
 }
 ```
 
@@ -85,18 +83,18 @@ service cloud.firestore {
       allow delete: if false; // PHI cannot be deleted via client — admin function only
     }
 
-    // Audit logs: append-only, no client deletes or updates
+    // Audit logs: convenience copy only (system of record is a locked log bucket).
+    // Written by Cloud Functions via the Admin SDK, which bypasses rules; clients can never forge entries.
     match /audit_logs/{logId} {
-      allow create: if request.auth != null;
+      allow create: if false;
       allow read: if request.auth.token.role == 'admin'
                   || request.auth.token.role == 'compliance_officer';
       allow update, delete: if false;
     }
 
-    // Consent records: append-only
+    // Consent records: append-only, written by a Cloud Function with a server timestamp
     match /consent_records/{recordId} {
-      allow create: if request.auth != null
-        && request.resource.data.userId == request.auth.uid;
+      allow create: if false;
       allow read: if request.auth.uid == resource.data.userId
                   || request.auth.token.role == 'admin';
       allow update, delete: if false;
@@ -108,31 +106,34 @@ service cloud.firestore {
 ### Firebase Auth Custom Claims for Compliance Roles
 
 ```typescript
-// Cloud Function to set compliance-related custom claims
-export const setComplianceRole = functions.https.onCall(async (data, context) => {
-  if (!context.auth?.token.role || context.auth.token.role !== 'admin') {
-    throw new functions.https.HttpsError('permission-denied', 'Admin only');
-  }
+// Cloud Functions v2 callable: set compliance roles and audit the change
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { randomUUID } from "node:crypto";
 
-  const { uid, role } = data;
-  const validRoles = ['user', 'provider', 'admin', 'compliance_officer'];
-  if (!validRoles.includes(role)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid role');
-  }
+const VALID_ROLES = ["user", "provider", "admin", "compliance_officer"];
 
-  await admin.auth().setCustomUserClaims(uid, { role });
-  // Audit log the role change
-  await admin.firestore().collection('audit_logs').add({
-    eventId: uuidv4(),
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    actorId: context.auth.uid,
-    actorRole: context.auth.token.role,
-    action: 'update',
+export const setComplianceRole = onCall({ enforceAppCheck: true }, async (request) => {
+  if (request.auth?.token.role !== "admin") {
+    throw new HttpsError("permission-denied", "Admin only");
+  }
+  const { uid, role, reason } = request.data as { uid: string; role: string; reason?: string };
+  if (!VALID_ROLES.includes(role)) throw new HttpsError("invalid-argument", "Invalid role");
+
+  await getAuth().setCustomUserClaims(uid, { role });
+  // Also emit the same event to the locked Cloud Logging bucket (system of record).
+  await getFirestore().collection("audit_logs").add({
+    eventId: randomUUID(),
+    timestamp: FieldValue.serverTimestamp(),
+    actorId: request.auth.uid,
+    actorRole: "admin",
+    action: "update",
     resource: `users/${uid}`,
-    resourceClassification: 'RESTRICTED',
-    fieldsModified: ['customClaims.role'],
-    result: 'success',
-    reason: data.reason || 'role_assignment',
+    classification: "RESTRICTED",
+    fieldsModified: ["customClaims.role"],
+    result: "success",
+    reason: reason ?? "role_assignment",
   });
 });
 ```

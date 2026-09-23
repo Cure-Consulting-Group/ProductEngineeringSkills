@@ -226,8 +226,9 @@ Deploy: `gcloud run deploy PROJECT_NAME-api --source . --region us-central1 --al
 ### Cloud Storage (Lifecycle Policies)
 ```bash
 # Create buckets per environment
-gsutil mb -l us-central1 gs://PROJECT_NAME-dev-uploads
-gsutil mb -l us-central1 gs://PROJECT_NAME-prod-uploads
+# (gsutil is superseded by gcloud storage)
+gcloud storage buckets create gs://PROJECT_NAME-dev-uploads --location=us-central1 --uniform-bucket-level-access
+gcloud storage buckets create gs://PROJECT_NAME-prod-uploads --location=us-central1 --uniform-bucket-level-access
 
 # Lifecycle policy — delete temp files after 30 days, archive after 90
 cat > lifecycle.json << 'EOF'
@@ -246,7 +247,7 @@ cat > lifecycle.json << 'EOF'
   }
 }
 EOF
-gsutil lifecycle set lifecycle.json gs://PROJECT_NAME-prod-uploads
+gcloud storage buckets update gs://PROJECT_NAME-prod-uploads --lifecycle-file=lifecycle.json
 ```
 
 ### Secret Manager
@@ -298,7 +299,8 @@ gcloud compute networks subnets create PROJECT_NAME-subnet \
   --region=us-central1 \
   --range=10.0.0.0/24
 
-# VPC connector for Cloud Functions / Cloud Run to access private resources
+# Prefer Direct VPC egress on Cloud Run (no connector to pay for); use a Serverless VPC Access
+# connector only where Direct VPC egress isn't supported
 gcloud compute networks vpc-access connectors create PROJECT_NAME-connector \
   --region=us-central1 \
   --network=PROJECT_NAME-vpc \
@@ -326,9 +328,18 @@ gcloud projects add-iam-policy-binding PROJECT_ID \
   --member="serviceAccount:ci-deploy@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/iam.serviceAccountUser"
 
-# Generate key for GitHub Actions
-gcloud iam service-accounts keys create sa-key.json \
-  --iam-account=ci-deploy@PROJECT_ID.iam.gserviceaccount.com
+# GitHub Actions authenticates with Workload Identity Federation — no JSON key.
+# Create a pool + OIDC provider restricted to the client's repo, then let it impersonate ci-deploy.
+gcloud iam workload-identity-pools create github --location=global
+gcloud iam workload-identity-pools providers create-oidc github \
+  --location=global --workload-identity-pool=github \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository=='ORG/REPO'"
+gcloud iam service-accounts add-iam-policy-binding ci-deploy@PROJECT_ID.iam.gserviceaccount.com \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/attribute.repository/ORG/REPO"
+# The workflow side (google-github-actions/auth) lives in ci-cd-pipeline.
 ```
 
 ## Step 6: Docker Configuration
@@ -336,16 +347,16 @@ gcloud iam service-accounts keys create sa-key.json \
 ### Multi-Stage Dockerfile (Node.js)
 ```dockerfile
 # --- Build stage ---
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production && cp -R node_modules /production_modules
+RUN npm ci --omit=dev && cp -R node_modules /production_modules
 RUN npm ci
 COPY . .
 RUN npm run build
 
 # --- Production stage ---
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
@@ -390,8 +401,7 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "app:create_app()"]
 
 ### docker-compose.yml (Local Development)
 ```yaml
-version: "3.9"
-
+# No top-level `version:` — the Compose Specification ignores it and warns.
 services:
   app:
     build:

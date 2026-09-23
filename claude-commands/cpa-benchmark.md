@@ -10,10 +10,16 @@ It exists for three jobs:
 3. **Remediation loop** — every miss names the section, the reason, and the
    reference file that should have prevented it.
 
+**Done when** `score` has run, the band is reported, and every miss is mapped to
+the reference file that should have carried the rule (or flagged as a gap).
+
 ## Running it
 
+Requires Node (`run.mjs`). Run from this skill's `benchmark/` directory — in an
+installed plugin, `<plugin>/skills/tax/cpa-benchmark/benchmark`.
+
 ```bash
-cd skills/tax/cpa-benchmark/benchmark
+cd <plugin>/skills/tax/cpa-benchmark/benchmark
 
 node run.mjs stats                       # coverage summary
 node run.mjs sources                     # which question dirs are in play
@@ -60,17 +66,16 @@ Generic competency is table stakes. The harder and more valuable test is whether
 the system is right about **one specific taxpayer**, and those questions cannot
 ship in a shared library because they are built out of filed figures.
 
-So a project writes its own applied sets into:
+So a project writes its own applied sets and points the runner at them:
 
 ```
-.claude/tax-benchmark/questions/*.json     # auto-discovered from the cwd
-CPA_BENCHMARK_QUESTIONS=dir1:dir2          # or by environment
+CPA_BENCHMARK_QUESTIONS=dir1:dir2          # by environment (any runtime)
 node run.mjs list --questions <dir>        # or explicitly, per run
+.claude/tax-benchmark/questions/*.json     # or auto-discovered from the cwd
 ```
 
-Same schema, merged with the bundled sets, and an overlay question sharing an id
-with a bundled one replaces it — so a project can also correct a bundled question
-locally. `node run.mjs sources` prints exactly what loaded and from where.
+Same schema; an overlay question sharing an id with a bundled one replaces it.
+`node run.mjs sources` prints what loaded and from where.
 
 Applied questions are worth writing for the traps that are structural rather than
 arithmetic: a disqualified trade or business silently killing QSBS,
@@ -80,25 +85,12 @@ pre-operating entity, and the March 15 deadlines that have no late relief.
 
 ## Question format
 
-```json
-{
-  "id": "REG-008",
-  "area": "Individual Taxation",
-  "type": "numeric",
-  "difficulty": "application",
-  "q": "...",
-  "choices": { "A": "...", "B": "..." },
-  "answer": 14129.55,
-  "tolerance": 2,
-  "cite": "IRC §1401, §1402(a)(12)",
-  "why": "..."
-}
-```
-
-`type` is `mcq`, `numeric`, or `short`. `difficulty` is `remember`,
-`application`, or `analysis`. Grading: MCQ by exact letter, numeric within
-tolerance, `short` flagged for manual grading. Add questions by appending to any
-file in `benchmark/questions/` — the runner picks up new files automatically.
+Each item has `id`, `area`, `type` (`mcq` / `numeric` / `short`), `difficulty`
+(`remember` / `application` / `analysis`), `q`, optional `choices`, `answer`,
+optional `tolerance`, `cite`, and `why` — copy an existing item in
+`benchmark/questions/` as the template. Grading: MCQ by exact letter, numeric
+within tolerance, `short` flagged for manual grading. New files in
+`benchmark/questions/` load automatically.
 
 ## Scoring standard
 
@@ -127,17 +119,17 @@ Update triggers:
   write it into the bank so it can never regress silently. This is the
   highest-value way the bank grows.
 
-Questions whose answers are marked `VERIFY` in
-`irc-lookup/reference/obbba-changes.md` (notably the §1202 OBBBA tiering in
-TCP-005) inherit that uncertainty — confirm against primary text before treating
-a miss there as a genuine competency gap.
+Questions whose answers depend on an item marked `VERIFY` in
+`irc-lookup/reference/obbba-changes.md` inherit that uncertainty — confirm
+against primary text before treating a miss there as a genuine competency gap.
+(The §1202 tiering behind TCP-005 was confirmed against the Code on 2026-09-23.)
 
 ## Reference files
 
-- `reference/blueprint-coverage.md` — CPA exam blueprint mapped to the bank, with
-  known coverage gaps stated honestly.
-- `reference/scoring-rubric.md` — grading of short-answer and research items, the
-  remediation loop, and the pre-filing gate.
+- `reference/blueprint-coverage.md` — read when adding questions or reporting
+  coverage; blueprint mapped to the bank, with known gaps.
+- `reference/scoring-rubric.md` — read when grading `short` items or running
+  the pre-filing gate.
 
 ## Related skills
 

@@ -25,157 +25,157 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| bid-decision | Make a disciplined go/no-go call on a solicitation — kill criteria, weighted scorecard, win probability, and pursuit economics | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
-| burn-rate-tracker | Model burn rates, runway scenarios, break-even analysis, and cash flow projections for multi-product venture studios | Read, Grep, Glob, WebSearch |
-| buyer-intelligence | Turn solicitations you cannot win into a durable buyer, incumbent, and renewal-date database — harvest sole source and award notices, and time the approach | Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch |
-| capture-management | Build and qualify a public-sector pipeline — opportunity sourcing, target profile, pre-RFP positioning, teaming, past performance | Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch |
-| engineering-cost-model | Engineering cost estimation — developer hours, infrastructure spend (Firebase/GCP/AWS), build-vs-buy analysis, and project budgeting for internal planning | Read, Grep, Glob, WebSearch |
-| finops | Optimize cloud costs — budget alerts, resource right-sizing, usage analysis, FinOps practices, and cost allocation for Firebase and GCP | default |
-| fundraising-materials | Generate pitch decks, investor updates, data room checklists, cap table scenarios, and fundraising pipeline management for venture-backed startups | Read, Grep, Glob, WebSearch |
-| investor-reporting | Generate investor updates, board decks, portfolio financial reports, cap table scenarios, runway modeling, and fundraising pipeline tracking | default |
-| proposal-generator | Generate consulting proposals and SOWs — project scoping, milestone-based pricing, deliverable definitions, and engagement structure | default |
-| public-sector-contracting | Navigate government contract terms — liability, IP, termination for convenience, non-appropriation, insurance, exceptions strategy | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
-| rfp-evaluation | Evaluate an RFP/RFQ/ITB — extract every requirement, build the compliance matrix, map the scoring rubric to effort, track addenda | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
-| saas-financial-model | Model unit economics, MRR/ARR projections, pricing tiers, runway, and break-even analysis | Read, Grep, Glob, WebSearch |
-| solicitation-triage | Screen public-sector solicitations at portal volume — classify the procurement instrument, run the ten-minute read order and gate check, reach a verdict in under an hour | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
-| technical-estimation | Build defensible software estimates with explicit uncertainty — decomposition, PERT, reference-class forecasting, risk contingency | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
+| bid-decision | Makes the bid/no-bid call on a solicitation: kill criteria, weighted scorecard, win odds, bid cost. Use when deciding whether to commit to a proposal or a pursuit is drifting. | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
+| burn-rate-tracker | Models burn, runway scenarios, break-even, and cash-flow projections. Use when asking how long cash lasts, when to raise or cut, or planning a studio or product budget. | Read, Grep, Glob, WebSearch |
+| buyer-intelligence | Builds a buyer, incumbent, and renewal-date database from declined bids and award notices. Use when a bid is declined, a sole source or award notice appears, or building a buyer dossier. | Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch |
+| capture-management | Builds a public-sector pipeline: target profile, sourcing, pre-RFP positioning, teaming. Use when entering a government market, choosing which bids to chase, or building past performance. | Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch |
+| engineering-cost-model | Estimates internal build cost: developer hours, cloud and service spend, maintenance, build-vs-buy. Use when asking what a feature or product will cost or take to build. | Read, Grep, Glob, WebSearch |
+| finops | Cloud cost optimization for Firebase and GCP: budgets, alerts, right-sizing, labels, AI API spend. Use when a cloud bill spikes, setting budgets, or cutting infra and LLM costs. | default |
+| fundraising-materials | Builds pitch decks, the ask and use of funds, and the investor outreach pipeline. Use when preparing a seed or Series A raise: deck, intro blurb, target list, or process plan. | Read, Grep, Glob, WebSearch |
+| investor-reporting | Drafts investor updates, board decks, portfolio P&L, data rooms, and cap-table/SAFE models. Use when writing the monthly investor update, a quarterly board deck, or diligence prep. | default |
+| proposal-generator | Drafts consulting proposals and SOWs: scope, milestones, pricing, payment terms. Use when writing a client proposal, a statement of work, or a change order for Cure. | default |
+| public-sector-contracting | Reviews government contract terms: liability, IP, termination, non-appropriation, insurance. Use when reading a municipal, state, or federal contract form or choosing exceptions. | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
+| rfp-evaluation | Extracts every requirement from an RFP/RFQ into a compliance matrix and maps the rubric to effort. Use when a solicitation has passed triage and you need what it requires. | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
+| saas-financial-model | Models SaaS unit economics, MRR/ARR projections, and pricing tiers. Use when computing LTV, CAC, payback, or churn, projecting MRR, or setting subscription prices. | Read, Grep, Glob, WebSearch |
+| solicitation-triage | Screens public-sector solicitations and portal alert batches to a verdict in under an hour. Use when a new RFP, RFQ, bid notice, or weekly bid-portal feed arrives. | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
+| technical-estimation | Builds defensible software estimates with ranges: PERT, reference class, risk reserve. Use when an estimate will be bid on, contracted, or audited, e.g. an RFP cost volume. | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 
 
 ### Engineering (40)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| agent-designer | Design single-agent and multi-agent systems — tool schemas, memory, termination, evals, cost, and failure modes | default |
-| agent-workflow-designer | Choose the right agentic workflow pattern — chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer, or autonomous agent | default |
-| ai-feature-builder | Build production AI features with LLM integration, RAG pipelines, prompt engineering, and guardrails | default |
-| analytics-implementation | Design event taxonomy, tracking plans, funnels, dashboards, and privacy/consent flows | default |
-| android-design-expert | Expert Android design guidance following Material Design 3 — dynamic color, component tokens, adaptive layouts, motion system, and Jetpack Compose implementation patterns | default |
-| android-feature-scaffold | Scaffold Android features with Clean Architecture, MVI, Jetpack Compose, Hilt, and Kotlin | default |
-| api-architect | Design REST/GraphQL APIs with versioning, auth, rate limiting, and error standards | default |
-| api-gateway | Design API gateway and BFF layers — rate limiting, request transformation, auth middleware, GraphQL federation, and mobile-optimized backends | default |
-| client-communication | Generate client-facing artifacts — sprint demo scripts, stakeholder updates, risk escalation reports, and executive status summaries | default |
-| client-handoff | Generate client handoff packages — architecture docs, runbooks, credential transfers, maintenance SLAs, and knowledge transfer plans for consulting engagements | default |
-| cure-infra-bootstrap | Provision Cure's standardized Claude dev infrastructure into any project — idempotent, manifest-driven, version-pinned scaffold of CLAUDE.md, STATE.md, .claude/, .cursorrules, .gemini | Read, Bash |
-| data-migration | Plan and execute data migrations — ETL pipelines, zero-downtime cutover, validation, rollback strategies, and legacy system integration | default |
-| database-architect | Design database schemas, plan migrations, optimize queries, define indexing strategies for Firestore, PostgreSQL, and SQLite | default |
-| e2e-testing | Generate end-to-end test suites with page objects, CI integration, visual regression, and cross-platform test strategies | default |
-| env-secrets-manager | .env hygiene, secret leak detection, rotation playbooks, and migration to managed secret stores — read-only audits | Read, Grep, Glob, Bash |
-| firebase-architect | Design Firestore schemas, security rules, Cloud Functions, and data layer architecture | default |
-| git-worktree-manager | Use git worktrees for parallel work — multiple client features, hotfixes, or PR reviews simultaneously without stash/branch-switch overhead | default |
-| i18n | Implement internationalization and localization — string extraction, RTL support, locale-aware formatting, translation workflows, and platform i18n patterns | default |
-| interview-system-designer | Design calibrated, fair, predictive engineering interview loops — phone screen to debrief, with stage rubrics, question banks, and evaluation metrics | default |
-| ios-architect | Scaffold iOS features with Swift/SwiftUI, Clean Architecture, MVVM, and structured concurrency | default |
-| ios-design-expert | Expert iOS design guidance following Apple Human Interface Guidelines (HIG) — SF Symbols, Dynamic Type, navigation patterns, SwiftUI components, and platform-native interactions | default |
-| llmops | Operationalize LLM features — prompt versioning, evaluation pipelines, cost optimization, guardrails, RAG monitoring, and model lifecycle management | default |
-| mcp-server-builder | Design and build MCP (Model Context Protocol) servers — the protocol agents use to call tools, expose resources, and consume prompts | default |
-| micro-frontends | Architect micro-frontend systems — module federation, monorepo management, shared dependencies, independent deployments, and cross-team coordination | default |
-| monorepo-navigator | Navigate, work in, and improve monorepos — pnpm workspaces, Turborepo, Nx, Lerna, Yarn workspaces, Bazel, or untangling a folder that thinks it's a monorepo | default |
-| nextjs-feature-scaffold | Scaffold Next.js features with App Router, Server/Client components, Tailwind, and data fetching patterns | default |
-| notification-architect | Design notification systems — push (FCM/APNs), in-app messaging, email transactional flows, preference management, and delivery optimization | default |
-| offline-first | Architect offline-first mobile apps — local storage, sync strategies, conflict resolution, optimistic UI, and background sync patterns | default |
-| parallel-agent-orchestration | Run N simultaneous agent sessions on one repo safely — worktree-per-ticket, module-boundary decomposition, rate-limit budgeting, model tiering, single-owner destructive ops | default |
-| performance-review | Define performance budgets, load testing plans, optimization strategies, and monitoring dashboards across mobile, web, and backend | default |
-| project-bootstrap | Bootstrap any project repo with CLAUDE.md and STATE.md — interviews the developer, inspects the codebase, and generates agent coordination files | default |
-| project-manager | Sprint execution and delivery management — sprint planning, RACI matrices, risk registers, retrospectives, and velocity tracking for engineering teams | default |
-| rag-architect | Design production RAG pipelines — chunking, embeddings, vector stores, hybrid retrieval, reranking, evals — with explicit cost and latency budgets | default |
-| sdlc | Generate structured engineering documents — PRDs, ADRs, RFCs, Epics, User Stories, Task specs, and test specs from a feature description | default |
-| self-improving-memory | Curate Claude Code auto-memory (user/feedback/project/reference) — bootstrap, audit, pattern detection, and health checks on MEMORY.md | default |
-| stitch-design | AI-native UI design via Stitch MCP — screen generation, mockups, design systems, DESIGN.md authoring, token export, screen-to-code handoff, visual consistency audits | default |
-| stripe-integration | Integrate Stripe payments and subscriptions via Firebase Cloud Functions with webhook handling | default |
-| test-accounts | Generate test account strategies, QA email provisioning, seed data scripts, test user personas, and environment-scoped credentials | default |
-| testing-strategy | Define the overall testing architecture — pyramid ratios, platform-specific frameworks (JUnit5/MockK, XCTest, Vitest/Playwright), coverage thresholds, and CI integration for a project or feature | default |
-| web-design-expert | Expert web design guidance — responsive design, CSS architecture, design tokens, container queries, accessibility-first patterns, dark mode, and Tailwind/CSS implementation | default |
+| agent-designer | Designs LLM agent internals: tool schemas, memory, termination, evals, cost, failure modes. Use when an agent or multi-agent system is the chosen shape and needs a design. | default |
+| agent-workflow-designer | Picks the shape of an LLM system: single call, workflow pattern, or autonomous agent. Use when deciding how to structure an AI feature, or when an agent is too slow, costly, or flaky. | default |
+| ai-feature-builder | Builds user-facing LLM features: client wrapper, prompts, streaming UX, fallbacks, kill switch. Use when adding chat, summarization, extraction, or generation to an app. | default |
+| analytics-implementation | Designs analytics event taxonomies, tracking plans, funnels, and consent flows. Use when instrumenting product analytics (GA4/Firebase, Mixpanel, PostHog) or auditing events. | default |
+| android-design-expert | Material Design 3 guidance for Android screens and components. Use when designing or reviewing Compose UI for dynamic color, adaptive layouts, navigation, motion, or M3 Expressive. | default |
+| android-feature-scaffold | Scaffolds Android feature modules (Clean Architecture, MVI, Compose, Hilt). Use when creating a new Kotlin feature, screen, ViewModel, repository, or use case in an Android app. | default |
+| api-architect | Designs REST/GraphQL API contracts: errors, auth, rate limits, versioning, OpenAPI. Use when designing endpoints or an API's error, auth, or deprecation policy. | default |
+| api-gateway | Designs API gateway and BFF layers: middleware order, aggregation, auth, GraphQL federation. Use when adding a gateway, a mobile/web BFF, or federating GraphQL subgraphs. | default |
+| client-communication | Drafts client-facing status emails, risk escalations, executive summaries, and sprint demo scripts. Use when writing a weekly client update, escalating a blocker, or preparing a stakeholder demo or QBR. | default |
+| client-handoff | Builds client handoff packages: architecture, runbooks, credential transfer, KT plan, SLA. Use when handing a project, phase, or support role to a client team or winding down an engagement. | default |
+| cure-infra-bootstrap | Runs Cure's manifest-driven bootstrap CLI (init/apply/doctor/inventory) for CLAUDE.md, .claude/, rules. Use when setting up, upgrading, or drift-checking Cure agent infra in a project. | Read, Bash |
+| data-migration | Plans and runs data migrations: ETL, backfills, dual-write, zero-downtime cutover, rollback. Use when moving or reshaping existing data across databases, Firestore, or legacy systems. | default |
+| database-architect | Designs schemas, indexes, and query plans for Firestore, PostgreSQL, SQLite/Room. Use when choosing a database, modeling data, adding indexes, or fixing slow queries. | default |
+| e2e-testing | Writes E2E test suites (Playwright, Compose/Espresso, XCUITest) with page objects and CI wiring. Use when adding E2E, smoke, or visual regression tests for a user flow or fixing flaky E2E tests. | default |
+| env-secrets-manager | Read-only .env and secrets audits. Use when designing an .env schema, scanning for leaked keys, responding to a leak, planning rotation, or moving to a secret manager. | Read, Grep, Glob, Bash |
+| firebase-architect | Designs Firestore data models, security rules, Cloud Functions v2, and App Check. Use when building a Firebase feature, writing rules or triggers, or wiring a Firestore data layer. | default |
+| git-worktree-manager | Sets up git worktrees with isolated ports, env files, and databases. Use when running parallel features, a hotfix, or a PR review without stashing or switching the main checkout. | default |
+| i18n | Internationalization and localization for Android, iOS, and Next.js. Use when externalizing strings, adding a locale, supporting RTL, fixing plurals or date/currency formatting, or setting up a translation pipeline. | default |
+| interview-system-designer | Designs engineering interview loops: stages, rubrics, question banks, AI-use policy, debrief rules. Use when hiring engineers or fixing a loop with poor pass or accept rates. | default |
+| ios-architect | Scaffolds iOS features in Swift/SwiftUI with Clean Architecture, MVVM, and Swift 6 concurrency. Use when creating a new iOS feature, view model, repository, or StoreKit 2 flow. | default |
+| ios-design-expert | Apple HIG design guidance for iOS/iPadOS screens and components. Use when designing or reviewing SwiftUI UI for Liquid Glass, navigation, tab bars, Dynamic Type, SF Symbols, or widgets. | default |
+| llmops | Runs LLM features in production: evals, prompt versioning, cost, caching, model routing, monitoring. Use when an AI feature needs eval gates, spend control, or a model/prompt rollout. | default |
+| mcp-server-builder | Designs and builds MCP (Model Context Protocol) servers: tool schemas, resources, transports, auth. Use when building an MCP server, wrapping an API as MCP tools, or migrating one to a new SDK/spec. | default |
+| micro-frontends | Decides whether and how to split a web frontend into independently deployed apps. Use when teams block each other's releases, or when weighing Vercel microfrontends, multi-zones, or module federation. | default |
+| monorepo-navigator | Diagnoses and speeds up JS/TS and polyglot monorepos (pnpm, Turborepo, Nx, Bazel). Use when joining, creating, or fixing a monorepo: slow CI, cache misses, dependency drift, package boundaries, or extracting a package. | default |
+| nextjs-feature-scaffold | Scaffolds Next.js 16 App Router features in TypeScript. Use when adding a page, route, Server Action, form, or CRUD feature to a Next.js app, with Server/Client split, caching, auth, and tests. | default |
+| notification-architect | Designs notification systems: push (FCM/APNs/web), in-app, transactional email, SMS, and preferences. Use when adding push notifications, notification preferences, email deliverability, or multi-channel dispatch. | default |
+| offline-first | Offline-first design for Android, iOS, and web: local storage, sync, conflicts. Use when an app must work without network, queue writes, resolve sync conflicts, or show optimistic UI. | default |
+| parallel-agent-orchestration | Operating model for running parallel agent sessions on one repo. Use when splitting a wave across 2+ agents or subagents: decomposition, budget, locks, merge order. | default |
+| performance-review | Sets performance budgets and load-test plans for web, mobile, backend. Use when an app or page is slow, before a launch or scale event, or to set Core Web Vitals targets. | default |
+| project-bootstrap | Writes a tailored CLAUDE.md and STATE.md for a repo by interview. Use when onboarding an existing or new repo to agent work by hand, without the Cure manifest CLI. | default |
+| project-manager | Sprint and delivery management for engineering teams. Use when planning a sprint, sizing capacity, building a RACI, risk register, dependency map, timeline, or running a retro. | default |
+| rag-architect | Designs RAG pipelines: chunking, embeddings, vector store, reranking. Use when building or auditing retrieval over documents, a knowledge base, or semantic search with retrieval evals. | default |
+| sdlc | Writes engineering specs: PRDs, ADRs, RFCs, epics, user stories, task and test specs. Use when asked to write a PRD or ADR, draft an RFC, spec a feature, or break work into stories. | default |
+| self-improving-memory | Curates agent auto-memory (MEMORY.md plus user/feedback/project/reference entries). Use when seeding memory for a new engagement, auditing or consolidating it, or checking for stale entries. | default |
+| stitch-design | Generates, syncs, and audits UI screens through Google Stitch MCP. Use when the user names Stitch or DESIGN.md, or the repo has a .stitch/ folder: screen generation, token export, design-drift audits. | default |
+| stripe-integration | Stripe payments and subscriptions through Firebase Cloud Functions. Use when adding checkout, subscriptions, billing portal, saved cards, or Stripe webhooks with Firestore sync to a mobile or web app. | default |
+| test-accounts | QA test accounts: personas, receivable QA emails, seed/reset scripts, env-guarded credentials. Use when setting up test users, seed data, QA email addresses, or test-account teardown. | default |
+| testing-strategy | Defines test architecture: pyramid, frameworks, coverage gates, flaky-test policy. Use when setting up testing, setting test standards, or asking 'what tests do we need'. | default |
+| web-design-expert | Web UI design guidance: responsive layout, tokens, Tailwind v4, dark mode, motion. Use when designing or reviewing pages and components for layout, CSS architecture, theming, or Core Web Vitals impact. | default |
 
 
 ### Finance (4)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| comps-analysis | Performs Comparable Company Analysis (Comps) to value a company relative to peers. Use when you need to benchmark multiples (EV/EBITDA, P/E), analyze industry premiums, or calculate enterprise value. | default |
-| dcf-modeling | Performs Discounted Cash Flow (DCF) valuation. Use when you need to calculate intrinsic value based on projected free cash flows, WACC, and terminal value. | default |
-| equity-research | Conducts public equity research and investment analysis. Use when you need to analyze earnings calls, parse SEC filings (10-K, 10-Q), track catalysts, or draft investment theses. | default |
-| merger-modeling | Performs Accretion/Dilution analysis for M&A transactions. Use when you need to model pro-forma financial impact, calculate synergy requirements, or analyze purchase price accounting. | default |
+| comps-analysis | Values a company against trading peers with EV/Revenue, EV/EBITDA, and P/E multiples. Use when benchmarking valuation multiples or pricing a company off public comparables. | default |
+| dcf-modeling | Builds a discounted cash flow valuation: unlevered FCF, WACC, terminal value, equity bridge. Use when estimating intrinsic value or a per-share price from projected cash flows. | default |
+| equity-research | Analyzes a public company from 10-K/10-Q filings and earnings calls into a thesis and catalysts. Use when digesting earnings, reading SEC filings, or drafting a buy/hold/sell view. | default |
+| merger-modeling | Models M&A accretion/dilution: pro-forma EPS, deal mix, purchase price allocation, synergies. Use when judging an acquisition's financial impact on the buyer. | default |
 
 
 ### Legal (1)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| legal-doc-scaffold | Generate Terms of Service, Privacy Policy, SOW, and NDA scaffolds with attorney disclaimer | default |
+| legal-doc-scaffold | Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy for attorney review. Use when a product or engagement needs a starting draft built from a required-clause checklist and compliance flags. | default |
 
 
 ### Marketing (6)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| go-to-market | Pre-launch planning — positioning, channel strategy, pricing, launch timeline, and distribution playbooks for new products or major feature releases | default |
-| growth-engineering | Build growth systems — activation funnels, referral programs, lifecycle automation, cohort analysis, and product-led growth patterns | default |
-| instagram-publishing-setup | Connect a brand's Instagram to programmatic publishing — Meta app, permissions, tester role, long-lived token, media hosting, and the scheduler Meta doesn't provide | default |
-| product-marketing | Product voice and content marketing expert — generates platform-native content packages across Instagram, YouTube, LinkedIn, and X/Twitter for portfolio brands | default |
-| seo-content-engine | Technical SEO and content strategy for web properties — meta tags, Open Graph, JSON-LD structured data, sitemap generation, keyword research, and content calendars | default |
-| technical-blog-writer | Crafts high-impact technical blog posts modeled after Netflix/Uber engineering blogs, translated for business owners. Use when you need to explain complex engineering feats using the 'Famous Actor' simple-explanation tone with clear visual concepts. | default |
+| go-to-market | Writes launch plans: positioning, messaging, channels, launch phases. Use when launching a product, entering a new market, or planning a major feature release. | default |
+| growth-engineering | Builds growth systems past activation. Use when improving retention loops, referrals, lifecycle messaging, PLG paywalls and trials, or cohort retention. | default |
+| instagram-publishing-setup | Sets up programmatic Instagram publishing: Meta app, tester role, token, media hosting, scheduler. Use when posting to Instagram from code or stuck on Insufficient Developer Role or a media_publish 400. | default |
+| product-marketing | Writes platform-native social content for portfolio brands. Use when creating Reels, Shorts, LinkedIn or X posts, a campaign, a message house, or brand-voice copy. | default |
+| seo-content-engine | Technical SEO and search content strategy for websites. Use when a site needs to rank, an SEO audit, metadata, JSON-LD, sitemaps, Core Web Vitals, or keyword clusters. | default |
+| technical-blog-writer | Writes one engineering blog post for business readers, Netflix/Uber style. Use when turning a scaling, cost, or reliability win into a plain-language post with visuals. | default |
 
 
 ### Platform (11)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| chaos-engineering | Design resilience testing — failure injection, graceful degradation, game days, and fault tolerance verification for distributed systems | default |
-| ci-cd-pipeline | Generate GitHub Actions workflows for build, test, deploy with environment configs and secrets management | default |
-| disaster-recovery | Design disaster recovery and business continuity plans — RTO/RPO targets, backup strategies, failover architecture, and DR testing runbooks | default |
-| dora-metrics | Implement DORA and SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, and developer experience dashboards | default |
-| edge-computing | Architect edge computing solutions — edge functions, CDN strategies, cache invalidation, edge middleware, and global latency optimization | default |
-| engagement-automation | Choose and configure the right Claude Code recurring-execution mechanism — /loop, cloud routines, scheduled tasks, CI cron, or hooks — with Cure guardrails for unattended runs | default |
-| green-software | Apply sustainable software practices — carbon-aware computing, energy-efficient architecture, resource optimization, and sustainability reporting | default |
-| incident-response | Create incident runbooks, severity classification, on-call procedures, post-mortems, and escalation paths | default |
-| infrastructure-scaffold | Generate cloud infrastructure configs for Firebase, GCP, Vercel, and Docker with IaC templates and environment management | default |
-| observability | Set up observability stacks — structured logging, distributed tracing, alerting, SLO/SLI definition, and dashboards with Crashlytics, Sentry, or Datadog | default |
-| release-management | Manage release workflows — app store submissions, staged rollouts, versioning strategy, changelogs, and ASO for Android and iOS | default |
+| chaos-engineering | Designs resilience tests: failure-mode catalogs, game days, fault injection, degradation audits. Use when planning a game day, testing fallbacks, or adding chaos tests to CI on Firebase/GCP. | default |
+| ci-cd-pipeline | Generates GitHub Actions CI/CD workflows for web, mobile, and Firebase. Use when setting up build, test, and deploy pipelines, environment approvals, or keyless GCP auth for a repo. | default |
+| disaster-recovery | Designs disaster recovery plans: RTO/RPO tiers, Firestore and Cloud SQL backups, failover, DR drills. Use when planning backups, multi-region failover, or a DR test before launch or an audit. | default |
+| dora-metrics | Measures DORA delivery metrics and SPACE developer experience from git, CI, and incident data. Use when baselining deploy frequency, lead time, change fail rate, recovery time, or reporting engineering health. | default |
+| edge-computing | Designs CDN caching, invalidation, and Next.js proxy routing on Vercel/Firebase. Use when cutting TTFB, setting Cache-Control, geo-routing, edge auth, or rate limits. | default |
+| engagement-automation | Picks and configures recurring automation: /loop, cloud routines, CI cron, or hooks. Use when putting engagement work on autopilot: weekly audits, monthly reports, maintenance loops, PR-triggered reviews. | default |
+| green-software | Measures and cuts software carbon (SCI score, carbon-aware regions, ESG reports). Use when asked for a carbon footprint, sustainability audit, green architecture, or an SCI score. | default |
+| incident-response | Guides live production incidents; builds on-call runbooks, severity levels, and post-mortems. Use when something is down or degraded now, or when setting up on-call, escalation, or a post-mortem. | default |
+| infrastructure-scaffold | Generates Firebase, GCP, Vercel, and Docker configs with dev/staging/prod separation and cost guards. Use when setting up hosting, Cloud Run, Functions, secrets, environments, or budgets for a project. | default |
+| observability | Sets up logging, tracing, SLOs, burn-rate alerts, and dashboards (Crashlytics, Sentry, Datadog, GCP). Use when adding monitoring to a service, defining SLOs, or fixing noisy or missing alerts. | default |
+| release-management | Plans mobile and web releases: versions, staged rollouts, rollback, changelogs. Use when cutting a release, shipping to Play or the App Store, planning a rollout or rollback, or store listings (ASO). | default |
 
 
 ### Product (11)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| customer-onboarding | Design user activation and first-run experiences — onboarding flows, empty states, welcome emails, tooltips, and time-to-value optimization for mobile (Android/iOS) and web apps | default |
-| design-studio | Full design studio: brand identity, UX architecture, wireframes, native iOS/Android/web screens, design systems, motion, production assets, Adobe and Figma hand-off | default |
-| design-system | Build cross-platform design systems — design tokens, component libraries, Storybook/Catalog setup, theme architecture, and platform consistency | default |
-| feature-audit | Post-ship quality gate — audits a completed feature for missing tests, security gaps, accessibility, analytics, and documentation across Android (.kt), iOS (.swift), Web (.ts/.tsx), and Firebase | Read, Grep, Glob |
-| feature-flags | Implement feature flag systems — progressive rollouts, A/B testing, kill switches, and experimentation frameworks with Firebase Remote Config or LaunchDarkly | default |
-| market-research | Conduct TAM/SAM/SOM analysis, competitive research, ICP definition, and pricing research | Read, Grep, Glob, WebSearch, WebFetch |
-| portfolio-registry | Generate and maintain a structured product portfolio registry — the single source of truth for all products, stacks, teams, stages, and shared infrastructure across the venture studio | default |
-| product-design | Create design specs following Apple HIG, Material Design 3, design tokens, and accessibility standards | default |
-| product-manager | Product strategy and prioritization — OKRs, RICE-scored roadmaps, feature briefs, and outcome-driven planning for product leaders | default |
-| technology-radar | Generate and maintain a ThoughtWorks-style technology radar — track Adopt/Trial/Assess/Hold decisions across the portfolio with rationale and migration plans | default |
-| uat | Generate UAT plans, acceptance criteria checklists, stakeholder sign-off workflows, and go/no-go release gates | default |
+| customer-onboarding | Designs onboarding and activation for mobile and web apps. Use when designing a first-run flow, empty states, welcome emails, or tooltips, or when day-1/day-7 retention or time-to-value is weak. | default |
+| design-studio | Full design studio: brand, UX architecture, screens, design systems, assets. Use for any design assignment, from idea, sketch, PRD, or existing app to screens and hand-off. | default |
+| design-system | Builds and governs component libraries from design-studio tokens. Use when setting up Storybook, Showkase, a SwiftUI catalog, token builds, or DS contribution rules. | default |
+| feature-audit | Post-ship completeness audit of one feature. Use after finishing a feature or before marking a PR ready, to find missing tests, wiring, error handling, a11y, and analytics. | Read, Grep, Glob |
+| feature-flags | Implements feature flags with Firebase Remote Config or LaunchDarkly. Use when adding a flag, kill switch, staged rollout, or experiment flag, or cleaning up stale flags. | default |
+| market-research | Sourced market research: TAM/SAM/SOM, competitors, ICP, pricing, go/no-go. Use when sizing a market, profiling competitors or buyers, or deciding whether to enter. | Read, Grep, Glob, WebSearch, WebFetch |
+| portfolio-registry | Creates and maintains PORTFOLIO.md, the registry of every product, stack, team, and stage. Use when setting up the portfolio, registering or updating a product, or health-checking a stale registry. | default |
+| product-design | Quick spec for one screen or component, or a review of existing UI against HIG, M3, and WCAG. Use when a developer needs states, a11y, and handoff notes, not full design work. | default |
+| product-manager | Product strategy and prioritization. Use when asked to prioritize features, score a backlog with RICE, write OKRs, build a Now/Next/Later roadmap, or write a feature brief. | default |
+| technology-radar | Builds and maintains a portfolio technology radar (Adopt/Trial/Assess/Hold) with migration plans. Use when choosing or retiring a technology, running a quarterly tech review, or planning a migration off Hold tech. | default |
+| uat | Plans and runs user acceptance testing with a go/no-go gate. Use when a feature or release candidate reaches staging and needs stakeholder sign-off before production. | default |
 
 
 ### Security (4)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| accessibility-audit | Audit apps and websites for WCAG 2.2 compliance, screen reader support, and inclusive design across Android, iOS, and Web | Read, Grep, Glob |
-| compliance-architect | Architect compliance frameworks for HIPAA, COPPA, GDPR, CCPA, and PCI — consent flows, audit trails, data classification, and privacy-by-design | default |
-| qsbs-compliance | Track and enforce IRC §1202 QSBS qualification — gross asset test, active business test, C-Corp status, holding periods, disqualifying events | Read, Grep, Glob |
-| security-review | OWASP Top 10 security audit for codebases — scans auth flows, API endpoints, data storage, secrets handling, and dependency supply chain across .kt, .swift, .ts, .py, .go, .rs, and infrastructure files | Read, Grep, Glob |
+| accessibility-audit | WCAG 2.2 AA audit of Android, iOS, and web UI with severity-ranked findings. Use when checking accessibility, a11y, screen reader support, touch targets, or contrast before a release or after a complaint. | Read, Grep, Glob |
+| compliance-architect | Designs HIPAA, COPPA, GDPR, CCPA, and PCI compliance: consent, audit trails, data classification. Use when an app handles health, kids', EU, California, or card data, or needs a BAA/DPA check. | default |
+| qsbs-compliance | Checks IRC §1202 QSBS qualification for C-corps under both OBBBA regimes. Use when an equity event, entity change, asset growth, or revenue mix could affect QSBS, or for an annual QSBS health check. | Read, Grep, Glob |
+| security-review | Security audit of code, APIs, mobile apps, LLM features, and Firebase/cloud config, mapped to OWASP. Use when asked to check security, find vulnerabilities, or review before launch or after adding auth, payments, or PII. | Read, Grep, Glob |
 
 
 ### Tax (12)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| audit-risk-substantiation | Assess audit exposure and penalty risk on a return or position, then build the file that defends it — trigger scoring, the §6662/§6694 penalty map, reasonable cause, disclosure decisions, and contemporaneous evidence. Use when judging how risky a position is, preparing audit defense, or answering an IRS notice. | default |
-| cpa-benchmark | Measure tax competency against CPA-exam-grade standards. Runs a scored question bank over REG core, TCP planning, and software/exempt-org fact patterns, reports weak areas, and turns misses into remediation. Use when setting a baseline, when gating a filing season, or when regression-testing a tax engine or skill library after changes. | default |
-| cpa-standards | Apply the professional standards a return preparer is held to — Circular 230, the AICPA Statements on Standards for Tax Services, due diligence, workpaper standards, conflicts of interest, and §7216 confidentiality. Use when preparing or reviewing any return or tax advice, or deciding whether a position may be taken or must be disclosed. | default |
-| deductions-and-credits | Identify and qualify every deduction, credit, and exclusion a taxpayer or entity is entitled to, with the IRC test, limits, phase-outs, and substantiation for each. Use when asked what is deductible, what credits apply, or whether anything is being missed, and when building the benefit side of a return or plan. | default |
-| estimated-tax-compliance | Manage estimated payments, withholding, and filing compliance — §6654/§6655 safe harbors, quarterly computation, the annualized income method, and the multi-entity due-date calendar. Use when computing or timing estimates, avoiding an underpayment penalty, or adjusting withholding. | default |
-| irc-lookup | Look up and cite Internal Revenue Code authority correctly — find the controlling section, read it against the regulations and rulings, weigh how strong the authority is, and produce a citation that survives review. Use when a position, deduction, credit, or election needs a statutory basis, or when a citation needs verifying. | default |
-| nonprofit-dissolution | Wind down a New York not-for-profit corporation and close its federal exempt-organization filings — final Form 990 with Schedule N, asset distribution under the dissolution clause, NY Attorney General Charities Bureau approval, Certificate of Dissolution, and final payroll closings. Use when dissolving a nonprofit or filing its final returns. | default |
-| return-review | Review a computed return for correctness before it is filed — tie-outs, reasonableness tests, cross-form consistency, prior-year variance, diagnostics, and a missed-opportunity scan. Use when a return or calculation is complete, when validating engine output, or as the pass before any accountant handoff. | default |
-| software-dev-tax | Determine the tax treatment of software and platform development costs — §174A R&E expensing, the §41 research credit and its internal-use software rules, what counts as a QRE, the pre-release boundary, and per-repo cost allocation. Use when accounting for engineering spend or evaluating an R&D credit. | default |
-| tax-preparation | Prepare a complete, filable return end to end — gather and reconcile source documents, select forms and schedules, compute each line, make and document elections, and assemble the workpaper file and accountant handoff package. Use when preparing a return, assembling a filing package, or asked what documents it needs. | default |
-| tax-recommendations | Turn tax analysis into a ranked, quantified action list for a specific taxpayer — screen opportunities, quantify after-tax benefit, score risk and effort, sequence by deadline, and present it so decisions get made. Use when asked what to do, for a tax plan, or to produce a client-facing deliverable. | default |
-| tax-strategies | Design legitimate tax-reduction strategies grounded in the IRC — entity structure, timing, character conversion, QSBS, R&D, retirement stacking, SALT workarounds, depreciation, and exit planning. Every strategy must clear the anti-abuse doctrines first. Use when asked how to pay less tax or how to structure a transaction. | default |
+| audit-risk-substantiation | Rates audit and penalty risk on tax positions and builds the defense file. Use when judging a position's risk, deciding Form 8275 disclosure, or answering an IRS notice. | default |
+| cpa-benchmark | Scores tax competency on a CPA-exam-grade question bank. Use when baselining, gating a filing season, or regression-testing a tax engine or tax skills after changes. Runner needs Node. | default |
+| cpa-standards | Applies Circular 230, AICPA SSTS, and §7216 to tax work. Use when deciding if a position can be taken or must be disclosed, or on preparer duties, workpapers, conflicts, or confidentiality. | default |
+| deductions-and-credits | Qualifies deductions, credits, and exclusions against IRC tests. Use when asked whether something is deductible, which credits apply, or what a return is leaving unclaimed. | default |
+| estimated-tax-compliance | Computes quarterly estimated tax, safe harbors, and withholding. Use when sizing or timing 1040-ES or corporate estimates, avoiding an underpayment penalty, or changing a W-4. | default |
+| irc-lookup | Finds and cites controlling Internal Revenue Code authority. Use when a tax position needs a statutory cite, a citation needs checking, or a pre-2025 rule may have changed under OBBBA. | default |
+| nonprofit-dissolution | Winds down a New York nonprofit and its exempt-org filings. Use when dissolving a not-for-profit: final Form 990 with Schedule N, NY AG approval, Certificate of Dissolution, payroll closeout. | default |
+| return-review | Reviews a computed tax return before handoff. Use when a return is done and needs a second pass: tie-outs, cross-form checks, prior-year variances, diagnostics, and missed opportunities. | default |
+| software-dev-tax | Determines tax treatment of software development costs. Use when accounting for engineering spend under §174A, claiming a §41 R&D credit, sizing QREs, or allocating costs by repo. | default |
+| tax-preparation | Prepares a tax return and CPA handoff package. Use when preparing a 1040, 1120, 1120-S, 1065 or Schedule C, gathering tax documents, reconciling 1099s, or filing information returns. | default |
+| tax-recommendations | Turns tax analysis into a ranked, dated action plan. Use when a client asks what to do, wants a year-end tax plan, or needs a client-facing deliverable with quantified savings. | default |
+| tax-strategies | Designs legal tax-reduction strategies. Use when asked how to pay less tax, choose an entity (S corp vs C corp), plan a sale or exit, or use QSBS, timing, or retirement stacking. | default |
 
 
 ## 3. Agents
@@ -185,92 +185,92 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| financial-analyst | Financial modeling agent that builds revenue forecasts, unit economics, scenario analyses, cost structures, and P&L projections from product data and business logic in code. Use when building a revenue forecast, unit-economics model, scenario analysis, or P&L projection. | Read, Grep, Glob, Bash |
-| investor-relations | Generates investor-facing materials — board updates, quarterly reports, KPI dashboards, fundraising narratives, and cap table scenarios from product and financial data. Use when preparing board updates, investor reports, KPI dashboards, or fundraising materials. | Read, Grep, Glob, Bash |
-| market-intelligence | Market intelligence agent for TAM/SAM/SOM analysis, industry trends, regulatory landscape, market timing, and investment thesis validation. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
-| ops-finance | Operational finance agent that assists with invoice generation, 1099 tracking, bookkeeping, tax compliance prep, and multi-entity consolidation for Cure Consulting Group. | Read, Grep, Glob, Bash |
-| tax-analyst | Tax analysis agent that drafts return workpapers, reviews, estimates, and plans against the IRC, gating every position through Circular 230/SSTS for CPA review. Use when preparing or reviewing a return, planning estimates, scoring audit risk, or treating software dev costs. | Read, Grep, Glob, Bash |
+| financial-analyst | Builds forecasts, unit economics, and scenarios from pricing and cost code. Use when you need a revenue forecast, unit-economics model, or P&L projection. | Read, Grep, Glob, Bash |
+| investor-relations | Drafts board updates, investor reports, KPI packs, and raise narratives. Use when preparing investor-facing materials from product and financial data. | Read, Grep, Glob, Bash |
+| market-intelligence | Market sizing (TAM/SAM/SOM), industry structure, trends, and timing. Use when validating a market, sizing an opportunity, or testing an investment thesis. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
+| ops-finance | Operational finance: invoices, 1099 tracking, month-end close, filing inventory. Use for Cure bookkeeping and multi-entity ops; tax positions go to tax-analyst. | Read, Grep, Glob, Bash |
+| tax-analyst | Drafts tax workpapers, reviews, estimates, and plans for CPA review. Use when preparing or reviewing a return, planning estimates, scoring audit risk, or treating dev costs. | Read, Grep, Glob, Bash |
 
 
 ### Data (3)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| ab-test-analyst | Designs and analyzes A/B tests — experiment design, sample size calculation, statistical significance testing, guardrail metrics, and result interpretation with actionable recommendations. Use when designing an experiment, sizing a test, or interpreting A/B results. | Read, Grep, Glob, Bash |
-| data-analyst | Data analysis agent that explores schemas, writes queries, analyzes data patterns, identifies anomalies, and generates visualization recommendations from database and analytics code. Use when exploring a schema, writing analytical queries, or investigating data anomalies. | Read, Grep, Glob, Bash |
-| metrics-dashboard | Designs KPI dashboards with metric definitions, alert thresholds, SLO/SLI targets, and visualization specs for engineering, product, and business stakeholders. | Read, Grep, Glob, Bash |
+| ab-test-analyst | Designs and analyzes A/B tests: sample size, significance, guardrails. Use when designing an experiment, sizing a test, or interpreting A/B results. | Read, Grep, Glob, Bash |
+| data-analyst | Explores schemas, writes analytical queries, and checks data quality. Use when mapping a data model, answering a data question, or investigating anomalies. | Read, Grep, Glob, Bash |
+| metrics-dashboard | Specifies KPIs, SLOs/SLIs, alert thresholds, and dashboard layouts. Use when designing dashboards or alerting for engineering, product, or business metrics. | Read, Grep, Glob, Bash |
 
 
 ### Engineering (18)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| api-validator | Validates API implementations match OpenAPI/GraphQL schemas. Checks endpoint coverage, request/response contracts, error handling consistency, and documentation completeness. Use when validating an API against its OpenAPI/GraphQL schema, checking contract coverage, or reviewing breaking changes. | Read, Grep, Glob, Bash |
-| ci-debugger | Diagnoses failed CI/CD pipeline runs by analyzing logs, identifying root causes, and suggesting targeted fixes. Supports GitHub Actions, Firebase Deploy, Fastlane, and Docker builds. Use when a CI/CD run fails and you need root-cause analysis and a targeted fix. | Read, Grep, Glob, Bash |
-| code-reviewer | Security and quality code review agent that audits code against Cure Consulting Group standards. Use when reviewing a diff or pull request for security, quality, and adherence to Cure standards. | Read, Grep, Glob |
-| codebase-explainer | Onboarding agent that answers questions about the codebase, explains architecture, traces data flows, and helps new developers understand how things work. Use when onboarding to an unfamiliar codebase or asking how the architecture or a data flow works. | Read, Grep, Glob, Bash |
-| dependency-auditor | Audits project dependencies for security vulnerabilities, outdated packages, license compliance, and supply chain risks. Use after installing or updating packages. | Read, Grep, Glob, Bash |
-| deployment-validator | Pre-deployment checklist validator. Verifies environment variables, secrets management, feature flags, smoke tests, and rollback readiness before any deployment. Use before a deployment to validate env vars, secrets, feature flags, smoke tests, and rollback readiness. | Read, Grep, Glob, Bash |
-| doc-generator | Generates and maintains technical documentation from code — API docs, architecture decision records, changelogs, onboarding guides, and inline documentation. Use when generating or updating API docs, ADRs, changelogs, or onboarding guides from code. | Read, Grep, Glob, Bash |
-| equity-analyst | Public markets research specialist. Analyzes SEC filings, earnings transcripts, and market news to develop investment theses, track catalysts, and update valuation models. Use when researching a public company — analyzing filings or earnings and building or updating a valuation thesis. | Read, Grep, Glob, Bash, WebFetch |
-| investment-banker | Specialized M&A and capital markets agent. Builds valuation models (Comps, DCF, LBO), drafts deal materials (CIMs, teasers), and analyzes pro-forma transaction impact. Use when building M&A valuation models (Comps/DCF/LBO) or drafting deal materials. | Read, Grep, Glob, Bash |
-| migration-validator | Validates database migrations for correctness, rollback safety, naming conventions, and zero-downtime compatibility. Use before applying migrations to staging or production. | Read, Grep, Glob, Bash |
-| pr-reviewer | Automated pull request reviewer that analyzes diffs for quality, security, performance, and adherence to Cure standards. Suggests improvements and flags blockers before merge. | Read, Grep, Glob, Bash |
-| private-equity-analyst | Private markets specialist focused on deal sourcing, commercial due diligence, and portfolio monitoring. Analyzes unit economics, builds LBO models, and drafts IC memos. Use when sourcing or diligencing a private deal, building an LBO, or drafting an IC memo. | Read, Grep, Glob, Bash |
-| project-bootstrapper | Sets up new projects with correct architecture, configuration, and Cure Consulting Group standards. Use when starting a new project that needs correct architecture, configuration, and Cure standards. | Read, Grep, Glob, Bash, Edit, Write |
-| qa-engineer | QA engineer agent that performs comprehensive quality assurance — test plan generation, edge case discovery, regression analysis, exploratory testing checklists, bug triage, and quality gate enforcement across all platforms. Use when planning tests, discovering edge cases, triaging bugs, or enforcing a quality gate. | Read, Grep, Glob, Bash |
-| refactor-assistant | Safe refactoring agent that restructures code while maintaining behavior. Runs tests before and after every change to ensure nothing breaks. Use when restructuring code that must preserve behavior, with tests run before and after each change. | Read, Grep, Glob, Bash, Edit, Write |
-| release-coordinator | Orchestrates the full release process — version bump, changelog generation, tagging, deploy validation, and rollback readiness. Coordinates across mobile, web, and backend releases. Use when cutting a release — version bump, changelog, tag, deploy validation, and rollback readiness. | Read, Grep, Glob, Bash, Edit |
-| system-architect | System architecture agent that generates RFCs, reviews system design, evaluates architectural trade-offs, and creates architecture decision records for Cure Consulting Group projects. | Read, Grep, Glob, Bash |
-| test-runner | Validates test suite health, runs tests, checks coverage thresholds, and flags flaky tests. Use after writing new code or before commits. | Read, Grep, Glob, Bash |
+| api-validator | Checks API code against its OpenAPI or GraphQL spec. Use when validating contract coverage, error consistency, or breaking changes before merge or release. | Read, Grep, Glob, Bash |
+| ci-debugger | Diagnoses failed CI/CD runs from logs and proposes the minimal fix. Use when a GitHub Actions, Firebase, Fastlane, or Docker build fails. | Read, Grep, Glob, Bash |
+| code-reviewer | Reviews code against Cure standards: security, architecture, tests. Use when reviewing a diff, file set, or PR; reports every finding with severity and confidence. | Read, Grep, Glob |
+| codebase-explainer | Explains a codebase with file:line citations. Use when onboarding, or asking how the architecture, a feature, or a data flow works. | Read, Grep, Glob, Bash |
+| dependency-auditor | Audits dependencies for CVEs, staleness, licenses, and supply-chain risk. Use after adding or upgrading packages, or before a release. | Read, Grep, Glob, Bash |
+| deployment-validator | Pre-deploy gate: env vars, secrets, flags, build, tests, rollback readiness. Use before deploying to staging or production; returns GO/NO-GO with findings. | Read, Grep, Glob, Bash |
+| doc-generator | Generates docs from source: API docs, ADRs, changelogs, onboarding guides. Use when documentation is missing or has drifted from the code. | Read, Grep, Glob, Bash |
+| equity-analyst | Public-equity research: filings, earnings, catalysts, valuation thesis. Use when researching a listed company or updating a thesis after earnings. | Read, Grep, Glob, Bash, WebFetch |
+| investment-banker | M&A and capital-markets analysis: comps, DCF, LBO, accretion/dilution. Use when valuing a company for a deal or drafting a teaser, CIM, or buyer list. | Read, Grep, Glob, Bash |
+| migration-validator | Reviews DB migrations for rollback safety, locking, and zero-downtime fit. Use before applying migrations to staging or production; reports every finding. | Read, Grep, Glob, Bash |
+| pr-reviewer | Reviews a branch diff for bugs, security, performance, tests, standards. Use before merging a PR; returns every finding with severity, confidence, and a verdict. | Read, Grep, Glob, Bash |
+| private-equity-analyst | Private-markets analysis: screening, diligence, LBO returns, IC memos. Use when sourcing or diligencing a private deal or monitoring a portfolio company. | Read, Grep, Glob, Bash |
+| project-bootstrapper | Scaffolds a new Android, iOS, Next.js, or Firebase project to Cure standards. Use when starting a repo from scratch, not when adding features to an existing one. | Read, Grep, Glob, Bash, Edit, Write |
+| qa-engineer | Adversarial QA: test plans, edge cases, regression scope, bug triage, ship gate. Use when a change needs a QA pass or a ship/no-ship call beyond running tests. | Read, Grep, Glob, Bash |
+| refactor-assistant | Behavior-preserving refactors with tests run before and after each step. Use when restructuring code that must not change behavior; stops on a red baseline. | Read, Grep, Glob, Bash, Edit, Write |
+| release-coordinator | Runs a release: version bump, changelog, validation, tag, rollback plan. Use when cutting a web, mobile, or backend release; confirms before tagging or publishing. | Read, Grep, Glob, Bash, Edit |
+| system-architect | Architecture reviews, RFCs, and ADRs with explicit trade-offs. Use when choosing a technology, drawing service boundaries, or reviewing a system design. | Read, Grep, Glob, Bash |
+| test-runner | Runs the test suite, checks coverage, and flags skipped or flaky tests. Use after writing code or before a commit; reports results and doesn't fix code. | Read, Grep, Glob, Bash |
 
 
 ### Legal (2)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| contract-reviewer | Reviews contracts, SOWs, NDAs, and legal documents for risk, scope gaps, unfavorable terms, IP issues, and liability exposure. Flags items requiring legal counsel. | Read, Grep, Glob |
-| legal-compliance | Legal compliance agent that monitors QSBS qualification, NCAA ECAG rules, FERPA data handling, trademark strategy, and entity compliance across the Cure Consulting Group venture portfolio. Use when checking QSBS, FERPA, NCAA ECAG, trademark, or entity-compliance questions across the portfolio. | Read, Grep, Glob |
+| contract-reviewer | Business-risk review of SOWs, MSAs, NDAs, and contracts. Use when checking terms for scope, payment, IP, liability, or termination risk. Not legal advice. | Read, Grep, Glob |
+| legal-compliance | Flags QSBS, FERPA, NCAA, trademark, and entity-compliance risk. Use when checking a portfolio company or codebase against those regimes. Not legal advice. | Read, Grep, Glob |
 
 
 ### Marketing (5)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| brand-guardian | Enforces brand consistency across the product — validates voice/tone, visual identity, naming conventions, microcopy, and style guide adherence in UI code and content. Use when reviewing UI copy, microcopy, naming, or visual identity for brand and style-guide consistency. | Read, Grep, Glob |
-| campaign-analyst | Analyzes marketing campaign performance — attribution, conversion funnels, A/B test results, CAC/LTV, channel ROI, and campaign optimization recommendations. Use when analyzing campaign performance, attribution, conversion funnels, or channel ROI. | Read, Grep, Glob, Bash |
-| content-strategist | Plans and generates content strategy — editorial calendars, blog posts, social media plans, SEO content, email sequences, and content audits aligned with product and growth goals. Use when planning an editorial calendar, content brief, SEO plan, or distribution strategy. | Read, Grep, Glob, Bash, WebSearch |
-| growth-analyst | Analyzes growth metrics — activation funnels, retention cohorts, viral coefficients, revenue attribution, and identifies growth levers from product data and code. Use when analyzing activation, retention, or virality and identifying growth levers. | Read, Grep, Glob, Bash |
-| technical-content-strategist | High-level technical marketing agent that translates complex engineering feats into simple, accessible blog posts and visuals. Uses the Netflix/Uber/Pinterest/Square style of engineering authority, but with the 'Famous Actor' simple-explanation tone for business owners. | Read, Grep, Glob, WebFetch, WebSearch, NanoBanana |
+| brand-guardian | Audits voice, terminology, microcopy, and visual tokens for consistency. Use when reviewing UI copy, naming, or visual identity against a brand or style guide. | Read, Grep, Glob |
+| campaign-analyst | Analyzes marketing attribution, funnels, CAC/LTV, and channel ROI. Use when evaluating campaign performance or auditing UTM and conversion tracking. | Read, Grep, Glob, Bash |
+| content-strategist | Content strategy: editorial calendars, briefs, SEO pillars, distribution. Use when planning content or auditing existing content against growth goals. | Read, Grep, Glob, Bash, WebSearch |
+| growth-analyst | Analyzes activation, retention, virality, and monetization. Use when looking for growth levers or diagnosing a funnel or retention drop from code and data. | Read, Grep, Glob, Bash |
+| technical-content-strategist | Turns engineering work into plain-language posts and visuals. Use when writing a technical story for business readers, with analogies and ROI framing. | Read, Grep, Glob, WebFetch, WebSearch |
 
 
 ### Product (4)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| competitive-intel | Competitive intelligence agent that analyzes market positioning, feature gaps, pricing strategies, and differentiation opportunities by examining product code and public data. Use when comparing the product to competitors, mapping feature gaps, or assessing positioning. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
-| product-analyst | Analyzes product usage patterns, feature adoption, user journeys, and product-market fit signals from analytics data, code instrumentation, and user feedback. Use when analyzing feature adoption, user journeys, or product-market-fit signals from analytics. | Read, Grep, Glob, Bash |
-| roadmap-strategist | Builds and validates product roadmaps using RICE scoring, dependency mapping, capacity planning, and strategic alignment. Generates quarterly plans and milestone tracking. Use when prioritizing a roadmap with RICE, mapping dependencies, or planning a quarter. | Read, Grep, Glob, Bash |
-| ux-researcher | Synthesizes UX research — analyzes UI code for usability issues, maps user flows for friction points, evaluates information architecture, and generates research plans. | Read, Grep, Glob |
+| competitive-intel | Competitive analysis: feature matrices, positioning, pricing, moats. Use when comparing the product to competitors or looking for differentiation gaps. | Read, Grep, Glob, Bash, WebSearch, WebFetch |
+| product-analyst | Analyzes feature adoption, user journeys, and PMF signals. Use when auditing analytics coverage or asking how users move through the product. | Read, Grep, Glob, Bash |
+| roadmap-strategist | Builds roadmaps with RICE scoring, dependencies, and capacity. Use when prioritizing a backlog, sequencing work, or planning the next quarter. | Read, Grep, Glob, Bash |
+| ux-researcher | Usability review from UI code: IA, flows, forms, feedback, cognitive load. Use when auditing a product's UX or planning user research. | Read, Grep, Glob |
 
 
 ### Security (3)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
-| accessibility-checker | Automated WCAG 2.2 accessibility validation for UI changes. Checks semantic HTML, ARIA labels, color contrast, keyboard navigation, and screen reader compatibility. | Read, Grep, Glob |
-| firebase-security-auditor | Audits Firestore security rules for overly permissive access, missing validations, and data model mismatches. Use after modifying security rules or Firestore schema. | Read, Grep, Glob, Bash |
-| skill-security-auditor | Static security audit for skill, agent, and persona files before they enter the repo. Scans for command injection, code execution, exfiltration, prompt injection, supply chain, privilege escalation, and secret leakage. Read-only. | Read, Grep, Glob |
+| accessibility-checker | WCAG 2.2 AA check of web, Android, and iOS UI code. Use when UI changes need an accessibility pass; reports every finding with severity and confidence. | Read, Grep, Glob |
+| firebase-security-auditor | Audits Firestore, Storage, and RTDB security rules against the data model. Use after changing rules or Firestore schema, or before a Firebase deploy. | Read, Grep, Glob, Bash |
+| skill-security-auditor | Static security audit of skill, agent, and persona files. Use before merging changes under skills/, agents/, or personas/; returns PASS/WARN/FAIL and every finding. | Read, Grep, Glob |
 
 
 ## 4. Personas
 
 | Persona | Description | Skills referenced |
 | --- | --- | --- |
-| cure-engagement-pm | Project/program manager for a Cure client engagement — sprint cadence, scope/budget tracking, client comms, handoff | 14 |
-| cure-product-lead | Product lead on a Cure client engagement — discovery, roadmap, stakeholder management, outcome-driven planning | 19 |
-| cure-solo-consultant | Single consultant on a small or early-stage Cure engagement — wears all hats, picks the smallest viable thing | 21 |
-| cure-tech-lead | Engineering lead on a Cure client engagement — architectural judgment, code quality enforcement, mentors junior consultants | 24 |
+| cure-engagement-pm | Engagement PM persona: sprint cadence, scope, burn, client comms, handoff. Use when running delivery on a Cure client engagement. | 13 |
+| cure-product-lead | Product lead persona: discovery, roadmap, metrics, stakeholders. Use when deciding what to build and why on a Cure client engagement. | 17 |
+| cure-solo-consultant | Solo consultant persona covering tech, product, and PM. Use on small or early-stage engagements where one person ships the smallest viable thing. | 20 |
+| cure-tech-lead | Engineering lead persona: architecture, quality bar, reviews, mentoring. Use when making technical decisions or reviews on a Cure client engagement. | 24 |
 
 
 ## 5. Hooks

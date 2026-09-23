@@ -1,14 +1,21 @@
 ---
 name: deductions-and-credits
-description: Identify and qualify every deduction, credit, and exclusion a taxpayer or entity is entitled to, with the IRC test, limits, phase-outs, and substantiation for each. Use when asked what is deductible, what credits apply, or whether anything is being missed, and when building the benefit side of a return or plan.
+description: "Qualifies deductions, credits, and exclusions against IRC tests. Use when asked whether something is deductible, which credits apply, or what a return is leaving unclaimed."
+when_to_use: "NOT for planning future moves (tax-strategies), software R&D costs (software-dev-tax), or defending a claim (audit-risk-substantiation)."
 argument-hint: "[expense-or-entity]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Deductions, Credits & Exclusions
 
-The benefit catalog. Where `tax-strategies` covers structural moves that require
-planning, this skill covers what is claimable on a return given facts that
-already exist.
+The benefit catalog: what is claimable on a return given facts that already
+exist (`tax-strategies` covers moves that need planning). **Done when** every
+candidate benefit has the output row below, with its limit computed and its
+verification flag shown.
+
+## Disclaimer
+This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`).
 
 ## The three benefit types — never confuse them
 
@@ -18,8 +25,8 @@ already exist.
 | **Deduction** | Reduces taxable income | \$0.24 |
 | **Credit** | Reduces tax dollar-for-dollar | \$1.00 |
 
-A credit is worth roughly 4x a deduction at a 24% marginal rate. **Always screen
-credits first** — they are more valuable and more often missed.
+A credit is worth roughly 4x a deduction at a 24% marginal rate, so screen
+credits first: they are more valuable and more often missed.
 
 Within deductions, the ranking is:
 1. **Above-the-line** (§62 adjustments) — reduce AGI itself, so they also unlock
@@ -36,14 +43,14 @@ Within deductions, the ranking is:
    figures from `irc-lookup` and cite the Rev. Proc. they come from.
 2. **Classify every dollar of spend** as: business (§162), personal (§262),
    mixed (allocate), or capital (§263 — depreciate instead).
-3. **Run the screens** in `reference/credits-catalog.md` first, then
-   `reference/deductions-catalog.md`. Both are ordered by how often they are
-   missed, not alphabetically.
+3. **Run the screens**: read `reference/credits-catalog.md` first, then
+   `reference/deductions-catalog.md`. Both are ordered by how often an item is
+   missed.
 4. **Apply the limitation stack** in order — see below. Deductions die in this
    stack far more often than they fail the underlying test.
 5. **Check substantiation** for each claimed item against
-   `reference/substantiation-by-deduction.md`. A deduction you cannot prove is a
-   deduction you will lose, plus a §6662 penalty.
+   `reference/substantiation-by-deduction.md` (read at this step). A deduction
+   you cannot prove is lost, plus a §6662 penalty.
 6. **Compare itemized vs standard**, including the OBBBA Schedule 1-A items that
    are additive to both.
 
@@ -68,9 +75,11 @@ Deductible this year (excess carries forward as NOL under §172)
 Additional gates that kill otherwise-valid deductions:
 - **§183 hobby loss** — no profit motive, no deduction. *Screen any activity with
   consecutive loss years: it fails the 3-of-5 presumption.*
-- **§280E** — cannabis trafficking disallows everything but COGS. *Applies to
-  any cannabis activity once it begins trafficking. Confirm the marijuana
-  rescheduling status before use (unverified as of 2026-09-23).*
+- **§280E** — trafficking in a Schedule I/II substance disallows everything but
+  COGS. Since 2026-04-23, FDA-approved and state-licensed *medical* marijuana
+  products are Schedule III and outside §280E (DOJ order; verified 2026-09-23,
+  justice.gov). Adult-use marijuana stayed Schedule I pending a broader
+  rescheduling hearing — confirm its status before use.
 - **§274(d)** — no substantiation, no deduction, regardless of merit.
 - **§267** — related-party payment not deductible until includible by the payee.
 
@@ -113,15 +122,6 @@ For each benefit identified:
 | Confidence | Per `irc-lookup` conventions: VERIFIED / CATALOG / RECALL |
 
 Flag anything claimed on `RECALL` numbers before it reaches a return.
-
-## Reference files
-
-- `reference/credits-catalog.md` — credits by category with eligibility tests,
-  refundability, carryforward, and ordering rules under §38.
-- `reference/deductions-catalog.md` — above-the-line, business, itemized, and
-  OBBBA Schedule 1-A deductions with tests and limits.
-- `reference/substantiation-by-deduction.md` — what documentation each deduction
-  requires, including the §274(d) strict-substantiation categories.
 
 ## Related skills
 

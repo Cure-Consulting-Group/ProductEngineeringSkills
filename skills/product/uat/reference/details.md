@@ -1,6 +1,6 @@
 # uat: detailed reference
 
-> Reference material for the `uat` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read when running UAT sessions (Step 4 of the `uat` skill): session structure, in-session bug triage, device/browser matrix, accessibility and offline checks.
 
 ## Contents
 - Step 4: UAT Execution Framework
@@ -73,24 +73,24 @@ Test on real devices. Simulators and emulators miss real-world issues.
 #### Android
 | Device Category | Examples | Required? |
 |---|---|---|
-| Flagship current | Pixel 8 / Samsung S24 | Yes |
-| Mid-range | Pixel 7a / Samsung A54 | Yes |
-| Low-end (if targeting) | Samsung A14 / Redmi Note 12 | Market-dependent |
+| Flagship current | Latest Pixel / Galaxy S | Yes |
+| Mid-range | Current Pixel a-series / Galaxy A5x | Yes |
+| Low-end (if targeting) | Galaxy A1x / Redmi Note class | Market-dependent (required for LATAM products) |
 | Tablet (if applicable) | Pixel Tablet / Samsung Tab S9 | Only if tablet layout exists |
 | Minimum supported OS | Android [minSdk version] | Yes |
-| Latest OS | Android 15 | Yes |
+| Latest OS | Current stable Android release (check at plan time) | Yes |
 
 **Play Store internal testing track:** Upload the release build to the internal testing track before UAT begins. Testers install via Play Store — this verifies the distribution pipeline, not just the app.
 
 #### iOS
 | Device Category | Examples | Required? |
 |---|---|---|
-| Latest iPhone | iPhone 15 / 16 | Yes |
-| Previous generation | iPhone 14 / 13 | Yes |
+| Latest iPhone | Current generation | Yes |
+| Previous generation | One and two generations back | Yes |
 | Oldest supported | iPhone [minimum target] | Yes |
 | iPad (if applicable) | iPad Air / iPad Pro | Only if iPad layout exists |
 | Minimum supported iOS | iOS [deployment target] | Yes |
-| Latest iOS | iOS 18 | Yes |
+| Latest iOS | Current release (iOS 26 or later; check at plan time) | Yes |
 
 **TestFlight distribution:** Upload the release build to TestFlight. All UAT testers install via TestFlight — this verifies the distribution pipeline, provisioning profiles, and entitlements.
 

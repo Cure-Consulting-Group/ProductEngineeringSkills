@@ -24,7 +24,7 @@ only, to worthless-as-authority.
 |---|---|
 | **Revenue Rulings** | IRS's legal conclusion on a stated fact pattern. Cite when your facts match. |
 | **Revenue Procedures** | Procedural rules, safe harbors, and the **annual inflation adjustments** (e.g. Rev. Proc. 2025-32 for 2026). |
-| **Notices / Announcements** | Interim guidance ahead of regs. Mileage rates (Notice 2026-10), retirement limits (Notice 2025-67). |
+| **Notices / Announcements** | Interim guidance ahead of regs. Retirement limits (Notice 2025-67). Mileage rates are set by notice (2026: Notice 2026-10; the July 1 mid-year increase is published in IRB 2026-29 — verified 2026-09-23, irs.gov). |
 | **Actions on Decision** | IRS's acquiescence or nonacquiescence in a loss. |
 
 ### Tier 4 — Case law below the Supreme Court

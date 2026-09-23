@@ -185,10 +185,10 @@ Rules:
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { TraceExporter } from "@google-cloud/opentelemetry-cloud-trace-exporter";
-import { Resource } from "@opentelemetry/resources";
+import { resourceFromAttributes } from "@opentelemetry/resources"; // SDK 2.x: the Resource class is no longer exported
 
 const sdk = new NodeSDK({
-  resource: new Resource({
+  resource: resourceFromAttributes({
     "service.name": process.env.SERVICE_NAME || "unknown",
     "service.version": process.env.SERVICE_VERSION || "0.0.0",
     "deployment.environment": process.env.NODE_ENV || "development",
@@ -357,7 +357,7 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   integrations: [
-    Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),
+    Sentry.replayIntegration(), // keep the default masking: Cure products carry PII/PHI
     Sentry.browserTracingIntegration(),
     Sentry.feedbackIntegration({ colorScheme: "system" }),
   ],
@@ -371,21 +371,24 @@ Sentry.init({
   },
 });
 
-// Web Vitals reporting
-// app/layout.tsx — Next.js App Router
-export function reportWebVitals(metric: NextWebVitalsMetric) {
-  const body = { name: metric.name, value: metric.value, id: metric.id };
+// Web Vitals reporting — App Router: a small client component rendered once in app/layout.tsx
+// app/web-vitals.tsx
+"use client";
+import { useReportWebVitals } from "next/web-vitals";
 
-  // Send to analytics
-  if (metric.name === "LCP" && metric.value > 2500) {
-    Sentry.captureMessage(`Poor LCP: ${metric.value}ms`, { level: "warning", extra: body });
-  }
-  if (metric.name === "CLS" && metric.value > 0.1) {
-    Sentry.captureMessage(`Poor CLS: ${metric.value}`, { level: "warning", extra: body });
-  }
-  if (metric.name === "INP" && metric.value > 200) {
-    Sentry.captureMessage(`Poor INP: ${metric.value}ms`, { level: "warning", extra: body });
-  }
+const POOR = { LCP: 2500, INP: 200, CLS: 0.1 } as const;
+
+export function WebVitals() {
+  useReportWebVitals((metric) => {
+    const limit = POOR[metric.name as keyof typeof POOR];
+    if (limit !== undefined && metric.value > limit) {
+      Sentry.captureMessage(`Poor ${metric.name}: ${metric.value}`, {
+        level: "warning",
+        extra: { id: metric.id, value: metric.value },
+      });
+    }
+  });
+  return null;
 }
 ```
 

@@ -1,228 +1,121 @@
 ---
 name: nextjs-feature-scaffold
-description: "Scaffold Next.js features with App Router, Server/Client components, Tailwind, and data fetching patterns"
-when_to_use: "Use when scaffolding Next.js features with App Router, Server/Client components, Tailwind, and data fetching. NOT for web design guidance (use web-design-expert)."
+description: "Scaffolds Next.js 16 App Router features in TypeScript. Use when adding a page, route, Server Action, form, or CRUD feature to a Next.js app, with Server/Client split, caching, auth, and tests."
+when_to_use: "NOT for visual design or tokens (web-design-expert), splitting an app across teams (micro-frontends), or API contract design (api-architect)."
 argument-hint: "[feature-name]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Next.js Feature Scaffold
 
-Full-stack Next.js feature scaffolding with App Router, Server/Client components, TypeScript, and Tailwind CSS. Platform-aware patterns for static export (Firebase Hosting) and server-side (Vercel/Node).
+**Outcome:** a working feature in the project's existing conventions — typed data layer, Server Actions with validation and auth, Server Components by default with Client islands, loading/error/not-found boundaries, metadata, and tests — that builds and passes lint and tests. Done when the files in the Generation Order exist, `next build` succeeds, and the summary table lists what was created.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
+- Versions: !`grep -oE '"(next|react|zod|tailwindcss|vitest|@playwright/test|firebase)": *"[^"]+"' package.json 2>/dev/null | head -8 || echo "(no package.json)"`
+- Config flags: !`grep -hoE "output: *['\"][a-z]+['\"]|cacheComponents: *(true|false)|reactCompiler: *(true|false)" next.config.* 2>/dev/null | head -4 || echo "(defaults)"`
+- Request interception: !`ls proxy.ts src/proxy.ts middleware.ts src/middleware.ts 2>/dev/null || echo "(none)"`
+- Existing routes: !`find src/app app -maxdepth 3 -name page.tsx 2>/dev/null | head -12`
 
 ## Step 1: Classify the Feature Type
 
 | Feature | Pattern |
-|---------|---------|
-| Static page (marketing, blog) | Server Component, static export |
-| Dynamic page (dashboard, profile) | Server Component + Client islands |
-| Interactive form (contact, checkout) | Client Component with Server Action or API route |
-| Data table / list | Server Component fetch + Client sort/filter |
-| Auth-gated page | Middleware + layout guard |
-| Real-time feature (chat, notifications) | Client Component + WebSocket/Firebase listener |
-| API endpoint | Route Handler (`app/api/`) |
-| Full CRUD feature | All of the above combined |
+|---|---|
+| Static page (marketing, blog) | Server Component; `'use cache'` if Cache Components is on, else static by default |
+| Dynamic page (dashboard, profile) | Server Component + Client islands; dynamic parts inside `<Suspense>` |
+| Form (contact, checkout, settings) | Client form + Server Action with Zod validation and auth check |
+| Data table / list | Server fetch + Client sort/filter via `searchParams` |
+| Auth-gated page | Session check in the layout/page **and** in every Server Action/Route Handler; `proxy.ts` only for optimistic redirects |
+| Real-time (chat, notifications) | Client Component + Firebase listener / WebSocket |
+| API endpoint | Route Handler `app/api/<name>/route.ts` |
+| Full CRUD | All of the above |
+
+A question about Next.js (not a build request) gets an answer, not scaffolding.
 
 ## Step 2: Gather Context
 
-1. **Feature name** — what are we building?
-2. **Data source** — Firebase, REST API, database, static?
-3. **Auth required** — public, authenticated, role-based?
-4. **Deployment target** — static export (Firebase) or server (Vercel)?
-5. **i18n** — single language or multi-locale?
-6. **SEO requirements** — metadata, structured data, OG tags?
+Ask only what auto-context didn't answer: feature name; data source (Firestore, Postgres, REST); auth model (public, signed-in, role-based); deployment (Vercel/Node server vs `output: 'export'` on Firebase Hosting); i18n (`[lang]` segment or not); SEO needs.
 
-## Step 3: Directory Structure
+## Step 3: Directory Structure (one layout — use it for generation)
 
 ```
 src/
-├── app/
-│   └── [lang]/                    # i18n segment (if multi-locale)
-│       └── [feature]/
-│           ├── page.tsx           # Route page (Server Component default)
-│           ├── layout.tsx         # Feature layout (if needed)
-│           ├── loading.tsx        # Loading UI (Suspense boundary)
-│           ├── error.tsx          # Error boundary (Client Component)
-│           ├── not-found.tsx      # 404 for this route
-│           └── [id]/
-│               └── page.tsx       # Dynamic route
-├── components/
-│   └── [feature]/
-│       ├── FeatureList.tsx        # Server or Client depending on interactivity
-│       ├── FeatureCard.tsx        # Presentational component
-│       ├── FeatureForm.tsx        # Client Component ("use client")
-│       └── FeatureFilters.tsx     # Client Component for interactive filtering
-├── lib/
-│   └── [feature]/
-│       ├── actions.ts             # Server Actions (mutations)
-│       ├── queries.ts             # Data fetching functions
-│       ├── types.ts               # TypeScript interfaces
-│       └── validation.ts          # Zod schemas for form validation
-└── __tests__/
-    └── [feature]/
-        ├── page.test.tsx          # Route tests
-        └── components.test.tsx    # Component tests
+├── app/[lang]/<feature>/           # drop [lang] if single-locale
+│   ├── page.tsx                    # Server Component
+│   ├── loading.tsx · error.tsx ('use client') · not-found.tsx
+│   └── [id]/page.tsx
+├── components/<feature>/           # FeatureList, FeatureCard, FeatureForm ('use client'), FeatureFilters
+├── lib/<feature>/
+│   ├── queries.ts                  # server-only reads (import 'server-only')
+│   ├── actions.ts                  # 'use server' mutations
+│   ├── schema.ts                   # Zod schemas + inferred types
+│   └── types.ts
+└── __tests__/<feature>/            # unit/component tests; Playwright specs live in e2e/
 ```
 
-## Step 4: Code Generation Rules
+If the project already uses a different convention (e.g. colocated `_components/`), follow the project.
 
-1. **Server Components by default** — only add `"use client"` when the component needs useState, useEffect, event handlers, or browser APIs
-2. **Never mix** — a Server Component cannot use hooks. Extract interactive parts into a separate Client Component child
-3. **Data fetching in Server Components** — use `async` function components, not useEffect
-4. **TypeScript strict** — no `any`, explicit return types on exported functions, Zod for runtime validation
-5. **Tailwind only** — no CSS modules, no styled-components. Use `cn()` utility for conditional classes
-6. **Accessible by default** — semantic HTML, ARIA labels on interactive elements, keyboard navigation
-7. **Error boundaries** — every route gets `error.tsx`, every async operation gets try/catch
-8. **Loading states** — every route with data fetching gets `loading.tsx`
-9. **Metadata** — every page exports `generateMetadata` for SEO
-10. **Images** — use `next/image` with explicit width/height. For static export: `unoptimized: true`
+## Step 4: Rules That Differ From Older Next.js (Next 15/16)
 
-## Step 5: Component Decision Tree
+- **Async request APIs.** `params`, `searchParams`, `cookies()`, `headers()`, `draftMode()` are Promises; synchronous access was removed in Next 16. Type them `params: Promise<{ id: string }>` and `await` them — including in `generateMetadata`.
+- **`proxy.ts` replaces `middleware.ts`** (Next 16; runs on Node.js, export `proxy`). Migrate with `npx @next/codemod@canary middleware-to-proxy .`. Keep it for redirects/rewrites/headers. **Never make it the only auth check**: CVE-2025-29927 bypassed middleware auth, and Server Actions skip proxy whenever a matcher excludes their route — verify the session inside every Server Action and Route Handler because each one is a public POST endpoint.
+- **Caching is opt-in.** With `cacheComponents: true`, mark cacheable functions/components with `'use cache'` plus `cacheLife()` / `cacheTag()`; everything else renders per request. After mutations: `updateTag(tag)` in Server Actions for read-your-writes, `revalidateTag(tag, 'max')` for stale-while-revalidate (the single-argument form is deprecated), `revalidatePath('/[lang]/items/[id]', 'page')` — the type argument is required when the path contains dynamic segments.
+- **Validation (Zod 4).** `schema.safeParse(...)`; return errors with `z.flattenError(result.error)` (flat forms) or `z.treeifyError` (nested) — `error.flatten()` is deprecated.
+- **Forms.** `useActionState(action, initialState)` for pending/error state; `useFormStatus` in the submit button.
+- **Server/Client split.** `'use client'` only for state, effects, event handlers, or browser APIs; pass Server Components as `children` into Client wrappers instead of converting the parent. Data reads happen in Server Components or `queries.ts` wrapped in React `cache()` for per-request dedupe.
+- **Tailwind v4** is CSS-first (`@theme` in global CSS, no `tailwind.config.ts`); use tokens from `web-design-expert`, `cn()` for conditional classes.
+- **Images.** `next/image` with dimensions; `images.remotePatterns` (not `domains`); local images with query strings need `images.localPatterns`.
+- **Lint.** `next lint` is removed in Next 16; run ESLint (flat config `eslint.config.mjs`) or Biome directly.
 
-```
-Does this component need interactivity (state, effects, events)?
-  ├── NO  → Server Component (default, no directive)
-  │         Can it fetch data?
-  │         ├── YES → async function component, fetch in body
-  │         └── NO  → pure presentational, receives props
-  └── YES → Client Component ("use client")
-            Does it need data from server?
-            ├── YES → Parent = Server Component passes data as props
-            │         OR use Server Action for mutations
-            └── NO  → Self-contained Client Component
-```
+### Static export (`output: 'export'`, Firebase Hosting)
 
-## Step 6: Data Patterns
+No Server Actions, `proxy.ts`, ISR/revalidation, or cookies/headers at request time. Every dynamic route needs `generateStaticParams`; images need `unoptimized: true`; redirects go in `firebase.json`; auth and data use the client Firebase SDK plus callable Functions.
 
-### Server-Side Data Fetching
+## Step 5: Minimal Server Action Pattern
+
 ```typescript
-// lib/[feature]/queries.ts
-import { cache } from 'react';
-
-export const getFeatureById = cache(async (id: string) => {
-  // Firebase, REST, or database call
-  // Runs on server only — safe for secrets
-});
-```
-
-### Server Actions (Mutations)
-```typescript
-// lib/[feature]/actions.ts
-"use server";
-
-import { revalidatePath } from 'next/cache';
+// src/lib/<feature>/actions.ts
+'use server';
 import { z } from 'zod';
+import { updateTag } from 'next/cache';
+import { getSession } from '@/lib/auth';
+import { createItemSchema } from './schema';
 
-const schema = z.object({ name: z.string().min(1) });
+export type ActionState = { ok: boolean; errors?: ReturnType<typeof z.flattenError> };
 
-export async function createFeature(formData: FormData) {
-  const parsed = schema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.flatten() };
-
-  // Create in database/Firebase
-  revalidatePath('/[lang]/[feature]');
-  return { success: true };
+export async function createItem(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const session = await getSession();            // auth inside the action, every time
+  if (!session) return { ok: false };
+  const parsed = createItemSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, errors: z.flattenError(parsed.error) };
+  // write to Firestore / DB
+  updateTag(`items-${session.userId}`);
+  return { ok: true };
 }
 ```
 
-### Client-Side State (when needed)
-```typescript
-// For complex client state: useReducer > useState
-// For shared client state: React Context (small) or Zustand (large)
-// For server cache: React Query / SWR (only if you need client-side refetching)
-```
+## Step 6: SEO
 
-## Step 7: Static Export Constraints
+Every `page.tsx` exports `generateMetadata` (awaiting `params`) with title, description (<160 chars), and Open Graph. Content pages add JSON-LD via `<script type="application/ld+json">`. Deeper SEO work belongs to `seo-content-engine`.
 
-When `output: "export"` (Firebase Hosting):
-- No Server Actions — use API routes or Firebase callable functions
-- No `revalidatePath` / `revalidateTag` — fully static
-- No middleware redirects at runtime — use `firebase.json` redirects
-- All dynamic routes need `generateStaticParams`
-- Images require `unoptimized: true` in next.config
-- Use client-side Firebase SDK for auth and real-time data
+## Code/Artifact Generation
 
-## Step 8: SEO & Metadata
+Applies when Step 1 classified a build request (the default for this skill). Generate in this order, matching existing project conventions found in auto-context:
 
-```typescript
-// Every page.tsx:
-export async function generateMetadata({ params }): Promise<Metadata> {
-  return {
-    title: 'Page Title | Site Name',
-    description: 'Clear description under 160 chars',
-    openGraph: {
-      title: '...',
-      description: '...',
-      type: 'website',
-      images: ['/og-image.png'],
-    },
-  };
-}
-```
+1. `lib/<feature>/schema.ts` and `types.ts`
+2. `lib/<feature>/queries.ts`
+3. `lib/<feature>/actions.ts` or `app/api/<name>/route.ts`
+4. `app/.../<feature>/page.tsx` (+ `layout.tsx` if needed), with `generateMetadata`
+5. Client components in `components/<feature>/`
+6. `loading.tsx`, `error.tsx`, `not-found.tsx`
+7. Tests in `__tests__/<feature>/` (Vitest + React Testing Library, MSW for network); a Playwright spec in `e2e/` only for a critical flow. Coverage and retry policy come from `testing-strategy`.
+8. A summary table of files created.
 
-For blog/content pages, add JSON-LD:
-```typescript
-<script type="application/ld+json" dangerouslySetInnerHTML={{
-  __html: JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
-    datePublished: post.date,
-    author: { "@type": "Organization", name: "Company" },
-  })
-}} />
-```
+Scaffold the requested feature only; don't refactor unrelated routes or upgrade dependencies unless asked.
 
-## Step 9: Testing Standards
+## Related
 
-```
-Unit:        Vitest + React Testing Library
-Integration: Vitest + MSW (mock API responses)
-E2E:         Playwright (critical user flows)
-```
-
-Test file naming: `[component].test.tsx` co-located in `__tests__/`
-
-## Generation Order
-
-1. Types (`types.ts`)
-2. Validation schemas (`validation.ts`)
-3. Data queries (`queries.ts`)
-4. Server actions or API routes (`actions.ts`)
-5. Server Components (page, layout)
-6. Client Components (forms, interactive elements)
-7. Loading/Error boundaries
-8. Tests
-9. Summary table of generated files
-
-## Code Generation (Required)
-
-You MUST generate actual TypeScript files using the Write tool:
-
-1. **Types**: `src/app/{feature}/types.ts` — TypeScript interfaces and Zod schemas
-2. **Server Actions**: `src/app/{feature}/actions.ts` — server-side mutations
-3. **Page**: `src/app/{feature}/page.tsx` — Server Component with data fetching
-4. **Components**: `src/app/{feature}/components/{Feature}Form.tsx`, `{Feature}List.tsx` — Client Components with 'use client'
-5. **Loading/Error**: `src/app/{feature}/loading.tsx`, `src/app/{feature}/error.tsx`
-6. **Tests**: `src/app/{feature}/__tests__/{feature}.test.tsx`
-7. **Metadata**: Full `generateMetadata` with OpenGraph in page.tsx
-
-Before generating, use Glob to find existing route patterns (`src/app/*/page.tsx`) and match project conventions. Read `tailwind.config.ts` for existing design tokens.
-
-## Cross-References
-
-- `/database-architect` — for Firestore/PostgreSQL schema design used by server actions and queries
-- `/firebase-architect` — for Firestore security rules and Firebase SDK usage patterns
-- `/api-architect` — for REST/GraphQL API route design when using Route Handlers
-- `/testing-strategy` — for Vitest and Playwright testing standards
-- `/seo-content-engine` — for metadata, structured data, and OpenGraph patterns
+`web-design-expert` (visual spec and tokens) · `database-architect` / `firebase-architect` (data model, rules) · `api-architect` (Route Handler contracts) · `testing-strategy` (test standards) · `e2e-testing` (Playwright) · `seo-content-engine` (metadata and structured data)

@@ -1,7 +1,7 @@
 ---
 name: legal-doc-scaffold
-description: "Generate Terms of Service, Privacy Policy, SOW, and NDA scaffolds with attorney disclaimer"
-when_to_use: "Use when generating Terms of Service, Privacy Policy, SOW, NDA, EULA, or DPA scaffolds. Requires attorney review. NOT for NIL contracts (no Cure skill; NCAA/NIL rule checks go to the legal-compliance agent, drafting to counsel)."
+description: "Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy for attorney review. Use when a product or engagement needs a starting draft built from a required-clause checklist and compliance flags."
+when_to_use: "NOT for reviewing a received contract (use contract-reviewer agent) or consent-flow design (use compliance-architect)."
 argument-hint: "[company-or-product]"
 disable-model-invocation: true
 ---
@@ -15,116 +15,93 @@ disable-model-invocation: true
 > runtimes ignore that field**, so on Codex and Antigravity this paragraph is the
 > only thing standing between a suggestion and an irreversible act.
 
-## Pre-Processing (Auto-Context)
+**What this skill ships:** the compliance-flag matrix (Step 2), a required-clause checklist per document type (Step 3), Cure's consulting positions for SOWs (Step 4), and one worked template (refund policy). The model drafts each document from those checklists; there is no pre-written ToS, privacy policy, NDA, DPA, or EULA text here. **Done** when the requested document covers every required clause for its type, every applicable Step 2 flag, and marks each attorney-review point.
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
-
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
-
-> **IMPORTANT DISCLAIMER — READ BEFORE PROCEEDING:** These are starting-point scaffolds for reference and drafting purposes only. They do NOT constitute legal advice and do NOT create an attorney-client relationship. These documents have NOT been reviewed by a licensed attorney and may not be appropriate for your jurisdiction, industry, or specific situation. ALWAYS have every legal document reviewed and approved by a licensed attorney in your jurisdiction before publishing, signing, or relying on it in any business context. Failure to do so may result in unenforceable agreements, regulatory violations, or legal liability. The use of these scaffolds is entirely at your own risk.
-
-Generates first-draft legal documents for SaaS products, mobile apps, and consulting engagements.
-
-## Disclaimer Enforcement (Required)
-
-Every generated document MUST begin with this notice block before any content:
+**Attorney review, stated once:** these drafts are not legal advice and have not been reviewed by a lawyer. Enforceability and disclosure duties vary by jurisdiction, industry, and user base, and an unreviewed ToS or privacy policy can be unenforceable or itself a regulatory violation. So every document begins and ends with the notice below, and nothing is published or signed until a licensed attorney approves it.
 
 ```markdown
-> **LEGAL DISCLAIMER:** This document is a scaffold for reference purposes only and does NOT constitute legal advice. It has not been reviewed by a licensed attorney. Have this document reviewed by qualified legal counsel in your jurisdiction before use.
+> **Draft for attorney review — not legal advice.** Prepared as a starting point; have licensed counsel in your jurisdiction review it before publishing, signing, or relying on it.
 ```
-
-Additionally, every section that touches jurisdiction-specific law, data privacy, intellectual property, or liability MUST include an inline `<!-- ATTORNEY REVIEW: [specific reason] -->` comment.
-
-The disclaimer MUST also be repeated verbatim at the end of every generated document.
-
-## Document Types
-
-| Request | Document |
-|---------|----------|
-| App / SaaS | Terms of Service |
-| App / SaaS | Privacy Policy |
-| App / SaaS | EULA (mobile app) |
-| B2B SaaS | Data Processing Agreement |
-| Consulting | Statement of Work |
-| Consulting | Consulting Agreement |
-| Any | NDA (Mutual or One-Way) |
-| App | Refund / Cancellation Policy |
 
 ## Step 1: Gather Context
 
-Before generating, confirm:
-1. **Document type** — which document(s) needed?
-2. **Product name + company name** — legal entity name
-3. **Product type** — mobile app / web app / API / consulting service
-4. **Data collected** — what user data is collected? (email, payment, location, health, etc.)
-5. **Target geography** — US only? EU users? (GDPR implications)
-6. **Third-party services** — Firebase, Stripe, Mixpanel, etc.
-7. **Business model** — subscription / one-time / freemium / consulting
-8. **Minors** — is the platform open to users under 13? Under 18?
+Confirm before drafting (ask the user for anything the request doesn't state):
+1. Document type(s).
+2. Legal entity name, product name, and state of formation.
+3. Product type: mobile app / web app / API / consulting engagement.
+4. Personal data collected: email, payment, location, health, biometrics, children's data.
+5. Where users are: US states, EU/UK, elsewhere.
+6. Third-party processors (Firebase, Stripe, analytics, LLM APIs).
+7. Business model: subscription / one-time / freemium / consulting.
+8. Minimum user age (under 13? under 18?).
 
 ## Step 2: Compliance Flags
 
-Based on context, auto-flag applicable requirements:
+Apply every row that matches; each becomes a section or an `<!-- ATTORNEY REVIEW: reason -->` note.
 
-| Condition | Requirement |
-|-----------|-------------|
-| Collecting email / PII | Privacy Policy required |
-| Payment processing | Must mention Stripe, PCI compliance note |
-| Users in EU | GDPR: data subject rights, DPA with processors |
-| Users in California | CCPA: right to know, delete, opt-out of sale |
-| App on App Store | Apple EULA passthrough required |
-| App on Play Store | Google Play Developer Policy compliance |
-| Users under 13 | COPPA — do not collect data; add age gate |
-| Health/fitness data | HIPAA adjacent — strong disclaimer needed |
-| SaaS B2B | DPA often required by enterprise customers |
+| Condition | What the document must address |
+|---|---|
+| Any personal data | Privacy policy: categories, purposes, processors, retention, rights, contact |
+| California residents | CCPA/CPRA: notice at collection, right to know/delete/correct, opt-out of sale/sharing, sensitive-data limits |
+| Other US states | About 20 states have comprehensive privacy laws in force (IAPP tracker; confirm the current list before use): draft rights and opt-outs to the strictest applicable state, and flag universal opt-out signals (GPC) |
+| EU/UK users | GDPR/UK GDPR: lawful basis per purpose, data-subject rights, transfers mechanism; DPA with each processor |
+| Users under 13 | COPPA: collection is allowed only with verifiable parental consent — a separate consent before disclosing to third parties, a written retention policy, and a written security program (2025 amendments). Don't draft a consent flow here; `compliance-architect` owns that design. The policy must describe what's collected from children, parental rights, and the consent method |
+| Health or fitness data outside HIPAA | FTC Health Breach Notification Rule (health apps), Washington My Health My Data Act, and similar state consumer-health laws: explicit consent and a separate consumer-health privacy policy |
+| Covered entity or business associate | HIPAA: route to compliance-architect for the BAA and safeguards; the public privacy policy is not a HIPAA notice |
+| Payments | Name the processor (Stripe); card data never touches our servers; refund terms |
+| Apple App Store | Apple's Standard EULA, or a custom EULA that includes Apple's minimum terms |
+| Google Play | Privacy policy link required in the listing; Data safety form must match the policy |
+| B2B SaaS | DPA offered to customers; subprocessor list and change notice |
+| LLM features | Disclose AI processing, whether inputs train models (normally no), and the model providers as processors |
 
-## Consulting Documents (Cure Consulting Group)
+## Step 3: Required Clauses by Document
 
-For SOW and consulting agreements, always include:
-- Clear scope of work (what's in, what's out)
-- Deliverables with acceptance criteria
-- Payment terms (milestone or net-30)
-- IP ownership (work-for-hire vs. licensed)
-- Confidentiality
-- Limitation of liability
-- Change order process
-- Termination clause
+| Document | Required clauses |
+|---|---|
+| Terms of Service | Acceptance and eligibility (age), accounts, acceptable use, subscriptions/billing/auto-renewal disclosure, IP and license to the service, user content license, third-party services, disclaimers, limitation of liability, indemnity, termination, dispute resolution (arbitration + class waiver is a counsel decision), governing law, changes to terms, contact |
+| Privacy Policy | Step 2 privacy rows, plus data categories and sources, purposes, sharing/processors, retention, security, user rights and how to exercise them, children, international transfers, changes, contact, effective date |
+| EULA (mobile) | License grant and restrictions, ownership, updates, termination, warranty disclaimer, liability cap, export compliance, App Store third-party beneficiary terms |
+| DPA | Roles (controller/processor), subject matter and duration, processing instructions, confidentiality, security measures annex, subprocessors, assistance with rights and DPIAs, breach notice timeline, deletion/return, audits, transfer clauses (SCCs where needed) |
+| NDA (mutual or one-way) | Definition and exclusions, permitted use, standard of care, compelled disclosure, term and survival, return/destruction, no license, remedies (injunctive relief), governing law |
+| SOW / consulting agreement | Step 4 positions, plus parties, background, scope in/out, deliverables with acceptance criteria, timeline, fees, assumptions, dependencies on the client |
+| Refund / cancellation policy | Template below |
+
+Mark with `<!-- ATTORNEY REVIEW: reason -->` at minimum: governing law and venue, limitation of liability, indemnity, IP ownership, data-subject rights, arbitration.
+
+## Step 4: Cure Consulting SOW Positions
+
+**Proposed defaults (Wave 5, 2026-09-23) — not yet approved by Cure leadership or counsel.** Only milestone-or-net-30 payment and deliverables-with-acceptance-criteria predate this list; treat every other number below as a placeholder and mark it `<!-- ATTORNEY REVIEW: proposed Cure default -->` in any draft until the owner signs off.
+
+Starting positions for Cure as the service provider — note any the client asks to change for counsel:
+- **Scope:** explicit in-scope and out-of-scope lists; anything not listed is a change order.
+- **Acceptance:** client has 5 business days to accept or list defects against the written criteria; silence = accepted.
+- **Payment:** milestone-based or net-30; late fees and the right to pause work after 15 days overdue.
+- **IP:** client owns deliverables on full payment; Cure keeps pre-existing tools, libraries, and know-how, licensed to the client for use with the deliverables.
+- **Change orders:** written, with cost and schedule impact, signed before work starts.
+- **Liability:** capped at fees paid under the SOW in the prior 12 months; no consequential damages.
+- **Termination:** either party on 30 days' notice; client pays for work performed to date.
+- **Confidentiality and non-solicitation** of staff for 12 months.
 
 ## Refund & Cancellation Policy Template
 
 ```markdown
 ## Refund & Cancellation Policy — [Product Name]
 
-**Subscriptions:**
-You may cancel your subscription at any time. Cancellation takes effect at the end of
-your current billing period. We do not provide prorated refunds for partial months.
+**Subscriptions:** Cancel anytime; cancellation takes effect at the end of the current billing
+period. We don't prorate partial periods.
 
-**Refunds:**
-We offer a [14-day / 30-day] money-back guarantee for first-time subscribers. To request
-a refund, contact support@[domain] within [N] days of your initial charge.
+**Refunds:** First-time subscribers may request a refund within [14/30] days of the initial
+charge at support@[domain]. After that window, charges are final except where law requires otherwise.
 
-After the refund window, all charges are final and non-refundable, except where required
-by applicable law.
-
-**App Store Purchases:**
-If you purchased through the Apple App Store or Google Play Store, refunds are subject
-to their respective refund policies. We are unable to process refunds for app store
-purchases directly.
+**App store purchases:** Purchases through the Apple App Store or Google Play follow their refund
+policies; we can't refund those directly.
 
 **Contact:** support@[domain]
 ```
 
 ## Output Format
 
-- Generate as clean Markdown
-- Use `[COMPANY NAME]`, `[PRODUCT NAME]`, `[DATE]`, `[EMAIL]` as fill-in placeholders
-- Highlight sections that need attorney review with `<!-- ATTORNEY REVIEW: [reason] -->`
-- Include a "Document Info" header with version, date, and applicable laws
-- **Start every document with the full legal disclaimer block** (see Disclaimer Enforcement above)
-- **End every document with the full legal disclaimer block** — repeated, never omitted
-- Inline `<!-- ATTORNEY REVIEW -->` comments are required on: jurisdiction clauses, limitation of liability, data subject rights, IP ownership, indemnification, and governing law sections
+- Clean Markdown; placeholders `[COMPANY NAME]`, `[PRODUCT NAME]`, `[DATE]`, `[EMAIL]`.
+- Header: document type, version, effective date, laws considered (from Step 2).
+- The attorney-review notice at the start and the end; inline attorney-review comments per Step 3.
+- Deliver the requested document only; don't add unrequested documents. Match length to the need; no filler sections or restated summaries.

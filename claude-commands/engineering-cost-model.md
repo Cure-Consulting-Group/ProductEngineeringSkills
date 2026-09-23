@@ -1,66 +1,42 @@
 # Engineering Cost Model
 
-> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
-> mutating commands, and do not create or delete resources. Under Claude Code
-> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
-> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
-> fields, and activation there can widen rather than narrow file access — so on
-> any runtime other than Claude Code this paragraph is the only guardrail.
+> **Advisory skill — writes reports only.** It may write the estimate file the user asks for; it
+> never edits code, infrastructure, or financial records. `allowed-tools` only pre-approves tools
+> and other runtimes ignore it, so this paragraph is the guardrail in every runtime.
 
-## Pre-Processing (Auto-Context)
+**Outcome:** an internal cost estimate — hours by component, year-1 infrastructure and services,
+monthly maintenance, and total year-1 cost — with assumptions and the prices' sources dated.
+**Done when** every feature maps to an hours line, every vendor price was checked on its current
+pricing page, and the top two cost risks are named. Match length to the need; no filler sections
+or restated summaries.
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
-
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
-
-Estimate the true cost of building, running, and maintaining software architectures. Use this before scoping projects, pricing engagements, or choosing between build vs buy.
-
-## Step 1: Classify the Cost Analysis Type
+## Step 1: Classify
 
 | Need | Output |
 |------|--------|
-| Project estimate | Total build cost (hours × rate + infrastructure) |
+| Project estimate | Hours × rate + infrastructure + maintenance |
 | Architecture comparison | Side-by-side cost of 2+ approaches |
-| Infrastructure forecast | Monthly/annual cloud + service costs at scale |
-| Build vs buy | Custom development vs SaaS/off-the-shelf comparison |
-| Maintenance budget | Ongoing cost to keep a shipped product running |
-| Client proposal | SOW-ready cost breakdown for consulting engagement |
+| Infrastructure forecast | Monthly/annual cloud and service cost at scale bands |
+| Build vs buy | Custom build vs SaaS over 3 years |
+| Maintenance budget | Ongoing cost of a shipped product |
+
+Client-facing pricing, milestones, and payment schedules go to `proposal-generator`, which owns
+Cure's commercial terms; this skill supplies its cost basis. When the estimate will be bid
+against or held under contract, use `technical-estimation` (three-point PERT, σ roll-up,
+reference-class correction) and feed its hours back here.
 
 ## Step 2: Gather Context
 
-1. **What's being built** — feature, MVP, full product, migration?
-2. **Platforms** — Android, iOS, Web, backend, or combination?
-3. **Team** — in-house, contractors, agency (rate per hour)?
-4. **Timeline** — deadline-driven or scope-driven?
-5. **Scale expectations** — users at launch, 6 months, 12 months?
-6. **Third-party services** — Stripe, Firebase, AI APIs, CDN?
+What is being built (feature, MVP, product, migration); platforms; team model and rates; timeline
+driver (deadline or scope); users at launch, 6, and 12 months; third-party services.
 
-## Step 3: Engineering Hour Estimates
+## Step 3: Engineering hours
 
-### Estimation Framework
-```
-Break every feature into tasks. Estimate each task in hours.
-Always use three-point estimation:
+Pick the column per task honestly. The columns already carry task complexity; add a component
+multiplier only for risk the column can't see: integration-heavy 1.3×, real-time/AI/payments
+1.6×, never-built-before R&D 2.0× (state which and why). For a range rather than a point, take hours from the Simple and Complex columns
+as the optimistic and pessimistic bounds (method in `technical-estimation`).
 
-  Optimistic (O):  everything goes right, no unknowns
-  Likely (L):      normal development with typical blockers
-  Pessimistic (P): significant unknowns, dependencies, or complexity
-
-  Estimate = (O + 4L + P) / 6
-
-Then apply the complexity multiplier:
-  Simple (CRUD, standard UI):          1.0x
-  Moderate (custom logic, integrations): 1.3x
-  Complex (real-time, AI, payments):    1.6x
-  Novel (never done before, R&D):      2.0x
-```
-
-### Standard Task Estimates (hours)
 
 ```
 MOBILE (Android or iOS — one platform)
@@ -123,39 +99,32 @@ CROSS-CUTTING
 └─────────────────────────────────┴──────────────────────────────────┘
 ```
 
-## Step 4: Infrastructure Cost Estimation
+## Step 4: Infrastructure and services
 
-### Firebase (pay-as-you-go after free tier)
-```
-Free tier covers:
-  Firestore: 50K reads, 20K writes, 20K deletes per day
-  Auth: 10K verifications/month (phone), unlimited email
-  Storage: 5GB stored, 1GB/day download
-  Functions: 2M invocations, 400K GB-seconds
-  Hosting: 10GB stored, 360MB/day transfer
+Look up every unit price on the vendor's current pricing page and date it in the output; the
+figures below are planning anchors, not quotes.
 
-Typical monthly cost by scale:
-  0-1K users:     \$0-25/month (free tier covers most)
-  1K-10K users:   \$25-150/month
-  10K-50K users:  \$150-500/month
-  50K-100K users: \$500-2,000/month
-  100K+ users:    \$2,000+/month (optimize reads, use caching)
 ```
+Firebase no-cost quotas (verified 2026-09-23, firebase.google.com/pricing):
+  Firestore:  50K reads, 20K writes, 20K deletes per day; 1 GiB stored
+  Functions:  2M invocations, 400K GB-seconds per month (Blaze plan required)
+  Storage:    5 GB-months stored, 100 GB/month downloaded
+  Hosting:    10 GB stored, 360 MB/day transfer
+  Auth:       50K MAU; phone SMS billed per message
 
-### Third-Party Services
-```
-Stripe:          2.9% + \$0.30 per transaction (no monthly fee)
-SendGrid/Resend: \$0-20/month (up to 100 emails/day free)
-OpenAI API:      \$0.50-15 per 1M tokens (model dependent)
-Gemini API:      \$0-7 per 1M tokens (model dependent)
-Vercel:          \$0-20/month (hobby/pro), usage-based beyond
-Algolia/Search:  \$0-50/month (up to 10K records free)
-Sentry:          \$0-26/month (error monitoring)
-Analytics:       \$0 (Firebase Analytics), \$0-25/month (Mixpanel/PostHog)
-Domain + DNS:    \$12-20/year
+Cure planning bands for a Firebase app (validate against the calculator):
+  0–1K users: \$0–25/mo | 1K–10K: \$25–150 | 10K–50K: \$150–500 | 50K–100K: \$500–2,000
+  100K+: \$2,000+ (optimize reads, add caching — see finops)
+
+Services to price explicitly:
+  Stripe: 2.9% + 30¢ per successful US domestic card charge (verified 2026-09-23, stripe.com/pricing)
+  Email: SendGrid retired its free plan in 2025 (60-day trial, then paid plans); Resend and
+         Postmark have paid tiers — check current pricing
+  LLM APIs: per-token prices by model tier — check each provider's pricing page; see finops Step 6
+  Hosting (Vercel/Cloud Run), search, error monitoring, analytics, domains: check current tiers
 ```
 
-## Step 5: Project Cost Templates
+## Step 5: Project cost templates (Cure reference points)
 
 ### MVP (one platform + backend)
 ```
@@ -226,26 +195,22 @@ Common build vs buy decisions:
   Core logic:  ALWAYS BUILD — this is your product
 ```
 
-## Live Pricing Data
+## Live pricing
 
-Use WebSearch to fetch current pricing for infrastructure components:
-- "Firebase pricing calculator 2025"
-- "Vercel pricing tiers 2025"
-- "OpenAI API pricing per token 2025"
-- "Stripe payment processing fees 2025"
-
-Flag any assumptions that differ from current published pricing.
+Search the web for the current pricing page of every detected service (e.g. "Firebase pricing",
+"Vercel pricing", "<provider> API pricing per token") and flag any assumption that differs from
+the published price. Don't put a year in the query; read the page date instead.
 
 ## Scripts
 
-This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
+`cure-cost-estimator` (on PATH while the plugin is enabled; otherwise
+`python3 <plugin-root>/skills/business/engineering-cost-model/scripts/cost_estimator.py`) totals
+hours × rate + PM/QA overhead + infra + optional contingency. Stdlib only; `--help` lists flags.
 
-- `scripts/cost_estimator.py` — Total project cost from `--hours`, `--rate`, `--infra-monthly`, `--duration-months`. Includes PM/QA overhead and optional contingency. With the plugin enabled it is also on PATH as `cure-cost-estimator` (same flags).
-  ```bash
-  python3 skills/business/engineering-cost-model/scripts/cost_estimator.py \
-    --hours 400 --rate 175 --infra-monthly 250 --duration-months 6 \
-    --pm-pct 10 --qa-pct 15 --contingency-pct 15 --json
-  ```
+```bash
+cure-cost-estimator --hours 400 --rate 175 --infra-monthly 250 --duration-months 6 \
+  --pm-pct 10 --qa-pct 15 --contingency-pct 15 --json
+```
 
 ## Step 7: Cost Estimate Output
 
@@ -253,7 +218,7 @@ This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and 
 ENGINEERING COST ESTIMATE
 Project: [NAME]
 Date: [TODAY]
-Prepared for: [CLIENT]
+Prepared for: [INTERNAL / CLIENT PLANNING]
 
 SCOPE SUMMARY
   Platforms: [Android / iOS / Web / Backend]
@@ -297,10 +262,7 @@ TOTAL YEAR 1: $XXX,XXX
 ASSUMPTIONS & RISKS
   - [Assumption 1]
   - [Risk 1 — impact on cost if realized]
-
-PAYMENT STRUCTURE (RECOMMENDED)
-  30% — Project kickoff
-  30% — Midpoint milestone (working prototype)
-  30% — Delivery and launch
-  10% — 30 days post-launch (bug fix period)
+  Prices checked: [vendor page, date]
 ```
+
+Payment schedule and client terms: hand the totals to `proposal-generator`.

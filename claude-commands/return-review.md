@@ -1,18 +1,21 @@
 # Return Review & Evaluation
 
 The independent second pass. Preparation finds the answer; review proves it.
+**Done when** all four layers have run, every finding and diagnostic has a
+written disposition, and the sign-off block is complete or the blockers are
+listed.
 
 ## Disclaimer
 This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`).
 
-**Rule: review is never performed in the same sitting as preparation.** Where the
-preparer and taxpayer are the same person, this pass is the only independent
-control that exists. Treat the return as though someone else made it and you are
-looking for their mistakes.
+**Review in a separate pass from preparation** (a fresh session, or a subagent
+if your runtime supports one). Where preparer and taxpayer are the same person,
+this pass is the only independent control that exists, so treat the return as
+someone else's work and look for their mistakes.
 
 ## Four layers, in order
 
-Do not skip ahead. Layer 1 failures make layers 2–4 meaningless.
+Layer 1 failures make layers 2–4 meaningless, so fix tie-outs first.
 
 ```
 1. TIE-OUT      Does every number trace to a source or a computation?
@@ -40,20 +43,16 @@ books reconciling.
 [ ] Book income → tax income via M-1, every difference itemized
 ```
 
-### Automated support
-Run whatever the project binds as `validator` (pre-filing validation, filing
-readiness) plus its golden-file and regression suites before starting the manual
-review, so the review spends its attention on judgment rather than arithmetic.
-
-Machine checks are **necessary, not sufficient** — they verify the engine did what
-it was told, not that it was told the right thing.
+Run the project's `validator` binding and its regression suites before the
+manual review, so attention goes to judgment rather than arithmetic. Machine
+checks prove the engine did what it was told, not that it was told the right
+thing.
 
 ## Layer 2 — Internal consistency
 
-Cross-form relationships that must hold. Full list in
-`reference/tie-out-checklist.md`.
-
-High-value checks:
+Cross-form relationships that must hold. Work through
+`reference/tie-out-checklist.md` for the return type in hand; the high-value
+checks are:
 - Schedule C net profit → Schedule SE → the §164(f) one-half deduction
 - Schedule SE net earnings → retirement contribution limit
 - QBI (§199A) → the W-2 wage / UBIA limitation, and the taxable-income limitation
@@ -97,7 +96,8 @@ Review is also the last chance to catch what was not claimed.
 [ ] Every election reviewed against elections-and-deadlines.md
 [ ] Retirement contribution maximized (many can still be funded post-year-end)
 [ ] Carryforwards actually USED where they should be, not just carried
-[ ] Accounting method opportunities (§174A catch-up of unamortized 2022–2024 R&E, §471(c)); the small-business retroactive election expired 2026-07-06
+[ ] Accounting method opportunities (§174A catch-up of unamortized 2022–2024 R&E, §471(c));
+    the small-business retroactive election expired 2026-07-06 (Rev. Proc. 2025-28)
 [ ] Anything the strategy playbook flags for this entity that was not executed
 ```
 
@@ -113,30 +113,25 @@ Every diagnostic gets one of three dispositions, in writing:
 
 ## Sign-off
 
-```
-Reviewed by: ______________________  Date: __________
-[ ] All four layers complete
-[ ] Zero open items
-[ ] Every material variance explained in writing
-[ ] Every non-routine position has a memo dated before today
-[ ] Carryforward schedule rolled forward and reconciled
-[ ] Diagnostics dispositioned
-```
+Reviewer name and date, confirming: four layers complete, zero open items,
+material variances explained in writing, a pre-dated memo for every non-routine
+position, carryforwards rolled and reconciled, diagnostics dispositioned.
 
 _Draft for professional review — not tax advice. A licensed CPA, EA, or tax attorney must review before filing, paying, or acting._
 
 ## Output shape
 
-Report findings as: **severity** (blocker / correction / question / opportunity),
-**location** (form and line), **the issue**, **the evidence**, **the fix**. Rank
-blockers first. Do not bury a material error inside a list of formatting notes.
+Report **every** finding, each with **severity** (blocker / correction /
+question / opportunity), **confidence**, **location** (form and line), **the
+issue**, **the evidence**, and **the fix**. Rank blockers first; ranking is
+ordering, not filtering. Don't bury a material error among formatting notes.
 
 ## Reference files
 
-- `reference/tie-out-checklist.md` — cross-form relationships that must hold, by
-  return type.
-- `reference/common-errors.md` — the recurring error catalog, ranked by frequency
-  and cost, with the detection test for each.
+- `reference/tie-out-checklist.md` — read during Layer 2; cross-form
+  relationships and 2026 phase-out figures by return type.
+- `reference/common-errors.md` — read before Layer 3; the recurring error
+  catalog ranked by frequency and cost, with a detection test for each.
 
 ## Related skills
 

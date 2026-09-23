@@ -1,6 +1,6 @@
 # design-system: detailed reference
 
-> Reference material for the `design-system` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read when scaffolding the component library for a platform (Step 4 of the `design-system` skill).
 
 ## Contents
 - Step 4: Component Library Per Platform
@@ -131,30 +131,25 @@ public struct PrimaryButton: View {
 
 ### Web — React + Tailwind
 
-```typescript
-// design-system/src/theme/tailwind-tokens.ts
-// Generated from Style Dictionary — do not edit manually
-export const tokens = {
-  colors: {
-    primary: {
-      DEFAULT: 'var(--color-primary)',
-      foreground: 'var(--color-on-primary)',
-    },
-    secondary: {
-      DEFAULT: 'var(--color-secondary)',
-      foreground: 'var(--color-on-secondary)',
-    },
-    surface: {
-      DEFAULT: 'var(--color-surface)',
-      foreground: 'var(--color-on-surface)',
-    },
-    destructive: {
-      DEFAULT: 'var(--color-error)',
-      foreground: 'var(--color-on-error)',
-    },
-  },
-} as const;
+```css
+/* design-system/src/theme/theme.css — Tailwind v4 is CSS-first: map generated
+   token variables into the theme with @theme inline (no tailwind.config.ts). */
+@import "tailwindcss";
+@import "./tokens.css"; /* generated from design-studio's DTCG tokens.json */
 
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-on-primary);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-foreground: var(--color-on-secondary);
+  --color-surface: var(--color-surface);
+  --color-surface-foreground: var(--color-on-surface);
+  --color-destructive: var(--color-error);
+  --color-destructive-foreground: var(--color-on-error);
+}
+```
+
+```typescript
 // design-system/src/components/button.tsx
 // Following shadcn/Radix patterns — composable, accessible by default
 import { cva, type VariantProps } from "class-variance-authority";
@@ -211,7 +206,7 @@ export function Button({
 // Package structure:
 // design-system/
 //   src/
-//     theme/        — tokens, CSS custom properties, Tailwind config
+//     theme/        — generated tokens.css + theme.css (@theme)
 //     components/   — Button, Card, Input, Dialog, etc. (Radix primitives)
 //     utils/        — cn(), token helpers
 //   stories/        — Storybook stories for each component

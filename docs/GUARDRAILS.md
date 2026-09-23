@@ -40,9 +40,13 @@ by design).
 
 ## Non-Claude runtimes: no enforcement surface exists
 
-Verified in Wave 2.5: Gemini CLI / Antigravity ignore `disallowed-tools` and
-`disable-model-invocation` silently. Exported skills carry prose
-READ-ONLY/DESTRUCTIVE blocks (T25) — those are **advisory, full stop**.
+Re-measured in Wave 5 (2026-09-23, `docs/evaluations/2026-09-23/platform-facts.md`):
+Codex and Antigravity both ignore `allowed-tools`, `disallowed-tools`, and
+`context: fork`. `disable-model-invocation` is **honored by Antigravity** but
+**ignored by Codex** — Codex gets a generated `openai.yaml` sidecar per skill with
+`allow_implicit_invocation: false` instead (T55). Skills carry prose
+READ-ONLY/DESTRUCTIVE blocks in their source bodies, and the Antigravity
+export adds guardrail notes (T56) — those are **advisory, full stop**.
 Consequence, inherited by RUNTIME-SELECTION (T33): **regulated or
 payment-touching work stays on Claude Code, where controls are real.**
 

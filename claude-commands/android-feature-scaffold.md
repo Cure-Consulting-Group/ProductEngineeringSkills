@@ -1,141 +1,115 @@
 # Android Feature Scaffold
 
-Generates complete, production-ready Android feature scaffolding using Clean Architecture, MVI, Jetpack Compose, Hilt, and Kotlin Coroutines/Flow.
-
-## Architecture Layers Generated
-
-```
-:feature:[name]/
-├── domain/
-│   ├── model/          [FeatureName].kt                  ← Domain model (pure Kotlin)
-│   └── usecase/        Get[FeatureName]UseCase.kt        ← UseCase(s)
-├── data/
-│   ├── dto/            [FeatureName]Dto.kt               ← Firestore/API DTO + mapper
-│   ├── source/         [FeatureName]DataSource.kt        ← Remote/local data source
-│   └── repository/     [FeatureName]RepositoryImpl.kt   ← Repository implementation
-├── presentation/
-│   ├── [FeatureName]ViewModel.kt                        ← MVI ViewModel
-│   ├── [FeatureName]Screen.kt                           ← Compose screen
-│   ├── [FeatureName]UiState.kt                          ← Sealed UI state
-│   └── components/     [FeatureName]*.kt                ← Extracted composables
-└── di/
-    └── [FeatureName]Module.kt                           ← Hilt module
-```
+**Outcome:** a compiling feature module in the project's existing conventions — domain, data,
+presentation, DI, navigation entry, and unit tests — following `rules/android.md` (Claude Code loads
+it for `*.kt`; elsewhere read it from the plugin). Done when every file in the Step 3 layout exists,
+the feature is registered in navigation and DI, and the ViewModel and use-case tests run.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Versions: !`grep -hE "compose-bom|hilt|navigation|kotlin|lifecycle|junit|mockk|turbine" gradle/libs.versions.toml 2>/dev/null | head -12 || echo "(no version catalog)"`
+- Existing features: !`find . -path "*/feature/*" -name "*ViewModel.kt" 2>/dev/null | head -8`
 
-Use this context to tailor all output to the actual project.
+Match the existing features' package structure and naming before applying the defaults below.
 
-## Step 1: Gather Requirements
+## Step 1: Classify
 
-Ask if not clear:
-1. **Feature name** — e.g., "PlayerProfile"
-2. **Domain context** — what entity/data does this feature show or manipulate?
-3. **Data source** — Firestore? REST API? Local Room? Multiple?
-4. **Actions** — what can the user do? (view, create, edit, delete, search?)
-5. **Navigation** — entry point(s) and exit point(s)?
-6. **Auth** — does this feature require a logged-in user?
+| Request | Output |
+|---|---|
+| Full feature | All layers (Step 3) |
+| Screen + ViewModel only | Presentation layer + contract + tests |
+| Data layer only | DTO, mapper, data source, repository + tests |
+| Question / review of existing feature | Answer or findings against Step 4 rules — no new files |
 
-## Step 2: Generate All Layers
+## Step 2: Gather Requirements
 
-Generate code following Clean Architecture patterns with full separation between domain, data, and presentation layers. For a full feature scaffold, generate ALL layers before outputting.
+Ask only what the context doesn't answer: feature name (e.g. `PlayerProfile`); entity and data
+source (Firestore, REST, Room, combination); user actions; navigation entry/exit points and
+arguments; auth requirement.
 
-## Step 3: MVI State Contract (Always Apply)
+## Step 3: File Layout (one layout — use it everywhere)
 
-Every feature follows this exact state pattern:
+```
+:feature:{name}/src/main/kotlin/.../{name}/
+├── domain/
+│   ├── model/{Feature}.kt                  pure Kotlin
+│   ├── repository/{Feature}Repository.kt   interface
+│   └── usecase/Get{Feature}UseCase.kt      one class per use case
+├── data/
+│   ├── dto/{Feature}Dto.kt
+│   ├── mapper/{Feature}Mapper.kt           Dto ↔ domain
+│   ├── source/{Feature}RemoteDataSource.kt
+│   └── repository/{Feature}RepositoryImpl.kt
+├── presentation/
+│   ├── {Feature}Contract.kt                UiState + UiAction + UiEvent
+│   ├── {Feature}ViewModel.kt
+│   ├── {Feature}Screen.kt                  route composable + stateless content
+│   └── components/
+├── navigation/{Feature}Navigation.kt       @Serializable route + graph builder
+└── di/{Feature}Module.kt                   Hilt
+:feature:{name}/src/test/kotlin/.../{name}/  {Feature}ViewModelTest.kt, Get{Feature}UseCaseTest.kt
+```
 
+Generation order: domain model → repository interface → use case → DTO + mapper → data source →
+repository impl → contract → ViewModel → screen → navigation → Hilt module → tests.
+
+## Step 4: Rules With Non-Obvious Reasons
+
+**MVI contract** (in `{Feature}Contract.kt`):
 ```kotlin
-// [Feature]UiState.kt
-sealed interface [Feature]UiState {
-    data object Loading : [Feature]UiState
-    data class Success(val data: [Feature]Data) : [Feature]UiState
-    data class Error(val message: String) : [Feature]UiState
-    data object Empty : [Feature]UiState
+sealed interface {Feature}UiState {
+    data object Loading : {Feature}UiState
+    data object Empty : {Feature}UiState
+    data class Success(val data: {Feature}) : {Feature}UiState
+    data class Error(@StringRes val message: Int) : {Feature}UiState
 }
+sealed interface {Feature}UiAction { data object Refresh : {Feature}UiAction; data class OnItemClick(val id: String) : {Feature}UiAction }
+sealed interface {Feature}UiEvent { data class ShowSnackbar(@StringRes val message: Int) : {Feature}UiEvent; data class OpenDetail(val id: String) : {Feature}UiEvent; data object NavigateBack : {Feature}UiEvent }
+```
+Events carry typed data, never route strings — the screen maps them to navigation calls.
 
-// [Feature]UiEvent.kt (one-shot events)
-sealed interface [Feature]UiEvent {
-    data class ShowSnackbar(val message: String) : [Feature]UiEvent
-    data class NavigateTo(val route: String) : [Feature]UiEvent
-    data object NavigateBack : [Feature]UiEvent
-}
-
-// [Feature]UiAction.kt (user intents → ViewModel)
-sealed interface [Feature]UiAction {
-    data object Refresh : [Feature]UiAction
-    data class OnItemClick(val id: String) : [Feature]UiAction
-    data object OnBackClick : [Feature]UiAction
-}
+**Cancellation-safe error handling.** Never wrap suspend calls in `runCatching`: it catches
+`CancellationException`, so a cancelled scope keeps running and emits stale Error states. Use:
+```kotlin
+suspend inline fun <T> suspendRunCatching(block: () -> T): Result<T> =
+    try { Result.success(block()) }
+    catch (e: CancellationException) { throw e }
+    catch (e: Exception) { Result.failure(e) }
 ```
 
-## Step 4: Code Generation Rules
+**Type-safe navigation.** Routes are `@Serializable` objects/data classes (Navigation Compose 2.8+:
+`composable<{Feature}Route> { … }`, `navController.navigate({Feature}Route(id))`, args via
+`backStackEntry.toRoute()` or `SavedStateHandle.toRoute()`). If the app already uses Navigation 3
+(`androidx.navigation3`, stable since 1.0.0), make the route a `NavKey` and add an `entry<…>`
+instead. No string routes.
 
-1. **No hardcoded strings** — all UI strings go to `strings.xml`
-2. **No magic numbers** — dimensions in `dimens.xml` or Compose tokens
-3. **Error handling** — every suspend call wrapped in `runCatching` or `Result`
-4. **Loading states** — every async operation emits Loading before result
-5. **No business logic in Compose** — all logic in ViewModel or UseCase
-6. **Preview annotations** — every Compose screen has `@Preview` (light + dark)
-7. **Accessibility** — all interactive elements have `contentDescription`
-8. **No direct repo in ViewModel** — always mediated by UseCase(s)
+**Lifecycle-aware collection.** Screens collect with `collectAsStateWithLifecycle()`; one-shot
+events are collected in a `LaunchedEffect` using `repeatOnLifecycle(Lifecycle.State.STARTED)`.
+ViewModel exposes `StateFlow` built
+with `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Loading)`.
 
-## Output Format
+**Layering.** ViewModels depend on use cases, never repositories. No business logic in
+composables. Screen = route composable (gets ViewModel via `hiltViewModel()`) + stateless content
+composable that takes state and lambdas — previews and UI tests target the stateless one.
 
-Generate code in this order:
-1. Domain model
-2. DTO + mapper
-3. Repository interface (in domain)
-4. Repository implementation (in data)
-5. UseCase(s)
-6. UiState / UiEvent / UiAction sealed classes
-7. ViewModel
-8. Compose Screen + components
-9. Hilt Module
-10. Navigation registration
-11. Unit test scaffold (ViewModel + UseCase)
+**UI hygiene.** Strings in `strings.xml` (ViewModels emit `@StringRes`, not text); every async
+operation emits Loading first; `@Preview` light + dark for each state; `contentDescription` on
+meaningful icons.
 
-After code generation, output a summary table:
-```
-| File | Layer | Status |
-|------|-------|--------|
-| PlayerProfile.kt | Domain | Generated |
-| PlayerProfileDto.kt | Data | Generated |
-...
-```
+**Tests.** JUnit 5 + MockK + Turbine + `kotlinx-coroutines-test` (`runTest`, a `MainDispatcher`
+extension). Coverage targets come from `testing-strategy`.
 
-## Tech Stack Defaults
+## Code/Artifact Generation
 
-```yaml
-language: Kotlin
-ui: Jetpack Compose
-architecture: MVI + Clean Architecture
-di: Hilt
-async: Coroutines + StateFlow
-testing: JUnit5 + MockK + Turbine
-```
-
-## Code Generation (Required)
-
-You MUST generate actual code files, not just describe patterns. Use the Write tool to create:
-
-1. **Domain layer**: `domain/model/{Feature}.kt`, `domain/usecase/{Feature}UseCase.kt`
-2. **Data layer**: `data/dto/{Feature}Dto.kt`, `data/repository/{Feature}RepositoryImpl.kt`, `data/mapper/{Feature}Mapper.kt`
-3. **Presentation layer**: `presentation/{feature}/{Feature}ViewModel.kt`, `presentation/{feature}/{Feature}Screen.kt`, `presentation/{feature}/{Feature}Contract.kt` (MVI state/event/effect)
-4. **DI module**: `di/{Feature}Module.kt` (Hilt)
-5. **Tests**: `test/{feature}/{Feature}ViewModelTest.kt`, `test/{feature}/{Feature}UseCaseTest.kt`
-
-Before generating, use Glob to find existing feature modules and match their package structure and naming conventions.
+Applies when Step 1 is a build request; a question or review gets an answer, not files. Write the
+Step 3 files, register the route and Hilt module, then output a table of files by layer. Deliver the
+requested feature; don't refactor adjacent modules.
 
 ## Cross-References
 
-- `/database-architect` — for Room schema design and migration strategies when local persistence is needed
-- `/testing-strategy` — for test pyramid standards and coverage rules
-- `/ci-cd-pipeline` — for Android build and distribution workflows
-- `/accessibility-audit` — for Compose accessibility and content description standards
+`database-architect` (Room schema/migrations) · `testing-strategy` (pyramid, coverage) ·
+`ci-cd-pipeline` (Android build/distribution) · `accessibility-audit` (Compose semantics) ·
+`android-design-expert` (M3 specs). In Claude Code these are `/cure-product-engineering:<name>`;
+in Codex `$<name>`.

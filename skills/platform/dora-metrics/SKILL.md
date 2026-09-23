@@ -1,398 +1,113 @@
 ---
 name: dora-metrics
-description: "Implement DORA and SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, and developer experience dashboards"
-when_to_use: "Use when implementing DORA or SPACE metrics — deployment frequency, lead time, MTTR, change failure rate, developer experience dashboards."
+description: "Measures DORA delivery metrics and SPACE developer experience from git, CI, and incident data. Use when baselining deploy frequency, lead time, change fail rate, recovery time, or reporting engineering health."
+when_to_use: "NOT for running a live incident or writing runbooks (use incident-response) or building CI workflows (use ci-cd-pipeline)."
 argument-hint: "[team-or-project]"
 context: fork
+metadata:
+  verified: 2026-09-23
 ---
 
 # DORA Metrics
 
+**Outcome:** real numbers for the DORA metrics (from the bundled scripts or the team's tools, never estimated from vibes), each placed against the dated benchmark below, plus the one or two bottlenecks worth fixing next. **Done** when every metric has a value with its data source and window, or an explicit "not measurable yet — here is what to instrument".
+
+This skill **owns the Cure definitions** of the delivery metrics, including recovery time / MTTR. Other skills (incident-response, observability, investor-reporting) link here instead of restating them.
+
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
-
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
-
-Implement DORA four key metrics and SPACE framework for measuring software delivery performance and developer experience. Covers data collection automation, dashboard templates, improvement playbooks, and anti-patterns. Use this to baseline your team, set improvement targets, and report to leadership with real data instead of vibes.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
+- Release tags: !`git tag --list --sort=-creatordate 2>/dev/null | head -10 || echo "(no tags)"`
+- Deploy workflows: !`ls .github/workflows/ 2>/dev/null | head -10 || echo "(no GitHub workflows)"`
 
 ## Step 1: Classify the Metrics Need
 
-| Need | Scope | Typical Trigger |
-|------|-------|-----------------|
-| Baseline Measurement | Establish current DORA metrics for a team or project from scratch | New team, new project, engineering leadership request |
-| Improvement Initiative | Identify bottlenecks and implement changes to move up DORA performance tiers | Team retrospective, slow delivery complaints, high failure rate |
-| Executive Reporting | Build dashboards and reports for leadership visibility into engineering performance | Board meeting, investor due diligence, org-wide review |
-| Team Health Check | Combine DORA with SPACE to assess developer experience and sustainability | Burnout signals, attrition risk, post-reorg assessment |
+| Need | Deliverable |
+|------|-------------|
+| Baseline | Current values for the five metrics + data-gap list |
+| Improvement | Baseline + bottleneck analysis + 1–3 prioritized changes |
+| Executive reporting | One-page report (Step 6) with trend vs. last period |
+| Team health | Baseline + SPACE survey results (read `reference/details.md` § SPACE when running a survey) |
+| Build collection | Automation files (see Code/Artifact Generation) |
 
 ## Step 2: Gather Context
 
-1. **CI/CD tooling** -- what pipeline tools are in use (GitHub Actions, Cloud Build, Fastlane, Vercel)? Are deployments automated or manual?
-2. **Team size and structure** -- how many engineers? Single team or multiple squads? Shared codebase or microservices?
-3. **Current deployment cadence** -- how often does the team deploy to production? Daily, weekly, ad-hoc?
-4. **Incident tracking** -- where are incidents logged (PagerDuty, Opsgenie, Linear, Jira, Slack)? Is there a severity classification?
-5. **Code review process** -- what is the typical PR lifecycle (open to merge)? Are there approval requirements?
-6. **Existing metrics** -- is anything being tracked today? What tools (Datadog, Grafana, LinearB, Sleuth, DX)?
-7. **Goals** -- what does success look like? Faster shipping, fewer incidents, better developer experience, all of the above?
+Ask only what the repo can't answer: where production deploys are recorded (tags, workflow runs, Vercel/Firebase history), where incidents live (PagerDuty, Opsgenie, Linear, a sheet), team size, and the reporting window. If deploys aren't tagged or incidents aren't logged, say so — that gap is the first finding.
 
-## Step 3: DORA Four Key Metrics
+## Step 3: Definitions (Cure standard)
 
-See [reference/details.md](reference/details.md) (section “Step 3: DORA Four Key Metrics”) for full detail.
+DORA's current set is five metrics (dora.dev/guides/dora-metrics, updated 2026-01-05). "MTTR" is the legacy name; DORA now says **failed deployment recovery time**.
 
-## Step 4: SPACE Framework Overlay
+| Metric | Cure definition | Measure with |
+|---|---|---|
+| Deployment frequency | Successful **production** deploys per period (features, fixes, config). Exclude staging/preview deploys and rollbacks. | `scripts/deployment_frequency.py` (tags or commits) |
+| Change lead time | First commit of the change → running in production. Report **median and p95**, never mean. Break down: code → review → merge → deploy to find the bottleneck. | GitHub PR + deploy timestamps (reference) |
+| Change fail rate | Deploys needing **immediate intervention** (rollback, hotfix, incident, flag kill) ÷ total production deploys. Vendor outages and planned maintenance don't count. | `scripts/change_failure_rate.py` |
+| Failed deployment recovery time | Failing deploy reaches production (or impact start, if later) → service restored (rollback, roll-forward, or flag off). Restored, not root-caused. | `scripts/mttr_calculator.py` on deploy-caused incidents |
+| Deployment rework rate | Unplanned deploys made because of a production incident ÷ total deploys. | Tag hotfix deploys; count |
 
-### Satisfaction
+**Incident MTTR (all incidents, not only deploy-caused)** — the number incident-response and post-mortems report: **impact start** (earliest evidence of user impact, backfilled from logs — not the alert time) → **service restored**. Report median per severity. Sub-intervals: MTTD = impact start → detection; MTTA = detection → human engaged; time to restore = impact start → restored. Using detection as the start hides slow detection, which is usually the biggest lever.
 
-```
-What to measure:
-  - Developer satisfaction survey (quarterly, anonymous)
-  - eNPS (Employee Net Promoter Score): "How likely are you to recommend
-    this team/company as a place to work?" (0-10 scale)
-  - Tool satisfaction: "Do your tools help or hinder your work?"
-  - Process satisfaction: "Is the development process reasonable?"
+Gotchas:
+- The scripts read `opened_at`; populate it with **impact start**, not the ticket-creation time.
+- Count rollbacks as the recovery event of the failed deploy, not as a new deploy.
+- Monorepos: measure per deployable service, or frequency is inflated by unrelated deploys.
+- Mobile store releases have review lag; report lead time to *submitted* and to *available* separately.
 
-Survey template (quarterly, 5 questions):
-  1. "I can ship changes to production with confidence" (1-5)
-  2. "Our development tools and CI/CD work well" (1-5)
-  3. "Code review is timely and valuable" (1-5)
-  4. "I spend most of my time on meaningful work, not toil" (1-5)
-  5. "I would recommend this engineering team to a friend" (0-10, eNPS)
+## Step 4: Benchmarks (dated)
 
-Track over time: quarterly trend. Alert if satisfaction drops >10% quarter over quarter.
-```
+DORA 2024 report clusters — the last report to publish tiers; the 2025 report replaced tiers with seven team archetypes, so cite these as "2024 clusters" and compare a team mainly to its own trend.
 
-### Performance
+| Cluster (2024) | Lead time | Deploy frequency | Change fail rate | Recovery time |
+|---|---|---|---|---|
+| Elite | < 1 day | On demand | ~5% | < 1 hour |
+| High | 1 day – 1 week | Daily – weekly | ~20% | < 1 day |
+| Medium | 1 week – 1 month | Weekly – monthly | ~10% | < 1 day |
+| Low | 1 – 6 months | Monthly – biannually | ~40% | 1 week – 1 month |
 
-```
-What to measure:
-  - DORA metrics (Step 3 above)
-  - Code quality metrics: test coverage trend, lint violations, type safety
-  - Reliability metrics: uptime, error rate, p95 latency
+The 2024 medium cluster had a lower fail rate than high — the metrics no longer move together, so never collapse them into one "level". Cure targets for client product teams: deploy at least daily to staging and weekly to production, lead time < 1 week, change fail rate ≤ 15%, recovery < 1 day. Regulated or store-gated teams: weekly production cadence is acceptable.
 
-DO NOT use as individual performance metric. These are team-level indicators.
-```
+## Step 5: Collect and Analyze
 
-### Activity
+Run the bundled scripts (stdlib Python, `--help` and `--json` on each). Paths are relative to this skill's directory; with the plugin enabled in Claude Code they are also on PATH as `cure-deploy-frequency`, `cure-change-failure-rate`, `cure-mttr`.
 
-```
-What to measure:
-  - PR throughput (PRs merged per week per engineer)
-  - Deployment count per week
-  - Code review volume (reviews given per week)
-  - Incident response participation
-
-WARNING: Activity metrics are the most dangerous category.
-  - NEVER use as a productivity proxy for individuals
-  - NEVER compare engineers by PR count or lines of code
-  - Use only for team-level trends and capacity planning
-  - A drop in activity might mean: vacation, deep work on hard problem,
-    onboarding, technical debt paydown -- all valid and valuable
-
-Safe usage:
-  - Team-level trends over time (are we shipping more or less than last quarter?)
-  - Capacity planning (how many PRs can this team handle per sprint?)
-  - Process bottleneck identification (are PRs piling up in review?)
+```bash
+python3 scripts/deployment_frequency.py --repo . --since <start> --until <end> --json   # tags matching ^v\d by default
+python3 scripts/change_failure_rate.py --csv deployments.csv --json   # id, deployed_at, caused_incident
+python3 scripts/mttr_calculator.py --csv incidents.csv --severity SEV1,SEV2 --json   # id, opened_at, resolved_at[, severity]
 ```
 
-### Communication
+If the team has no deploy log or incident CSV, build them from tags/workflow runs and the incident tracker first; the reference file has GitHub Actions snippets for lead time and PR metrics. Read `reference/details.md` § Data Collection when the team needs continuous collection rather than a one-off baseline.
+
+Bottleneck reading: long code time → stories too big; long review time → PRs > 200 lines or too few reviewers; long merge time → slow CI or heavy approvals; long deploy time → manual release trains. High fail rate with fast deploys → add canary/staged rollout and automated rollback before pushing frequency further.
+
+Rules that protect the data: metrics are team-level only — never rank individuals by PRs, commits, or lines (it destroys the signal and trust); compare a team to its own history, not to other teams; automate collection so nobody hand-edits counts; every review produces at least one funded action.
+
+## Step 6: Output
+
+Match length to the need; no filler sections or restated summaries.
 
 ```
-What to measure:
-  - Code review turnaround time (PR opened → first review)
-  - PR cycle time (PR opened → merged)
-  - Handoff friction (how many times does a PR bounce between author and reviewer?)
-  - Cross-team dependency wait time (blocked on another team)
-  - Documentation freshness (when were runbooks/docs last updated?)
-
-Targets:
-  First review: <4 hours during business hours
-  PR cycle time: <24 hours for standard PRs, <4 hours for hotfixes
-  Review rounds: <=2 rounds average (if higher, PRs are too large or standards unclear)
-  Cross-team blocks: track and report -- no target, but visibility drives improvement
+DORA REPORT — [team] — [window]            Data sources: [tags / workflow runs / incident tracker]
+Metric                         Value (median/p95)   vs last period   2024 cluster   Source
+Deployment frequency           …
+Change lead time               …
+Change fail rate               …
+Failed deployment recovery     …
+Deployment rework rate         …
+Incident MTTR by severity      …
+Data gaps: …
+Top bottleneck + next 1–3 actions (owner, expected metric movement): …
 ```
 
-### Efficiency
+Cross-references: `ci-cd-pipeline` (pipeline speed, automated rollback), `incident-response` (incident logging that feeds MTTR), `feature-flags` (decouple deploy from release).
 
-```
-What to measure:
-  - Flow state time: hours of uninterrupted coding per day (survey-based)
-  - Context switching: meetings per day, Slack interruption frequency
-  - Toil ratio: time on manual/repetitive tasks vs. feature work (survey-based)
-  - Build/CI wait time: how long do engineers wait for CI to complete?
-  - Environment setup time: how long for a new engineer to make first commit?
+## Code/Artifact Generation
 
-Targets:
-  Flow state:      >=4 hours per day of uninterrupted work
-  Meeting load:    <=2 hours of meetings per day for IC engineers
-  CI wait time:    <10 minutes for full pipeline
-  Onboarding:      <1 day from laptop to first commit in dev environment
-  Toil ratio:      <20% of time on repetitive tasks (automate the rest)
-```
+Applies only when Step 1 classified the request as **Build collection** (or the user asks for automation). Write:
 
-## Step 5: Data Collection Automation
+1. `.github/workflows/dora-report.yml` — scheduled job that runs the three bundled scripts and uploads the JSON as an artifact.
+2. `docs/dora-report-template.md` — the Step 6 template.
+3. Optional `monitoring/dora-dashboard.json` when the team names a dashboard tool (Grafana/Datadog/Looker).
 
-See [reference/details.md](reference/details.md) (section “Step 5: Data Collection Automation”) for full detail.
-
-## Step 6: Dashboard Templates
-
-### Team-Level Dashboard
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    ENGINEERING METRICS — [TEAM NAME]                │
-│                    Period: [MONTH YEAR]                              │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  DORA METRICS                                                       │
-│  ┌──────────────────────┬────────────┬────────────┬───────────────┐ │
-│  │ Metric               │ This Month │ Last Month │ Target        │ │
-│  ├──────────────────────┼────────────┼────────────┼───────────────┤ │
-│  │ Deploy Frequency     │ 42/month   │ 38/month   │ Daily (High)  │ │
-│  │ Lead Time (median)   │ 18 hours   │ 24 hours   │ <1 day (High) │ │
-│  │ MTTR (median)        │ 45 min     │ 1.2 hours  │ <1 hr (Elite) │ │
-│  │ Change Failure Rate  │ 12%        │ 15%        │ <15% (Elite)  │ │
-│  └──────────────────────┴────────────┴────────────┴───────────────┘ │
-│                                                                     │
-│  DORA Performance Level: HIGH (3 of 4 metrics at High or above)    │
-│                                                                     │
-│  PR HEALTH                                                          │
-│  ┌──────────────────────────────────┬────────────┐                  │
-│  │ Median time to first review      │ 3.2 hours  │                  │
-│  │ Median PR cycle time             │ 14 hours   │                  │
-│  │ Average review rounds            │ 1.8        │                  │
-│  │ PRs merged this month            │ 87         │                  │
-│  │ Average PR size (additions)      │ 142 lines  │                  │
-│  └──────────────────────────────────┴────────────┘                  │
-│                                                                     │
-│  INCIDENTS                                                          │
-│  ┌───────────┬───────┬───────┬───────┬───────┐                      │
-│  │ Severity  │ Count │ MTTD  │ MTTA  │ MTTR  │                      │
-│  ├───────────┼───────┼───────┼───────┼───────┤                      │
-│  │ SEV1      │ 0     │ --    │ --    │ --    │                      │
-│  │ SEV2      │ 1     │ 3 min │ 5 min │ 45 min│                      │
-│  │ SEV3      │ 3     │ 15 min│ 22 min│ 2.1 hr│                      │
-│  │ SEV4      │ 5     │ N/A   │ N/A   │ N/A   │                      │
-│  └───────────┴───────┴───────┴───────┴───────┘                      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Org-Level Executive Dashboard
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│              ENGINEERING HEALTH — [ORG NAME] — [QUARTER]           │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  DORA PERFORMANCE BY TEAM                                           │
-│  ┌──────────────┬────────┬───────────┬────────┬────────┬──────────┐│
-│  │ Team         │ Deploy │ Lead Time │ MTTR   │ CFR    │ Level    ││
-│  │              │ Freq   │ (median)  │(median)│        │          ││
-│  ├──────────────┼────────┼───────────┼────────┼────────┼──────────┤│
-│  │ Product      │ Daily  │ 16 hr     │ 40 min │ 11%    │ Elite    ││
-│  │ Platform     │ Weekly │ 3 days    │ 1.5 hr │ 18%    │ High     ││
-│  │ Mobile       │ Weekly │ 5 days    │ 2 hr   │ 22%    │ High     ││
-│  │ Data         │ Monthly│ 2 weeks   │ 4 hr   │ 30%    │ Medium   ││
-│  └──────────────┴────────┴───────────┴────────┴────────┴──────────┘│
-│                                                                     │
-│  QUARTER OVER QUARTER TREND                                         │
-│  Deploy Frequency:  ↑ 15%  (improving)                              │
-│  Lead Time:         ↓ 20%  (improving — lower is better)            │
-│  MTTR:              ↓ 30%  (improving — lower is better)            │
-│  Change Failure:    ↓  5%  (improving — lower is better)            │
-│                                                                     │
-│  DEVELOPER EXPERIENCE (from quarterly survey)                       │
-│  eNPS: 42 (↑ from 35 last quarter)                                 │
-│  Top concern: CI wait times (addressed — reduced 40% this quarter)  │
-│  Toil ratio: 18% (↓ from 25% — automation investments paying off)  │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-## Step 7: Improvement Playbooks
-
-### Moving from Low to Medium
-
-```
-Typical blockers at Low level:
-  - No CI/CD pipeline or mostly manual deploys
-  - No incident tracking or severity classification
-  - Long-lived feature branches (weeks or months)
-  - No automated testing
-
-Actions:
-  1. Implement basic CI/CD: automate build, test, deploy on merge to main
-     → Cross-ref: /ci-cd-pipeline
-  2. Adopt trunk-based development: short-lived branches (<2 days), small PRs
-  3. Start tracking incidents: severity, detection time, resolution time
-     → Cross-ref: /incident-response
-  4. Add basic automated tests: unit tests on critical paths, CI gate on test pass
-     → Cross-ref: /testing-strategy
-  5. Deploy at least weekly: if weekly feels scary, you need more tests and feature flags
-
-Expected improvement timeline: 1-2 quarters
-```
-
-### Moving from Medium to High
-
-```
-Typical blockers at Medium level:
-  - CI/CD exists but is slow (>30 min pipeline)
-  - Manual QA gate before every release
-  - No feature flags — all-or-nothing deployments
-  - Incident response is ad-hoc, no runbooks
-
-Actions:
-  1. Speed up CI: parallelize tests, cache dependencies, remove flaky tests
-  2. Implement feature flags: decouple deploy from release
-     → Ship dark, enable gradually, kill switch for rollback
-  3. Build runbooks for top 5 failure modes
-     → Cross-ref: /incident-response
-  4. Automate deployment: merge to main triggers deploy (with canary or staged rollout)
-  5. Reduce PR size: target <200 lines changed per PR
-  6. Automate code review basics: linting, type checking, security scanning in CI
-
-Expected improvement timeline: 1-2 quarters
-```
-
-### Moving from High to Elite
-
-```
-Typical blockers at High level:
-  - Deploy multiple times per day but some manual steps remain
-  - Good testing but no canary deployments or progressive delivery
-  - Fast MTTR but detection could be faster
-  - Change failure rate stubbornly above 15%
-
-Actions:
-  1. Progressive delivery: canary deployments with automatic rollback on error spike
-  2. Shift-left testing: contract tests, integration tests in CI, synthetic monitoring
-  3. Observability investment: distributed tracing, custom metrics, anomaly detection
-     → Cross-ref: /analytics-implementation
-  4. Automated rollback: deploy pipeline auto-rolls back if error rate exceeds threshold
-  5. Reduce blast radius: deploy per-service, not monolith. Microservice or modular architecture.
-  6. Invest in developer experience: fast local dev, instant preview environments, excellent docs
-
-Expected improvement timeline: 2-4 quarters (Elite is genuinely hard)
-```
-
-## Step 8: Anti-Patterns
-
-```
-ANTI-PATTERN: Gaming metrics
-  Problem:  Splitting one deploy into multiple to inflate deployment frequency.
-            Or not counting incidents to lower MTTR.
-  Fix:      Automate measurement. Remove human judgment from data collection.
-            Make metrics a tool for learning, not judgment.
-
-ANTI-PATTERN: Using activity as productivity
-  Problem:  Ranking engineers by PRs merged, lines of code, or commits.
-  Fix:      Activity metrics are team-level only. A senior engineer mentoring
-            juniors ships zero PRs that week but creates massive value.
-            Never use DORA metrics in performance reviews for individuals.
-
-ANTI-PATTERN: Comparing teams unfairly
-  Problem:  Comparing a 2-person team maintaining legacy code to a 10-person
-            team building greenfield. Different contexts, different targets.
-  Fix:      Compare teams to their own past performance, not to each other.
-            Set context-appropriate targets. A regulated industry team at
-            Medium is doing great. An early-stage startup at Medium is too slow.
-
-ANTI-PATTERN: Measuring without acting
-  Problem:  Beautiful dashboards that nobody looks at. Metrics collected but
-            no improvement initiatives funded.
-  Fix:      Every metrics review must produce at least one action item.
-            Block time in the sprint for improvement work (20% rule).
-            Report improvement trends to leadership alongside the metrics.
-
-ANTI-PATTERN: Optimizing one metric at the expense of others
-  Problem:  Deploying 10x per day but change failure rate is 50%. Or MTTR
-            is great because you never detect incidents (low MTTD).
-  Fix:      DORA metrics are designed to be used together. Improving all four
-            simultaneously is the goal. If one improves while another degrades,
-            investigate the tradeoff.
-
-ANTI-PATTERN: Skipping the developer experience dimension
-  Problem:  All four DORA metrics are Elite but engineers are burned out,
-            attrition is high, and nobody enjoys the work.
-  Fix:      Supplement DORA with SPACE (Step 4). Sustainable pace matters.
-            Survey quarterly. Act on the results.
-```
-
-## Step 9: Output
-
-```
-DORA & SPACE METRICS REPORT
-Team: [NAME]
-Period: [MONTH/QUARTER YEAR]
-Prepared by: [NAME]
-
-CURRENT PERFORMANCE
-┌──────────────────────┬────────────────────────────────────┐
-│ Field                │ Value                              │
-├──────────────────────┼────────────────────────────────────┤
-│ Metrics Need         │ [From Step 1 classification]       │
-│ DORA Performance     │ [Elite / High / Medium / Low]      │
-│ Deploy Frequency     │ [Value + tier]                     │
-│ Lead Time            │ [Value + tier]                     │
-│ MTTR                 │ [Value + tier]                     │
-│ Change Failure Rate  │ [Value + tier]                     │
-│ eNPS                 │ [Score]                            │
-│ Top Bottleneck       │ [Identified bottleneck]            │
-└──────────────────────┴────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] DORA baseline measurement for all four metrics
-  - [ ] SPACE framework assessment
-  - [ ] Data collection automation (GitHub Actions workflows)
-  - [ ] Dashboard templates (team-level and org-level)
-  - [ ] Improvement playbook with prioritized actions
-  - [ ] Anti-pattern checklist reviewed
-
-CROSS-REFERENCES:
-  - /ci-cd-pipeline — for deployment automation and pipeline optimization
-  - /incident-response — for MTTR improvement and incident tracking
-  - /project-manager — for sprint planning and improvement initiative tracking
-  - /analytics-implementation — for metrics data collection and dashboards
-```
-
-## Automated Metric Collection
-
-Before analysis, gather actual DORA data from the project:
-
-1. **Deployment Frequency**: Run `git tag --list --sort=-creatordate | head -20` and count tags per week/month
-2. **Lead Time**: Run `git log --oneline --since="30 days ago"` to estimate PR-to-deploy time
-3. **Change Failure Rate**: Grep git log for `revert|hotfix|rollback` commits as % of total
-4. **MTTR**: Grep for incident-related commits and measure time between incident start and resolution
-
-## Scripts
-
-This skill bundles the following stdlib-only scripts under `scripts/`. Each supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
-
-- `scripts/deployment_frequency.py` — Count deployments per day/week from a git repo or JSON log; reports DORA tier. With the plugin enabled it is also on PATH as `cure-deploy-frequency` (same flags).
-  ```bash
-  python3 skills/platform/dora-metrics/scripts/deployment_frequency.py \
-    --repo /path/to/repo --since 2025-01-01 --until 2025-03-31 --json
-  ```
-- `scripts/mttr_calculator.py` — Mean / median / p90 / p95 MTTR from an incidents CSV (`id, opened_at, resolved_at[, severity]`). With the plugin enabled it is also on PATH as `cure-mttr` (same flags).
-  ```bash
-  python3 skills/platform/dora-metrics/scripts/mttr_calculator.py --csv incidents.csv --json
-  ```
-- `scripts/change_failure_rate.py` — Change Failure Rate % from a deployments CSV (`id, deployed_at, caused_incident`). With the plugin enabled it is also on PATH as `cure-change-failure-rate` (same flags).
-  ```bash
-  python3 skills/platform/dora-metrics/scripts/change_failure_rate.py --csv deployments.csv --json
-  ```
-
-## Code Generation (Required)
-
-Generate metric collection automation using Write:
-
-1. **Metric collector**: `scripts/collect-dora-metrics.sh` — parses git history into DORA metrics
-2. **Dashboard config**: `monitoring/dora-dashboard.json` — Grafana/Datadog dashboard template
-3. **CI integration**: `.github/workflows/dora-report.yml` — weekly DORA metric collection
-4. **Team report**: `docs/dora-report-template.md` — monthly report template
+Reuse the bundled scripts; don't write a second collector.

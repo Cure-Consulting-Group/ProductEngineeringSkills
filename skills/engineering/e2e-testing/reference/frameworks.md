@@ -1,85 +1,75 @@
 # E2E Frameworks & Platform Patterns
 
-> Reference for the `e2e-testing` skill. Platform-specific framework choices and patterns (web, Android, iOS, backend).
+> Read when writing the config or first tests for a platform in the `e2e-testing` skill.
+> Retry counts come from the `testing-strategy` skill; the configs below read them from env.
 
-## Contents
-- Step 4: Platform-Specific Frameworks and Patterns
+## Web (Playwright — default)
 
-## Step 4: Platform-Specific Frameworks and Patterns
-
-### Web (Playwright — Default)
-
-Playwright is the default for web E2E. Cypress only if the team already uses it.
-
-**Config template (playwright.config.ts):**
+**Config (`playwright.config.ts`):**
 ```typescript
 import { defineConfig, devices } from '@playwright/test';
 
-export default defineConfig({
-  testDir: './e2e/tests',
-  timeout: 30_000,
-  retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 4 : undefined,
-  reporter: process.env.CI
-    ? [['html', { open: 'never' }], ['github']]
-    : [['html', { open: 'on-failure' }]],
+const auth = { storageState: 'e2e/.auth/user.json' };
 
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 30_000,
+  retries: Number(process.env.E2E_RETRIES ?? 0), // value per testing-strategy flake policy
+  workers: process.env.CI ? 4 : undefined,
+  reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : [['html', { open: 'on-failure' }]],
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     screenshot: 'only-on-failure',
-    video: 'on-first-retry',
-    trace: 'on-first-retry',
+    video: 'retain-on-failure',
+    trace: 'retain-on-failure', // works with or without retries
   },
-
   projects: [
-    // Auth setup — runs once, saves state for all tests
-    { name: 'setup', testMatch: /.*\.setup\.ts/, teardown: 'teardown' },
-    { name: 'teardown', testMatch: /.*\.teardown\.ts/ },
-
-    // Desktop browsers
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
-      dependencies: ['setup'],
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'], storageState: 'e2e/.auth/user.json' },
-      dependencies: ['setup'],
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'], storageState: 'e2e/.auth/user.json' },
-      dependencies: ['setup'],
-    },
-
-    // Responsive viewports
-    {
-      name: 'mobile-chrome',
-      use: { ...devices['Pixel 5'], storageState: 'e2e/.auth/user.json' },
-      dependencies: ['setup'],
-    },
-    {
-      name: 'mobile-safari',
-      use: { ...devices['iPhone 13'], storageState: 'e2e/.auth/user.json' },
-      dependencies: ['setup'],
-    },
+    { name: 'setup', testMatch: /fixtures\/.*\.setup\.ts/ },
+    { name: 'chromium', testMatch: /tests\/.*\.spec\.ts/, use: { ...devices['Desktop Chrome'], ...auth }, dependencies: ['setup'] },
+    { name: 'firefox', testMatch: /tests\/.*\.spec\.ts/, use: { ...devices['Desktop Firefox'], ...auth }, dependencies: ['setup'] },
+    { name: 'webkit', testMatch: /tests\/.*\.spec\.ts/, use: { ...devices['Desktop Safari'], ...auth }, dependencies: ['setup'] },
+    { name: 'mobile-chrome', testMatch: /tests\/.*\.spec\.ts/, use: { ...devices['Pixel 5'], ...auth }, dependencies: ['setup'] },
+    { name: 'mobile-safari', testMatch: /tests\/.*\.spec\.ts/, use: { ...devices['iPhone 13'], ...auth }, dependencies: ['setup'] },
   ],
 });
 ```
+Add `e2e/.auth/` to `.gitignore` — it holds live session cookies.
 
-**Auth state reuse (storageState):**
+**Auth state reuse (`e2e/fixtures/auth.setup.ts`):**
 ```typescript
-// e2e/fixtures/auth.fixture.ts — runs once, caches login state
-import { test as setup } from '@playwright/test';
+import { test as setup, expect } from '@playwright/test';
 
 setup('authenticate', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('Email').fill(process.env.TEST_USER_EMAIL!);
   await page.getByLabel('Password').fill(process.env.TEST_USER_PASSWORD!);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.waitForURL('/dashboard');
+  await expect(page).toHaveURL('/dashboard');
   await page.context().storageState({ path: 'e2e/.auth/user.json' });
+});
+```
+
+**Page object + test (assertions in the test):**
+```typescript
+// e2e/pages/LoginPage.ts
+export class LoginPage {
+  constructor(private page: Page) {}
+  async goto() { await this.page.goto('/login'); }
+  async signIn(email: string, password: string) {
+    await this.page.getByLabel('Email').fill(email);
+    await this.page.getByLabel('Password').fill(password);
+    await this.page.getByRole('button', { name: 'Sign in' }).click();
+    return new HomePage(this.page);
+  }
+  error() { return this.page.getByRole('alert'); }
+}
+
+// e2e/tests/auth.spec.ts
+test('auth_login_invalidCredentials', async ({ page }) => {
+  const login = new LoginPage(page);
+  await login.goto();
+  await login.signIn('nobody@example.com', 'wrong');
+  await expect(login.error()).toContainText('Invalid');
 });
 ```
 
@@ -98,37 +88,20 @@ await page.route('**/*.google-analytics.com/**', (route) => route.abort());
 await page.route('**/api.mixpanel.com/**', (route) => route.abort());
 ```
 
-**Accessibility assertions in every page object:**
+**Accessibility check (call from tests on key screens; WCAG level per `accessibility-audit`):**
 ```typescript
 import AxeBuilder from '@axe-core/playwright';
 
-// Add to BasePage or use as a shared assertion
-async assertAccessible() {
-  const results = await new AxeBuilder({ page: this.page })
-    .withTags(['wcag2a', 'wcag2aa'])
+// e2e/helpers/axe.ts
+export async function expectAccessible(page: Page) {
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
     .analyze();
   expect(results.violations).toEqual([]);
 }
 ```
 
-**Responsive testing viewports:**
-```
-Desktop:  1280 x 720  — default
-Tablet:   768 x 1024  — iPad portrait
-Mobile:   375 x 667   — iPhone SE
-```
-
-**Parallel execution with sharding:**
-```yaml
-# In CI, shard across machines
-strategy:
-  matrix:
-    shard: [1/4, 2/4, 3/4, 4/4]
-steps:
-  - run: npx playwright test --shard=${{ matrix.shard }}
-```
-
-### Android (Espresso + Compose Testing)
+## Android (Compose testing + Espresso)
 
 **ComposeTestRule setup with Hilt injection:**
 ```kotlin
@@ -195,7 +168,7 @@ IdlingRegistry.getInstance().unregister(idlingResource)
 ```
 
 **Test orchestrator for isolated runs:**
-```groovy
+```kotlin
 // build.gradle.kts
 android {
     testOptions {
@@ -203,7 +176,7 @@ android {
     }
 }
 dependencies {
-    androidTestUtil("androidx.test:orchestrator:1.5.0")
+    androidTestUtil("androidx.test:orchestrator:<current>") // confirm current androidx.test release before use
 }
 ```
 
@@ -229,12 +202,12 @@ fun loginScreen_default() {
     --type instrumentation
     --app app/build/outputs/apk/debug/app-debug.apk
     --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-    --device model=Pixel6,version=33
-    --device model=Pixel4,version=30
+    --device model=<model>,version=<api>   # pick from: gcloud firebase test android models list
+    --device model=<model>,version=<api>   # cover min SDK and target SDK
     --results-bucket=${{ vars.GCS_BUCKET }}
 ```
 
-### iOS (XCUITest)
+## iOS (XCUITest)
 
 **XCUIApplication launch arguments for test configuration:**
 ```swift

@@ -4,7 +4,9 @@
 
 ## Contents
 - Step 4: Seed Data Scripts
+- Reset Script (paginated)
 - Step 8: Compliance-Safe Test Data
+- Firestore Batch Delete by Test Prefix
 
 ## Step 4: Seed Data Scripts
 
@@ -57,9 +59,12 @@ async function seedUsers(auth: any, db: FirebaseFirestore.Firestore) {
     // Idempotent: delete if exists, then create
     try { await auth.getUserByEmail(persona.email).then((u: any) => auth.deleteUser(u.uid)); } catch {}
 
+    // Random per persona per environment, stored in the env's secret store — never derived from the persona name
+    const password = process.env[`QA_PASSWORD_${key.toUpperCase()}`];
+    if (!password) throw new Error(`Missing QA_PASSWORD_${key.toUpperCase()} for this environment`);
     const user = await auth.createUser({
       email: persona.email,
-      password: `TestPass123!${key}`,
+      password,
       displayName: persona.displayName,
       emailVerified: true,
     });
@@ -200,6 +205,46 @@ npx ts-node scripts/seed-firestore.ts
 echo "Done."
 ```
 
+### Reset Script (paginated)
+
+```typescript
+// scripts/reset-test-data.ts — same env guard as the seed script
+import { initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth, Auth } from 'firebase-admin/auth';
+
+const QA_DOMAIN = process.env.QA_EMAIL_DOMAIN!;            // e.g. qa.acme.dev
+const PREFIX = `qa-${process.env.QA_PROJECT}-`;            // matches qaEmail() output
+const isQa = (email?: string) => !!email && email.startsWith(PREFIX) && email.endsWith(`@${QA_DOMAIN}`);
+
+async function resetTestUsers(auth: Auth): Promise<string[]> {
+  const uids: string[] = [];
+  let pageToken: string | undefined;
+  do {                                                      // listUsers caps at 1000 per page
+    const page = await auth.listUsers(1000, pageToken);
+    uids.push(...page.users.filter(u => isQa(u.email)).map(u => u.uid));
+    pageToken = page.pageToken;
+  } while (pageToken);
+  for (let i = 0; i < uids.length; i += 1000) {             // deleteUsers takes up to 1000 uids
+    await auth.deleteUsers(uids.slice(i, i + 1000));
+  }
+  return uids;
+}
+
+async function main() {
+  await assertEnvironment();
+  const app = initializeApp();
+  const uids = await resetTestUsers(getAuth(app));
+  const db = getFirestore(app);
+  const writer = db.bulkWriter();
+  for (const uid of uids) await db.recursiveDelete(db.doc(`users/${uid}`), writer);
+  await writer.close();
+  console.log(`Reset ${uids.length} QA users. Run the seed script to restore personas.`);
+}
+
+main().catch(e => { console.error(e); process.exit(1); });
+```
+
 ## Step 8: Compliance-Safe Test Data
 
 ### HIPAA: Synthetic PHI
@@ -270,7 +315,7 @@ function generateCOPPATestPair() {
 Hard rule: NEVER store, log, or transmit real card numbers anywhere.
 
 In test environments:
-  - Use ONLY Stripe test card numbers (see Step 5 table above)
+  - Use ONLY Stripe test card numbers (listed in the stripe-integration skill)
   - Stripe test mode guarantees no real charges occur
   - Card data never touches your servers — Stripe.js / PaymentSheet handles it
   - PCI compliance = "let Stripe handle it" for SAQ-A merchants

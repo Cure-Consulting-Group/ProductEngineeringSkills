@@ -1,70 +1,48 @@
 # Discounted Cash Flow (DCF) Modeling
 
-This skill provides a structured workflow for performing intrinsic valuation by projecting Free Cash Flows to the Firm (FCFF) and discounting them to the present value.
+**Outcome:** enterprise value, equity value, and value per share, with a WACC × terminal-growth
+sensitivity grid and every assumption sourced and dated. **Done when** the equity bridge
+reconciles, the terminal value's share of EV is reported, and the Gordon and exit-multiple
+methods have been cross-checked. Not investment advice. Match length to the need; no filler
+sections or restated summaries.
 
-## Workflow
+In Claude Code the `investment-banker` agent pairs this with `comps-analysis`.
 
-### 1. Forecast Period (typically 5-10 years)
-Project the 3 core components:
-- **Revenue**: Based on market growth, market share, and pricing.
-- **EBITDA / EBIT**: Based on operating leverage and margin expansion/contraction.
-- **Taxes**: Apply the marginal or effective tax rate.
+## Step 1: Classify
 
-### 2. Unlevered Free Cash Flow (UFCF) Calculation
-Derived from NOPAT (Net Operating Profit After Tax):
-- **(+) Depreciation & Amortization**
-- **(-) Capital Expenditures (CapEx)**
-- **(-) Change in Net Working Capital (NWC)**
-- **= Unlevered Free Cash Flow**
+- **Operating company with positive or near-positive FCF:** full 5–10 year UFCF DCF.
+- **Pre-revenue or early startup** (most Cure portfolio questions): a DCF is mostly terminal value
+  and false precision. Say so, then value off recent rounds and comps; run a DCF only as a
+  scenario check.
 
-### 3. WACC Calculation (Weighted Average Cost of Capital)
-Determine the discount rate:
-- **Cost of Equity**: Using CAPM (Risk-Free Rate + Beta * Equity Risk Premium).
-- **Cost of Debt**: Pre-tax cost of debt * (1 - Tax Rate).
-- **Weights**: Based on target capital structure (Market Value of Equity and Debt).
+## Step 2: Gather
 
-### 4. Terminal Value (TV)
-Calculate value beyond the forecast period:
-- **Gordon Growth Method**: UFCF_n * (1 + g) / (WACC - g).
-- **Exit Multiple Method**: EBITDA_n * Peer Multiple.
+Historical financials from filings (SEC EDGAR for public companies); management or consensus
+projections with source; current risk-free rate (10-year Treasury yield, dated), an equity risk
+premium from a named, dated source (e.g. Damodaran's current estimate), beta source, pre-tax cost
+of debt, target capital structure. Search the web for current values; never use remembered rates.
 
-### 5. Enterprise & Equity Value
-- **Enterprise Value**: PV of Forecast UFCFs + PV of Terminal Value.
-- **Equity Value**: Enterprise Value − Net Debt − Minority Interest − Preferred Equity (+ non-operating assets not already in the cash flows, e.g. equity investments). Net Debt = Debt − Cash, so cash is already counted — **do not add cash back** after subtracting net debt.
-- **Per Share Value**: Equity Value / Diluted Shares Outstanding.
+## Step 3: Gotchas that change the answer
 
-## Standard Output Format
+- **Equity bridge:** Equity = EV − net debt − minority interest − preferred (+ non-operating
+  assets not in the cash flows). Net debt = debt − cash, so never add cash back again.
+- **Mid-year convention** for flows that arrive through the year; state whether it is used.
+- **Normalize the terminal year:** capex consistent with growth (above D&A when growing), NWC
+  growing with revenue, margin at steady state.
+- **Terminal growth** at or below long-run nominal GDP / the risk-free rate; g ≥ WACC is an error.
+- **Cross-check:** implied exit multiple from the Gordon value vs. peer multiples, and vice versa.
+- **Flag terminal value > 75% of EV.**
+- **SBC** is a real cost — treat it as cash or dilute the share count, not neither.
+- Use target (not current) capital-structure weights to avoid WACC circularity.
+- Per-share value uses diluted shares (treasury stock method).
+
+## Output
 
 ```markdown
-## DCF Valuation: [Target Name]
-
-### Free Cash Flow Forecast
-| Year | 202X | 202X | 202X | 202X | 202X |
-|------|------|------|------|------|------|
-| UFCF | $[X] | $[X] | $[X] | $[X] | $[X] |
-| PV   | $[X] | $[X] | $[X] | $[X] | $[X] |
-
-### Valuation Assumptions
-- **WACC**: [X]%
-- **Terminal Growth (g)**: [X]%
-- **Exit Multiple**: [X]x
-
-### Implied Value
-- **Enterprise Value**: $[Value]
-- **Equity Value**: $[Value]
-- **Implied Share Price**: $[Value]
-- **Current Share Price**: $[Value]
-- **Premium / (Discount)**: [X]%
-
-### Sensitivity Analysis (Matrix)
-| WACC \ g | [g-0.5%] | [g] | [g+0.5%] |
-|----------|----------|-----|----------|
-| [W+0.5%] | $[V]     | $[V]| $[V]     |
-| [WACC]   | $[V]     | $[V]| $[V]     |
-| [W-0.5%] | $[V]     | $[V]| $[V]     |
+## DCF Valuation: [Target] — as of [date]
+UFCF forecast table (years × revenue, EBIT, taxes, D&A, capex, ΔNWC, UFCF, PV)
+WACC [X]% (rf [X]% [date], ERP [X]% [source], beta [X] [source]) | g [X]% | exit multiple [X]x
+EV $[X] (TV = [X]% of EV) → equity $[X] → $[X]/share vs current $[X] ([X]% premium/discount)
+Sensitivity: WACC ±0.5–1.0% × g ±0.5%
+Gordon vs exit-multiple cross-check: [values, gap explained]
 ```
-
-## Quality Standards
-- **Reasonableness**: Check if terminal value is >75% of total enterprise value (flag if so).
-- **Conservative Bias**: Use market-standard equity risk premiums.
-- **Transparency**: Explicitly state the source for Beta (e.g., Bloomberg, Damodaran).

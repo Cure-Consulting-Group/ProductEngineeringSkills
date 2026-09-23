@@ -1,325 +1,128 @@
 ---
 name: observability
-description: "Set up observability stacks — structured logging, distributed tracing, alerting, SLO/SLI definition, and dashboards with Crashlytics, Sentry, or Datadog"
-when_to_use: "Use when setting up structured logging, distributed tracing, alerting, SLO/SLI definition, or dashboards with Crashlytics, Sentry, or Datadog."
+description: "Sets up logging, tracing, SLOs, burn-rate alerts, and dashboards (Crashlytics, Sentry, Datadog, GCP). Use when adding monitoring to a service, defining SLOs, or fixing noisy or missing alerts."
+when_to_use: "NOT for incident runbooks or post-mortems (use incident-response) or DORA delivery metrics (use dora-metrics)."
 argument-hint: "[project-or-service]"
 context: fork
 ---
 
 # Observability
 
-Production observability framework covering the three pillars — logs, metrics, and traces — across all Cure Consulting Group platforms. Every production service ships with structured logging, health metrics, distributed tracing, SLO definitions, and actionable alerts. No service goes to production without observability.
+Outcome: a service that can't fail silently — structured logs with PII redaction, RED metrics,
+traces with correlation IDs, SLOs with error budgets, and burn-rate alerts that each link a
+runbook. Done when every alert is actionable and owned, and the maturity table in Step 8 is filled
+in with evidence. Cure rule: no service goes to production without this baseline.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
-
-## Automated Observability Baseline
-
-Scan for existing monitoring infrastructure:
-
-1. **Logging**: Grep for logging libraries:
-   - `winston|pino|bunyan|log4j|timber|os_log|slog`
-   - Grep for: `console.log` count (debug logging in production)
-2. **Monitoring**: Glob for configs:
-   - `**/sentry*`, `**/datadog*`, `**/newrelic*`, `**/prometheus*`, `**/grafana*`
-3. **Tracing**: Grep for:
-   - `opentelemetry|jaeger|zipkin|@sentry/tracing|dd-trace`
-4. **Alerting**: Glob for alert configs:
-   - `**/alerts*`, `**/monitors*`, `**/*alert*`
-5. **Health Checks**: Grep for:
-   - `/health|/healthz|/ready|/live` endpoint definitions
-
-Report observability maturity level before recommending improvements.
+- Stack: !`head -30 package.json 2>/dev/null || head -30 app/build.gradle.kts 2>/dev/null || echo "(no package.json / gradle)"`
+- Monitoring SDKs: !`grep -rhoE "@sentry/[a-z-]+|[d]d-trace|@opentelemetry/[a-z-]+|firebase-crashlytics|pino|winston" --include=package.json --include=*.gradle.kts --include=Podfile . 2>/dev/null | sort -u | head -12 || echo "(none found)"`
 
 ## Step 1: Classify the Observability Need
 
-| Need | Scope | Starting Point |
+| Need | Scope | Start at |
 |------|-------|---------------|
-| Greenfield setup | Full observability stack from scratch — logging, metrics, tracing, dashboards, alerts | Start at Step 3 |
-| Add monitoring to existing | Bolt on observability to a service that shipped without it | Audit current gaps first, then Step 3 |
-| Incident-driven improvement | Post-mortem revealed monitoring gaps — targeted fixes | Identify specific gaps, apply relevant sections |
-| SLO definition | Define reliability targets and error budgets for existing services | Jump to Step 5 |
-| Alert tuning | Reduce noise, fix alert fatigue, improve signal-to-noise | Jump to Step 6 |
+| Greenfield setup | Full stack: logs, metrics, traces, SLOs, alerts, dashboards | Step 3 |
+| Add monitoring to existing | Baseline scan, then fill the gaps | Baseline scan, then Step 3 |
+| Incident-driven improvement | Targeted fixes for gaps a post-mortem found | The relevant step only |
+| SLO definition | Reliability targets and error budgets | Step 5 |
+| Alert tuning | Noise, fatigue, missed pages | Step 6 |
 
 ## Step 2: Gather Context
 
-1. **Platforms** -- which platforms are in play (Android, iOS, Web, Firebase Functions, Cloud Run, third-party APIs)?
-2. **Current tooling** -- what is already instrumented (Crashlytics, Sentry, Datadog, Cloud Monitoring, custom logging)?
-3. **Scale** -- requests per second, daily active users, number of services, geographic distribution?
-4. **Compliance requirements** -- HIPAA (no PHI in logs), SOC 2 (audit trails), GDPR (PII redaction), data residency?
-5. **Budget** -- Datadog/New Relic licensing vs. GCP-native vs. open-source (Grafana/Prometheus)?
-6. **Team maturity** -- is there an on-call rotation, are there existing runbooks, who owns observability?
-7. **Pain points** -- what incidents have been missed, what takes too long to debug, where are the blind spots?
+Ask only for what is missing: platforms (Android, iOS, Web, Functions, Cloud Run), current
+tooling, scale (RPS, DAU), compliance (HIPAA → no PHI in logs; GDPR → PII redaction; data
+residency), budget (Datadog vs GCP-native vs Grafana), on-call maturity, and recent blind spots.
 
-## Step 3: Three Pillars Framework -- Logs, Metrics, Traces
+**Baseline scan** (existing services): search the code for logging libraries (`winston|pino|bunyan|timber|os_log|slog`)
+and `console.log` counts, monitoring configs (`sentry*`, `datadog*`, `prometheus*`), tracing
+(`opentelemetry|dd-trace`), alert configs, and health endpoints (`/health|/healthz|/ready`).
+Report maturity before recommending.
 
-See [reference/details.md](reference/details.md) (section “Step 3: Three Pillars Framework -- Logs, Metrics, Traces”) for full detail.
+## Step 3: Logs, Metrics, Traces
+
+Cure defaults: JSON logs with `service`, `version`, `trace_id`, `user_id` (hashed), redaction
+before emit; RED metrics (rate, errors, duration) per endpoint plus business counters;
+OpenTelemetry for traces (JS SDK 2.x API) with W3C `traceparent` propagation. Read
+[reference/details.md](reference/details.md) (section "Step 3") when writing the log schema,
+redaction code, correlation middleware, metric types, or OpenTelemetry setup.
 
 ## Step 4: Platform-Specific Setup
 
-See [reference/details.md](reference/details.md) (section “Step 4: Platform-Specific Setup”) for full detail.
+Android: Crashlytics + Firebase Performance, ANR tracking. iOS: Crashlytics + MetricKit +
+`os_signpost`. Web: Sentry (`@sentry/nextjs`) + `useReportWebVitals` (INP, not FID). Functions:
+`firebase-functions/v2` logger to Cloud Logging, Cloud Trace. Read
+[reference/details.md](reference/details.md) (section "Step 4") when writing SDK initialization
+code for any of these platforms.
 
-## Step 5: SLO/SLI Definition
+## Step 5: SLOs and Error Budgets
 
-### SLI Definitions (Service Level Indicators)
-```
-SLI Type       Measurement                                  Formula
-────────────────────────────────────────────────────────────────────────────────
-Availability   Ratio of successful requests                 (200-399 responses) / total requests
-Latency        Ratio of requests faster than threshold      requests < threshold / total requests
-Error Rate     Ratio of failed requests                     (500+ responses) / total requests
-Throughput     Requests served per second                   count(requests) / time_window
-Freshness      Ratio of data updated within threshold       stale_records < threshold / total records
-Correctness    Ratio of correct outputs                     correct_responses / total_responses
-```
+One convention for all Cure services, so availability and error rate never disagree:
 
-### SLO Template Per Service
-```
-SERVICE: [Name]
-Owner: [Team]
-Tier: [Critical / Standard / Best-effort]
+- **Good event** = response that is not 5xx and not a timeout, served within the latency threshold
+  when the SLI is latency. 4xx are client errors and count as good (except 429 caused by our own
+  throttling, which counts as bad).
+- **Availability SLI** = good requests / valid requests. **Error rate** = 1 − availability.
+- Measure on a 30-day rolling window.
 
-┌────────────────────┬──────────────┬────────────────┬─────────────┬──────────────┐
-│ SLI                │ Target       │ Window         │ Error Budget│ Burn Rate    │
-│                    │              │                │ (30d)       │ Alert        │
-├────────────────────┼──────────────┼────────────────┼─────────────┼──────────────┤
-│ Availability       │ 99.9%        │ 30-day rolling │ 43.2 min    │ >2% in 1hr   │
-│ Latency (p95)      │ <500ms       │ 30-day rolling │ 0.1% budget │ >5% in 1hr   │
-│ Latency (p99)      │ <2000ms      │ 30-day rolling │ 0.1% budget │ >10% in 1hr  │
-│ Error rate         │ <0.1%        │ 30-day rolling │ 43.2 min    │ >1% in 15min │
-└────────────────────┴──────────────┴────────────────┴─────────────┴──────────────┘
+| Tier | Examples | Availability | Latency (p95) | 30-day budget |
+|---|---|---|---|---|
+| Critical | auth, payments, core API | 99.9% | < 500 ms | 43.2 min |
+| Standard | admin, analytics, notifications, search | 99.5% | < 1 s | 3.6 h |
+| Best-effort | internal tools, staging, batch | 99.0% | — | 7.2 h |
 
-Error Budget Policy:
-  - If >50% budget consumed → freeze non-critical deploys, prioritize reliability work
-  - If >80% budget consumed → freeze all deploys except hotfixes
-  - If budget exhausted → incident response mode, all hands on reliability
-```
+Error-budget policy: >50% consumed → freeze non-critical deploys; >80% → hotfixes only;
+exhausted → reliability work is the sprint.
 
-### SLO Tiers by Service Type
-```
-Critical (99.9% availability):
-  - Authentication service
-  - Payment processing
-  - Core API endpoints
-  - Production database
+## Step 6: Alerting
 
-Standard (99.5% availability):
-  - Admin dashboard
-  - Analytics pipeline
-  - Email/notification service
-  - Search functionality
+Use the Google SRE Workbook multiwindow, multi-burn-rate alerts (sre.google/workbook/alerting-on-slos)
+for every SLO. An alert fires only when both the long and short windows exceed the burn rate:
 
-Best-effort (99.0% availability):
-  - Internal tools
-  - Staging environments
-  - Batch processing jobs
-  - Non-critical background tasks
-```
+| Budget consumed | Long window | Short window | Burn rate | Action |
+|---|---|---|---|---|
+| 2% | 1 h | 5 min | 14.4× | Page (P1) |
+| 5% | 6 h | 30 min | 6× | Page (P2) |
+| 10% | 3 d | 6 h | 1× | Ticket (P3) |
 
-## Step 6: Alerting Strategy
+Also page on: zero successful requests, detected data loss or security breach, payment failure
+rate > 5% over 10 min. Route P1/P2 through PagerDuty/Opsgenie (phone + push), P3 to Slack, P4 to
+the tracker.
 
-### Severity Tiers
-```
-P1 — Page immediately (24/7):
-  - SLO burn rate critical (>10x in 5 minutes)
-  - Service completely down (zero successful requests)
-  - Data loss or security breach detected
-  - Payment processing failure rate >5%
-  → Route: PagerDuty/Opsgenie → phone call + SMS + push
+Alert hygiene, because pages that don't need action train people to ignore pages:
+- Every alert is actionable and has an owner and a runbook link; delete the ones that aren't.
+- Alert on rates and SLO burn, never on single errors, raw CPU > 50%, or log lines containing "error".
+- Evaluate over ≥ 5-minute windows, auto-resolve, and group by root cause.
+- Targets: < 5 pages per on-call week; delete alerts with > 30% false positives.
 
-P2 — Page during business hours:
-  - SLO burn rate elevated (>2x in 1 hour)
-  - Error rate sustained above threshold
-  - Latency p95 above SLO for >15 minutes
-  - Disk/memory utilization >85%
-  → Route: PagerDuty/Opsgenie → push notification
+## Step 7: Dashboards and On-Call
 
-P3 — Slack notification:
-  - SLO burn rate slightly elevated (>1.5x in 6 hours)
-  - Non-critical service degradation
-  - Certificate expiry within 30 days
-  - Dependency deprecation warning
-  → Route: Slack #alerts channel
+Three dashboards per product:
+- **Service health:** RPS by status class, error rate, availability (30-day), latency p50/p95/p99, error budget remaining and burn rate, instances, DB pool.
+- **User experience:** LCP/INP/CLS at p75, app start time, crash-free sessions, ANR (Android) and hang rate (iOS), signup and checkout funnels.
+- **Business:** MRR, payment success rate, signups, DAU/WAU/MAU, cost per user.
 
-P4 — Ticket only:
-  - Informational: deployment completed, backup succeeded
-  - Trend warning: gradual latency increase
-  - Capacity planning: approaching resource limits
-  → Route: Create ticket in issue tracker
-```
+On-call: one PagerDuty/Opsgenie service per critical system; escalation primary → secondary
+(10 min no-ack) → engineering lead (20 min). Synthetic checks for login, checkout, and health
+endpoints from ≥ 2 regions (GCP Uptime Checks or Checkly).
 
-### Alert Fatigue Prevention Rules
-```
-Rules:
-  1. Every alert MUST be actionable — if there's nothing to do, delete the alert
-  2. Every alert MUST have a runbook link — no alert without documentation
-  3. Group related alerts — don't fire 10 alerts for one root cause
-  4. Use alert windows (not instantaneous) — 5-minute minimum evaluation window
-  5. Auto-resolve alerts — if the condition clears, the alert resolves
-  6. Review alert volume monthly — target <5 pages per on-call week
-  7. Track false positive rate — target <10%, delete alerts with >30% false positive rate
-  8. Deduplicate — same alert from same source within 1 hour = single notification
+## Step 8: Output
 
-Anti-patterns:
-  ✗ Alerting on individual errors (use error rate instead)
-  ✗ Alerting on CPU >50% (use sustained >85% for >5 minutes)
-  ✗ Alerting on log messages containing "error" (use structured metrics)
-  ✗ Email-only alerts for P1/P2 (must page)
-  ✗ Alerts without owners
-```
+A maturity table (logging, metrics, tracing, SLOs, alerting, dashboards, on-call: not started /
+partial / complete, with the evidence), the SLO table for each service, the alert policy list,
+and the ranked gaps. Match length to the need; no filler sections.
 
-## Step 7: Dashboard Templates
+## Code/Artifact Generation
 
-### Service Health Dashboard
-```
-Layout:
-  Row 1: Traffic overview
-    - [Timeseries] Requests per second (by status code)
-    - [Stat]       Current RPS
-    - [Stat]       Error rate (last 5 min)
-    - [Stat]       Availability (30-day rolling)
+Applies only when Step 1 classified the request as greenfield setup, add-monitoring, or
+incident-driven improvement. SLO definition and alert tuning produce the Step 5/6 tables.
+Write the files the gaps call for — typically the logger with redaction, correlation-ID
+middleware, OpenTelemetry init, platform SDK init, and alert policies as code — and nothing else.
 
-  Row 2: Latency
-    - [Timeseries] Latency percentiles (p50, p95, p99)
-    - [Heatmap]    Latency distribution
-    - [Stat]       p95 latency (last 5 min)
+## Cross-References
 
-  Row 3: SLO tracking
-    - [Gauge]      Error budget remaining (30-day)
-    - [Timeseries] SLO burn rate
-    - [Stat]       Days until budget exhaustion at current rate
-
-  Row 4: Infrastructure
-    - [Timeseries] CPU and memory utilization
-    - [Timeseries] Active instances / container count
-    - [Timeseries] Database connection pool usage
-```
-
-### User Experience Dashboard
-```
-Layout:
-  Row 1: Web Vitals
-    - [Timeseries] LCP by page (p75)
-    - [Timeseries] INP by interaction type (p75)
-    - [Stat]       CLS (p75, last 24h)
-
-  Row 2: Mobile performance
-    - [Timeseries] App startup time (Android/iOS)
-    - [Timeseries] Crash-free sessions rate
-    - [Stat]       ANR rate (Android)
-    - [Stat]       Hang rate (iOS)
-
-  Row 3: User flows
-    - [Funnel]     Signup completion rate
-    - [Funnel]     Checkout completion rate
-    - [Timeseries] Feature adoption over time
-```
-
-### Business Metrics Dashboard
-```
-Layout:
-  Row 1: Revenue
-    - [Stat]       MRR / ARR
-    - [Timeseries] Daily revenue
-    - [Stat]       Payment success rate
-
-  Row 2: Growth
-    - [Timeseries] Daily signups
-    - [Timeseries] DAU / WAU / MAU
-    - [Stat]       Activation rate (7-day)
-
-  Row 3: Cost
-    - [Timeseries] Infrastructure spend by service
-    - [Stat]       Cost per user
-    - [Stat]       Budget remaining (month)
-```
-
-## Step 8: On-Call Integration
-
-### PagerDuty / Opsgenie Setup
-```
-Configuration:
-  1. Create service per critical system (API, payments, auth, database)
-  2. Create escalation policy:
-     - Level 1: Primary on-call (immediate)
-     - Level 2: Secondary on-call (after 10 min no-ack)
-     - Level 3: Engineering lead (after 20 min no-ack)
-  3. Integrate alert sources:
-     - Cloud Monitoring → PagerDuty Events API v2
-     - Sentry → PagerDuty integration
-     - Crashlytics → Cloud Functions → PagerDuty
-     - Custom health checks → PagerDuty
-  4. Configure notification rules per severity:
-     - P1: Phone + SMS + Push + Email
-     - P2: Push + Email
-     - P3: Slack only (not paged)
-
-Runbook Links:
-  Every PagerDuty service MUST have a runbook URL in the service description.
-  Format: https://docs.company.com/runbooks/{service-name}
-  Every alert MUST include a runbook link in the alert body.
-
-Incident Auto-Creation:
-  P1/P2 alerts → auto-create incident in PagerDuty
-  Incident → auto-create Slack channel (#incident-{date}-{short-desc})
-  Incident → auto-post to #incidents channel with severity and summary
-  Resolution → auto-create post-mortem ticket
-```
-
-### Synthetic Monitoring
-```
-Set up synthetic checks for critical user flows:
-  - Homepage load: every 1 minute from 3 regions
-  - Login flow: every 5 minutes from 2 regions
-  - Checkout flow: every 5 minutes from 2 regions
-  - API health endpoint: every 30 seconds from 3 regions
-
-Tools:
-  - GCP Uptime Checks (basic HTTP/HTTPS)
-  - Datadog Synthetic Monitoring (browser + API tests)
-  - Checkly (programmable synthetic monitoring)
-```
-
-## Step 9: Output
-
-```
-OBSERVABILITY REPORT
-Service: [NAME]
-Date: [TODAY]
-Prepared by: [NAME]
-
-CURRENT STATE ASSESSMENT
-┌──────────────────────┬──────────────────────────────────────┐
-│ Pillar               │ Status                               │
-├──────────────────────┼──────────────────────────────────────┤
-│ Structured Logging   │ [Not started / Partial / Complete]   │
-│ Metrics              │ [Not started / Partial / Complete]   │
-│ Distributed Tracing  │ [Not started / Partial / Complete]   │
-│ SLO/SLI Defined      │ [Not started / Partial / Complete]   │
-│ Alerting             │ [Not started / Partial / Complete]   │
-│ Dashboards           │ [Not started / Partial / Complete]   │
-│ On-Call Integration  │ [Not started / Partial / Complete]   │
-└──────────────────────┴──────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Structured logging implementation with PII redaction
-  - [ ] Correlation ID middleware
-  - [ ] Custom metrics per service (RED + business)
-  - [ ] Distributed tracing setup (OpenTelemetry or platform-native)
-  - [ ] Platform-specific monitoring (Crashlytics, Sentry, Web Vitals)
-  - [ ] SLO/SLI definitions with error budgets
-  - [ ] Alerting rules with severity tiers and runbook links
-  - [ ] Dashboard templates (service health, UX, business)
-  - [ ] PagerDuty/Opsgenie integration with escalation policies
-  - [ ] Synthetic monitoring for critical flows
-```
-
-Cross-references: Use `/incident-response` for runbook templates and post-mortems. Use `/performance-review` for performance budgets and load testing. Use `/infrastructure-scaffold` for Cloud Monitoring and alerting policy setup. Use `/ci-cd-pipeline` for deploying observability configs alongside application code.
+`incident-response` (runbooks, post-mortems), `performance-review` (performance budgets, load
+tests), `infrastructure-scaffold` (Cloud Monitoring policies as code), `dora-metrics` (delivery
+metrics and MTTR definition).

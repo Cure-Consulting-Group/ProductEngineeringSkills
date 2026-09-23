@@ -1,6 +1,6 @@
 # Lanes: exact invocations, verified 2 Sep 2026
 
-Versions this was verified against: Claude Code 2.1.259, codex-cli 0.152.0, Antigravity CLI (`agy`) 1.1.24. When any of these change, re-verify the flags before trusting this file.
+Versions this was verified against: Claude Code 2.1.259, codex-cli 0.152.0, Antigravity CLI (`agy`) 1.1.24 (the `--add-dir` requirement re-measured on agy 1.2.9, 23 Sep 2026). When any of these change, re-verify the flags before trusting this file.
 
 ## Model slugs and efforts
 
@@ -130,6 +130,7 @@ TMPDIR="$RUN/tmp" agy -p "$(cat "$SPEC")" \
   --output-format json --print-timeout 15m > "$OUT"
 ```
 
+- `--add-dir` is mandatory, not optional context. Headless `agy -p` has no workspace without it: on agy 1.2.9 a `/skills` listing from inside the repo showed 17 skills without it and 120 with it, and workspace `.agents/` skills, rules, and plugins load only with it. Pass the trusted form of the path (`lane_toolchains.agy_workspace_path`, which `lane-eval.py` uses); `tests/test_scripts.py` fails on any prompt invocation here without it.
 - The JSON response has `status`, `response`, `duration_seconds`, `usage` (`input_tokens`, `output_tokens`, `thinking_tokens`, `cache_read_tokens`).
 - `--mode plan` is a request, not a guarantee. On 2 Sep it reverted a live working tree because the user's settings set `toolPermission: always-proceed`. `--sandbox` plus a read-only worktree is the guarantee.
 - Never pass `--mode accept-edits` or `--dangerously-skip-permissions`. The hook refuses both.

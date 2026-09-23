@@ -1,27 +1,24 @@
 # Tax Return Preparation
 
-The production workflow. `deductions-and-credits` finds the benefit,
-`tax-strategies` plans the structure — this skill turns facts into a return that
-can be signed.
+Turns facts into a return a CPA can sign. `deductions-and-credits` finds the
+benefit and `tax-strategies` plans the structure; this skill builds the return.
+
+**Done when** every line traces to source, every election is identified, the
+workpaper file meets the quality bar below, and `return-review` has run in a
+separate pass. Deliver the return package and open-items list; don't add
+unrequested planning sections.
 
 ## Disclaimer
-This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`).
+This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`). Never file, e-file, pay, or sign: a return transmitted without a signing preparer's review leaves the taxpayer with no reasonable-cause defense.
 
-## Operating model — settle this before preparing anything
+## Operating model
 
-Two models, and they produce different deliverables:
-
-1. **Prepare in-house, accountant of record transmits.** Returns are built and
-   reconciled internally, then handed to the firm that signs and files. Direct
-   MeF e-filing is not pursued; the practical DIY lane is **IRIS for 1099
-   information returns**. The deliverable is an **accountant handoff package**.
-2. **Prepare and transmit in-house.** Requires an EFIN, an ERO, and preparer
-   registration — a materially heavier compliance posture.
-
-Model 1 is the right default for a small group, and the rest of this skill
-assumes it. Either way, build to handoff standard: every number traceable to a
-source document, every position memoed, every open item flagged rather than
-quietly resolved.
+Cure default: **prepare in-house, the accountant of record signs and transmits.**
+The deliverable is an **accountant handoff package**; the only direct-filing lane
+worth running in-house is **IRIS for 1099s** (no EFIN needed). Transmitting
+returns in-house needs an EFIN, an ERO, and preparer registration — don't assume
+it. Build to handoff standard: every number traceable to a source, every position
+memoed, every open item flagged rather than quietly resolved.
 
 ## Return map
 
@@ -45,14 +42,14 @@ extension or §6651(a)(2) failure-to-pay plus interest starts running.
 ## Workflow
 
 ### 1. Open the year
-- Pass the tax year explicitly to every `calculator`/`constants` call; never rely
-  on an engine default.
-- Pull the prior-year return and the **carryforward schedule**. Nothing else
-  starts until carryforwards are in hand.
+Pass the tax year explicitly to every `calculator`/`constants` call. Pull the
+prior-year return and the **carryforward schedule** first; nothing else starts
+until carryforwards are in hand.
 
 ### 2. Gather and reconcile source documents
-See `reference/document-checklist.md`. The reconciliation step is what separates
-a return from a guess:
+Read `reference/document-checklist.md` when building the request list for a
+new entity or income type. The reconciliation step is what separates a return
+from a guess:
 - 1099-NEC/MISC/K totals **reconciled to reported gross receipts**, with
   differences explained in writing. Revenue is almost always higher than the
   1099s (direct sales, cash, sub-threshold payers) — document why.
@@ -68,47 +65,41 @@ a return from a guess:
   draft** — tie every extracted figure back to the document image before use.
 
 ### 3. Classify and post
-- Classify expenses, map Schedule C items, and populate COGS through the project's
-  posting steps, if it has them.
-- Every classification that is not obvious gets a note. "Software \$4,200" is not
-  a workpaper.
+Classify expenses, map Schedule C items, and populate COGS through the project's
+posting steps. Every non-obvious classification gets a note: "Software \$4,200"
+is not a workpaper.
 
 ### 4. Compute
 - Compute the return through the `calculator` binding, including SE tax, QBI, AMT,
   credits, and the schedules the project supports.
-- Compute depreciation through the project's depreciation step (MACRS tables,
-  §179, bonus). Reconcile the
-  schedule to the fixed asset register — additions, disposals, and the
-  carryforward.
-- Compute the home-office deduction and Form 8829 through the project's available
-  preparation steps.
+- Compute depreciation (MACRS, §179, bonus) and reconcile the schedule to the
+  fixed asset register — additions, disposals, carryforward.
+- Compute the home-office deduction and Form 8829.
 
 ### 5. Elections
 Identify every election **before** finalizing — several must be on a timely filed
-*original* return and cannot be added later. See
-`reference/elections-and-deadlines.md`.
+*original* return and cannot be added later. Run the review checklist in
+`reference/elections-and-deadlines.md` on every return.
 
 ### 6. Assemble
-- Assemble forms through the project's form-mapping step, if it has one, and
-  render the review copy through its PDF-generation step.
-- Export the handoff package through the project's package-export step, if it has
-  one.
-- Workpaper file per `cpa-standards/reference/workpaper-standards.md`.
+Use the project's form-mapping, PDF, and package-export steps where they exist.
+Workpaper file per `cpa-standards/reference/workpaper-standards.md`.
 
 ### 7. Validate before handoff
-Run `return-review`. Do not hand off a return you have not reviewed in a separate
-pass. The `validator` binding produces the machine checks; they are necessary,
-not sufficient.
+Run `return-review` in a separate pass (a fresh session, or a subagent if your
+runtime supports one); the same pass that built the return cannot catch its own
+framing errors. The `validator` binding's machine checks are necessary, not
+sufficient.
 
-## Information return obligations — do not miss these
+## Information return obligations
 
 Any entity that pays contractors owes these. They are **separate from the income
-tax return** and have earlier deadlines — missing them is a penalty with no
-reasonable-cause story.
+tax return**, due earlier, and missing them draws per-form penalties that rarely
+have a reasonable-cause story.
 
 | Form | Due to recipient | Due to IRS | Trigger |
 |---|---|---|---|
-| **1099-NEC** | Jan 31 | **Jan 31** (no extension in practice) | Nonemployee compensation. **OBBBA raised the threshold from \$600 to \$2,000 for payments made in 2026 and later — `VERIFY` before applying.** |
+| **1099-NEC** | Jan 31 | **Jan 31** (no extension in practice) | Nonemployee compensation. Threshold **\$2,000 for payments made in 2026 or later** (was \$600), indexed from 2027 (verified 2026-09-23, Rev. Proc. 2025-32 §2.15). The §3406 backup-withholding trigger moved with it. |
 | **1099-MISC** | Jan 31 | Feb 28 paper / Mar 31 e-file | Rents, other income |
 | **W-2 / W-3** | Jan 31 | Jan 31 | Any payroll |
 | **1042-S** | Mar 15 | Mar 15 | Payments to foreign persons |
@@ -119,7 +110,8 @@ reasonable-cause story.
   through **IRIS**, which is generally the one direct-filing lane worth running
   in-house, since it needs no EFIN.
 - Penalties under §6721/§6722 are **per form, per failure** (recipient copy and
-  IRS copy are separate failures), and they escalate with lateness.
+  IRS copy are separate failures) and escalate with lateness; amounts in
+  `audit-risk-substantiation/reference/penalty-map.md`.
 
 ## Quality bar
 
@@ -136,11 +128,12 @@ _Draft for professional review — not tax advice. A licensed CPA, EA, or tax at
 
 ## Reference files
 
-- `reference/document-checklist.md` — what to collect by entity and income type,
-  with the reconciliation each document supports.
-- `reference/elections-and-deadlines.md` — every election, its statement
-  requirements, its deadline, and whether it can be made late.
-- `reference/filing-calendar-2026.md` — the dated compliance calendar for TY2026.
+- `reference/document-checklist.md` — read when requesting documents; lists what
+  to collect by entity and income type and the reconciliation each supports.
+- `reference/elections-and-deadlines.md` — read before finalizing any return;
+  every election, its statement, deadline, and whether late relief exists.
+- `reference/filing-calendar-2026.md` — read when dating deliverables for TY2026.
+  For another year, rebuild the dates from the IRS calendar.
 
 ## Related skills
 

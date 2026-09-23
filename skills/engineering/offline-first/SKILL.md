@@ -1,42 +1,32 @@
 ---
 name: offline-first
-description: "Architect offline-first mobile apps — local storage, sync strategies, conflict resolution, optimistic UI, and background sync patterns"
-when_to_use: "Use when architecting offline-first mobile apps — local storage, sync strategies, conflict resolution, optimistic UI, or background sync."
+description: "Offline-first design for Android, iOS, and web: local storage, sync, conflicts. Use when an app must work without network, queue writes, resolve sync conflicts, or show optimistic UI."
+when_to_use: "NOT for server schema design (use database-architect), Firestore modeling/rules (use firebase-architect), or push (use notification-architect)."
 argument-hint: "[feature-or-project]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Offline-First Architecture
 
-Architects production-grade offline-first applications across Android, iOS, and web. Every output enforces local-first data persistence, deterministic sync, explicit conflict resolution, and seamless UX regardless of connectivity. If your app breaks without internet, it is not ready for production.
+Local-first persistence, deterministic sync, conflict resolution decided per entity, and UX that never blocks on the network.
+
+**Done when:** every entity in scope has a storage location, a sync strategy, and a conflict rule; the write path is local-first with an idempotent sync queue; and the offline test scenarios below have an owner. For an audit, done is a gap report with severity per finding.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Local data layer in use: !`grep -rlE "androidx.room|SwiftData|CoreData|dexie|idb|persistentLocalCache|enableIndexedDbPersistence|WorkManager|BGTaskScheduler" --include=*.kts --include=*.gradle --include=*.swift --include=*.ts --include=*.json . 2>/dev/null | grep -v node_modules | head -10 || echo "(none found)"`
 
-Use this context to tailor all output to the actual project.
+## Invariants
 
-## Core Principle: The Network is a Lie
-
-```
-Offline-first     →  App works fully without network; syncs when connectivity returns
-Cache-first       →  App shows cached data immediately, refreshes in background
-Graceful degrade  →  Core features work offline, advanced features require network
-Sync-critical     →  Data must be consistent across devices with conflict resolution
-```
-
-**Hard rules:**
-- The app must launch and show meaningful content with zero network connectivity
-- All write operations are persisted locally FIRST, then synced to the server
-- Every sync operation is idempotent — replaying the same operation produces the same result
-- Conflict resolution strategy is defined per entity at design time — never at runtime panic
-- Users always see their own local changes immediately (optimistic UI is default)
-- Network status is never shown as a blocking error — show a subtle indicator and continue
-- Data integrity is non-negotiable: local data must never be silently dropped or corrupted during sync
+These protect user data, which is why they are fixed rather than per-project choices:
+- The app launches and shows meaningful content with zero connectivity.
+- Writes persist locally first, then sync; every sync operation is idempotent.
+- Conflict strategy is chosen per entity at design time.
+- Users see their own changes immediately; offline is a subtle indicator, never a blocking error.
+- Local data is never silently dropped — rejected writes are surfaced with a recovery option.
 
 ## Step 1: Classify the Offline Need
 
@@ -58,86 +48,26 @@ Before generating, confirm:
 4. **Connectivity patterns** — always-on WiFi, intermittent mobile, field work with no signal?
 5. **Data volume** — how much data needs to be available offline? (KB, MB, GB)
 6. **Sync frequency** — real-time, periodic, manual, or on-reconnect?
-7. **Current backend** — Firestore (has built-in offline), REST API, GraphQL?
+7. **Current backend** — Firestore (built-in offline cache), REST, GraphQL?
 8. **Compliance** — any data that must NOT be stored locally? (PII restrictions, HIPAA)
 
 ## Step 3: Local Storage Strategy
 
-### Android
+| Data | Android | iOS | Web |
+|------|---------|-----|-----|
+| Structured entities + sync queue | Room | SwiftData (iOS 17+) / Core Data | IndexedDB via Dexie 4 or idb |
+| Preferences | DataStore | UserDefaults | localStorage (small, non-secret only) |
+| Files / media | Files + Coil 3 disk cache | FileManager + URLCache | Cache API (Service Worker) |
 
-| Storage Type | Use For | Technology | Max Size |
-|-------------|---------|------------|----------|
-| Structured data | Entities, relationships, queries | Room (SQLite) | Device storage |
-| Preferences | Settings, flags, simple key-value | DataStore (Proto/Preferences) | ~1MB practical |
-| Files/media | Images, documents, cached assets | File storage + coil disk cache | Device storage |
-| Sync queue | Pending operations | Room table | Device storage |
+Every syncable entity carries sync metadata: `syncStatus` (SYNCED/PENDING/CONFLICT/FAILED), `localVersion`, `serverVersion`, `lastSyncedAt`. Read [reference/platform-code.md](reference/platform-code.md) when generating the entity models, persistence setup, or background workers.
 
-```kotlin
-// Room entity with sync metadata
-@Entity(tableName = "orders")
-data class OrderEntity(
-    @PrimaryKey val id: String,
-    val customerId: String,
-    val status: String,
-    val total: Double,
-    val updatedAt: Long,
-    // Sync metadata
-    val syncStatus: SyncStatus,  // SYNCED, PENDING, CONFLICT, FAILED
-    val localVersion: Int,
-    val serverVersion: Int,
-    val lastSyncedAt: Long?
-)
+### Firestore offline persistence (current APIs)
 
-enum class SyncStatus { SYNCED, PENDING, CONFLICT, FAILED }
-```
-
-### iOS
-
-| Storage Type | Use For | Technology | Max Size |
-|-------------|---------|------------|----------|
-| Structured data | Entities, relationships, queries | SwiftData / Core Data | Device storage |
-| Preferences | Settings, flags, simple key-value | UserDefaults | ~1MB practical |
-| Files/media | Images, documents, cached assets | FileManager + URLCache | Device storage |
-| Sync queue | Pending operations | SwiftData table | Device storage |
-
-```swift
-// SwiftData model with sync metadata
-@Model
-class Order {
-    @Attribute(.unique) var id: String
-    var customerId: String
-    var status: String
-    var total: Double
-    var updatedAt: Date
-    // Sync metadata
-    var syncStatus: SyncStatus
-    var localVersion: Int
-    var serverVersion: Int
-    var lastSyncedAt: Date?
-}
-
-enum SyncStatus: String, Codable {
-    case synced, pending, conflict, failed
-}
-```
-
-### Web
-
-| Storage Type | Use For | Technology | Max Size |
-|-------------|---------|------------|----------|
-| Structured data | Entities, queries | IndexedDB (via Dexie.js or idb) | ~50MB-unlimited (with permission) |
-| Preferences | Settings, tokens | localStorage | 5-10MB |
-| Cached assets | Pages, images, API responses | Cache API (Service Worker) | Browser-managed |
-| Sync queue | Pending operations | IndexedDB table | Browser-managed |
-
-### Firestore Offline Persistence
-
-- Firestore has built-in offline persistence — enable it and get offline reads/writes for free
-- **Android:** `FirebaseFirestore.getInstance().firestoreSettings = firestoreSettings { isPersistenceEnabled = true }`
-- **iOS:** persistence is enabled by default
-- **Web:** `enableIndexedDbPersistence(db)` or `enableMultiTabIndexedDbPersistence(db)` for multi-tab
-- **Limitations:** cache size defaults to 100MB (configurable), no offline query indexing, listener-based reads only (no cold cache queries without prior listener)
-- **When Firestore offline is NOT enough:** complex local queries, custom conflict resolution, offline write queues with retry logic, local-only data
+- **Web:** memory cache is the default. Opt in with `initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) })`. `enableIndexedDbPersistence` / `enableMultiTabIndexedDbPersistence` are deprecated.
+- **Android:** persistent cache is on by default; configure through `setLocalCacheSettings(PersistentCacheSettings…)` — `isPersistenceEnabled` / `setCacheSizeBytes` are deprecated.
+- **iOS:** on by default; configure with `PersistentCacheSettings` on `cacheSettings`.
+- Cache threshold defaults to 100 MB with LRU cleanup. Cold cache reads work without a listener via `getDocsFromCache` / `Source.CACHE`. Use `includeMetadataChanges` + `fromCache` / `hasPendingWrites` to drive sync indicators.
+- **Firestore offline is not enough** when you need complex local queries, custom conflict rules (Firestore is last-write-wins per field), write queues with business-level retry, or local-only data — add Room/SwiftData/IndexedDB on top.
 
 ## Step 4: Sync Architecture
 
@@ -212,166 +142,24 @@ sync_queue table:
   - Paginate: never download unbounded result sets
   - Trigger automatically if delta sync returns inconsistent data
 
-## Step 5: Optimistic UI Patterns
+## Step 5: Optimistic UI
 
-### Immediate Local Feedback
-
-```kotlin
-// Android — ViewModel pattern
-fun placeOrder(order: Order) {
-    viewModelScope.launch {
-        // 1. Save locally with PENDING status
-        val localOrder = order.copy(syncStatus = SyncStatus.PENDING)
-        localRepository.save(localOrder)
-        // UI updates immediately via Room Flow
-
-        // 2. Enqueue sync operation
-        syncQueue.enqueue(SyncOperation.Create("order", localOrder))
-
-        // 3. Sync engine processes queue when online
-        // On success: update syncStatus to SYNCED
-        // On failure: update syncStatus to FAILED, show retry option
-    }
-}
-```
-
-### Pending State Indicators
-
-- Subtle sync icon on items with `PENDING` status (small cloud with arrow)
-- Do NOT block user interaction while sync is pending
-- Show "Syncing..." in a non-intrusive status bar, not a modal
-- Items with `FAILED` status show a retry button — tapping retries immediately
-
-### Rollback on Failure
-
-- If server rejects a create: remove from local DB, show "Could not save — please try again" toast
-- If server rejects an update: revert to last synced version, show diff of what was lost
-- If server rejects a delete: restore the item locally, show "Could not delete" message
-- Never silently discard user data — always inform and offer recovery
-
-### Error Recovery UX
-
-| Scenario | User Experience |
-|----------|----------------|
-| Offline, user creates item | Item saved locally, shown with sync-pending icon |
-| Comes online, sync succeeds | Sync icon disappears, item fully saved |
-| Comes online, sync conflicts | Badge on item, tap to resolve conflict |
-| Comes online, sync fails (server error) | Retry icon, automatic retry with backoff |
-| Comes online, sync fails (validation) | Error message, edit form reopens with issues highlighted |
+- Save locally with `PENDING`, enqueue the sync op, let the UI update from the local store (Room Flow, SwiftData `@Query`, Dexie `liveQuery`).
+- Pending items show a small sync icon; `FAILED` items show a retry control; never a modal.
+- Server rejects a create → remove locally and say so; an update → revert to last synced version and show what was lost; a delete → restore the item.
+- Validation failures reopen the edit form with the server's errors.
 
 ## Step 6: Background Sync
 
-### Android (WorkManager)
+- **Android:** WorkManager — unique periodic work (15-minute minimum) with `NetworkType.CONNECTED`, exponential backoff, plus one-time work on reconnect. Chain upload → download → resolve. Foreground service only for transfers over ~10 minutes.
+- **iOS:** `BGAppRefreshTask` (~30 s budget) for light sync, `BGProcessingTask` for heavy sync; silent push can trigger a fetch but is throttled — design for infrequent execution.
+- **Web:** the Background Sync API is **Chromium-only** (no Safari, no Firefox), and Periodic Background Sync requires an installed PWA. Always ship the fallback: drain the queue on load, on the `online` event, and on `visibilitychange`.
 
-```kotlin
-// Periodic background sync
-val syncWork = PeriodicWorkRequestBuilder<SyncWorker>(
-    repeatInterval = 15, repeatIntervalTimeUnit = TimeUnit.MINUTES
-).setConstraints(
-    Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .setRequiresBatteryNotLow(true)
-        .build()
-).setBackoffCriteria(
-    BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS
-).build()
+## Step 7: Network State
 
-WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-    "periodic_sync", ExistingPeriodicWorkPolicy.KEEP, syncWork
-)
-```
-
-- Use `PeriodicWorkRequest` for regular sync (min 15-minute interval)
-- Use `OneTimeWorkRequest` for immediate sync on connectivity change
-- Chain workers: `uploadPendingChanges` → `downloadServerChanges` → `resolveConflicts`
-- Use `Foreground Service` only for large uploads/downloads that take >10 minutes
-
-### iOS (BGTaskScheduler)
-
-```swift
-// Register background task
-BGTaskScheduler.shared.register(
-    forTaskWithIdentifier: "com.app.sync",
-    using: nil
-) { task in
-    handleBackgroundSync(task: task as! BGAppRefreshTask)
-}
-
-// Schedule
-let request = BGAppRefreshTaskRequest(identifier: "com.app.sync")
-request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
-try BGTaskScheduler.shared.submit(request)
-```
-
-- `BGAppRefreshTask` for lightweight sync (30s execution window)
-- `BGProcessingTask` for heavy sync (minutes, requires power + WiFi)
-- Silent push notifications can trigger immediate background fetch
-- iOS aggressively throttles background tasks — design for infrequent execution
-
-### Web (Service Worker + Background Sync API)
-
-```javascript
-// Register sync event
-navigator.serviceWorker.ready.then(registration => {
-    return registration.sync.register('sync-pending-changes');
-});
-
-// Service worker handles sync
-self.addEventListener('sync', event => {
-    if (event.tag === 'sync-pending-changes') {
-        event.waitUntil(processPendingSyncQueue());
-    }
-});
-```
-
-- Background Sync API fires when connectivity is restored — even if page is closed
-- Periodic Background Sync (`periodicSync`) requires site to be installed as PWA
-- Fallback: sync on page load if Background Sync is not supported
-
-## Step 7: Network State Management
-
-### Connectivity Detection
-
-```kotlin
-// Android — ConnectivityManager with Flow
-class NetworkMonitor @Inject constructor(
-    context: Context
-) {
-    val isOnline: Flow<Boolean> = callbackFlow {
-        val connectivityManager = context.getSystemService<ConnectivityManager>()
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) { trySend(true) }
-            override fun onLost(network: Network) { trySend(false) }
-        }
-        connectivityManager?.registerDefaultNetworkCallback(callback)
-        awaitClose { connectivityManager?.unregisterNetworkCallback(callback) }
-    }.distinctUntilChanged()
-}
-```
-
-- **Android:** `ConnectivityManager.NetworkCallback` — reactive, battery-efficient
-- **iOS:** `NWPathMonitor` — observe `currentPath.status`
-- **Web:** `navigator.onLine` + `online`/`offline` events (unreliable) — verify with actual fetch
-
-### Bandwidth-Aware Behavior
-
-| Bandwidth | Behavior |
-|-----------|----------|
-| High (WiFi) | Full sync, download images at full resolution, prefetch next pages |
-| Medium (4G/5G) | Normal sync, compressed images, no prefetch |
-| Low (3G/Edge) | Essential sync only, thumbnail images, pagination reduced |
-| None (offline) | Local data only, queue all writes, show offline indicator |
-
-- **Android:** check `NetworkCapabilities.NET_CAPABILITY_NOT_METERED` for WiFi detection
-- **iOS:** check `NWPath.isExpensive` and `NWPath.isConstrained`
-- Respect user's data saver settings — reduce sync frequency on metered connections
-
-### Airplane Mode and Edge Cases
-
-- Airplane mode with WiFi: treat as connected (hotel WiFi, airplane WiFi)
-- Captive portal: `ConnectivityManager` may report connected but HTTP requests fail — detect via connectivity check endpoint
-- VPN: may cause connectivity callbacks to fire repeatedly — debounce with 1s delay
-- Server maintenance: distinguish between no-network and server-down (different UI treatment)
+- Android `ConnectivityManager.NetworkCallback` (+ `NET_CAPABILITY_VALIDATED` to catch captive portals), iOS `NWPathMonitor` (`isExpensive`, `isConstrained` for data-saver), web `navigator.onLine` only as a hint — confirm with a real request.
+- Debounce connectivity flaps (~1 s, VPNs fire repeatedly). Distinguish no-network from server-down in the UI.
+- On metered or constrained networks: essential sync only, thumbnails, no prefetch.
 
 ## Step 8: Testing Offline Scenarios
 
@@ -411,84 +199,29 @@ class NetworkMonitor @Inject constructor(
 - Test all configured conflict strategies (LWW, field-merge, manual)
 - Verify no data loss in any conflict scenario — compare pre-conflict and post-resolution data
 
-## Step 9: Output Templates
+## Step 9: Output
 
-For every offline-first architecture, deliver:
+Deliver, scaled to the Step-1 classification: storage schema with sync metadata; sync flow (local write → queue → server → reconcile); a per-entity conflict matrix (`Entity | Field | Strategy | Notes`); background-sync configuration per platform; and the offline test plan. Match length to the need; no filler sections.
 
-1. **Storage layer diagram** — local DB schema with sync metadata fields
-2. **Sync architecture diagram** — flow from local write → queue → sync → server → reconcile
-3. **Conflict resolution matrix** — per-entity strategy with field-level rules
-4. **Background sync configuration** — platform-specific WorkManager/BGTask/ServiceWorker setup
-5. **Offline test plan** — scenario table with expected behaviors
-
-### Sync Status Dashboard Template
-```
-| Entity | Local Count | Server Count | Pending | Conflicts | Last Sync |
-|--------|------------|--------------|---------|-----------|-----------|
-| Orders | 142 | 140 | 2 | 0 | 2 min ago |
-| Products | 89 | 89 | 0 | 0 | 5 min ago |
-| Messages | 1,203 | 1,198 | 3 | 2 | 1 min ago |
-```
-
-### Conflict Resolution Matrix Template
-```
-| Entity | Field | Strategy | Priority | Notes |
-|--------|-------|----------|----------|-------|
-| Order | status | Server wins | — | Server is authoritative for status |
-| Order | notes | Field merge | Client | User's notes take priority |
-| Profile | email | Server wins | — | Email verified server-side |
-| Profile | displayName | LWW | — | Non-critical, last write wins |
-| Message | content | Client wins | — | User authored the content |
-```
-
-## Tech Stack Defaults
+## Tech Stack Defaults (verified 2026-09-23)
 
 ```yaml
-android:
-  local_db: Room 2.6.x (SQLite)
-  preferences: DataStore (Preferences or Proto)
-  sync: WorkManager 2.9.x
-  network_monitor: ConnectivityManager + Flow
-  image_cache: Coil 2.x with disk cache
-ios:
-  local_db: SwiftData (iOS 17+) or Core Data
-  preferences: UserDefaults
-  sync: BGTaskScheduler + URLSession background tasks
-  network_monitor: NWPathMonitor
-  image_cache: URLCache + AsyncImage
-web:
-  local_db: IndexedDB via Dexie.js 4.x or idb
-  sync: Background Sync API + Service Worker
-  cache: Cache API for assets, stale-while-revalidate for API
-  network_monitor: navigator.onLine + periodic health check
-firestore:
-  offline: enableIndexedDbPersistence (web), default on (mobile)
-  cache_size: 100MB default, increase for data-heavy apps
-  listeners: onSnapshot for real-time, getDoc for one-shot cached reads
-conflict_resolution:
-  default: field-level merge
-  fallback: manual resolution UI
-  collaborative: evaluate CRDT (Yjs, Automerge) for real-time co-editing
+android: Room 2.8, DataStore 1.2, WorkManager 2.11, Coil 3.x
+ios:     SwiftData (iOS 17+) or Core Data, BGTaskScheduler, NWPathMonitor
+web:     Dexie 4.x or idb, Service Worker + Cache API, Background Sync where supported
+firestore: persistentLocalCache (web), default persistent cache (mobile)
+conflicts: field-level merge default; CRDT (Yjs, Automerge) for real-time co-editing
 ```
 
-## Code Generation (Required)
+## Code/Artifact Generation
 
-Generate offline-first infrastructure using Write:
+Applies when Step 1 calls for building. Detect the data layer first and extend existing sync code. Generate only for platforms in scope:
 
-1. **Sync queue** (Android): `data/sync/SyncQueue.kt` — Room-backed operation queue with WorkManager
-2. **Sync queue** (iOS): `Data/Sync/SyncQueue.swift` — SwiftData-backed queue with BGTaskScheduler
-3. **Sync queue** (Web): `src/sync/sync-queue.ts` — IndexedDB-backed queue with service worker
-4. **Conflict resolver**: `src/sync/conflict-resolver.ts` — last-write-wins or custom merge strategy
-5. **Network monitor**: `src/sync/network-monitor.ts` — connectivity detection and queue drain trigger
-6. **Optimistic UI helper**: `src/sync/optimistic.ts` — temporary ID management and rollback
-
-Before generating, Grep for existing offline/sync code and detect which data layer is in use (Room, SwiftData, IndexedDB).
+1. Sync queue — `data/sync/SyncQueue.kt` (Room + WorkManager), `Data/Sync/SyncQueue.swift` (SwiftData + BGTaskScheduler), or `src/sync/sync-queue.ts` (IndexedDB + service worker)
+2. Conflict resolver implementing the per-entity matrix
+3. Network monitor that triggers queue drain
+4. Optimistic-update helper (temporary IDs, rollback)
 
 ## Cross-References
 
-- `/database-architect` — schema design for local storage and sync metadata tables
-- `/firebase-architect` — Firestore offline persistence configuration and security rules
-- `/testing-strategy` — offline test scenarios in the testing pyramid
-- `/performance-review` — sync performance budgets and battery impact monitoring
-- `/notification-architect` — silent push notifications to trigger background sync
-- `/i18n` — offline-available localized strings
+`database-architect` (local schema), `firebase-architect` (Firestore config and rules), `testing-strategy` (where offline tests sit and coverage targets), `performance-review` (battery and sync budgets), `notification-architect` (silent push triggers).

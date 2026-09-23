@@ -1,7 +1,7 @@
 ---
 name: bid-decision
-description: "Make a disciplined go/no-go call on a solicitation — kill criteria, weighted scorecard, win probability, and pursuit economics"
-when_to_use: "Use before committing resources to a proposal, or when a pursuit is drifting. NOT for first-pass screening (use solicitation-triage). NOT for parsing requirements (use rfp-evaluation). NOT for sourcing opportunities (use capture-management)."
+description: "Makes the bid/no-bid call on a solicitation: kill criteria, weighted scorecard, win odds, bid cost. Use when deciding whether to commit to a proposal or a pursuit is drifting."
+when_to_use: "NOT for first-pass screening of portal alerts (use solicitation-triage)."
 argument-hint: "[solicitation-number]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
 ---
@@ -12,12 +12,18 @@ Decide whether to pursue a solicitation, using criteria set **before** you fall 
 
 The core discipline: **proposal effort is real, unrecoverable cost, and buyers explicitly disclaim it.** A consulting firm that bids everything wins a low percentage of a lot of expensive attempts and starves its delivery work. The purpose of this skill is to make no-bid a respectable, frequent, early outcome.
 
+**Outcome:** a recorded GO / CONDITIONAL GO / NO-BID with rationale, scorecard, expected value,
+and — for conditional go — owners and a decision date. **Done when** every kill criterion is
+answered with evidence, the score and EV are computed, and `01-analysis/bid-no-bid.md` exists.
+
 ## Pre-Processing (Auto-Context)
 
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
+
 - Evaluation artifacts: !`ls 01-analysis/*.md 2>/dev/null || echo "(run rfp-evaluation first)"`
-- Bid pipeline: !`sed -n '1,30p' ../../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
-- Days remaining: !`date +%Y-%m-%d`
-- Past pursuits: !`ls -d ../../archive/*/ 2>/dev/null | head -20 || echo "(no archive)"`
+- Bid pipeline: !`sed -n '1,30p' PIPELINE.md ../PIPELINE.md ../../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
+- Today (compute days to the deadline in the facts table): !`date +%Y-%m-%d`
+- Past pursuits: !`ls -d archive/*/ ../archive/*/ ../../archive/*/ 2>/dev/null | head -20 || echo "(no archive)"`
 
 ## Step 1: Kill criteria — before any scoring
 
@@ -36,7 +42,7 @@ These are procurement **facts**, not judgment calls. Any unresolvable "no" ends 
 
 ### On mandatory qualifications
 
-Read the operative verb. "Must provide three public-sector references" is a bar; "should demonstrate relevant experience" is a preference. When it is a bar and you cannot clear it, the honest options are:
+Bar vs. preference is decided by the operative verb (see `solicitation-triage` Step 2). When it is a bar and you cannot clear it, the honest options are:
 
 1. **Team with a partner** who clears it — but subcontractors usually must be **named in the proposal** with qualifications and credit references, so this must be arranged in days, not weeks
 2. **Bid anyway** and accept rejection risk — legitimate only when you have priced the effort as marketing spend and said so out loud
@@ -104,7 +110,7 @@ Bid cost is real. Compute it.
 
 Then: **Expected value = (win probability × contract margin) − bid cost**
 
-A 15% chance at \$400K of margin against a \$60K bid cost is EV-positive (\$0K... marginally). A 15% chance at \$200K margin against the same cost is clearly negative. Run the arithmetic rather than trusting instinct — instinct is reliably optimistic about win probability.
+A 20% chance at \$400K of margin against a \$60K bid cost is EV +\$20K. At 15% it is exactly break-even (0.15 × 400K − 60K = 0), and a 15% chance at \$200K margin against the same cost is −\$30K. Run the arithmetic rather than trusting instinct — instinct is reliably optimistic about win probability.
 
 Also weigh **opportunity cost**: what does this team do instead for three weeks? For a small firm, a bid is usually funded by deferring delivery or business development, both of which have returns.
 
@@ -157,7 +163,7 @@ Record every decision in the pipeline, including no-bids, and revisit quarterly.
 | Bid cost per win | The real cost of business development |
 | Bids lost on compliance vs. content | Compliance losses are unforced and fixable |
 
-**Request a debrief on every loss.** Most public agencies must provide one. For a firm's first bids, the debrief is worth more than the contract.
+**Request a debrief on every loss** (this skill owns the rule; siblings link here). Most public agencies must provide one. For a firm's first bids, the debrief is worth more than the contract.
 
 ## Anti-patterns
 
@@ -174,9 +180,10 @@ Record every decision in the pipeline, including no-bids, and revisit quarterly.
 
 ## Handoff
 
-- Requirements and compliance → `rfp-evaluation`
 - Contract terms driving the risk score → `public-sector-contracting`
 - Cost and effort driving the economics score → `technical-estimation`
+- First-pass screening → `solicitation-triage`
+- Requirements or compliance checklist not yet built → `rfp-evaluation`
 - Pipeline and opportunity sourcing → `capture-management`
 - No-bid, but the buyer is worth keeping → `buyer-intelligence`
 - If go → `proposal-generator`

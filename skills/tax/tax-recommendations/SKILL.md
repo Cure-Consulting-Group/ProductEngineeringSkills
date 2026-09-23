@@ -1,20 +1,22 @@
 ---
 name: tax-recommendations
-description: Turn tax analysis into a ranked, quantified action list for a specific taxpayer — screen opportunities, quantify after-tax benefit, score risk and effort, sequence by deadline, and present it so decisions get made. Use when asked what to do, for a tax plan, or to produce a client-facing deliverable.
+description: "Turns tax analysis into a ranked, dated action plan. Use when a client asks what to do, wants a year-end tax plan, or needs a client-facing deliverable with quantified savings."
+when_to_use: "NOT for generating strategy ideas (tax-strategies) or qualifying a single deduction or credit (deductions-and-credits)."
 argument-hint: "[taxpayer-or-entity]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Tax Recommendations
 
 The delivery layer. Analysis that does not end in a dated, prioritized action list
-does not reduce anyone's tax.
+does not reduce anyone's tax. **Done when** the deliverable below is filled:
+every item quantified net of interactions, risk-rated, owned, and dated, plus a
+"Not recommended" section. Match length to the need; no filler sections or
+restated summaries.
 
 ## Disclaimer
 This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`).
-
-The failure mode this skill exists to prevent: a list of thirty generic ideas,
-unquantified, unranked, with no deadlines — which produces zero action and reads
-as padding.
 
 ## Principles
 
@@ -71,7 +73,8 @@ With permanent TCJA rates under OBBBA, the pre-2025 "defer because rates rise in
 2026" logic is dead. Purge it from any inherited plan.
 
 ### 4. Score
-See `reference/scoring-model.md`. Three axes: **benefit**, **risk**, **effort**.
+Three axes: **benefit**, **risk**, **effort**. Read `reference/scoring-model.md`
+at this step for the scales, interaction handling, and worked examples.
 
 ### 5. Sequence
 Order by deadline first, then by score. Produce dates, not "by year end."
@@ -133,11 +136,6 @@ about.
   §199A deduction with it.
 - Never present a strategy that fails the doctrine gate, even labeled as
   aggressive.
-
-## Reference files
-
-- `reference/scoring-model.md` — the benefit/risk/effort model, interaction
-  handling, and worked prioritization examples.
 
 ## Related skills
 

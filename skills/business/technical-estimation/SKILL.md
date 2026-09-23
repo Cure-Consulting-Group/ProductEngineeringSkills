@@ -1,23 +1,32 @@
 ---
 name: technical-estimation
-description: "Build defensible software estimates with explicit uncertainty — decomposition, PERT, reference-class forecasting, risk contingency"
-when_to_use: "Use when an estimate will be bid against or held to for years. NOT for quick internal budgeting (use engineering-cost-model). NOT for pricing structure (use proposal-generator)."
+description: "Builds defensible software estimates with ranges: PERT, reference class, risk reserve. Use when an estimate will be bid on, contracted, or audited, e.g. an RFP cost volume."
+when_to_use: "NOT for quick internal budgets (use engineering-cost-model) or pricing and payment terms (use proposal-generator)."
 argument-hint: "[project-or-scope-name]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
+metadata:
+  verified: 2026-09-23
 ---
 
 # Technical Estimation
 
 Produce estimates you can defend under scrutiny and be held to under contract.
 
+**Outcome:** a labeled estimate class, a range with a stated confidence, an itemized risk reserve,
+a staffing-derived schedule, and a numbered assumptions list. **Done when** every requirement ID
+maps to an effort line, every pessimistic value names its failure mode, σ is rolled up in
+quadrature, multi-year costs are modeled per year, and a skeptical reviewer could trace every
+number to its basis. Match length to the need; no filler sections or restated summaries.
+
 The distinction from casual estimation: **a bid estimate is a commitment, not a forecast.** When a fixed price is locked for five years with no escalator, the estimate *is* the margin. The goal is not a single confident number — it is a range with stated assumptions, an explicit confidence level, and contingency sized to the real risks.
 
 ## Pre-Processing (Auto-Context)
 
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
+
 - Requirements source: !`ls 01-analysis/requirements-matrix.md docs/PRD*.md 2>/dev/null || echo "(none found)"`
 - Comparable past projects: !`ls -d ../*/ 2>/dev/null | head -20`
-- Stack manifest: !`head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || echo "(none)"`
-- Repo scale, if estimating against existing code: !`git ls-files 2>/dev/null | wc -l`
+- Repo scale (matters only when the scope extends existing code): !`git ls-files 2>/dev/null | wc -l`
 
 ## Step 1: Establish what kind of estimate this is
 
@@ -38,7 +47,7 @@ Estimate against **what the buyer asked for**, so every requirement ID maps to e
 ```markdown
 | Req ID | Component | Optimistic | Likely | Pessimistic | PERT | Confidence |
 |---|---|---:|---:|---:|---:|---|
-| F-7 | Ride scheduling + 4 provider integrations | 320 | 560 | 1200 | 613 | Low — providers unnamed |
+| F-7 | Ride scheduling + 4 provider integrations | 320 | 560 | 1200 | 627 | Low — providers unnamed |
 ```
 
 **PERT expected value:** `(O + 4M + P) / 6`
@@ -68,10 +77,7 @@ Inside-view estimates — summing tasks you can imagine — are systematically o
 3. Compute the historical ratio
 4. Apply it to the bottom-up number
 
-```bash
-# Survey comparable work already in the workspace
-ls -d ../*/ | head -30
-```
+Comparable work in the workspace is listed in the context block above.
 
 **If you have no history, say so and use a documented industry multiplier rather than pretending to precision.** Typical inside-view underestimation for greenfield software runs 1.3×–2.0×. For work with regulatory adjacency, novel technology, or many external dependencies, the top of that range is the realistic floor.
 
@@ -125,7 +131,9 @@ Contingency is not padding. It is a priced reserve against named risks.
 | Integration partners unnamed at bid time | 70% | 800 | 560 | Price integrations as options |
 ```
 
-Sum expected values → risk reserve. Add separately from the PERT roll-up, and **show it as a line item**. Buyers respect a named contingency far more than a number quietly inflated by 20%.
+Sum expected values → risk reserve, and **show it as a line item**. Buyers respect a named contingency far more than a number quietly inflated by 20%.
+
+**Don't count risk twice.** The reference-class multiplier (Step 3) already contains the risk your past projects realized. Put a risk in the reserve only if it is **absent from the reference class** — e.g. unnamed integration partners when no comparable project had them. If a risk was typical of the comparables, it is already in the multiplier.
 
 Distinguish two categories:
 - **Known unknowns** → contingency reserve, owned by the project
@@ -174,32 +182,16 @@ Never present a single number. Present a distribution with the assumptions attac
 | | Hours | At \$165/hr blended |
 |---|---:|---:|
 | Bottom-up PERT | 10,400 | \$1.72M |
-| Reference-class adjusted | 14,560 | \$2.40M |
-| Risk reserve (named) | 1,850 | \$0.31M |
-| **Budgetary total** | **16,410** | **\$2.71M** |
-| 80% confidence range | 13,900–19,200 | \$2.29M–\$3.17M |
+| Reference-class adjusted (×1.4) | 14,560 | \$2.40M |
+| Risk reserve (named, outside the reference class) | 600 | \$0.10M |
+| **Budgetary total** | **15,160** | **\$2.50M** |
+| Budgetary range (−10% / +25%) | 13,644–18,950 | \$2.25M–\$3.13M |
 
 **Assumptions this rests on:** <numbered list>
 **What would move it most:** <the two or three biggest swing factors>
 ```
 
 **The assumptions list is the most important part.** It is what converts an estimate from a guess into a defensible position, and it is what you point to when scope changes.
-
-## Step 9: Sanity checks
-
-Before shipping the estimate:
-
-- [ ] Does every requirement ID map to some effort line?
-- [ ] Is the pessimistic case tied to a named failure mode?
-- [ ] Is σ rolled up in quadrature, not summed?
-- [ ] Is the reference-class multiplier stated with its source?
-- [ ] Is duration derived from a staffing profile, not hours ÷ team size?
-- [ ] Does the peak team exist, or is there a named plan to get it?
-- [ ] Is contingency a separate, itemized line?
-- [ ] Are multi-year costs modeled per year, not averaged?
-- [ ] Is usage-based cost a pass-through with stated assumed volume?
-- [ ] Does the summary lead with a range and a confidence level?
-- [ ] Would a skeptical reviewer be able to audit every number to its basis?
 
 ## Anti-patterns
 

@@ -1,8 +1,10 @@
 ---
 name: parallel-agent-orchestration
-description: "Run N simultaneous agent sessions on one repo safely — worktree-per-ticket, module-boundary decomposition, rate-limit budgeting, model tiering, single-owner destructive ops"
-when_to_use: "Use when running 2+ concurrent sessions on one repo or parallelizing a wave. NOT worktree mechanics (git-worktree-manager). NOT unattended runs (engagement-automation)."
+description: "Operating model for running parallel agent sessions on one repo. Use when splitting a wave across 2+ agents or subagents: decomposition, budget, locks, merge order."
+when_to_use: "NOT worktree mechanics (use git-worktree-manager). NOT unattended or scheduled runs (use engagement-automation)."
 argument-hint: "[wave-or-ticket-list]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Parallel Agent Orchestration
@@ -13,7 +15,19 @@ env files); this skill owns the *judgment*: what parallelizes, who owns the
 merge, how the token budget splits, and what must never run twice.
 
 Cure default: any wave with 3+ independent tickets, or any day where a feature
-session and a review/hotfix session run simultaneously.
+session and a review/hotfix session run simultaneously. Done when every ticket
+has a gate, an owner, and a place in the merge order.
+
+## When to delegate (and when not)
+
+Delegate to subagents only when the work splits into pieces that are large
+(each worth a fresh context), independent (no shared files), and gated
+(iron rule 3). Small, coupled, or judgment-heavy work stays in one session.
+Caps: at most 4 concurrent writing agents and one level of nesting — subagents
+don't spawn subagents. Claude Code's defaults are far looser (20 concurrent,
+depth 3), so set `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=4` and
+`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1` (v2.1.217+) for fleet work. Codex
+won't spawn subagents unless told to, so when this skill's criteria are met, say explicitly "spawn one subagent per ticket below".
 
 ## The iron rules
 
@@ -35,7 +49,7 @@ session and a review/hotfix session run simultaneously.
 |---|---|
 | Wave of scoped tickets (BACKLOG style) | Worktree per ticket, cheap-model mechanical tickets first, judgment tickets serial on the strong model |
 | Feature + hotfix + PR review same day | Long-lived feature worktree + two ephemeral worktrees (see git-worktree-manager) |
-| Repo-wide mechanical change | One orchestrating session fanning out subagents (`isolation: worktree`), not N manual sessions |
+| Repo-wide mechanical change | One orchestrating session fanning out subagents, one worktree each (Claude Code: `isolation: worktree`), not N manual sessions |
 | Audit/review of a large surface | Parallel read-only subagents, one synthesis session; no worktrees needed (nothing mutates) |
 | Two agents editing the same module | **Don't.** Re-decompose until they don't (Step 2) |
 
@@ -65,7 +79,8 @@ concurrency before cutting model quality on judgment work.
 
 ## Step 4: Blast radius → autonomy
 
-Extends AUTOMATION.md rule 1 from unattended runs to interactive parallel work:
+Extends Cure's unattended-run rule ("unattended runs report, humans apply";
+full list in the plugin repo's `docs/AUTOMATION.md`) to interactive parallel work:
 
 | Blast radius | Autonomy |
 |---|---|
@@ -86,8 +101,8 @@ mkdir .cure-locks 2>/dev/null; ln -s "$(git branch --show-current)-$$" .cure-loc
 rm .cure-locks/migrate
 ```
 
-Locked ops: db migrations, `release.sh`, deploys, seed/reset scripts, anything
-on the AUTOMATION.md never-unattended list. Stale lock (owner session gone) is
+Locked ops: db migrations, `release.sh`, deploys, seed/reset scripts, secrets,
+billing — anything that is never run unattended. Stale lock (owner session gone) is
 a human call to break — never auto-broken by an agent.
 
 ## Step 6: Merge discipline
@@ -100,11 +115,7 @@ a human call to break — never auto-broken by an agent.
 
 ## Anti-patterns
 
-- Two sessions in the same working directory (state corruption, silent
-  overwrites — always a worktree per session).
+- Two sessions in the same working directory (silent overwrites — always a
+  worktree per session).
 - Parallelizing to "go faster" on judgment work: review quality drops faster
   than wall-clock does.
-- Letting an agent both write a change and grade it done — gates or a second
-  read-only session verify.
-- Spawning the wave before every ticket has a gate ("we'll check it at the
-  end" = you won't).

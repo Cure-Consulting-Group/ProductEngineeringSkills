@@ -407,14 +407,17 @@ def lane_agy(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[s
     if task["role"] not in ("review", "whole-repo"):
         raise SystemExit("Antigravity lanes run review and whole-repo roles only (doctrine: the Antigravity lane never writes)")
     eff = {"low": "low", "medium": "medium", "high": "high"}.get(effort, "high")
+    sys.path.insert(0, str(HERE))
+    from lane_toolchains import agy_workspace_path  # noqa: E402
+    ws = agy_workspace_path(work)  # trusted form, never the physical /Volumes path (lanes.md failure table)
     if task["role"] == "review":
-        prompt = f"You are reviewing the repository at {work.resolve()}. Do not modify any file. Answer only with the JSON schema provided.\n\n" + task["spec"]
+        prompt = f"You are reviewing the repository at {ws}. Do not modify any file. Answer only with the JSON schema provided.\n\n" + task["spec"]
     else:
-        prompt = f"You are reading the repository at {work.resolve()}. Do not modify any file. End with the exact answer lines the INTERFACES section asks for.\n\n" + task["spec"]
+        prompt = f"You are reading the repository at {ws}. Do not modify any file. End with the exact answer lines the INTERFACES section asks for.\n\n" + task["spec"]
     out = run_dir / "agy.json"
     env = dict(os.environ, TMPDIR=str(run_dir / "tmp"))
     (run_dir / "tmp").mkdir(exist_ok=True)
-    argv = ["agy", "-p", prompt, "--add-dir", str(work.resolve()), "--model", lane, "--effort", eff, "--mode", "plan", "--sandbox",
+    argv = ["agy", "-p", prompt, "--add-dir", ws, "--model", lane, "--effort", eff, "--mode", "plan", "--sandbox",
             "--output-format", "json", "--print-timeout", f"{task.get('timeout', 900) // 60}m"] + (["--json-schema", str(SCHEMA)] if task["role"] == "review" else [])
     rc, so, se = sh(argv, cwd=str(work), env=env, timeout=task.get("timeout", 900) + 60)
     out.write_text(so)

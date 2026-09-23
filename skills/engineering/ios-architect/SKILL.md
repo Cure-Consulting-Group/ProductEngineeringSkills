@@ -1,172 +1,126 @@
 ---
 name: ios-architect
-description: "Scaffold iOS features with Swift/SwiftUI, Clean Architecture, MVVM, and structured concurrency"
-when_to_use: "Use when scaffolding iOS features with Swift/SwiftUI, Clean Architecture, MVVM, and structured concurrency. NOT for design guidance (use ios-design-expert)."
+description: "Scaffolds iOS features in Swift/SwiftUI with Clean Architecture, MVVM, and Swift 6 concurrency. Use when creating a new iOS feature, view model, repository, or StoreKit 2 flow."
+when_to_use: "NOT for Apple HIG design guidance (ios-design-expert) or Core Data/SwiftData schema design (database-architect)."
 argument-hint: "[feature-name]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # iOS Architect
 
-Production Swift/SwiftUI architecture. Clean Architecture with Swift Concurrency. Mirrors Android scaffold structure for cross-platform consistency.
-
-## Architecture Options
-
-Default: **Clean Architecture + MVVM + Swift Concurrency**
-Alternative: **The Composable Architecture (TCA)** — ask if user specifies TCA
-
-```
-Presentation Layer  →  SwiftUI Views + ViewModels (@Observable / ObservableObject)
-Domain Layer        →  Use Cases + Repository Protocols (pure Swift, no frameworks)
-Data Layer          →  Repository Impls + Data Sources (URLSession, Firebase, CoreData)
-DI Layer            →  DIContainer or swift-dependencies (TCA)
-```
-
-## Feature Scaffold Structure
-
-```
-Feature/[FeatureName]/
-├── Domain/
-│   ├── Models/         [FeatureName].swift           ← Pure Swift value types
-│   ├── Repositories/   [FeatureName]Repository.swift ← Protocol only
-│   └── UseCases/       [Action][FeatureName]UseCase.swift
-├── Data/
-│   ├── DTOs/           [FeatureName]DTO.swift        ← Codable + mapper
-│   ├── DataSources/    [FeatureName]RemoteDataSource.swift
-│   └── Repositories/   [FeatureName]RepositoryImpl.swift
-├── Presentation/
-│   ├── [FeatureName]ViewModel.swift                 ← @Observable or @MainActor
-│   ├── [FeatureName]View.swift                      ← SwiftUI root view
-│   ├── [FeatureName]State.swift                     ← State/action enums
-│   └── Components/     [Component]View.swift
-└── DI/
-    └── [FeatureName]Module.swift
-```
+**Outcome:** a feature that compiles cleanly under the Swift 6 language mode (complete concurrency
+checking, zero warnings), in the project's existing conventions — domain, data, presentation, DI,
+and tests. Done when every file in the Step 3 layout exists, the feature is wired into the DI
+container and navigation, and the view-model and use-case tests pass. Mirrors
+`android-feature-scaffold` so Cure's two mobile codebases read alike.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Toolchain / settings: !`grep -rhoE "SWIFT_VERSION = [0-9.]+|IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+|SWIFT_DEFAULT_ACTOR_ISOLATION = [A-Za-z]+|SWIFT_STRICT_CONCURRENCY = [a-z]+" --include=project.pbxproj . 2>/dev/null | sort | uniq -c | head -8 || echo "(no Xcode project)"`
+- Packages: !`grep -hoE 'url: "[^"]+"|swift-tools-version:[0-9.]+|defaultIsolation\([^)]*\)' Package.swift 2>/dev/null | head -8 || echo "(no Package.swift)"`
+- Existing features: !`find . -name "*ViewModel.swift" -not -path "*/.build/*" 2>/dev/null | head -6`
 
-Use this context to tailor all output to the actual project.
+Match existing features' structure and naming before applying the defaults below.
 
-## Step 1: Classify Request
+## Step 1: Classify
 
-| Request | Action |
-|---------|--------|
-| Full feature scaffold | Generate all layers |
-| SwiftUI view + ViewModel | Generate presentation layer |
-| Data layer + networking | Generate data layer |
-| StoreKit 2 subscriptions | Generate StoreKit integration |
-| Firebase iOS integration | Generate Firebase data layer |
-| TCA architecture | Generate TCA pattern |
-| Testing scaffold | Generate XCTest files |
+| Request | Output |
+|---|---|
+| Full feature | All layers (Step 3) |
+| SwiftUI view + view model | Presentation layer + tests |
+| Data layer / networking / Firebase | DTOs, data source, repository + tests |
+| StoreKit 2 purchases / subscriptions | Store service per Step 4 + tests with a `.storekit` config |
+| Project already uses TCA | Follow its reducer/`@Dependency` conventions; same layering below the store |
+| Question / review | Answer or findings against Step 4 — no new files |
+
+Don't introduce TCA into a non-TCA codebase; MVVM is the Cure default.
 
 ## Step 2: Gather Context
 
-1. **Feature name** — e.g., "PlayerProfile"
-2. **Architecture preference** — Clean + MVVM (default) or TCA?
-3. **Data source** — REST API / Firebase / Core Data / SwiftData / combined?
-4. **iOS deployment target** — iOS 17+ recommended (enables @Observable, SwiftData)
-5. **Auth requirement** — Firebase Auth / Sign in with Apple / both?
-6. **Existing patterns** — any established conventions in the codebase?
+Ask only what the context doesn't answer: feature name; data source (REST, Firebase, SwiftData,
+Core Data); deployment target (Cure floor: iOS 17 — needed for `@Observable` and SwiftData; confirm
+against the client's device analytics); auth (Firebase Auth, Sign in with Apple); any purchase flow.
 
-## Step 3: Core Swift Patterns (Always Apply)
+## Step 3: File Layout (one naming scheme — use it everywhere)
 
-### State Management Selection
 ```
-iOS 17+: @Observable macro (preferred)
-iOS 16 and below: ObservableObject + @Published
-TCA: Store<State, Action> + Reducer
-```
-
-### Concurrency Rules
-- All network/IO calls: `async throws` — never DispatchQueue or completion handlers
-- UI updates: `@MainActor` — annotate ViewModels
-- Shared mutable state: `actor` — never raw class with locks
-- Structured concurrency: `async let` for parallel work, `TaskGroup` for dynamic parallelism
-- Cancellation: `Task { }` stored as property, cancel in `deinit` / `.onDisappear`
-
-### Error Handling Pattern
-```swift
-enum [Feature]Error: LocalizedError {
-    case notFound(id: String)
-    case networkUnavailable
-    case unauthorized
-    case unknown(underlying: Error)
-
-    var errorDescription: String? {
-        switch self {
-        case .notFound(let id): return "Item \(id) not found."
-        case .networkUnavailable: return "No internet connection."
-        case .unauthorized: return "You don't have access."
-        case .unknown: return "An unexpected error occurred."
-        }
-    }
-}
+Features/{Feature}/
+├── Domain/
+│   ├── Models/{Feature}.swift                   value types, Sendable
+│   ├── Repositories/{Feature}Repository.swift   protocol
+│   └── UseCases/Get{Feature}UseCase.swift
+├── Data/
+│   ├── DTOs/{Feature}DTO.swift                  Codable
+│   ├── Mappers/{Feature}Mapper.swift            DTO ↔ domain
+│   ├── DataSources/{Feature}RemoteDataSource.swift
+│   └── Repositories/{Feature}RepositoryImpl.swift
+├── Presentation/
+│   ├── {Feature}ViewModel.swift                 @Observable, main-actor isolated
+│   ├── {Feature}View.swift
+│   └── Components/
+└── DI/{Feature}Module.swift                     registers the feature in the app container
+Tests/{Feature}Tests/  {Feature}ViewModelTests.swift, Get{Feature}UseCaseTests.swift
 ```
 
-### Repository Protocol Pattern
-```swift
-protocol [Feature]Repository {
-    func get(id: String) async throws -> [Feature]
-    func observe(id: String) -> AsyncThrowingStream<[Feature], Error>
-    func update(_ item: [Feature]) async throws
-}
-```
+Generation order: model → repository protocol → use case → DTO + mapper → data source → repository
+impl → view model → view → DI → tests.
 
-## Step 4: Code Generation Order
+## Step 4: Rules With Non-Obvious Reasons
 
-1. Domain models (struct, enum)
-2. Repository protocol
-3. Use case(s)
-4. DTO + Codable + mapper
-5. Data source (networking or Firebase)
-6. Repository implementation
-7. State / Action enums
-8. ViewModel (`@Observable @MainActor`)
-9. SwiftUI root view
-10. Subcomponent views
-11. DI wiring
-12. XCTest scaffold
+**Concurrency (Swift 6 language mode).** Swift 6.2 added default actor isolation (SE-0466): new
+Xcode 26+ app targets default to `MainActor`, so unannotated types are main-actor isolated. Check
+the setting in the context above and write code that is correct under it:
+- UI and view models: main-actor (implicit under the default, explicit `@MainActor` otherwise).
+- Data sources, repositories, mappers: mark `nonisolated` (or keep in a module/package without
+  MainActor default) so decoding and I/O don't run on the main actor. Use `@concurrent` for
+  functions that must leave the caller's actor.
+- Domain models and DTOs are `Sendable` value types; shared mutable state lives in an `actor`.
+- Core Data / codegen classes inherit MainActor under the default — access `NSManagedObject`s only
+  inside their context's `perform`.
+- No `DispatchQueue`, completion handlers, or `@unchecked Sendable` to silence the checker.
 
-## Code Generation (Required)
+**Task lifetime.** Start view work with SwiftUI `.task { await viewModel.load() }` (or
+`.task(id:)`), which cancels automatically when the view disappears. Don't store a `Task` and
+cancel it in `deinit`: a task whose closure captures `self` keeps the view model alive, so `deinit`
+never runs, and a main-actor class's `deinit` is nonisolated unless declared `isolated deinit`.
 
-You MUST generate actual Swift files using the Write tool:
+**Observation and DI.** `@Observable` view models, held with `@State` in the owning view and passed
+down or via `@Environment(Type.self)`. Dependencies are protocol-typed and injected through the
+initializer from a composition root; no singletons reached from views.
 
-1. **Domain**: `Domain/Models/{Feature}.swift`, `Domain/UseCases/{Feature}UseCase.swift`, `Domain/Repositories/{Feature}RepositoryProtocol.swift`
-2. **Data**: `Data/DTOs/{Feature}DTO.swift`, `Data/Repositories/{Feature}Repository.swift`, `Data/Mappers/{Feature}Mapper.swift`
-3. **Presentation**: `Presentation/{Feature}/{Feature}ViewModel.swift`, `Presentation/{Feature}/{Feature}View.swift`
-4. **DI**: `DI/{Feature}Assembly.swift`
-5. **Tests**: `Tests/{Feature}/{Feature}ViewModelTests.swift`, `Tests/{Feature}/{Feature}UseCaseTests.swift`
+**Errors.** Each feature defines a `LocalizedError` enum (`notFound`, `networkUnavailable`,
+`unauthorized`, `unknown(underlying:)`); user-facing text comes from the String Catalog. Map
+transport errors at the repository boundary; view models never see `URLError`.
 
-Before generating, use Glob to find existing feature modules (`**/*ViewModel.swift`, `**/*UseCase.swift`) and match conventions.
+**Repository shape.** `get(id:) async throws -> Model`, `observe(id:) -> AsyncThrowingStream<Model,
+Error>` (finish the stream and remove Firebase listeners in `onTermination`), `update(_:) async throws`.
+
+**StoreKit 2.** One `@MainActor` store service. Start a `Transaction.updates` listener at app
+launch (missed renewals and Ask-to-Buy approvals arrive there); `finish()` every verified
+transaction; derive entitlements from `Transaction.currentEntitlements`, not local flags. Validate
+server-side with App Store Server Notifications V2 when the backend grants access. Test with a
+`.storekit` configuration file.
+
+**Tests.** Swift Testing (`@Test`, `#expect`) for unit tests; XCTest for UI tests. Coverage targets
+come from `testing-strategy`.
+
+## Code/Artifact Generation
+
+Applies when Step 1 is a build request; a question or review gets an answer, not files. Write the
+Step 3 files, wire DI and navigation, then list files by layer. Deliver the requested feature;
+don't refactor adjacent features.
+
+## Defaults (verified 2026-09-23)
+
+Swift 6 language mode on the current Xcode toolchain (Swift 6.4 released 2026-09-15, swift.org) ·
+SwiftUI (UIKit via representables where needed) · `@Observable` · URLSession async/await ·
+`Codable` · SwiftData (iOS 17+) or Core Data · Firebase Apple SDK via SPM · StoreKit 2 ·
+Swift Testing + XCTest UI · SwiftLint.
 
 ## Cross-References
 
-- `/database-architect` — for CoreData/SwiftData schema design and migrations
-- `/testing-strategy` — for XCTest standards and coverage expectations
-- `/ci-cd-pipeline` — for iOS Fastlane and TestFlight workflows
-- `/accessibility-audit` — for SwiftUI accessibility modifiers and VoiceOver compliance
-
-## Tech Stack Defaults
-
-```yaml
-language: Swift 5.10+
-ui: SwiftUI (UIKit interop where needed)
-state: @Observable (iOS 17+) or ObservableObject
-concurrency: Swift Concurrency (async/await, Actor, AsyncStream)
-networking: URLSession with async/await
-serialization: Codable (JSONDecoder with .convertFromSnakeCase)
-di: Manual DIContainer or swift-dependencies
-firebase: FirebaseFirestore, FirebaseAuth (Swift SDK)
-payments: StoreKit 2
-persistence: SwiftData (iOS 17+) or Core Data
-testing: XCTest + Swift Testing framework (iOS 17+)
-ui_testing: XCUITest + snapshot testing (swift-snapshot-testing)
-package_manager: Swift Package Manager
-linting: SwiftLint
-```
+`database-architect` (SwiftData/Core Data schema) · `testing-strategy` · `ci-cd-pipeline` (Fastlane,
+TestFlight) · `accessibility-audit` (VoiceOver) · `ios-design-expert` (HIG specs).

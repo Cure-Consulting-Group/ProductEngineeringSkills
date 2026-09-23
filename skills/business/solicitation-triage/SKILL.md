@@ -1,7 +1,7 @@
 ---
 name: solicitation-triage
-description: "Screen public-sector solicitations at portal volume — classify the procurement instrument, run the ten-minute read order and gate check, reach a verdict in under an hour"
-when_to_use: "Use on a solicitation you have not decided to pursue, or a batch of portal alerts — the front door before rfp-evaluation. NOT for requirement extraction (use rfp-evaluation). NOT for the go/no-go (use bid-decision)."
+description: "Screens public-sector solicitations and portal alert batches to a verdict in under an hour. Use when a new RFP, RFQ, bid notice, or weekly bid-portal feed arrives."
+when_to_use: "NOT for extracting requirements from a promoted RFP (use rfp-evaluation) or the resourced go/no-go (use bid-decision)."
 argument-hint: "[solicitation-or-batch]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
 ---
@@ -26,20 +26,20 @@ for the bid.
 
 ## Pre-Processing (Auto-Context)
 
-Triage context, gathered before the skill runs. Values are injected inline below; in an environment that
-does not execute them, run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
 - Today: !`date +%Y-%m-%d`
 - Target profile: !`sed -n '1,40p' TARGET-PROFILE.md ../TARGET-PROFILE.md ../../TARGET-PROFILE.md 2>/dev/null || echo "(no TARGET-PROFILE.md — write one first, see capture-management)"`
 - Pipeline: !`sed -n '1,25p' PIPELINE.md ../PIPELINE.md ../../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
-- Documents in hand: !`ls *.pdf *.docx *.xlsx src/*.pdf src/*.xlsx 2>/dev/null | head -20 || echo "(none staged)"`
+- Documents in hand: !`ls *.pdf *.docx *.xlsx 00-source/*.pdf 00-source/*.xlsx 2>/dev/null | head -20 || echo "(none staged)"`
 - Prior verdicts: !`ls -d ../triage/*/ ../archive/*/ triage/*/ archive/*/ 2>/dev/null | head -20 || echo "(no history)"`
 
-Extract text before reading, so the documents are greppable:
+Stage documents in `00-source/` and extract text to `00-source/extracted/` — the same layout
+`rfp-evaluation` uses, so a PROMOTEd folder carries over unchanged:
 
 ```bash
-mkdir -p src
-for f in src/*.pdf; do pdftotext -layout "$f" "${f%.pdf}.txt"; done
+mkdir -p 00-source/extracted
+for f in 00-source/*.pdf; do pdftotext -layout "$f" "00-source/extracted/$(basename "$f" .pdf).txt"; done
 ```
 
 `-layout` preserves table columns, which is what makes cost forms and rubrics readable as text.
@@ -98,6 +98,8 @@ than the scope does.** Scope is what everyone reads first and is the least decis
 
 ### Mandatory qualifications: read the operative verb
 
+(This skill owns the rule; `bid-decision` and `rfp-evaluation` link here.)
+
 "Must provide three public-sector references" is a bar. "Should demonstrate relevant experience" is a
 preference. Bars are long-lead procurement facts — references, licensure, insurance limits, bonding,
 certifications, registrations — and **no amount of writing fixes them in the final week.** If a bar is
@@ -137,7 +139,7 @@ Score against the firm's written target profile. If there is no written profile,
 | 5 | Past performance satisfiable, or teaming permitted | ☐ |
 | 6 | No bonding, no clearances | ☐ |
 | 7 | Payment terms the balance sheet can float | ☐ |
-| 8 | RFI window still open | ☐ |
+| 8 | RFI window still open (RFP/RFQ only — score N/A as a pass for RFQual, SOQ, and pool vehicles) | ☐ |
 | 9 | Rubric weights technical quality over size and price | ☐ |
 | 10 | You can name a **specific** reason you would win | ☐ |
 
@@ -177,8 +179,8 @@ failure, not a pending decision.
 
 ## Step 6: Write one file
 
-One `QUALIFY.md`, verdict at the top, no subfolders. Wanting an `01-analysis/` directory is the signal to
-promote, not to build structure in triage.
+One `QUALIFY.md`, verdict at the top; no analysis subfolders (only `00-source/`). Wanting an
+`01-analysis/` directory is the signal to promote, not to build structure in triage.
 
 ```markdown
 # Qualification — <SOLICITATION>

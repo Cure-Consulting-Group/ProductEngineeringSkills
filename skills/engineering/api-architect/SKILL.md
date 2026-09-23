@@ -1,218 +1,122 @@
 ---
 name: api-architect
-description: "Design REST/GraphQL APIs with versioning, auth, rate limiting, and error standards"
-when_to_use: "Use when designing API endpoints, versioning, auth, or error contracts. NOT for API gateway/BFF layer (use api-gateway). NOT for validating existing APIs (use api-validator agent)."
+description: "Designs REST/GraphQL API contracts: errors, auth, rate limits, versioning, OpenAPI. Use when designing endpoints or an API's error, auth, or deprecation policy."
+when_to_use: "NOT for gateway/BFF layers (use api-gateway) or validating an existing API against its spec (api-validator agent)."
 argument-hint: "[api-name]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # API Architect
 
-Design production REST and GraphQL APIs with versioning, authentication, error handling, and documentation. For backends beyond Firebase — Node.js, Python, Go, or any HTTP service.
+**Outcome:** an API contract a client team can build against — an OpenAPI 3.1 document (or GraphQL SDL) plus a short decisions table (auth, errors, pagination, limits, versioning). Done when every endpoint has request/response schemas, an error type, an auth requirement, and a rate-limit class. This skill owns Cure's API policy: rate-limit defaults, error format, versioning and deprecation, and the OpenAPI version. `api-gateway` and other skills link here instead of restating it.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Existing specs: !`find . -maxdepth 4 \( -name "openapi*.y*ml" -o -name "openapi*.json" -o -name "*.graphql" \) -not -path "*/node_modules/*" 2>/dev/null | head -5 || echo "(none)"`
+- Route files: !`find . -maxdepth 5 -path "*/node_modules" -prune -o \( -path "*/api/*" -o -path "*/routes/*" \) -type f -print 2>/dev/null | head -5 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Step 1: Classify the API Type
-
-| Need | Pattern |
-|------|---------|
-| Standard CRUD | REST with resource-based routes |
-| Complex queries, multiple clients | GraphQL |
-| Real-time data | WebSocket or Server-Sent Events |
-| Webhook receiver | HTTP POST endpoint with signature verification |
-| Third-party integration | REST client with retry and circuit breaker |
-| Internal microservice | REST or gRPC depending on performance needs |
-| Public developer API | REST with API keys, rate limits, versioned |
+| Need | Pattern | Output |
+|------|---------|--------|
+| CRUD over resources | REST | OpenAPI 3.1 + decisions table |
+| Many clients, varied read shapes | GraphQL | SDL + complexity/depth limits |
+| Server push | SSE (one-way) or WebSocket (two-way) | Event schema + reconnect/resume rules |
+| Webhook receiver | HTTP POST | Signature check, idempotency, 2xx-fast + async processing |
+| Public developer API | REST + API keys | Everything above + key lifecycle + published deprecation policy |
+| Review of an existing design | — | Findings against the conventions below, with severity; no files |
 
 ## Step 2: Gather Context
 
-1. **API purpose** — internal, partner, or public?
-2. **Consumers** — mobile app, web app, third-party, or all?
-3. **Auth model** — Firebase Auth, JWT, API keys, OAuth 2.0?
-4. **Data model** — what entities and relationships?
-5. **Scale** — expected requests per second?
-6. **Versioning** — how will breaking changes be handled?
+Ask only what the repo doesn't answer: consumers (own mobile/web, partners, public), auth model, core entities, expected peak RPS, and whether old mobile app versions must keep working (they usually must — this drives versioning).
 
-## Step 3: REST API Design Standards
+## Step 3: Cure Contract Conventions
 
-### URL Structure
-```
-/{version}/{resource}                    GET (list), POST (create)
-/{version}/{resource}/{id}               GET (read), PUT (update), DELETE
-/{version}/{resource}/{id}/{sub-resource} Nested resources
+These are decisions, not options. Deviate only with a stated reason.
 
-Examples:
-  GET    /v1/users                       List users
-  POST   /v1/users                       Create user
-  GET    /v1/users/123                   Get user 123
-  PUT    /v1/users/123                   Update user 123
-  DELETE /v1/users/123                   Delete user 123
-  GET    /v1/users/123/orders            List user 123's orders
+- **Paths:** plural kebab-case resources, `/v1/payment-methods/{id}`; nest at most one level (`/v1/users/{id}/orders`). Actions that aren't CRUD use a sub-resource verb: `POST /v1/orders/{id}/cancel`.
+- **Casing:** camelCase for every JSON field *and* query parameter (`perPage`, `createdAfter`, `sort=-createdAt`). One convention across body and query.
+- **Timestamps:** RFC 3339 UTC strings (`2026-01-15T10:30:00Z`). Money: integer minor units + ISO 4217 currency (`{ "amount": 1999, "currency": "USD" }`), never floats.
+- **Envelope:** `{ "data": … }`; lists add `"pagination": { "nextCursor": "…", "hasMore": true }`. Cursor pagination by default (`?cursor=…&limit=20`, max 100); offset only for admin UIs under ~100k rows.
+- **Idempotency:** any POST that moves money or sends messages accepts an `Idempotency-Key` header; store key + response for 24 h and replay on retry.
+- **Request ID:** every response carries `X-Request-Id`; propagate it downstream and include it in error bodies.
 
-Rules:
-  - Plural nouns for resources (users, not user)
-  - Lowercase, hyphen-separated (payment-methods, not paymentMethods)
-  - No verbs in URLs (POST /users, not POST /create-user)
-  - Nest max 2 levels deep (/users/123/orders, not /users/123/orders/456/items)
-```
+## Step 4: Errors — RFC 9457 Problem Details
 
-### HTTP Methods & Status Codes
-```
-GET     200 (OK), 404 (Not Found)
-POST    201 (Created), 400 (Bad Request), 409 (Conflict)
-PUT     200 (OK), 404 (Not Found), 400 (Bad Request)
-DELETE  204 (No Content), 404 (Not Found)
-Any     401 (Unauthorized), 403 (Forbidden), 429 (Rate Limited), 500 (Server Error)
-```
+All errors are `application/problem+json` (RFC 9457, which obsoletes RFC 7807). Standard members plus Cure extension members `code`, `requestId`, and `errors[]` for validation:
 
-### Request/Response Format
 ```json
-// Success response (single resource)
 {
-  "data": { "id": "123", "name": "Acme Corp", "createdAt": "2026-01-15T10:30:00Z" }
-}
-
-// Success response (list)
-{
-  "data": [{ ... }, { ... }],
-  "pagination": {
-    "page": 1,
-    "perPage": 20,
-    "total": 142,
-    "hasMore": true
-  }
-}
-
-// Error response
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Email is required",
-    "details": [
-      { "field": "email", "message": "must be a valid email address" }
-    ]
-  }
+  "type": "https://api.example.com/problems/validation-error",
+  "title": "Validation failed",
+  "status": 400,
+  "detail": "2 fields are invalid",
+  "code": "VALIDATION_ERROR",
+  "requestId": "req_7Hk2",
+  "errors": [{ "field": "email", "message": "must be a valid email address" }]
 }
 ```
 
-### Pagination (cursor-based preferred)
-```
-Offset-based:  ?page=2&per_page=20       (simple, but skip-count is slow on large sets)
-Cursor-based:  ?cursor=abc123&limit=20    (performant, stable for real-time data)
-```
+| `code` | Status | Notes |
+|---|---|---|
+| `VALIDATION_ERROR` | 400 / 422 | Field-level `errors[]` required |
+| `AUTHENTICATION_ERROR` | 401 | Missing, expired, or revoked token |
+| `FORBIDDEN` | 403 | Authenticated but not allowed; don't reveal whether the resource exists if that leaks data (use 404) |
+| `NOT_FOUND` | 404 | |
+| `CONFLICT` | 409 | Duplicate or state conflict; also idempotency-key reuse with a different body |
+| `RATE_LIMITED` | 429 | Always with `Retry-After` |
+| `INTERNAL_ERROR` | 500 | Generic `detail`; never stack traces, SQL, or file paths — log those server-side keyed by `requestId` |
 
-### Filtering, Sorting, Search
-```
-Filter:  GET /v1/orders?status=active&created_after=2026-01-01
-Sort:    GET /v1/orders?sort=-created_at  (- prefix = descending)
-Search:  GET /v1/users?q=rashad
-Fields:  GET /v1/users?fields=id,name,email  (sparse fieldsets)
-```
+Clients switch on `code`, never on `detail` text.
 
-## Step 4: Authentication Patterns
+## Step 5: Authentication
 
-```
-Firebase Auth (mobile + web):
-  Client sends Firebase ID token in Authorization header
-  Server verifies with admin.auth().verifyIdToken(token)
+- **Firebase Auth (Cure default for own apps):** client sends the ID token as `Authorization: Bearer …`; server verifies with the modular Admin SDK — `import { getAuth } from 'firebase-admin/auth'; await getAuth().verifyIdToken(token, true)`. Pass `checkRevoked: true` on sensitive routes (payments, account changes); it costs an extra lookup.
+- **Custom JWT:** access token 15–60 min, refresh token rotated on every use with reuse detection (a reused refresh token revokes the family). Asymmetric signing (RS256/ES256) when anything other than the issuer verifies.
+- **API keys (partners/public):** `X-API-Key` header, never the URL. Prefix by environment (`sk_live_`, `sk_test_`), store only a hash, scope per key, allow two active keys during rotation.
 
-JWT (custom backend):
-  Access token:  short-lived (15min-1hr), stateless
-  Refresh token: long-lived (7-30 days), stored server-side
-  Rotation:      new refresh token on each use, old one invalidated
+## Step 6: Rate Limits (canonical defaults)
 
-API Keys (third-party / public API):
-  Sent in X-API-Key header (never in URL)
-  Scoped to specific permissions
-  Rate limited per key
-  Rotatable without downtime
-```
+| Class | Limit | Key |
+|---|---|---|
+| Anonymous | 20 req/min | IP |
+| Authenticated | 100 req/min | user or API key |
+| Writes | 30 req/min | user |
+| Auth endpoints (login, OTP, password reset) | 5 req/min | IP **and** account |
+| Expensive (search, upload, export) | 10–30 req/min | user |
+| Webhook receivers | 1,000 req/min | source (Stripe and similar send bursts) |
+| Service-to-service | none at the edge | mTLS / service identity |
 
-## Step 5: Rate Limiting
+Paid tiers may raise the authenticated limit; record the tier table in the decisions table. Over the limit: `429` + `Retry-After` (seconds). Quota headers: the IETF `RateLimit` / `RateLimit-Policy` fields (e.g. `RateLimit-Policy: "default";q=100;w=60`, `RateLimit: "default";r=42;t=30`) are still an Internet-Draft (draft-ietf-httpapi-ratelimit-headers-11, May 2026) and the syntax has changed between drafts — confirm before use, and keep legacy `X-RateLimit-Limit/Remaining/Reset` only where existing clients already parse them.
 
-```
-Default limits:
-  Authenticated:    100 requests/minute per user
-  Unauthenticated:  20 requests/minute per IP
-  Write operations:  30 requests/minute per user
-  Webhook receivers: 1000 requests/minute (Stripe sends bursts)
+## Step 7: Versioning and Deprecation
 
-Response headers:
-  X-RateLimit-Limit: 100
-  X-RateLimit-Remaining: 42
-  X-RateLimit-Reset: 1710100000
+- Major version in the URL (`/v1`); start at v1. Additive changes (new fields, endpoints, enum values clients were told to tolerate) stay in the version; removals, renames, type or semantics changes need a new major.
+- Support N-1 for at least 6 months after the successor ships — longer when old mobile builds can't be forced to update. Pair every sunset with a Remote Config force-update gate in the apps.
+- Announce with headers on every response from the deprecated surface: `Deprecation: @1767225600` (RFC 9745, a Structured Field date) plus `Sunset: Thu, 01 Jul 2027 00:00:00 GMT` (RFC 8594) and `Link: <https://…/migration>; rel="deprecation"`. The Sunset date must not be earlier than the Deprecation date.
+- Log usage per client version on deprecated endpoints so you know who is still calling before you turn it off.
 
-429 response:
-  Retry-After: 30
-```
+## Step 8: Spec and GraphQL Rules
 
-## Step 6: Versioning Strategy
+- **OpenAPI 3.1** is the Cure default: schemas are JSON Schema 2020-12, so nullable is `type: [string, "null"]` (the 3.0 `nullable: true` keyword is gone). OAS 3.2.0 was released in September 2025; adopt it only once the project's generator, validator, and docs renderer support it — confirm before use.
+- Every operation has an `operationId`, a `security` requirement (or explicit `security: []`), and a `default` response referencing the Problem Details schema.
+- **GraphQL:** DataLoader on every resolver that fetches from a store; query depth ≤10 and a cost limit enforced before execution; errors use `extensions.code` with the same codes as the REST table. Federation and gateway composition belong to `api-gateway`.
 
-```
-URL versioning (default):   /v1/users, /v2/users
-Header versioning:          Accept: application/vnd.api+json;version=2
+## Code/Artifact Generation
 
-Rules:
-  - v1 is the first version, not v0
-  - Additive changes (new fields, new endpoints) don't require new version
-  - Breaking changes (removed fields, changed types) require new version
-  - Support N-1 version for minimum 6 months after new version
-  - Deprecation header: Sunset: Sat, 01 Jan 2027 00:00:00 GMT
-```
+Applies only when Step 1 calls for building a new or revised contract (not reviews or questions). Read existing specs and routes first and extend them rather than replacing.
 
-## Step 7: API Documentation
+1. `docs/openapi.yaml` — OpenAPI 3.1 with schemas, security schemes, and the Problem Details component.
+2. Error types for the server's language (e.g. `src/types/problem.ts`) matching Step 4.
+3. A typed client only if the project has no generator already; prefer generating it from the spec.
 
-Every API ships with OpenAPI 3.0 spec:
-```yaml
-openapi: 3.0.3
-info:
-  title: API Name
-  version: 1.0.0
-paths:
-  /v1/resource:
-    get:
-      summary: List resources
-      parameters: [...]
-      responses:
-        '200': { description: Success, content: { ... } }
-```
+Deliver the requested artifact; don't refactor route handlers or add unrequested files.
 
-Auto-generate docs from spec using Swagger UI or Redoc.
+## Related skills
 
-## Code Generation (Required)
-
-Generate actual API specification using Write:
-
-1. **OpenAPI spec**: `docs/openapi.yaml` — complete OpenAPI 3.1 specification with schemas, paths, security
-2. **Error response types**: `src/types/errors.ts` — standardized error response types
-3. **API client**: `src/api/client.ts` — type-safe API client generated from spec
-4. **Postman collection**: `docs/api-collection.json` — importable Postman collection
-
-Before generating, Glob for existing API routes (`**/api/**`, `**/routes/**`) and Read them to document current state.
-
-## Step 8: Error Handling Standards
-
-```
-Error codes (use instead of relying on HTTP status alone):
-  VALIDATION_ERROR     — 400, invalid input
-  AUTHENTICATION_ERROR — 401, missing or invalid token
-  FORBIDDEN            — 403, insufficient permissions
-  NOT_FOUND            — 404, resource doesn't exist
-  CONFLICT             — 409, duplicate or state conflict
-  RATE_LIMITED         — 429, too many requests
-  INTERNAL_ERROR       — 500, unexpected server error
-
-Rules:
-  - Never expose stack traces, file paths, or SQL in error responses
-  - Log full error server-side, return sanitized message to client
-  - Include request ID in every response for debugging: X-Request-Id
-  - Validation errors include field-level details
-```
+- `api-gateway` — BFF, gateway middleware order, and GraphQL federation; enforces the limits above.
+- `api-validator` agent — checks an implementation against the spec.
+- `security-review` — threat modelling of the auth and key design.

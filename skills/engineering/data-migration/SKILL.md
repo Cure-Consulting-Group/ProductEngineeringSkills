@@ -1,498 +1,105 @@
 ---
 name: data-migration
-description: "Plan and execute data migrations — ETL pipelines, zero-downtime cutover, validation, rollback strategies, and legacy system integration"
-when_to_use: "Use when planning ETL pipelines, zero-downtime data migrations, or legacy system cutover. NOT for schema design (use database-architect)."
+description: "Plans and runs data migrations: ETL, backfills, dual-write, zero-downtime cutover, rollback. Use when moving or reshaping existing data across databases, Firestore, or legacy systems."
+when_to_use: "NOT for schema, index, or engine selection (use database-architect) or checking a single migration file (migration-validator agent)."
 argument-hint: "[source-to-target]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Data Migration
 
+**Outcome:** a migration plan an engineer can execute and reverse — strategy with the reason, field mapping, idempotent scripts, validation gates (before/during/after), a rollback path with a tested restore, and the cutover sequence. Done when every source field has a mapping or an explicit skip, the rollback has been rehearsed on a copy, and the go/no-go checks are numeric.
+
+**Invariants** (these protect client data, which is irreversible to lose):
+- A restore from the pre-migration backup is tested before the forward run.
+- Every script is idempotent and resumable from a checkpoint — migrations get interrupted.
+- Production data never lands in dev/staging without anonymization.
+- Scheduled downtime needs explicit client sign-off; zero-downtime is the default target.
+
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Existing migrations: !`find . -maxdepth 4 -path "*/node_modules" -prune -o -type d -name "migrations" -print 2>/dev/null | head -3 || echo "(none)"`
+- Firebase config: !`ls firebase.json firestore.rules firestore.indexes.json 2>/dev/null || echo "(no Firebase config)"`
+- Stack manifest: !`head -25 package.json 2>/dev/null || echo "(no package.json)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-Plans and executes production-grade data migrations across databases, cloud platforms, and legacy systems. Covers ETL pipeline design, zero-downtime cutover patterns, validation frameworks, rollback strategies, and Firestore-specific migration tooling. Every migration is reversible, validated, and monitored.
+| Type | Example | Default strategy |
+|---|---|---|
+| In-place reshape | Rename/split fields, flatten subcollections, change types | Expand-contract with backfill |
+| Same engine, new home | Cloud SQL instance move, project split | Replication (logical/PITR export) + cutover |
+| Engine switch | MongoDB → Firestore, MySQL → PostgreSQL | Bulk load + CDC catch-up + flagged cutover |
+| Legacy integration | CSV/SFTP drops, SOAP, mainframe extracts | Staged ETL with quarantine table |
+| Review of a plan | — | Findings with severity against the invariants; no files |
 
-**Hard rules:**
-- Every migration has a rollback plan — tested before the forward migration runs
-- Data validation runs before, during, and after migration — not just after
-- Zero-downtime is the default target; scheduled downtime requires executive approval
-- Idempotent operations only — every script must be safe to re-run
-- Production data is never used in development without anonymization
-- Migration scripts live in version control alongside application code
-
-## Step 1: Classify the Migration Type
-
-| Type | Characteristics | Typical Duration | Risk Level |
-|------|----------------|-----------------|------------|
-| Schema Evolution | Same database, structural changes (add/rename/drop columns) | Minutes–hours | Low–Medium |
-| Database-to-Database | Same engine, different instance (e.g., dev → prod restore) | Hours | Medium |
-| Platform Switch | Different engines (MySQL → PostgreSQL, MongoDB → Firestore) | Days–weeks | High |
-| Cloud Migration | On-premise → cloud or cloud → cloud | Weeks–months | High |
-| Legacy System Integration | Mainframe, CSV exports, SOAP APIs → modern stack | Weeks–months | Very High |
-| Firestore Restructuring | Collection/document model changes within Firestore | Hours–days | Medium–High |
+Strategy choice in one line: under ~1M records with an agreed window → big bang; otherwise bulk + CDC; long-lived legacy replacement → strangler (per-feature dual-read/dual-write). The model knows these patterns; the plan must state *which* and *why*.
 
 ## Step 2: Gather Context
 
-Before planning, confirm:
-
-1. **Source system** — database engine, version, hosting, schema, data volume (rows/documents, GB/TB)?
-2. **Target system** — database engine, version, hosting, desired schema?
-3. **Data volume** — total records, total size, largest table/collection, growth rate?
-4. **Downtime tolerance** — zero-downtime required, or maintenance window available (duration)?
-5. **Compliance constraints** — does data include PII, PHI, PCI data? Cross-border transfer restrictions?
-6. **Dependencies** — what applications read/write this data? Can they be paused or dual-configured?
-7. **Timeline** — hard deadline (e.g., vendor contract end), or flexible?
-8. **Current backup state** — last backup timestamp, backup verification status, restore tested?
-9. **Rollback requirements** — how quickly must we be able to revert? What data loss is acceptable?
-
-## Step 3: Migration Strategy Selection
-
-### Big Bang Migration
-
-```
-When to use:
-  - Small datasets (<1M records)
-  - Short maintenance window available (< 4 hours)
-  - Simple schema mapping (1:1 field correspondence)
-  - Non-critical system or acceptable downtime
-
-Process:
-  1. Announce maintenance window
-  2. Stop all writes to source
-  3. Run full export from source
-  4. Transform data
-  5. Load into target
-  6. Validate (row counts, checksums, spot checks)
-  7. Switch application to target
-  8. Monitor for 1 hour
-  9. Decommission source after 7-day hold
-
-Rollback: switch application back to source (source is read-only during hold period)
-Risk: all-or-nothing — failure means full rollback
-```
-
-### Trickle Migration (Change Data Capture)
-
-```
-When to use:
-  - Large datasets (>1M records)
-  - Zero-downtime required
-  - Source system supports CDC (PostgreSQL WAL, MySQL binlog, Firestore listeners)
-
-Process:
-  1. Set up CDC pipeline (Debezium, Firestore onSnapshot, PostgreSQL logical replication)
-  2. Run initial bulk load of historical data
-  3. CDC catches up on changes made during bulk load
-  4. Validate source-target consistency
-  5. Switch reads to target (behind feature flag)
-  6. Switch writes to target
-  7. Decommission CDC pipeline after 7-day monitoring period
-
-Rollback: reverse CDC direction or switch reads/writes back to source
-Risk: CDC lag can cause temporary inconsistency; monitor lag continuously
-```
-
-### Blue-Green Migration
-
-```
-When to use:
-  - Critical systems where cutover must be instant
-  - Both source and target can run simultaneously
-  - Application supports database connection switching
-
-Process:
-  1. Stand up target (green) alongside source (blue)
-  2. Sync data from blue → green (initial + ongoing CDC)
-  3. Run validation suite against green
-  4. Switch traffic to green (DNS, connection string, feature flag)
-  5. Monitor green for anomalies
-  6. Keep blue running for 7 days as fallback
-  7. Decommission blue
-
-Rollback: switch traffic back to blue (instant)
-Risk: cost of running two systems simultaneously; data sync complexity
-```
-
-### Strangler Fig Migration
-
-```
-When to use:
-  - Legacy system replacement over months
-  - Gradual feature-by-feature migration
-  - Cannot afford big-bang risk
-
-Process:
-  1. Identify migration order (lowest risk features first)
-  2. For each feature:
-     a. Build new data model in target
-     b. Implement dual-read (read from target, fallback to source)
-     c. Implement dual-write (write to both)
-     d. Migrate historical data for this feature
-     e. Validate feature data in target
-     f. Switch to target-only reads
-     g. Stop writing to source for this feature
-  3. Repeat until all features migrated
-  4. Decommission source
-
-Rollback: per-feature rollback by reverting to dual-read/source-only
-Risk: long duration increases complexity; dual-write bugs can cause divergence
-```
-
-## Step 4: ETL Pipeline Design
-
-### Extract Patterns
-
-```
-Firestore:
-  - Full export: gcloud firestore export gs://bucket/path
-  - Streaming: onSnapshot listeners for real-time CDC
-  - Batch read: getAll() with pagination (500 docs per batch)
-  - BigQuery export: scheduled export via Data Transfer Service
-
-PostgreSQL:
-  - Full dump: pg_dump --format=custom --compress=9
-  - Logical replication: CREATE PUBLICATION / CREATE SUBSCRIPTION
-  - COPY command: COPY table TO STDOUT WITH CSV HEADER
-  - CDC: Debezium connector reading WAL
-
-Legacy systems:
-  - CSV/Excel: parse with streaming reader (not full-file load into memory)
-  - SOAP API: paginated requests with exponential backoff
-  - FTP drops: scheduled pickup with file validation (checksum, row count header)
-  - Direct database: read-only replica connection with query timeout
-```
-
-### Transform Rules
-
-```
-Mapping document template:
-┌─────────────────────┬──────────────────────┬──────────────────────────┐
-│ Source Field         │ Target Field         │ Transformation           │
-├─────────────────────┼──────────────────────┼──────────────────────────┤
-│ user.first_name     │ users.displayName    │ CONCAT(first, ' ', last) │
-│ user.created_date   │ users.createdAt      │ PARSE_DATE('MM/dd/yyyy') │
-│ order.total_cents   │ orders.totalAmount   │ DIVIDE by 100, DECIMAL   │
-│ user.status = 'A'   │ users.isActive       │ MAP('A'→true, else false)│
-│ (no equivalent)     │ users.migratedAt     │ CURRENT_TIMESTAMP        │
-│ user.ssn            │ (do not migrate)     │ SKIP — not needed        │
-└─────────────────────┴──────────────────────┴──────────────────────────┘
-
-Transformation rules:
-  - NULL handling: define explicit default for every nullable source field
-  - Type coercion: document every type change (string→number, date format changes)
-  - Encoding: normalize to UTF-8; detect and convert from source encoding
-  - Deduplication: define merge strategy for duplicate source records
-  - Derived fields: document calculation formulas for computed fields
-  - Anonymization: PII fields that should not migrate to non-production targets
-```
-
-### Load Strategies
-
-```
-Batch loading:
-  - Firestore: batched writes (max 500 ops per batch), with retry and exponential backoff
-  - PostgreSQL: COPY command for bulk inserts (10-100x faster than INSERT)
-  - Batch size: 1000–5000 records; tune based on target system capacity
-
-Streaming loading:
-  - Process source changes in near-real-time
-  - Buffer writes to reduce target system load (batch micro-writes)
-  - Monitor lag between source event and target write
-
-Idempotency rules:
-  - Use deterministic IDs (hash of source primary key + migration version)
-  - Use UPSERT / ON CONFLICT for SQL targets
-  - Use set() with merge for Firestore targets
-  - Log every record processed; support resumption from last checkpoint
-```
-
-## Step 5: Data Validation Framework
-
-### Pre-Migration Validation
-
-```
-Before starting:
-  1. Source data quality audit:
-     - [ ] NULL percentage per column (flag >10% unexpected NULLs)
-     - [ ] Data type consistency (strings in numeric columns, invalid dates)
-     - [ ] Referential integrity (orphaned foreign keys)
-     - [ ] Duplicate detection (primary key uniqueness, business key uniqueness)
-     - [ ] Value range validation (negative ages, future dates, impossible amounts)
-
-  2. Schema compatibility check:
-     - [ ] All source fields have a target mapping or explicit skip justification
-     - [ ] Target schema can accommodate maximum source field lengths
-     - [ ] Target constraints (NOT NULL, UNIQUE, CHECK) are satisfiable by source data
-     - [ ] Character encoding is compatible
-```
-
-### During-Migration Validation
-
-```
-Real-time monitoring:
-  - Record count: source extracted vs. target loaded (should match or have documented delta)
-  - Error rate: failures per batch (alert if >0.1%)
-  - Throughput: records/second (alert if drops below baseline by >50%)
-  - Lag: time between source change and target write (for CDC migrations)
-  - Checkpointing: last successfully processed record ID (for resumption)
-
-Error handling:
-  - Dead letter queue for failed records (do not skip silently)
-  - Categorize errors: data quality, network, capacity, permission
-  - Auto-retry transient errors (network, rate limit) with exponential backoff
-  - Halt migration if error rate exceeds threshold (configurable, default 1%)
-```
-
-### Post-Migration Validation
-
-```
-Completeness checks:
-  - [ ] Row/document count matches (source vs. target, per table/collection)
-  - [ ] Checksum comparison on critical columns (SUM, HASH of concatenated values)
-  - [ ] Null count comparison per column
-
-Accuracy checks:
-  - [ ] Random sample validation (1% or 1000 records, whichever is larger)
-  - [ ] Business rule validation (calculated fields produce correct results)
-  - [ ] Referential integrity in target (no orphaned foreign keys)
-  - [ ] Date/time values preserved correctly (timezone handling)
-
-Functional checks:
-  - [ ] Application smoke tests pass against target database
-  - [ ] Critical user flows work end-to-end
-  - [ ] Reporting queries produce same results against target
-  - [ ] Search/filter functionality returns expected results
-```
-
-## Step 6: Rollback Plan
-
-### Point-in-Time Recovery
-
-```
-Before migration:
-  1. Take a labeled backup of the target database
-     - PostgreSQL: pg_dump with timestamp label
-     - Firestore: gcloud firestore export with date prefix
-     - Room/SQLite: copy database file before migration object runs
-
-  2. Record the pre-migration state:
-     - Row counts per table/collection
-     - Schema version identifier
-     - Application version deployed
-     - Feature flag states
-
-Rollback execution:
-  1. Stop writes to target
-  2. Restore from pre-migration backup
-  3. Revert application to previous version (or toggle feature flag)
-  4. Verify restored state matches pre-migration records
-  5. Resume normal operations
-  6. Conduct post-mortem on migration failure
-
-Recovery Time Objective (RTO): document and test — target <30 minutes for critical systems
-Recovery Point Objective (RPO): zero data loss during rollback (backup is pre-migration state)
-```
-
-### Dual-Write Rollback
-
-```
-During dual-write period:
-  - Both source and target receive all writes
-  - Reads default to source (target is warming up)
-  - Validation runs continuously comparing source and target
-
-Rollback trigger conditions:
-  - Error rate >1% on target writes
-  - Data divergence detected between source and target
-  - Application latency increases >50% due to dual-write overhead
-  - Target system instability (connection failures, timeouts)
-
-Rollback steps:
-  1. Disable dual-write (stop writing to target)
-  2. Revert read path to source-only
-  3. Target becomes stale but source is authoritative
-  4. No data loss — source was always receiving all writes
-```
-
-### Feature Flag Cutover
-
-```
-Migration phases controlled by feature flags:
-  FF: migration_read_from_target   (default: false)
-  FF: migration_write_to_target    (default: false)
-  FF: migration_dual_write         (default: false)
-
-Rollout sequence:
-  Phase 1: migration_dual_write = true          (write to both)
-  Phase 2: migration_read_from_target = true     (read from target, write to both)
-  Phase 3: migration_write_to_target = true      (write to target only)
-  Phase 4: Remove flags, decommission source
-
-Rollback: set all flags to false → instant revert to source-only
-```
-
-## Step 7: Zero-Downtime Patterns
-
-### Dual-Write Architecture
-
-```
-Application Layer:
-  ┌─────────────┐
-  │  App Server  │
-  │  / Client    │
-  └──────┬───────┘
-         │ write
-    ┌────┴────┐
-    ▼         ▼
-┌────────┐ ┌────────┐
-│ Source  │ │ Target │
-│   DB   │ │   DB   │
-└────────┘ └────────┘
-
-Implementation:
-  - Write to source first (authoritative)
-  - Write to target second (async or sync depending on consistency needs)
-  - If target write fails: log to retry queue, do NOT fail the user request
-  - Read from source until validation confirms target consistency
-  - Gradual read traffic shift: 0% → 10% → 50% → 100% target
-```
-
-### Change Data Capture Pipeline
-
-```
-┌────────┐    ┌─────────┐    ┌───────────┐    ┌────────┐
-│ Source  │───▶│   CDC   │───▶│ Transform │───▶│ Target │
-│   DB   │    │ (Debezium│    │  Service  │    │   DB   │
-└────────┘    │  / WAL)  │    └───────────┘    └────────┘
-              └─────────┘
-                  │
-                  ▼
-           ┌────────────┐
-           │ Dead Letter │
-           │   Queue     │
-           └────────────┘
-
-PostgreSQL CDC setup:
-  ALTER SYSTEM SET wal_level = logical;
-  CREATE PUBLICATION migration_pub FOR TABLE users, orders, products;
-  -- On target:
-  CREATE SUBSCRIPTION migration_sub
-    CONNECTION 'host=source dbname=app'
-    PUBLICATION migration_pub;
-
-Firestore CDC:
-  // Cloud Function triggered on document changes
-  exports.syncToTarget = functions.firestore
-    .document('{collection}/{docId}')
-    .onWrite(async (change, context) => {
-      // Transform and write to target
-    });
-```
-
-## Step 8: Firestore-Specific Migrations
-
-See [reference/details.md](reference/details.md) (section “Step 8: Firestore-Specific Migrations”) for full detail.
-
-## Step 9: Post-Migration Verification and Monitoring
-
-### Verification Checklist
-
-```
-Immediately after cutover:
-  - [ ] Row/document counts match expected values
-  - [ ] Application health checks passing
-  - [ ] Error rate at or below pre-migration baseline
-  - [ ] Latency at or below pre-migration baseline
-  - [ ] All critical user flows tested manually
-  - [ ] Search and filter results verified
-  - [ ] Reporting queries producing correct output
-
-24 hours after cutover:
-  - [ ] No data drift detected (scheduled consistency checks)
-  - [ ] Backup of target database confirmed
-  - [ ] No increase in support tickets or error reports
-  - [ ] CDC pipeline (if used) lag is consistently <5 seconds
-
-7 days after cutover:
-  - [ ] Source system decommission decision made
-  - [ ] Migration scripts archived in version control
-  - [ ] Documentation updated (architecture diagrams, runbooks)
-  - [ ] Lessons learned captured
-```
-
-### Monitoring Dashboard
-
-```
-Metrics to watch post-migration:
-  - Query latency (p50, p95, p99) — compare to pre-migration baseline
-  - Error rate per endpoint — compare to pre-migration baseline
-  - Database CPU/memory/IOPS — watch for capacity issues
-  - Connection pool utilization — watch for exhaustion
-  - Replication lag (if applicable) — alert if >10 seconds
-  - Firestore read/write/delete counts — watch for unexpected spikes
-  - Application-level health checks — all green
-
-Alert thresholds:
-  - Latency p95 >2x pre-migration baseline → page on-call
-  - Error rate >1% → page on-call
-  - Replication lag >30 seconds → alert migration team
-  - Database CPU >80% sustained → alert infrastructure team
-```
-
-### Migration Report Output
-
-```
-DATA MIGRATION REPORT
-Migration: [SOURCE] → [TARGET]
-Date: [TODAY]
-Engineer: [NAME]
-
-MIGRATION SUMMARY
-┌──────────────────────┬────────────────────────────────────┐
-│ Field                │ Value                              │
-├──────────────────────┼────────────────────────────────────┤
-│ Migration Type       │ [From Step 1 classification]       │
-│ Strategy             │ [From Step 3 selection]            │
-│ Total Records        │ [count]                            │
-│ Duration             │ [HH:MM]                            │
-│ Downtime             │ [HH:MM or "zero"]                  │
-│ Error Rate           │ [percentage]                       │
-│ Rollback Tested      │ [Yes/No]                           │
-│ Validation Passed    │ [Yes/No — with details]            │
-└──────────────────────┴────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Migration strategy document
-  - [ ] ETL pipeline (extract, transform, load scripts)
-  - [ ] Field mapping document
-  - [ ] Validation framework (pre, during, post checks)
-  - [ ] Rollback plan (tested)
-  - [ ] Monitoring dashboard configured
-  - [ ] Post-migration verification completed
-
-CROSS-REFERENCES:
-  - /database-architect — for schema design and indexing strategy
-  - /firebase-architect — for Firestore-specific patterns and security rules
-  - /infrastructure-scaffold — for cloud infrastructure provisioning
-  - /incident-response — for migration failure runbook
-```
-
-## Code Generation (Required)
-
-Generate migration infrastructure using Write:
-
-1. **Migration script template**: `migrations/{timestamp}_{name}.ts` with up/down functions
-2. **Validation script**: `scripts/validate-migration.ts` — pre/post migration data integrity checks
-3. **Rollback script**: `scripts/rollback-migration.ts` — reverses last applied migration
-4. **Firestore backup**: `scripts/backup-before-migration.sh` — snapshot before migration
-5. **CI workflow**: `.github/workflows/migration-test.yml` — runs migration against test DB
-
-Before generating, Glob for existing migrations (`**/migrations/**`) and Read them to match format.
+Ask only what isn't discoverable: source and target engines and versions, volume (records, GB, largest table/collection), write rate during migration, downtime tolerance, PII/PHI/PCI and residency constraints, every reader/writer of the data (including mobile app versions still in the field), hard deadline, and last verified backup.
+
+## Step 3: Mapping and Idempotency
+
+Produce a mapping table: source field → target field → transform → null default. Every source field appears, including `SKIP` rows with a reason (e.g. SSNs not needed).
+
+- **Deterministic target IDs** derived from the source primary key only (`hash(sourceTable + ":" + sourcePk)` or the source key itself). Never include a migration version or timestamp in the ID — a re-run under a new version would duplicate every record.
+- **Writes are upserts:** `INSERT … ON CONFLICT DO UPDATE` in SQL; `set(…, { merge: true })` in Firestore.
+- **Checkpoint** the last processed key after each chunk; the script accepts `--resume-from` and `--dry-run` (logs what would change, writes nothing). Dry run first, always.
+- **Dead-letter** failed records with the error category (data quality / network / quota / permission); never skip silently. Halt when the error rate exceeds 1% of a chunk.
+- Record `migratedAt` and `migrationId` as fields (not in the ID) so you can find and reverse touched rows.
+
+## Step 4: Firestore Migrations (Cure's most common case)
+
+- **Bulk writes use `BulkWriter`** (`db.bulkWriter()` in the Admin SDK): it batches, retries transient errors, and throttles to the 500/50/5 ramp automatically. Use batched writes only when a group of writes must be atomic; batches are bounded by the 10 MiB request size and 500 field transforms (the old 500-writes-per-batch cap no longer appears in the quotas page — confirm before relying on larger batches).
+- **Paginate by document ID**, not by a query on the field you're backfilling: `orderBy(FieldPath.documentId()).startAfter(lastId).limit(500)`. A `where('newField', '==', null)` query does **not** match documents where the field is missing, so a backfill driven by it silently skips every unmigrated document. Check the field in code.
+- **Expand-contract for type or shape changes:** add the new field → app writes both → backfill → app reads new → stop writing old → cleanup migration drops old. Mobile clients lag: don't drop the old field until the minimum supported app version reads the new one (check the Remote Config force-update floor).
+- **CDC with Functions v2:** `onDocumentWritten` from `firebase-functions/v2/firestore`. Delivery is at-least-once and unordered — handlers must be idempotent and compare `event.data.after.updateTime` (or a version field) before overwriting the target. A write that doesn't change data fires no event.
+- **Hot documents:** a single document sustains about 1 write/sec; counters or aggregates touched by the backfill need sharding or a post-pass.
+- **Security rules** must accept both old and new shapes during the transition, or clients on the old shape start failing writes mid-migration.
+- **Backups:** `gcloud firestore export` is *not* a point-in-time snapshot (it may include writes made while it ran). For a consistent pre-migration copy use PITR (7-day window, export with a snapshot time) or a scheduled backup. `gcloud firestore import` overwrites documents with the same ID.
+
+Read the Firestore scripts reference (`reference/details.md`) when you need a full backfill or subcollection-flattening script to adapt.
+
+## Step 5: SQL and Legacy Gotchas
+
+- **PostgreSQL logical replication** needs `wal_level = logical` (restart required; on Cloud SQL set the `cloudsql.logical_decoding` flag instead of `ALTER SYSTEM`). Tables need a primary key or `REPLICA IDENTITY`; sequences and DDL are not replicated — reset sequences on the target before cutover.
+- Bulk load with `COPY` (or `\copy` from a client), then create secondary indexes and constraints after the load.
+- Backfills on large tables: chunk by primary-key range (1k–5k rows), commit per chunk, and watch replication lag and lock waits; never one giant `UPDATE`.
+- Legacy files: stream-parse (never load whole files), verify header row counts and checksums, normalise encoding to UTF-8 up front, land raw rows in a quarantine/staging table before transforming.
+
+## Step 6: Validation Gates
+
+| Gate | Checks | Pass threshold |
+|---|---|---|
+| Pre | Null %, type drift, orphaned FKs, duplicate business keys, max field lengths vs target | All mapped fields satisfiable; anomalies listed with owner |
+| During | Extracted vs loaded counts per chunk, error rate, throughput, CDC lag | Errors <0.1% (halt at 1%); lag <5 s steady |
+| Post | Counts per table/collection, checksums on critical columns, 1% or 1,000-record sample (whichever larger), business-rule checks, smoke tests of critical flows | Counts match or delta explained; zero checksum mismatches on money fields |
+
+## Step 7: Cutover and Rollback
+
+Flag-controlled sequence (flags from `feature-flags`): dual-write on → validate → reads shift 10% → 50% → 100% → target-only writes → hold → decommission. Rollback at any step before target-only writes = flags off (source stayed authoritative). After target-only writes, rollback = restore the pre-migration backup plus replay of the dead-letter/CDC log — state that RPO explicitly.
+
+Roll back when: target write errors >1%, divergence found by the consistency check, p95 latency >2× the pre-migration baseline, or any money-field checksum mismatch. Keep the source read-only for at least 7 days after cutover.
+
+Report: type, strategy, record counts, duration, downtime, error rate, rollback rehearsed (yes/no), gate results. Match length to the need; no filler sections.
+
+## Code/Artifact Generation
+
+Applies only when Step 1 calls for executing a migration (not reviews or planning questions). Read existing migrations first and match their format and language.
+
+- The migration script with `--dry-run`, `--resume-from`, checkpointing, and dead-lettering.
+- A validation script implementing the Step 6 gates.
+- A backup/restore script for the target (Firestore PITR export or `pg_dump --format=custom`).
+
+Don't add CI workflows or refactor application code unless asked.
+
+## Related skills
+
+- `database-architect` — target schema, indexes, engine choice.
+- `firebase-architect` — Firestore rules and data model for the target shape.
+- `feature-flags` — the cutover flags.
+- `disaster-recovery` — backup policy beyond this migration.
+- `migration-validator` agent — review of individual migration files.

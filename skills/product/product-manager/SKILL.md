@@ -1,154 +1,77 @@
 ---
 name: product-manager
-description: "Product strategy and prioritization — OKRs, RICE-scored roadmaps, feature briefs, and outcome-driven planning for product leaders"
-when_to_use: "Use when asked to 'prioritize features', 'write OKRs', 'build a roadmap', or 'create a feature brief'. NOT for engineering specs (use sdlc). NOT for sprint/project execution (use project-manager). NOT for market sizing (use market-research)."
+description: "Product strategy and prioritization. Use when asked to prioritize features, score a backlog with RICE, write OKRs, build a Now/Next/Later roadmap, or write a feature brief."
+when_to_use: "NOT for PRDs or stories (sdlc), sprint execution (project-manager), market sizing (market-research), or capacity audits (roadmap-strategist)."
 argument-hint: "[product-or-feature-name]"
 ---
 
 # Product Manager
 
-Senior PM operating model. Every output is decision-ready and outcome-oriented. Pairs with sdlc (PRDs, Epics), market-research, and go-to-market skills.
+**Outcome:** a decision-ready PM artifact — the decision or recommendation, success and guardrail
+metrics, explicit non-goals, assumptions, and open questions with owners. Done when a stakeholder
+could approve or reject it without a meeting. Match length to the need; no filler sections or restated
+summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Portfolio products: !`grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Existing roadmap/briefs: !`ls docs/roadmap.md docs/briefs/ 2>/dev/null | head -5 | grep . || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+Read the matching PORTFOLIO.md section for stage, priority, and metrics when the product is in it.
 
-## PM Operating Principles
-
-1. **Outcomes over outputs** — "increase activation rate" not "add onboarding screen"
-2. **Evidence over opinion** — every recommendation grounded in data or explicit assumption
-3. **Say no explicitly** — deferred items get a written reason, not silence
-4. **Small bets first** — validate with minimum surface area before full build
-5. **Define done before starting** — success metrics set before sprint begins
-
-## Step 1: Classify the Request
+## Step 1: Classify
 
 | Request | Output |
-|---------|--------|
-| Strategy & vision | Product strategy doc |
-| OKRs | OKR set with key results |
-| Prioritization | Scored backlog (RICE/ICE) |
-| Roadmap | Phased roadmap doc |
-| Feature brief | Feature brief + success metrics |
-| Discovery | Discovery sprint plan |
-| Metrics | KPIs + north star + funnel |
-| Release | Release notes + announcement |
-| Pricing | Pricing strategy analysis (pair with market-research) |
-| Competitive | Positioning + differentiation (pair with market-research) |
+|---|---|
+| Strategy / vision | Strategy doc: where we play, how we win, what we won't do |
+| OKRs | 1–3 objectives × 3–5 KRs, each "metric from baseline to target by date" |
+| Prioritization | RICE-scored backlog table, sorted, with the cut line and why items fell below it |
+| Roadmap | Now / Next / Later with RICE scores and the outcome each item serves |
+| Feature brief | One page: problem, user, outcome metric, guardrail, scope, non-goals |
+| Metrics | North star + 3–5 input metrics + the decision each informs |
+| Pricing / positioning | Recommendation; pair with market-research for evidence |
 
-## Step 2: Context Gathering
+## Step 2: Gather Context
 
-Minimal viable context per output type:
+Minimum per type — ask only for what's missing:
+- Strategy/OKRs: product, stage, traction, top 1–3 business goals.
+- Prioritization: candidate list, horizon, binding constraint (people, date, money).
+- Roadmap: milestones, capacity, hard deadlines.
+- Brief: problem, target user, what success looks like.
 
-**Strategy / OKRs:** Product name, stage, current traction (if any), top 1-3 business goals
-**Prioritization:** List of candidate features/stories, time horizon, key constraint
-**Roadmap:** Product, key milestones, resource constraints, launch deadline
-**Feature brief:** Feature name, problem it solves, target user, definition of success
-**Metrics:** Product type, current funnel (if known), what decision will this inform?
+## Step 3: Cure PM Rules
 
-## Step 3: PM Document Standards
+- Outcomes over outputs: "raise activation from 22% to 30%", not "add onboarding screen".
+- Every feature ships with one primary (leading) metric and one guardrail; vanity counts (page views, total users) are never primary. Metrics must be readable within the release window.
+- Say no in writing: every deferred item gets a one-line reason.
+- Smallest bet first: name the cheapest test that could kill the idea before full build.
+- Unknown numbers are stated as explicit assumptions, not guessed silently.
 
-### All documents must include:
-- **Decision or recommendation** — what are we doing and why?
-- **Success criteria** — how will we know it worked?
-- **Explicit non-goals** — what are we NOT doing?
-- **Assumptions** — what must be true for this to work?
-- **Open questions** — with owners and due dates
+## Step 4: RICE (the one Cure definition)
 
-### Metric Rules (always apply):
-- Every feature ships with a primary success metric (lead measure)
-- Every feature ships with a guardrail metric (what we won't sacrifice)
-- Metrics are measurable within the sprint or release window
-- Vanity metrics (page views, total users) never the primary metric
+**Score = Reach × Impact × Confidence ÷ Effort**
 
-## Core PM Frameworks
+| Factor | Unit |
+|---|---|
+| Reach | Users (or accounts) affected per quarter |
+| Impact | 3 massive · 2 high · 1 medium · 0.5 low · 0.25 minimal |
+| Confidence | 100% · 80% · 50% (below 50% → run discovery, don't score) |
+| Effort | **Person-weeks** (always — scores are only comparable in one unit) |
 
-### RICE Scoring
-```
-Reach x Impact x Confidence / Effort = RICE Score
+Show inputs next to each score so the ranking can be challenged.
 
-Reach:      Users affected per quarter (number)
-Impact:     0.25 (minimal) | 0.5 (low) | 1 (med) | 2 (high) | 3 (massive)
-Confidence: 50% (low) | 80% (medium) | 100% (high)
-Effort:     Person-weeks (estimate)
-```
+## Step 5: Artifact Generation
 
-### North Star Metric Framework
-```
-North Star = the single metric that best captures value delivered to users
-             AND predicts long-term revenue growth
+Applies when the user wants a document written (not for a quick prioritization answer in chat).
+Write only the artifact the classification calls for:
 
-Good north stars:
-  - Airbnb: nights booked
-  - Spotify: time listening
-  - Slack: messages sent within an organization
+- Feature brief → `docs/briefs/{feature}.md`
+- Roadmap → `docs/roadmap.md` (Now/Next/Later, RICE-scored)
+- OKRs / strategy → `docs/okrs/{quarter}.md` or `docs/strategy.md`
 
-Input metrics (levers that move the north star):
-  - Acquisition: new users
-  - Activation: completed core action
-  - Engagement: returned within 7 days
-  - Revenue: converted to paid
-  - Referral: invited another user
-```
-
-### User Story Mapping Format
-```
-[Activity] → [User Tasks] → [User Stories (releases)]
-
-Example:
-Sign Up → Enter email → Create account story (Release 1)
-        → Verify email → Email verification story (Release 1)
-        → Set up profile → Profile setup story (Release 2)
-        → Connect social → Social linking story (Release 3)
-```
-
-## OKR Framework
-
-When generating OKRs:
-- **Objective**: Qualitative, inspirational, time-bound (quarterly)
-- **Key Results**: 3-5 per objective, measurable, achievable but ambitious
-- Use format:
-  ```
-  **O1: [Objective statement]**
-  - KR1: [Metric] from [baseline] to [target] by [date]
-  - KR2: [Metric] from [baseline] to [target] by [date]
-  - KR3: [Metric] from [baseline] to [target] by [date]
-  ```
-
-## RICE Prioritization
-
-Score every feature request:
-| Factor | Definition | Scale |
-|--------|-----------|-------|
-| Reach | How many users affected per quarter | Actual number |
-| Impact | Effect on individual user | 3=massive, 2=high, 1=medium, 0.5=low, 0.25=minimal |
-| Confidence | How sure are we | 100%=high, 80%=medium, 50%=low |
-| Effort | Person-months to complete | Actual estimate |
-
-**RICE Score = (Reach × Impact × Confidence) / Effort**
-
-Generate a prioritized backlog table sorted by RICE score.
-
-## Artifact Generation (Required)
-
-You MUST generate actual documents using Write:
-
-1. **PRD**: `docs/prd/{feature-name}.md` — full PRD with problem, solution, success metrics, scope
-2. **Feature brief**: `docs/briefs/{feature-name}.md` — 1-page summary for stakeholder alignment
-3. **Roadmap**: `docs/roadmap.md` — Now/Next/Later format with RICE-scored items
-4. **User story map**: ASCII art or Mermaid diagram showing user journey with story cards
-
-Use WebSearch to validate assumptions about market size, user behavior, and competitive landscape.
-
-## Cross-References
-
-- `/market-research` — validate market assumptions before writing strategy docs
-- `/sdlc` — generate PRDs, Epics, and Stories from PM briefs
-- `/analytics-implementation` — define success metrics and tracking plans
+A full PRD, epics, and stories are sdlc's output — hand the brief to sdlc rather than writing a PRD
+here. If a web tool is available, check market or competitor assumptions against current, dated
+sources; otherwise mark them unverified. Related: market-research (evidence), analytics-implementation
+(instrumenting the success metrics).

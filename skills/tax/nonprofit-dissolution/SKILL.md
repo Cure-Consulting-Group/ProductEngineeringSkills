@@ -1,10 +1,18 @@
 ---
 name: nonprofit-dissolution
-description: Wind down a New York not-for-profit corporation and close its federal exempt-organization filings — final Form 990 with Schedule N, asset distribution under the dissolution clause, NY Attorney General Charities Bureau approval, Certificate of Dissolution, and final payroll closings. Use when dissolving a nonprofit or filing its final returns.
+description: "Winds down a New York nonprofit and its exempt-org filings. Use when dissolving a not-for-profit: final Form 990 with Schedule N, NY AG approval, Certificate of Dissolution, payroll closeout."
+when_to_use: "NOT for closing a for-profit entity (tax-preparation for its final return)."
 argument-hint: "[organization]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # NY Nonprofit Dissolution & Final Filings
+
+**Done when** the organization has a dated sequence plan, the right final 990
+form identified, a distribution plan that satisfies its dissolution clause, and
+every `VERIFY` item listed for confirmation. Draft filings only; officers sign
+and file.
 
 Two tracks that run in parallel and must be sequenced correctly:
 
@@ -60,6 +68,8 @@ do not distribute assets before the plan is approved.
 
 ## Federal — the final return
 
+Thresholds verified 2026-09-23 (irs.gov, Form 990 series filing table):
+
 | Gross receipts / assets | Form |
 |---|---|
 | Normally ≤ \$50,000 | **Form 990-N** (e-Postcard) — has a "terminated" checkbox |
@@ -83,10 +93,8 @@ the 5th month after the **date of termination**. Form 8868 extends filing by six
 months.
 
 ### Attachments to the final return
-- Certified copy of the Certificate of Dissolution / articles of dissolution
-- The approved Plan of Dissolution
-- A schedule of assets distributed with recipients and EINs
-- Board resolution
+Certified Certificate of Dissolution, the approved Plan, a schedule of assets
+distributed with recipients and EINs, and the board resolution.
 
 ### The penalty for skipping this
 Failing to file for **three consecutive years** triggers **automatic revocation**
@@ -111,21 +119,14 @@ cleanly instead of leaving an organization that appears delinquent.
 That last point matters: dissolving the corporation does **not** extinguish
 personal liability for unpaid withheld payroll taxes.
 
-## If there were contractors
-
-Final Forms 1099-NEC for the year, due January 31. The obligation survives
-dissolution.
+Contractors: final 1099-NECs are due January 31 and survive dissolution.
 
 ## Records retention
 
-Keep for **at least 3 years after the final return**, and preferably permanently:
-- Certificate of incorporation, bylaws, and all amendments
-- The IRS determination letter
-- All Forms 990 filed (these are public documents; keep the originals)
-- Board minutes, especially the dissolution resolution
-- Plan of Dissolution and the AG approval
-- Asset distribution receipts with recipient EINs
-- Final Certificate of Dissolution as filed
+Keep for **at least 3 years after the final return**, preferably permanently:
+governing documents and amendments, the determination letter, every Form 990
+filed, board minutes (especially the dissolution resolution), the Plan and AG
+approval, distribution receipts with recipient EINs, and the filed Certificate.
 
 ## What this does NOT do
 
@@ -136,8 +137,8 @@ assets and standing to address them.
 
 ## Reference files
 
-- `reference/dissolution-checklist.md` — the working checklist with the document
-  intake list and the information needed to begin.
+- `reference/dissolution-checklist.md` — read at intake; the working checklist,
+  document list, and the facts needed to begin.
 
 ## Related skills
 

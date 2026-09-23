@@ -1,236 +1,170 @@
 # CI/CD Pipeline
 
-Continuous integration and deployment pipelines for mobile (Android/iOS), web (Next.js), and backend (Firebase). GitHub Actions first. Every project ships with automated build, test, and deploy from day one.
+GitHub Actions pipelines for Cure projects: web (Next.js), Android, iOS, and Firebase backends.
+**Done when** the repo has CI on every PR (lint, type-check, test, build), staging deploys on merge to
+`main`, production deploys behind an environment approval, keyless GCP auth, and a written rollback
+path per platform. Deliver the requested workflows; don't refactor app code or add unrequested jobs.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Existing workflows: !`(ls .github/workflows/ 2>/dev/null || echo "(none)") | head -15`
+- Scripts: !`(grep -A15 '"scripts"' package.json 2>/dev/null || echo "(no package.json)") | head -16`
+- Platforms: !`(ls -d android ios functions app apps firebase.json apphosting.yaml vercel.json 2>/dev/null || echo "(none detected)") | head -10`
 
-Use this context to tailor all output to the actual project.
+Read any existing workflow before writing a new one — adapt, don't duplicate.
 
-## Step 1: Classify the Pipeline Type
+## Step 1: Classify
+
+| Request | Output |
+|---|---|
+| New pipeline (greenfield) | `ci.yml` + `deploy.yml` (+ `release.yml` for mobile) |
+| Add a platform/job to an existing pipeline | Edit the existing workflow |
+| Review/harden an existing pipeline | Findings list (pins, permissions, secrets, gates) — no new files |
+| Question (how do I…) | Answer with the relevant snippet |
 
 | Project | Pipeline |
-|---------|----------|
-| Next.js + Firebase Hosting | Build → Test → Export → Deploy to Firebase |
-| Next.js + Vercel | Push-to-deploy (Vercel handles CI) |
-| Android app | Build → Lint → Test → Assemble → Firebase App Distribution / Play Store |
-| iOS app | Build → Test → Archive → TestFlight / App Store (Fastlane) |
-| Firebase Cloud Functions | Lint → Test → Deploy Functions |
-| Monorepo (web + functions) | Matrix build: web and functions in parallel |
-| Full stack (mobile + web + backend) | Separate workflows per platform, shared test gate |
+|---|---|
+| Next.js on Firebase **App Hosting** (Cure default for Firebase + Next) | CI in Actions; App Hosting builds and rolls out on push to its live branch — don't duplicate the build |
+| Next.js on Vercel | CI in Actions; Vercel Git integration deploys previews and production |
+| Static site on Firebase Hosting | Build → deploy with firebase-tools |
+| Android | Lint → unit test → assemble → App Distribution (testers) / Play (via release-management) |
+| iOS | Test → archive → TestFlight via Fastlane |
+| Cloud Functions | Lint → test → `firebase deploy --only functions` |
+| Monorepo | Path-filtered jobs, shared test gate |
 
 ## Step 2: Gather Context
 
-1. **Platforms** — web, Android, iOS, backend, or combination?
-2. **Hosting** — Firebase, Vercel, AWS, or other?
-3. **Environments** — dev / staging / production? How many?
-4. **Branch strategy** — trunk-based, GitFlow, or GitHub Flow?
-5. **Secrets needed** — Firebase SA key, Play Store key, App Store Connect, Stripe keys?
-6. **Test suite** — unit, integration, E2E? What runners?
+Ask only for what the repo doesn't answer: platforms, hosting, environments (dev/staging/prod),
+required secrets (App Store Connect, Play, Stripe), and test runners.
 
-## Step 3: Branch Strategy (Default: GitHub Flow)
+## Step 3: Cure Pipeline Policy
 
-```
-main              — production, always deployable
-feature/*         — feature branches, PR into main
-hotfix/*          — urgent fixes, PR into main
+- **Branching and release policy is owned by the `release-management` skill** — link to it, don't
+  restate it. The CI view of it: PRs → CI + preview; merge to `main` → auto-deploy **staging**;
+  **production** deploys only from a release tag or `release/*` branch through a GitHub Environment
+  with required reviewers. `main` never auto-deploys production.
+- Follow `rules/cicd.md`: actions pinned by full commit SHA (tag in a trailing comment), a
+  `permissions:` block on every workflow, `concurrency` groups, `timeout-minutes` on every job.
+- **Keyless GCP auth.** Use Workload Identity Federation via `google-github-actions/auth` with
+  **service-account impersonation** (`service_account:` input), then run `firebase-tools` directly.
+  Gotchas: direct WIF (no impersonation) is not supported by the Firebase Admin SDK and its tokens
+  expire in 5 minutes; `FirebaseExtended/action-hosting-deploy` still requires a JSON key, so skip it
+  for keyless deploys. Long-lived `FIREBASE_SERVICE_ACCOUNT` JSON keys are legacy — migrate them.
+- Node: 24 (Active LTS) for new projects; 22 is maintenance LTS until 2027-04-30; 20 is EOL
+  (2026-04-30). Match the `engines` field and the Cloud Functions runtime.
+- Runners: `ubuntu-24.04`, `macos-26` (pin the version, not `-latest`, for reproducible Xcode).
 
-Environments:
-  PR preview       → deploy to preview URL (Vercel) or staging Firebase site
-  main             → auto-deploy to production
-  tags (v1.0.0)    → release builds (mobile)
-```
+## Step 4: Templates
 
-## Step 4: Pipeline Templates
+Pins below were current on 2026-09-23 (checkout v7.0.1, setup-node v7.0.0, setup-java v6.0.1,
+gradle/actions v6.3.0, setup-ruby v1.326.0, auth v3.0.0, firebase-tools 15.x). Refresh SHAs with
+`gh api repos/<owner>/<action>/commits/<tag> --jq .sha` when writing new files.
 
-### Next.js + Firebase Hosting
+### CI (every PR, web/functions)
 ```yaml
-name: Deploy Web
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
+name: CI
+on: { pull_request: {}, push: { branches: [main] } }
+permissions: { contents: read }
+concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  ci:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: 'npm' }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with: { node-version: 24, cache: npm }
       - run: npm ci
-      - run: npm run lint
-      - run: npm run test -- --ci
+      - run: npm run lint && npx tsc --noEmit
+      - run: npm test -- --ci
       - run: npm run build
-      - if: github.ref == 'refs/heads/main'
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
 ```
 
-### Android (Gradle + Firebase App Distribution)
+### Deploy Firebase (keyless) — staging on `main`, production on tag with approval
 ```yaml
-name: Android CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-
+name: Deploy
+on: { push: { branches: [main], tags: ['v*'] } }
+permissions: { contents: read, id-token: write }
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with: { node-version: 24, cache: npm }
+      - run: npm ci && npm run build
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+      - run: npx firebase-tools@15 deploy --only hosting,functions --project ${{ vars.FIREBASE_PROJECT_ID }} --non-interactive
+```
+The `production` environment carries required reviewers; `vars.*` are per-environment.
+
+### Android
+```yaml
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with: { distribution: temurin, java-version: 17 }
-      - uses: gradle/actions/setup-gradle@v3
-      - run: ./gradlew ktlintCheck
-      - run: ./gradlew testDebugUnitTest
-      - run: ./gradlew assembleRelease
-      - if: github.ref == 'refs/heads/main'
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          groups: internal-testers
-          file: app/build/outputs/apk/release/app-release.apk
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      - run: ./gradlew ktlintCheck testDebugUnitTest assembleRelease
+      # testers build, after the auth step above:
+      - run: npx firebase-tools@15 appdistribution:distribute app/build/outputs/apk/release/app-release.apk --app ${{ vars.FIREBASE_APP_ID_ANDROID }} --groups internal-testers
 ```
 
-### iOS (Fastlane + TestFlight)
+### iOS (Fastlane → TestFlight), on `macos-26`
 ```yaml
-name: iOS CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-jobs:
-  build:
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with: { ruby-version: 3.2, bundler-cache: true }
+      - uses: ruby/setup-ruby@762794c140bbeda0f1224786aa33b4b46783a6c1 # v1.326.0
+        with: { bundler-cache: true }   # reads .ruby-version
       - run: bundle exec fastlane test
-      - if: github.ref == 'refs/heads/main'
+      - if: startsWith(github.ref, 'refs/tags/')
         run: bundle exec fastlane beta
         env:
           APP_STORE_CONNECT_API_KEY: ${{ secrets.ASC_API_KEY }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
 ```
 
-### Firebase Cloud Functions
-```yaml
-name: Deploy Functions
-on:
-  push:
-    branches: [main]
-    paths: ['functions/**']
+## Step 5: Secrets and Gates
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: 'npm', cache-dependency-path: functions/package-lock.json }
-      - run: cd functions && npm ci
-      - run: cd functions && npm run lint
-      - run: cd functions && npm test
-      - uses: w9jds/firebase-action@v13.22.1
-        with:
-          args: deploy --only functions
-        env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
-```
+- Secrets only for what has no keyless path: `ASC_API_KEY`, `MATCH_PASSWORD`, Android keystore +
+  password, Play service-account JSON (whether Fastlane `supply` can upload keylessly: confirm before use).
+  Non-secrets (project IDs, WIF provider, SA email) go in environment `vars`.
+- Required checks on `main`: lint, type-check, unit tests, build, one approving review. Coverage
+  thresholds come from the `testing-strategy` skill; don't restate them here.
+- Recommended: E2E (see `e2e-testing`), bundle-size delta, secret scanning and SAST (see
+  `security-review`), Dependabot.
 
-## Step 5: Environment & Secrets Management
+## Step 6: Rollback per Platform
 
-```
-GitHub Secrets (never in code):
-  FIREBASE_SERVICE_ACCOUNT     — GCP service account JSON
-  FIREBASE_APP_ID_ANDROID      — Firebase app ID
-  ASC_API_KEY                  — App Store Connect API key (base64)
-  MATCH_PASSWORD               — iOS code signing
-  KEYSTORE_PASSWORD            — Android signing key
-  STRIPE_SECRET_KEY            — only in Functions deploy
+| Platform | Rollback |
+|---|---|
+| Firebase Hosting | `firebase hosting:clone SITE_ID@PREVIOUS_VERSION_ID SITE_ID:live` (or console → Release history → Roll back) |
+| App Hosting | Console → Rollouts → "Roll back to this build"; CLI: `firebase apphosting:rollouts:create BACKEND_ID --git_commit <good-sha>` |
+| Cloud Functions | `git revert` the change and let the pipeline redeploy |
+| Vercel | Instant Rollback / promote the previous deployment |
+| Android (Play) | Halt the staged rollout; a fix needs a new build with a higher versionCode (Play won't re-serve an older one) |
+| iOS (App Store) | Pause phased release, then ship a fix with a higher build number (request expedited review if needed). TestFlight has no rollback — expiring a build doesn't restore production. |
 
-GitHub Variables (non-sensitive):
-  FIREBASE_PROJECT_ID          — project identifier
-  ENVIRONMENT                  — dev / staging / production
-```
+Never force-push `main`; revert and roll forward.
 
-Rules:
-- **Never** commit secrets, .env files, service account keys, or keystores
-- Use GitHub Environment protection rules for production deploys (require approval)
-- Rotate secrets quarterly
+## Code/Artifact Generation
 
-## Step 6: Quality Gates
+Applies only when Step 1 classified the request as a new pipeline or an addition to one. Write:
 
-Every PR must pass before merge:
+- New pipeline → `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`; mobile projects also
+  get `.github/workflows/release.yml` (tag-triggered store build).
+- Addition → edit the existing workflow file in place.
 
-```
-Required checks:
-  ✅ Lint passes (no warnings)
-  ✅ Unit tests pass (100%)
-  ✅ Build succeeds
-  ✅ No new TypeScript errors
-  ✅ Code review approved (1+ reviewer)
-
-Recommended checks:
-  ⬜ E2E tests pass
-  ⬜ Bundle size delta < 10%
-  ⬜ Lighthouse score >= 90
-  ⬜ Security scan clean (Dependabot / Snyk)
-```
-
-## Step 7: Rollback Procedures
-
-```
-Firebase Hosting:  firebase hosting:clone SOURCE_SITE:PREVIOUS_VERSION TARGET_SITE:live
-Cloud Functions:   Redeploy previous commit: git revert HEAD && git push
-Android:           Firebase App Distribution → promote previous build
-iOS:               TestFlight → expire current build, previous is auto-available
-Vercel:            Dashboard → Deployments → Promote previous
-```
-
-Never force-push main. Always revert-and-push-forward.
-
-## Code Generation (Required)
-
-You MUST generate actual workflow files using the Write tool:
-
-1. **CI workflow**: `.github/workflows/ci.yml` — lint, type-check, test, build (matrix for affected platforms)
-2. **Deploy workflow**: `.github/workflows/deploy.yml` — staging auto-deploy, production with approval
-3. **Release workflow**: `.github/workflows/release.yml` — version bump, changelog, tag, publish
-
-Before generating, use Glob to find existing workflows (`.github/workflows/*.yml`) and Read them to understand current setup. Adapt, don't duplicate.
-
-Use Grep to find test commands in package.json/build.gradle to set correct test steps.
+Review and question requests get findings or an answer, not files. After deploys, the smoke check is
+part of the deploy job (health URL, Crashlytics/Sentry baseline) — see the `observability` skill.
 
 ## Cross-References
 
-- `/infrastructure-scaffold` — for Firebase, GCP, Vercel, and Docker configs the pipeline deploys
-- `/testing-strategy` — for test runner commands and coverage thresholds to enforce in CI
-- `/security-review` — for secret scanning and SAST steps to add to the pipeline
-- `/e2e-testing` — for E2E workflow integration and sharding patterns
-
-## Step 8: Monitoring Post-Deploy
-
-After every production deploy, verify:
-- [ ] App loads without errors (smoke test URL)
-- [ ] Firebase Functions logs clean (no cold start errors)
-- [ ] Crash reporting baseline unchanged (Firebase Crashlytics)
-- [ ] Key user flows work (manual or E2E)
-- [ ] No new error spikes in first 15 minutes
+- `infrastructure-scaffold` — Firebase/GCP/Vercel/Docker configs the pipeline deploys
+- `release-management` — branching, versioning, staged rollouts, store submission
+- `testing-strategy` — test commands and coverage thresholds
+- `security-review` — secret scanning and SAST steps
+- `e2e-testing` — E2E sharding in CI

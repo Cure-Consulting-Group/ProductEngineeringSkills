@@ -1,426 +1,103 @@
 # LLMOps
 
-Production operations framework for LLM-powered features. Every AI feature at Cure Consulting Group ships with versioned prompts, automated evaluation, cost guardrails, safety filters, and monitoring. No LLM feature goes to production without these operational controls. Shipping a prompt without eval is shipping code without tests.
+**Outcome:** the operational layer for an existing or about-to-ship LLM feature — versioned prompts with an eval gate in CI, a cost model with the caching/batch/routing levers applied, budgets and alerts, and an AI incident runbook. Done when a prompt or model change cannot reach production without passing the eval, and spend per feature is visible and capped. Match length to the need; no filler sections or restated summaries.
+
+**Ownership boundary.** This skill owns *operations*: evals, prompt lifecycle, model routing, caching, batching, budgets, cost tracking, monitoring, AI incidents. It does not create the LLM client wrapper, prompt templates, or input/output guardrail code — `ai-feature-builder` owns `src/llm/client.ts`, `src/llm/prompts/`, and `src/llm/guardrails.ts`; extend those, don't regenerate them. Retrieval metrics, index drift, and chunking belong to `rag-architect`.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- LLM SDKs in use: !`grep -E '"(@anthropic-ai/sdk|openai|@google/genai|ai|langchain)"' package.json 2>/dev/null | head -8; grep -iE '^(anthropic|openai|google-genai|langchain)' requirements.txt pyproject.toml 2>/dev/null | head -5 || echo "(none detected)"`
+- Existing LLM/eval code: !`ls -d src/llm evals eval prompts 2>/dev/null || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Step 1: Classify the LLMOps Need
-
-| Need | Scope | Starting Point |
-|------|-------|---------------|
-| New AI feature productionization | Full LLMOps stack — prompts, eval, guardrails, monitoring, cost controls | Start at Step 3 |
-| Eval pipeline setup | Build offline and online evaluation for existing AI feature | Jump to Step 4 |
-| Cost optimization | Reduce LLM spend without degrading quality | Jump to Step 5 |
-| Guardrail implementation | Add safety filters, input validation, output validation | Jump to Step 6 |
-| RAG monitoring | Monitor retrieval quality, index freshness, embedding drift | Jump to Step 7 |
+| Need | Deliver |
+|---|---|
+| Productionize a new AI feature | Steps 3–7, plus Code/Artifact Generation |
+| Eval pipeline for an existing feature | Step 3 (+ generation of eval files only) |
+| "The LLM bill is too high" | Step 4 cost audit: ranked levers with estimated savings; no scaffolding unless asked |
+| Model or prompt rollout / migration | Step 3 gate + Step 5 routing + rollback plan |
+| Live AI incident | Step 7 runbook only — mitigate first, generate nothing until the feature is stable |
 
 ## Step 2: Gather Context
 
-1. **Models used** -- which LLMs are in play (GPT-4o, Claude, Gemini, open-source)? Are there multiple models for different tasks?
-2. **Deployment target** -- where does the AI feature run (Firebase Functions, Cloud Run, edge, client-side)?
-3. **Current spend** -- monthly LLM API costs, tokens per day, cost per user interaction?
-4. **Latency requirements** -- what's the acceptable response time (sub-second for autocomplete, 5-10s for generation)?
-5. **Compliance** -- data residency, PII handling, content moderation requirements, industry regulations?
-6. **Evaluation maturity** -- are there existing evals, golden datasets, human eval processes?
-7. **RAG pipeline** -- is there a retrieval component? What's the index size, embedding model, chunking strategy?
-8. **User volume** -- requests per day, peak concurrency, growth trajectory?
-
-## Step 3: Prompt Management
-
-See [reference/details.md](reference/details.md) (section “Step 3: Prompt Management”) for full detail.
-
-## Step 4: Evaluation Pipelines
-
-See [reference/details.md](reference/details.md) (section “Step 4: Evaluation Pipelines”) for full detail.
-
-## Step 5: Cost Optimization
-
-### Model Tiering Strategy
-
-```
-MODEL ROUTING FRAMEWORK
-
-Tier 1 — Small/Fast (for simple tasks):
-  Models: Claude Haiku, GPT-4o-mini, Gemini Flash
-  Use for: Classification, extraction, formatting, short Q&A
-  Cost: ~\$0.25/M input, ~\$1/M output tokens
-  Latency: <500ms typical
-
-Tier 2 — Standard (for most tasks):
-  Models: Claude Sonnet, GPT-4o, Gemini Pro
-  Use for: Content generation, summarization, analysis, RAG synthesis
-  Cost: ~\$3/M input, ~\$15/M output tokens
-  Latency: 1-3s typical
-
-Tier 3 — Large/Powerful (for complex tasks):
-  Models: Claude Opus, o1, Gemini Ultra
-  Use for: Complex reasoning, code generation, multi-step analysis
-  Cost: ~\$15/M input, ~\$75/M output tokens
-  Latency: 5-30s typical
-
-Router Implementation:
-```
-
-```typescript
-// lib/llm/router.ts
-interface RoutingDecision {
-  model: string;
-  tier: number;
-  reason: string;
-}
-
-export function routeRequest(request: LLMRequest): RoutingDecision {
-  // Classification/extraction → Tier 1
-  if (request.taskType === "classify" || request.taskType === "extract") {
-    return { model: "claude-haiku", tier: 1, reason: "Simple structured task" };
-  }
-
-  // Short input + short expected output → Tier 1
-  if (request.inputTokens < 500 && request.maxOutputTokens < 200) {
-    return { model: "claude-haiku", tier: 1, reason: "Short input/output" };
-  }
-
-  // Complex reasoning, code gen, multi-step → Tier 3
-  if (request.taskType === "code-generation" || request.taskType === "complex-reasoning") {
-    return { model: "claude-sonnet", tier: 2, reason: "Complex task (use Tier 3 only if Tier 2 eval fails)" };
-  }
-
-  // Default → Tier 2
-  return { model: "claude-sonnet", tier: 2, reason: "Standard generation task" };
-}
-```
-
-### Caching Strategy
-
-```typescript
-// lib/llm/cache.ts
-import { createHash } from "crypto";
-
-interface CacheConfig {
-  semanticCache: boolean;         // Cache similar (not identical) queries
-  ttlSeconds: number;             // Time to live
-  maxEntries: number;             // Max cache size
-}
-
-// Exact match cache (for deterministic prompts: classification, extraction)
-function exactCacheKey(prompt: string, model: string, temperature: number): string {
-  return createHash("sha256").update(`${model}:${temperature}:${prompt}`).digest("hex");
-}
-
-// Semantic cache (for similar queries with same intent)
-async function semanticCacheKey(query: string, threshold: number = 0.95): Promise<string | null> {
-  const embedding = await getEmbedding(query);
-  const nearest = await vectorStore.findNearest(embedding, { threshold });
-  return nearest?.cacheKey || null;
-}
-
-// Cache rules by task type:
-// Classification (temperature=0) → exact cache, TTL 24h
-// FAQ answers → semantic cache, TTL 1h
-// Creative generation → no cache (non-deterministic)
-// User-specific responses → no cache (personalized)
-```
-
-### Token Budget Enforcement
-
-```typescript
-// lib/llm/budget.ts
-interface TokenBudget {
-  maxInputTokensPerCall: number;
-  maxOutputTokensPerCall: number;
-  maxTokensPerSession: number;
-  maxTokensPerUserPerDay: number;
-  maxDailySpend: number;
-}
-
-const BUDGETS: Record<string, TokenBudget> = {
-  "chat-assistant": {
-    maxInputTokensPerCall: 8000,
-    maxOutputTokensPerCall: 2000,
-    maxTokensPerSession: 50000,
-    maxTokensPerUserPerDay: 200000,
-    maxDailySpend: 500,  // dollars
-  },
-  "content-summarizer": {
-    maxInputTokensPerCall: 100000,
-    maxOutputTokensPerCall: 4000,
-    maxTokensPerSession: 200000,
-    maxTokensPerUserPerDay: 500000,
-    maxDailySpend: 200,
-  },
-};
-
-export async function checkBudget(feature: string, userId: string, tokens: number): Promise<boolean> {
-  const budget = BUDGETS[feature];
-  if (!budget) throw new Error(`No budget defined for feature: ${feature}`);
-
-  const dailyUsage = await getDailyUsage(feature, userId);
-  if (dailyUsage + tokens > budget.maxTokensPerUserPerDay) {
-    logger.warn("Token budget exceeded", { feature, userId, dailyUsage, requested: tokens });
-    return false;
-  }
-
-  const dailySpend = await getDailySpend(feature);
-  if (dailySpend > budget.maxDailySpend) {
-    logger.error("Daily spend limit exceeded", { feature, dailySpend, limit: budget.maxDailySpend });
-    // Page on-call if spend is 2x limit
-    if (dailySpend > budget.maxDailySpend * 2) {
-      await alertOncall(`LLM spend alert: ${feature} at $${dailySpend} (limit: $${budget.maxDailySpend})`);
-    }
-    return false;
-  }
-
-  return true;
-}
-```
-
-### Cost Dashboard and Alerts
-
-```
-COST MONITORING
-
-Dashboard Panels:
-  - [Timeseries] Daily LLM spend by feature
-  - [Timeseries] Daily LLM spend by model
-  - [Stat]       Month-to-date spend vs budget
-  - [Timeseries] Cost per request trend
-  - [Timeseries] Token usage (input vs output) by feature
-  - [Stat]       Cache hit rate (higher = more savings)
-  - [Table]      Top 10 most expensive user sessions (identify abuse)
-
-Alerts:
-  - Daily spend >120% of average → Slack notification
-  - Daily spend >200% of average → page on-call
-  - Single user >\$50/day in LLM costs → investigate (possible abuse or bug)
-  - Cache hit rate drops below 30% → investigate (cache invalidation issue?)
-  - Average cost per request increases >50% → check model routing
-```
-
-## Step 6: Guardrails and Safety
-
-See [reference/details.md](reference/details.md) (section “Step 6: Guardrails and Safety”) for full detail.
-
-## Step 7: RAG Pipeline Monitoring
-
-### Retrieval Quality Metrics
-
-```
-RETRIEVAL METRICS
-
-Precision@K:
-  Definition: Of the top K retrieved documents, how many are relevant?
-  Formula: relevant_in_top_k / k
-  Target: >0.8 for k=5
-  Measure: Compare retrieved docs against human-judged relevance
-
-Recall:
-  Definition: Of all relevant documents, how many were retrieved?
-  Formula: relevant_retrieved / total_relevant
-  Target: >0.9
-  Measure: Requires known-relevant document set per query
-
-MRR (Mean Reciprocal Rank):
-  Definition: Average of 1/rank of first relevant result
-  Formula: mean(1 / rank_of_first_relevant)
-  Target: >0.7
-  Measure: First relevant document should be in top 2-3 results
-
-NDCG (Normalized Discounted Cumulative Gain):
-  Definition: Quality of ranking considering position
-  Target: >0.8
-  Measure: Relevant documents should be ranked higher
-```
-
-### Index Freshness Monitoring
-
-```typescript
-// lib/rag/monitoring.ts
-
-interface IndexHealth {
-  totalDocuments: number;
-  lastIndexedAt: Date;
-  staleDocs: number;          // Docs not re-indexed since source update
-  averageChunkSize: number;
-  embeddingModel: string;
-  embeddingDimension: number;
-}
-
-// Monitor and alert on:
-// - Index age: if lastIndexedAt > 24 hours → warning
-// - Stale documents: if staleDocs > 10% of total → re-index trigger
-// - Document count: sudden drop indicates indexing failure
-// - Embedding model version: track for drift detection
-
-async function checkIndexHealth(): Promise<IndexHealth> {
-  const health = await vectorStore.getHealth();
-
-  if (health.staleDocs / health.totalDocuments > 0.1) {
-    await triggerReindex("Stale document threshold exceeded");
-  }
-
-  if (Date.now() - health.lastIndexedAt.getTime() > 24 * 60 * 60 * 1000) {
-    logger.warn("Index is stale", { lastIndexed: health.lastIndexedAt });
-  }
-
-  return health;
-}
-```
-
-### Embedding Drift Detection
-
-```
-EMBEDDING DRIFT DETECTION
-
-What is drift:
-  - Embedding model update changes vector space geometry
-  - Source documents change character (new terminology, different style)
-  - Query patterns shift (users ask different types of questions)
-
-Detection:
-  - Track average cosine similarity between queries and top results
-  - If average similarity drops >10% over 7 days → investigate
-  - Compare embedding distributions monthly (centroid shift)
-  - Monitor retrieval quality metrics alongside similarity scores
-
-Response:
-  - If model updated: full re-index required (cannot mix embedding versions)
-  - If content drift: re-evaluate chunking strategy, update golden eval set
-  - If query drift: analyze new query patterns, potentially add new content
-```
-
-### Chunk Quality Analysis
-
-```
-CHUNK QUALITY CHECKLIST
-
-Chunking Rules:
-  - Chunk size: 500-1000 tokens (test what works for your content)
-  - Overlap: 50-100 tokens between chunks (prevent information loss at boundaries)
-  - Respect document structure: don't split mid-sentence, mid-paragraph, or mid-section
-  - Include metadata: source document, section title, page number, last updated date
-
-Quality Checks:
-  - [ ] No orphan chunks (chunks that make no sense without context)
-  - [ ] No duplicate chunks (same content indexed multiple times)
-  - [ ] Metadata is complete and accurate
-  - [ ] Chunk boundaries align with semantic boundaries
-  - [ ] Average retrieval score for test queries > 0.8
-
-Monitoring:
-  - Track average chunk length (should be consistent)
-  - Track chunks per document (sudden changes indicate processing issues)
-  - Sample random chunks monthly for quality review
-```
-
-## Step 8: Incident Response for AI Features
-
-### AI-Specific Incident Types
-
-```
-INCIDENT TYPE               DETECTION                         RESPONSE
-──────────────────────────────────────────────────────────────────────────────
-Model degradation           Quality eval scores drop >10%     Switch to fallback model,
-                            User satisfaction drops >15%       investigate, re-evaluate
-
-Cost spike                  Daily spend >200% of average      Activate cost limits,
-                            Single-user spend anomaly          investigate traffic source
-
-Safety incident             Toxic output detected by filter   Disable feature immediately,
-                            User report of harmful content    preserve logs, investigate
-
-Hallucination spike         Faithfulness score drops >15%     Check RAG index freshness,
-                            User reports of incorrect info    re-run eval pipeline
-
-Latency degradation         p95 latency >2x normal            Check model provider status,
-                            Timeout rate increases              activate caching, consider
-                                                               model downgrade
-
-Data leak                   PII detected in LLM output        Disable feature, audit logs,
-                            Prompt injection succeeded         notify security team, notify
-                                                               affected users if required
-```
-
-### AI Incident Runbook
-
-```
-AI INCIDENT RESPONSE STEPS
-
-1. Detect: automated quality monitoring, user feedback, cost alerts
-2. Classify: model issue, safety issue, cost issue, data issue
-3. Mitigate:
-   - Model issue → switch to fallback model
-   - Safety issue → disable feature, enable safe-mode responses only
-   - Cost issue → enforce strict rate limits, disable non-critical features
-   - Data issue → disable feature, preserve logs for investigation
-4. Investigate: check eval scores, review user reports, analyze logs
-5. Fix: update prompt, fix guardrails, update model config, re-index
-6. Verify: re-run eval pipeline, confirm metrics back to baseline
-7. Post-mortem: update golden dataset with new failure cases
-```
-
-## Step 9: Output
-
-```
-LLMOPS REPORT
-Feature: [NAME]
-Date: [TODAY]
-Prepared by: [NAME]
-
-CURRENT STATE ASSESSMENT
-┌──────────────────────────┬──────────────────────────────────────┐
-│ Component                │ Status                               │
-├──────────────────────────┼──────────────────────────────────────┤
-│ Prompt versioning        │ [Not started / Partial / Complete]   │
-│ Offline evaluation       │ [Not started / Partial / Complete]   │
-│ Online evaluation        │ [Not started / Partial / Complete]   │
-│ CI eval pipeline         │ [Not started / Partial / Complete]   │
-│ Model routing            │ [Not started / Partial / Complete]   │
-│ Caching                  │ [Not started / Partial / Complete]   │
-│ Token budgets            │ [Not started / Partial / Complete]   │
-│ Input guardrails         │ [Not started / Partial / Complete]   │
-│ Output guardrails        │ [Not started / Partial / Complete]   │
-│ RAG monitoring           │ [Not started / Partial / Complete]   │
-│ Cost monitoring          │ [Not started / Partial / Complete]   │
-│ Incident response plan   │ [Not started / Partial / Complete]   │
-└──────────────────────────┴──────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Prompt management system with version control
-  - [ ] Golden dataset for offline evaluation
-  - [ ] LLM-as-judge evaluation pipeline
-  - [ ] CI/CD eval integration (fail PR if quality drops)
-  - [ ] Model routing with tier strategy
-  - [ ] Caching layer (exact + semantic)
-  - [ ] Token budget enforcement per feature/user
-  - [ ] Input validation (PII, injection, topic boundaries)
-  - [ ] Output validation (safety, hallucination, format)
-  - [ ] Rate limiting per user
-  - [ ] Fallback chain for model unavailability
-  - [ ] RAG retrieval quality monitoring
-  - [ ] Cost dashboard and spend alerts
-  - [ ] AI-specific incident response plan
-```
-
-## Code Generation (Required)
-
-Generate LLMOps infrastructure using Write:
-
-1. **Eval pipeline**: `.github/workflows/prompt-eval.yml` — CI workflow that runs prompt evaluations on PR
-2. **Golden dataset**: `evals/golden-dataset.jsonl` — starter test cases (10 examples)
-3. **Eval runner**: `evals/run-eval.ts` — script that runs prompts against golden dataset and scores
-4. **Prompt registry**: `src/prompts/registry.ts` — versioned prompt templates with metadata
-5. **Cost tracker**: `src/llm/cost-tracker.ts` — middleware that logs token usage and cost per request
-6. **Guardrails**: `src/llm/guardrails.ts` — input/output validation, PII detection, content filtering
-
-Before generating, Grep for existing LLM usage (`openai|anthropic|gemini|Claude|GPT|completion`) to understand current integration.
-
-Cross-references: Use `/ai-feature-builder` for designing the AI feature itself. Use `/observability` for setting up the monitoring infrastructure that LLMOps metrics feed into. Use `/incident-response` for the broader incident response framework. Use `/engineering-cost-model` for projecting LLM costs as part of total project cost.
+Ask only for what the SDK scan above doesn't answer: models and providers per task; monthly spend and tokens/request if known (or `usage` logs); latency budget per route (autocomplete <1s vs generation 5–30s); request volume; data-residency/PII/ZDR constraints; existing evals or golden sets.
+
+## Step 3: Evals and Prompt Lifecycle
+
+Cure rules:
+- **Every prompt lives in git** with its config (model ID, effort/thinking settings, `max_tokens`, output schema) and a semver: major = behavior change, minor = quality change, patch = wording. No prompts that live only in a dashboard or env var.
+- **Golden set per prompt**: ≥100 cases (≥200 for customer-facing or regulated), sampled to match production traffic, plus empty/very long/adversarial/injection cases. Every production failure becomes a new case.
+- **Grading, cheapest first**: deterministic checks (schema, `mustContain`, exact label) → LLM judge with a rubric → human review. An LLM judge is calibrated against ≥50 human-labelled cases before its scores gate anything; re-calibrate when judge and humans disagree on >20%.
+- **CI gate**: any PR touching `prompts/**`, model IDs, or routing config runs the eval for the affected prompts and fails if the score drops >3 points against the main-branch baseline or below the prompt's floor. Post the diff of scores to the PR.
+- **Online signals** after release: thumbs-down rate, regenerate rate, edit distance on accepted output, abstention rate, format-violation rate. A prompt A/B assigns by stable user hash and logs the prompt version on every call.
+- **Model migration** is a prompt change: re-run the full golden set on the new model, re-tune effort, and diff cost per completed task (not per request) before switching.
+
+Read `reference/details.md` when you are generating the eval harness, golden-set format, judge rubric, or CI workflow — it has the file layouts and templates.
+
+## Step 4: Cost — levers in order
+
+Model prices change; quote from the provider's pricing page at the time of the estimate and date it. Anthropic reference (verified 2026-09-23, platform.claude.com/docs/en/about-claude/pricing), per million tokens:
+
+| Model (ID) | Input | Output | Cache read | Batch in/out |
+|---|---|---|---|---|
+| Claude Haiku 4.5 (`claude-haiku-4-5`, snapshot `claude-haiku-4-5-20251001`) | \$1 | \$5 | \$0.10 | \$0.50 / \$2.50 |
+| Claude Sonnet 5 (`claude-sonnet-5`) | \$2 | \$10 | \$0.20 | \$1 / \$5 |
+| Claude Opus 5.5 (`claude-opus-5-5`) | \$4 | \$20 | \$0.20 (0.05×) | \$2 / \$10 |
+| Claude Fable 5.1 (`claude-fable-5-1`) | \$10 | \$50 | \$0.25 (0.025×) | \$5 / \$25 |
+
+Cache writes cost 1.25× input (5-minute TTL) or 2× (1-hour TTL); a 5-minute cache pays off after one read. Caching and Batch discounts stack. For other providers, look up the current price list; don't reuse remembered numbers.
+
+Apply levers in this order — free wins before quality trade-offs:
+
+1. **Prompt caching.** Put stable content first (tools → system → long documents → few-shot), volatile content (timestamps, user IDs, the question) last. Mark the stable prefix with `cache_control` (or top-level automatic caching). Verify with `usage.cache_read_input_tokens` > 0 on repeat requests — zero means a silent invalidator (a timestamp in the system prompt, unsorted JSON, a changing tool list). Prefixes below the model's minimum cacheable length don't cache. Target ≥70% of input tokens served from cache on chat and agent routes.
+2. **Batch API** for anything not user-facing within seconds (nightly classification, backfills, eval runs, report generation): 50% off input and output, results within 24h, keyed by `custom_id` in any order. Eval runs in CI that don't block a human can batch too.
+3. **Input hygiene**: trim retrieved context to what the eval shows is used, drop stale conversation turns (or use server-side compaction/context editing), cap tool-result size.
+4. **Output hygiene**: structured outputs for machine-read results, explicit length guidance, realistic `max_tokens` per route.
+5. **Effort** (Claude 4.6+ models): lower `output_config.effort` per route where the eval holds. Measure the most capable model at low/medium effort before building a multi-model cascade — one model keeps one cache namespace, and caches are model-scoped.
+6. **Model routing** (Step 5) — last, because it trades quality and forfeits cache reuse across models.
+
+Budgets: every feature gets a per-user daily token cap and a per-feature daily spend cap enforced before the call; over-budget requests degrade (smaller model or queued) rather than fail. Alerts: daily spend >120% of the 7-day average → channel notification; >200% → page on-call; single user >\$50/day → investigate abuse; cache-read share drops >20 points → investigate an invalidator; cost per completed task +50% → check routing and prompt size.
+
+## Step 5: Model Routing
+
+Route by task, with each route's model chosen by eval, not by tier folklore:
+
+| Route | Default | Escalate when |
+|---|---|---|
+| Classification, extraction, formatting, short Q&A | Small tier (Haiku 4.5) | Eval accuracy below floor |
+| Generation, summarization, RAG synthesis, most chat | Mid tier (Sonnet 5), effort low/medium | Eval fails on hard slice |
+| Multi-step reasoning, code, agentic loops | Frontier (Opus 5.5) at medium/high effort | — |
+| Most demanding long-horizon work | Fable 5.1 only when evals prove the gain justifies 2.5× Opus 5.5 | — |
+
+Model-behavior gotchas that break old ops code (Anthropic, 2026): on Opus 5.5 and Fable 5.1 thinking cannot be disabled (control depth with effort), `temperature`/`top_p` are rejected on current Opus/Sonnet/Fable models, forced `tool_choice` is rejected on Opus 5.5/Fable 5.1, and assistant prefill is removed — so a "temperature 0 for determinism" cache-key or a prefill-based JSON trick must be replaced (structured outputs; key the exact cache on prompt + model + schema). Fallback chains: retry with backoff on 429/5xx/overload (the SDK retries twice by default), then fall to a secondary model whose eval passes, then to a cached or non-AI response. Never retry a safety refusal on a different model to get around it; handle `stop_reason: "refusal"` explicitly.
+
+Application-level caches (distinct from prompt caching): exact-match cache for deterministic routes (classification, extraction) keyed on prompt version + model + normalized input, TTL ≤24h; semantic cache only for FAQ-style answers with a similarity threshold validated on the golden set; never cache personalized or user-specific responses.
+
+## Step 6: Monitoring
+
+Log per call: feature, prompt version, model ID, effort, input/cached/output tokens, cost, latency (TTFT and total), stop reason, guardrail verdicts, user/session hash. Dashboards: spend by feature and by model; cache-read share; cost per completed task; p50/p95 latency; refusal, error, and fallback rates; guardrail trigger rate; online quality signals from Step 3. Feed these into the project's monitoring stack (`observability` skill); retrieval-quality panels come from `rag-architect`.
+
+## Step 7: AI Incident Runbook
+
+| Incident | Detect | First action |
+|---|---|---|
+| Quality regression | Sampled judge score −10%, thumbs-down +15% | Pin the previous prompt/model version via config; re-run the golden set |
+| Cost spike | Spend >200% of 7-day average | Enforce budgets, check for loops/abuse, check cache-read share |
+| Safety/data leak | Guardrail hit on output, PII in output, successful injection | Kill switch the feature (remote config), preserve logs, involve security |
+| Latency | p95 >2× baseline, timeouts | Check provider status, shed to cached/smaller-model route |
+| Provider outage | Error rate >5% | Fallback chain; communicate degraded mode |
+
+Mitigate before investigating. Afterwards, add the failing inputs to the golden set and follow the `incident-response` skill for the postmortem.
+
+## Code/Artifact Generation
+
+Applies when Step 1 is "productionize" or "eval pipeline" and the user wants files. Detect the stack first and match its language; extend existing files rather than duplicating them.
+
+- `evals/<prompt>/golden.jsonl`, `evals/run-eval.(ts|py)`, and a CI workflow `.github/workflows/prompt-eval.yml` (eval pipeline)
+- `prompts/<name>/` with versioned prompt files and `config.json` (only if prompts aren't already versioned — otherwise add config beside them)
+- `src/llm/cost-tracker.*` (usage → cost logging from `usage` fields), `src/llm/budget.*`, `src/llm/router.*`
+
+Don't create `src/llm/client.*` or `src/llm/guardrails.*`; if missing, point to `ai-feature-builder`. Related: `engineering-cost-model` for project-level LLM cost projections.

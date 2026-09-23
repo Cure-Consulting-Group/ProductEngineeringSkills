@@ -102,7 +102,7 @@ Strategy: Subtle and minimal. Use elevation sparingly to denote interactive laye
 - Next.js App Router with Tailwind CSS
 - shadcn/ui component library as base (Radix primitives)
 - Responsive: mobile-first, breakpoints at sm(640px), md(768px), lg(1024px), xl(1280px)
-- CSS custom properties for theme tokens in HSL format
+- CSS custom properties for theme tokens (OKLCH or hex), exposed to Tailwind v4 via `@theme inline`
 - Dark mode via Tailwind `dark:` variant with `class` strategy
 - Icons: Lucide React (`lucide-react`)
 - Forms: react-hook-form + zod + shadcn Form components

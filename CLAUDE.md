@@ -31,6 +31,10 @@ docs/OVERVIEW.md               — Auto-generated overview (regenerate via scrip
 docs/SCRIPTS_CONVENTION.md     — Convention for bundled Python scripts in skills
 scripts/generate-overview.py   — Regenerates docs/OVERVIEW.md from frontmatter
 scripts/verify-skill-scripts.sh — Smoke-tests every bundled skill script via --help
+scripts/export-antigravity.py  — Builds the flat Antigravity plugin (dist/antigravity/cure, gitignored); --install for agy
+scripts/antigravity-smoke.py   — Zero-model agy listing check (skips when agy is absent)
+hooks/cure_guard.py            — Stdin-JSON hook guard (edit/bash/skill-content/telemetry); tests: hooks/test_cure_guard.py
+docs/AUTHORING.md              — How a skill is written for Claude Code, Codex, and Antigravity (Wave 5 standard)
 BACKLOG.md                     — Internal improvement backlog (not for distribution)
 ```
 

@@ -1,21 +1,17 @@
 # MCP Server Builder
 
-Design and ship production MCP servers. Cure standard: tools are explicit, schemas are strict, secrets never leak into responses, and every mutation is confirmable. For protocol reference, see `modelcontextprotocol.io`.
+**Outcome:** a working MCP server (or a design for one) with a small, well-named tool surface, strict schemas, typed results, honest tool annotations, the right transport and auth, and contract tests. Done when each tool has a schema, annotations, an error path returning `isError`, and a test, and the server runs in at least one real client. Deliver the requested server; don't add unrequested tools.
+
+Cure standard: tools are explicit, schemas are strict, secrets never leak into results, and destructive tools are declared as such so the host can ask for consent.
+
+**Currency (verified 2026-09-23):** current spec revision is **2026-07-28** (modelcontextprotocol.io/specification/2026-07-28/changelog). It made the protocol stateless — no `initialize` handshake or `Mcp-Session-Id`; version and client capabilities travel in each request's `_meta`; servers must implement `server/discover`. Server-initiated requests (elicitation, sampling, roots) are replaced by Multi Round-Trip Requests (`resultType: "input_required"`); Roots, Sampling, Logging, and HTTP+SSE are deprecated; Tasks moved to an extension. SDKs implementing it: TypeScript v2 (`@modelcontextprotocol/server` 2.x — replaces the monolithic `@modelcontextprotocol/sdk` 1.x) and Python `mcp` 2.x (`MCPServer`). Existing v1 servers keep working against older clients; pin `<2` until migrated.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
-
-Additionally gather (domain-specific):
-- Grep for existing MCP usage: `@modelcontextprotocol|mcp\.server|FastMCP|stdio_server` to extend rather than duplicate
-- Read `.mcp.json` at repo root if present — see how this server will be consumed
+- Existing MCP code/SDK: !`grep -rlE '@modelcontextprotocol|from mcp|FastMCP|MCPServer|McpServer' --include=*.py --include=*.ts --include=package.json --include=pyproject.toml . 2>/dev/null | grep -v node_modules | head -8 || echo "(none)"`
+- Client configs present: !`ls .mcp.json .codex/config.toml mcp_config.json 2>/dev/null || echo "(none)"`
 
 ## Step 1: Classify the Build
 
@@ -33,12 +29,12 @@ If unclear, ask one question: *"Will this server run as a local subprocess, or b
 
 ## Step 2: Gather Context
 
-1. **Language** — Python (`mcp` SDK) or TypeScript (`@modelcontextprotocol/sdk`)? Default: match the surrounding codebase. See `rules/python.md` and `rules/web.md`.
-2. **Transport** — stdio, SSE, or streamable HTTP? (Decision matrix below.)
-3. **Auth model** — none (local), API key, OAuth, mTLS?
+1. **Language** — Python (`mcp` 2.x) or TypeScript (`@modelcontextprotocol/server` 2.x)? Default: match the surrounding codebase.
+2. **Transport** — stdio or Streamable HTTP (decision matrix below). Don't start new work on HTTP+SSE.
+3. **Auth model** — none (local stdio), or OAuth 2.1 per the spec's authorization section for hosted servers (client registration via Client ID Metadata Documents; Dynamic Client Registration is deprecated). Static API keys only for internal service-to-service.
 4. **Tool count** — under 10, 10–30, over 30? Over 30 means split into multiple servers.
 5. **Resources vs tools** — does the agent need to *read* documents, or *do* things? Often both.
-6. **Side effects** — read-only, mutating, irreversible? Mutating tools require explicit `confirm` parameter.
+6. **Side effects** — read-only, mutating, irreversible? Drives tool annotations and whether the tool should ask the user for input mid-call (Step 3).
 7. **Latency budget** — agent-perceived. Tools over 5s should stream progress or be made async with a separate "check status" tool.
 8. **Distribution** — npm/PyPI for general use, internal registry, or single-user `.mcp.json` install?
 
@@ -87,22 +83,28 @@ Rules:
 - `additionalProperties: false` on every object — block schema drift
 - Use `enum` over free-form strings whenever possible
 - `description` is read by the model — write it for an LLM, not a human (action-oriented, mention output shape, mention limits)
-- For mutating tools, require an explicit `confirm: { type: "boolean", const: true }` argument
+- Schemas may use any JSON Schema 2020-12 keyword; keep `$ref` shallow — clients bound composition depth.
+- Declare **tool annotations** honestly: `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`, plus a `title`. Hosts use them to decide when to ask the user for consent; clients treat them as untrusted hints, so they are not a security control — enforce authorization server-side.
+- For irreversible actions, don't invent a `confirm: true` argument (the model will just set it). Mark the tool `destructiveHint: true` and, when you need the human's answer, return an `input_required` result asking for confirmation (spec's Multi Round-Trip Requests pattern) — the client shows it to the user and retries with the answer.
+- Return tools from `tools/list` in a deterministic order (the spec now asks for it; it keeps client prompt caches warm).
 
 ### Output Conventions
 
 ```
-Success: structured content with explicit shape (not raw API JSON dumped)
+Success: declare an outputSchema and return structuredContent
+  (plus a short text summary in content for clients that ignore structure)
   - Strip secrets, internal IDs, debug fields
-  - Cap arrays (return first N + "has_more": true)
-  - Include a "next_cursor" if paginated
+  - Cap arrays (return first N + "has_more": true), include "next_cursor" if paginated
 
-Error: throw McpError with code + message
-  - InvalidParams (-32602)  — bad input
-  - MethodNotFound (-32601) — unknown tool
-  - InternalError (-32603)  — unexpected
-  - Custom application errors as data field
-  - Never leak stack traces, file paths, SQL, or upstream auth headers
+Tool execution failure (upstream 404, validation, rate limit, business rule):
+  return a normal result with isError: true and a message the model can act on
+  ("order ord_… not found; search_orders by email instead"). The model sees it
+  and can self-correct. SDKs do this for you when the handler throws/raises.
+
+JSON-RPC errors are for protocol faults only: unknown tool, malformed request,
+  unsupported protocol version (-32602 Invalid Params, -32601, -32603).
+
+Never leak stack traces, file paths, SQL, or upstream auth headers in either path.
 ```
 
 ### Rate Limiting
@@ -130,79 +132,67 @@ github://repo/cure-cg/portfolio
 sentry://issue/PROJ-1234
 ```
 
-Expose `resources/list` and `resources/read`. Never expose huge resources unbounded — cap at ~100KB or paginate. Subscribe (`resources/subscribe`) only if the data genuinely changes during a session.
+Expose `resources/list` and `resources/read`. Never expose huge resources unbounded — cap at ~100KB or paginate. List/read results carry `ttlMs` and `cacheScope` in the current spec; set a real TTL. Change notifications go through `subscriptions/listen` (replaces `resources/subscribe`); add them only if the data genuinely changes while an agent works.
 
 Prompts (the third primitive): expose only when there's a known, reusable user-facing prompt — e.g., "review_pr", "summarize_incident". Skip otherwise.
 
 ## Step 5: Server Implementation Patterns
 
-### Python (mcp SDK)
+Shapes below are from the v2 SDK docs (verified 2026-09-23); check the SDK README before generating, since v2 is new.
+
+### Python (`mcp` 2.x)
 
 ```python
-# pyproject.toml dep: mcp>=1.0.0
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
-import asyncio
+# pyproject.toml: mcp>=2.2,<3
+from mcp.server import MCPServer
 
-server = Server("cure-orders")
+mcp = MCPServer("cure-orders")
 
-@server.list_tools()
-async def list_tools() -> list[Tool]:
-    return [
-        Tool(
-            name="search_orders",
-            description="Find orders by email or order_id. Returns <=50 results.",
-            inputSchema={ "type": "object", "properties": { ... }, "additionalProperties": False }
-        )
-    ]
-
-@server.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    if name == "search_orders":
-        result = await orders_service.search(**arguments)  # validate + sanitize
-        return [TextContent(type="text", text=json.dumps(result))]
-    raise ValueError(f"Unknown tool: {name}")
-
-async def main():
-    async with stdio_server() as (read, write):
-        await server.run(read, write, server.create_initialization_options())
-
-if __name__ == "__main__":
-    asyncio.run(main())
+@mcp.tool(annotations={"readOnlyHint": True})
+async def search_orders(email: str | None = None, order_id: str | None = None, limit: int = 20) -> list[OrderSummary]:
+    """Find orders by customer email or order ID. Returns up to 50, newest first."""
+    return await orders_service.search(email=email, order_id=order_id, limit=min(limit, 50))
+    # Type hints generate inputSchema/outputSchema; a raised exception becomes an isError result.
 ```
 
-### TypeScript (@modelcontextprotocol/sdk)
+Run: `uv run mcp dev server.py` (local), `uv run mcp run server.py --transport streamable-http` (hosted).
+
+### TypeScript (`@modelcontextprotocol/server` 2.x)
 
 ```typescript
-// package.json dep: "@modelcontextprotocol/sdk": "^1.0.0"
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { McpServer } from "@modelcontextprotocol/server";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
+import { z } from "zod";
 
-const server = new Server({ name: "cure-orders", version: "1.0.0" }, { capabilities: { tools: {} } });
+function build() {
+  const server = new McpServer({ name: "cure-orders", version: "1.0.0" });
+  server.registerTool(
+    "search_orders",
+    {
+      title: "Search orders",
+      description: "Find orders by customer email or order ID. Returns up to 50, newest first.",
+      inputSchema: z.object({ email: z.string().email().optional(), orderId: z.string().optional(), limit: z.number().int().max(50).default(20) }),
+      outputSchema: z.object({ orders: z.array(OrderSummary), hasMore: z.boolean() }),
+      annotations: { readOnlyHint: true },
+    },
+    async (args) => {
+      const result = await ordersService.search(args);
+      return { structuredContent: result, content: [{ type: "text", text: `${result.orders.length} orders` }] };
+    },
+  );
+  return server;
+}
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [{
-    name: "search_orders",
-    description: "Find orders by email or order_id. Returns <=50 results.",
-    inputSchema: { type: "object", properties: { /* ... */ }, additionalProperties: false }
-  }]
-}));
-
-server.setRequestHandler(CallToolRequestSchema, async (req) => {
-  const { name, arguments: args } = req.params;
-  // Validate args with zod against the inputSchema, then dispatch.
-});
-
-await server.connect(new StdioServerTransport());
+serveStdio(build); // hosted: createMcpHandler(build) + toNodeHandler from @modelcontextprotocol/node
 ```
+
+The HTTP handler trusts its caller: put Host/Origin validation and token verification in front of it. The factory runs per request, so the endpoint is stateless and scales horizontally; cross-call state goes in explicit handles passed as tool arguments.
 
 ### Server Hygiene
 
 - One server, one domain — don't bundle "everything for client X" into a single MCP
 - All env config via env vars (`MCP_SERVER_API_KEY`), never CLI flags
-- Log to stderr only — stdout is reserved for the protocol
+- Log to stderr only (stdio) or OpenTelemetry — stdout is reserved for the protocol, and MCP Logging is deprecated
 - Graceful shutdown on SIGINT/SIGTERM, flush in-flight requests
 - Version your tool schemas. Breaking schema change → new tool name (`search_orders_v2`), keep old for one release
 
@@ -211,31 +201,23 @@ await server.connect(new StdioServerTransport());
 ### Contract Tests (Required)
 
 For every tool:
-1. Schema validation: invalid input → `InvalidParams` error, valid input → success
+1. Schema validation: invalid input → `isError` result with an actionable message; valid input → result matching `outputSchema`
 2. Authorization: missing/expired creds → typed error, never raw upstream response
 3. Output shape: response matches declared output schema
 4. Idempotency for mutating tools: same input twice → same effect (or explicit error on duplicate)
 
-### Integration with Claude Code
+### Run it in real clients
 
-Add to `.mcp.json`:
-```json
-{
-  "mcpServers": {
-    "cure-orders": {
-      "command": "python",
-      "args": ["-m", "cure_orders.server"],
-      "env": { "CURE_ORDERS_API_KEY": "${CURE_ORDERS_API_KEY}" }
-    }
-  }
-}
-```
+Wire it into the client the team uses (env vars for secrets, never inline):
 
-Manual test loop:
-1. `claude mcp list` — server appears
-2. `claude --debug` and invoke a tool — inspect stderr for protocol errors
-3. Bad input — confirm typed error reaches the agent, not a stack trace
-4. Kill the server mid-call — agent should get a clean disconnect, not hang
+| Client | Config |
+|---|---|
+| Claude Code | `.mcp.json` `mcpServers.<name>` `{command, args, env}` or `claude mcp add`; check with `claude mcp list` |
+| Codex CLI | `~/.codex/config.toml` `[mcp_servers.<name>]` with `command`, `args`, `env` |
+| Antigravity | `mcp_config.json` (workspace or plugin) — confirm the current path in the agy docs before use |
+| Any | MCP Inspector (`npx @modelcontextprotocol/inspector`) for protocol-level debugging |
+
+Manual loop: server listed → call each tool → bad input yields an `isError` result the agent reacts to, not a stack trace → kill the server mid-call and confirm the client reports a disconnect instead of hanging.
 
 ### Eval
 
@@ -247,7 +229,7 @@ Maintain a small golden set: 10–20 representative tool calls + expected output
 |----------|--------------|
 | Single client / engagement | Internal git, install via `pip install -e` or `npm link`, wired in `.mcp.json` |
 | Cure-wide, multiple clients | Internal PyPI / npm registry, semver pinned in `.mcp.json` |
-| Public | PyPI / npm, README with `.mcp.json` snippet, version in `_meta` field |
+| Public | PyPI / npm, README with client config snippets, `serverInfo` version returned in result `_meta` |
 | Hosted (multi-tenant) | Containerized, behind auth, HTTP transport, versioned URL `/v1/mcp` |
 
 Versioning rules (semver, strict):
@@ -259,43 +241,34 @@ Versioning rules (semver, strict):
 
 | Transport | Use When | Avoid When |
 |-----------|----------|------------|
-| **stdio** | Local subprocess (Claude Code, Codex desktop). Single user. No network. | Multi-tenant, hosted, or remote consumption |
-| **SSE** | Legacy hosted servers, server-pushed events to single client. | New builds — prefer streamable HTTP |
-| **Streamable HTTP** | Hosted, multi-tenant, browser-reachable, standard auth (Bearer/OAuth). | Local dev tools (overhead not worth it) |
-
-Default: **stdio for local, streamable HTTP for hosted.** SSE only for backwards compat.
+| **stdio** | Local subprocess (Claude Code, Codex, Antigravity). Single user. No network. | Multi-tenant, hosted, or remote consumption |
+| **Streamable HTTP** | Hosted, multi-tenant, OAuth 2.1. Stateless per request in the 2026-07-28 spec. | Local dev tools (overhead not worth it) |
+| HTTP+SSE | Deprecated — only to keep an existing legacy client working | Anything new |
 
 ## Anti-Patterns
 
-- **Mutating tool with no `confirm`**. Model misfires happen. Every irreversible action needs an explicit boolean.
-- **Schema drift**: returning extra fields not in the declared output. Pin shape, version when changing.
-- **Leaking secrets in tool responses**. Never echo back the API key, internal user IDs, or upstream auth headers in success or error paths. Audit with: `grep -rE "api_key|token|secret|password" responses_log/`
-- **Stuffing 50 tools into one server**. Model tool-selection degrades sharply past ~30 tools. Split by domain.
-- **Generic tool names** (`query`, `get`, `do`). Collide across servers, model picks wrong one.
-- **stdout for logging**. Corrupts the protocol. stderr only.
-- **No timeout**. A hung upstream blocks the agent indefinitely. Every external call gets a hard timeout.
-- **Returning raw upstream JSON**. The agent doesn't need 200 fields when 5 matter. Shape the output.
-- **No versioning strategy**. First breaking change → angry consumers. Decide v1/v2 strategy before shipping v1.
-- **Building MCP when a CLI would do**. If only one user uses it locally and it's already a CLI, MCP is overhead. MCP shines when the agent needs to choose between many tools.
+- Destructive tool without `destructiveHint: true` (or with a model-settable `confirm` flag standing in for user consent).
+- Throwing protocol errors for tool failures — the model never sees them and can't recover; return `isError`.
+- Output drifting from the declared `outputSchema`; version the tool instead.
+- More than ~30 tools on one server, or generic names (`query`, `get`) that collide across servers.
+- No hard timeout on upstream calls — a hung upstream blocks the agent.
+- Returning raw upstream JSON when 5 of 200 fields matter.
+- Building MCP when a CLI would do: one local user, one tool, already a CLI.
 
 ## When NOT to Use This Skill
 
-- **Consuming an existing MCP server** — just edit `.mcp.json`, no skill needed
+- **Consuming an existing MCP server** — just edit the client config, no skill needed
 - **Designing a public REST/GraphQL API** — use `api-architect`
-- **Building a Claude Code plugin (skill, agent, hook)** — use `sdlc` or a domain skill; this is plugin territory, not MCP
+- **Building a Claude Code plugin (skill, agent, hook)** — plugin territory, not MCP
 - **One-off internal CLI tool with one user** — a CLI is simpler; consider MCP only if an agent needs to discover and choose among tools
 - **General LLM feature work** — use `ai-feature-builder`
 
-## Code Generation (Required)
+## Code/Artifact Generation
 
-Generate actual scaffolding using Write:
+Applies when Step 1 is a build or migration and the user wants files. Glob `**/*server*.{py,ts}` first and extend existing servers.
 
-1. **Server entry point**: `src/server.{py,ts}` with `list_tools` + `call_tool` handlers, stdio transport
-2. **Tool schemas**: `src/tools/{tool_name}.{py,ts}` — one file per tool, schema + handler colocated
-3. **Output types**: `src/types.{py,ts}` — declared output shapes (Pydantic / Zod)
-4. **Config**: `pyproject.toml` or `package.json` with the right SDK pin
-5. **`.mcp.json` snippet** in README showing how to install
-6. **Contract tests**: `tests/test_tools.{py,ts}` — schema validation + happy path per tool
-7. **README.md**: tool list, install snippet, env vars required
-
-Before generating, Glob `**/*server*.{py,ts}` and Read existing servers to extend rather than duplicate.
+- Server entry (`src/server.{py,ts}`) with the transport chosen in Step 2
+- One module per tool under `src/tools/` (schema, annotations, handler together); declared output types (Pydantic / Zod)
+- `pyproject.toml` or `package.json` pinned to the v2 SDK major (or `<2` if the user must stay on v1)
+- Contract tests per tool (`tests/`): schema rejects bad input with `isError`, happy path matches `outputSchema`, auth failure is typed
+- README: tool list with annotations, env vars, client config snippets for Claude Code and Codex

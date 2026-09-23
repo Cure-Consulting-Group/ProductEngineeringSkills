@@ -1,399 +1,126 @@
 # Release Management
 
-Manages the full release lifecycle for Android, iOS, and web applications. Covers versioning strategy, release checklists, staged rollouts, App Store Optimization (ASO), changelog generation, release monitoring, and Fastlane/CI automation. Every release is staged, monitored, and reversible.
+Outcome: a release plan (or executed release artifacts) for Android, iOS, and/or web in which
+every step is staged, monitored, and reversible. Done when the version numbers, the rollout
+schedule with halt thresholds, the rollback path per platform, and the release notes exist.
+Match length to the need; no filler sections.
 
-**Hard rules:**
-- Never ship to 100% on day one — staged rollouts are mandatory for mobile
-- Every release has a rollback plan (feature flags, staged rollout halt, or hotfix path)
-- Crash rate must be below threshold before advancing rollout percentage
-- Changelog is generated from conventional commits — no manual writing
-- Release branches are cut, never released directly from main
-- App store metadata (screenshots, descriptions) is version-controlled
+This skill owns the **Cure branch and release policy**; `ci-cd-pipeline` and
+`infrastructure-scaffold` implement it and link here rather than restating it.
+
+## Branch and release policy (Cure standard)
+
+- `main` is always releasable and auto-deploys to **staging** on merge.
+- **Production** deploys only from a version tag (`vX.Y.Z`) cut from `main` — or from a
+  `release/X.Y` branch when a release needs stabilization or a hotfix on an older line — and
+  runs in a CI `production` environment with manual approval.
+- Mobile production is always a staged rollout; never 100% on day one.
+- Every release names its rollback path before it ships (flag kill switch, rollout halt, or
+  roll-forward hotfix).
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Recent tags: !`git tag --sort=-creatordate 2>/dev/null | head -5 || echo "(no tags)"`
+- Commits since last tag: !`git log --oneline "$(git describe --tags --abbrev=0 2>/dev/null)..HEAD" 2>/dev/null | head -15 || echo "(none)"`
+- Versions: !`grep -hE "versionName|versionCode|MARKETING_VERSION|\"version\":" app/build.gradle.kts package.json *.xcodeproj/project.pbxproj 2>/dev/null | sort -u | head -6 || echo "(not found)"`
+- Release tooling: !`ls fastlane/Fastfile release-please-config.json .changeset .github/workflows/release*.yml 2>/dev/null || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify the Release
 
-## Step 1: Classify the Release Type
+| Type | Bump | Rollout | Sign-off |
+|------|------|---------|----------|
+| Major | X.0.0 | Internal → Beta → 1% → 10% → 50% → 100% | Full QA + stakeholder |
+| Minor | x.Y.0 | Internal → Beta → 5% → 25% → 100% | QA + team lead |
+| Patch | x.y.Z | Internal → 10% → 50% → 100% | QA |
+| Hotfix | x.y.Z | Internal → 25% → 100% (accelerated) | Engineering lead |
+| Beta / TestFlight | x.y.z-beta.N | Internal + opt-in testers | None external |
 
-| Type | Trigger | Version Bump | Rollout Strategy | Review Required |
-|------|---------|-------------|-----------------|-----------------|
-| Major | Breaking changes, redesign, platform update | X.0.0 | Internal → Beta → 1% → 10% → 50% → 100% | Full QA + stakeholder sign-off |
-| Minor | New features, non-breaking enhancements | x.Y.0 | Internal → Beta → 5% → 25% → 100% | QA + team lead sign-off |
-| Patch | Bug fixes, performance improvements | x.y.Z | Internal → 10% → 50% → 100% | QA sign-off |
-| Hotfix | Critical production bug, security fix | x.y.Z | Internal → 25% → 100% (accelerated) | Engineering lead sign-off |
-| Beta / TestFlight | Pre-release testing | x.y.z-beta.N | Internal testers + opt-in users | No external review needed |
+Also note whether the request is a **plan/checklist**, **automation setup**, or **rollback now** —
+it decides what Code/Artifact Generation produces.
 
 ## Step 2: Gather Context
 
-Before releasing, confirm:
+Ask only for what the auto-context didn't answer: platforms and channels (Play tracks,
+TestFlight, Vercel, Firebase Hosting), current production version per platform, flags tied to
+this release, accepted known issues, privacy-policy or data-safety changes, and new strings
+awaiting translation.
 
-1. **Platform(s)** — Android (Play Store), iOS (App Store), web (Vercel/Firebase Hosting), or multi-platform?
-2. **Current version** — what is the current production version on each platform?
-3. **Release cadence** — weekly, biweekly, monthly, or ad-hoc?
-4. **Distribution channels** — Play Store tracks (internal/closed/open/production), TestFlight, App Store, Vercel, Firebase Hosting?
-5. **Feature flags** — any flags that should be toggled with this release?
-6. **Known issues** — any known bugs shipping in this version (documented and accepted)?
-7. **Compliance** — any privacy policy or terms changes required with this version?
-8. **Localization** — new strings added? Translations complete for all supported locales?
+## Step 3: Versioning
 
-## Step 3: Versioning Strategy
+- SemVer for the user-visible version; pre-releases `1.2.0-beta.1`, `1.2.0-rc.1`.
+- **Android** `versionCode` = `MAJOR*10000 + MINOR*100 + PATCH` (2.5.3 → 20503). It must strictly
+  increase on every upload, so leave headroom: a rollback build of 2.5.2 code ships as 2.5.4
+  (20504), never as 20502.
+- **iOS** build number = CI build number (ever-incrementing) — avoids duplicate-build rejections.
+- **Web**: tag `vX.Y.Z`; deploy label `X.Y.Z-<shortsha>`.
 
-### Semantic Versioning (SemVer)
+## Step 4: Release Checklist (gotchas only — the model knows the generic list)
 
-```
-Format: MAJOR.MINOR.PATCH
+**Android:** archive the R8 mapping file; include a baseline profile; update the Data safety form
+when data collection changed; the base module's compressed per-device download must stay under
+Play's 200 MB cap (move extras to Play Feature/Asset Delivery). Rollout: 1% day 0 → 5% day 1
+(if crash < 1%, ANR < 0.5%) → 10% day 2 → 25% day 3 → 50% day 5 → 100% day 7.
 
-MAJOR:  Breaking changes to user-facing behavior or API contracts
-        Examples: complete UI redesign, removed features, auth system change
-MINOR:  New features, non-breaking enhancements
-        Examples: new screen, new settings option, new API endpoint
-PATCH:  Bug fixes, performance improvements, copy changes
-        Examples: crash fix, typo correction, loading speed improvement
+**iOS:** archive dSYMs; external TestFlight groups need beta review (allow 1–2 days); update
+privacy nutrition labels; add review notes with a test account. Phased release is fixed at 7
+days (1/2/5/10/20/50/100%) and only affects automatic updates — manual updaters get it at once.
 
-Pre-release:  1.2.0-beta.1, 1.2.0-rc.1
-Build meta:   1.2.0+build.456 (informational only, no precedence)
-```
+**Web:** E2E against the preview deployment; Lighthouse Performance > 90, Accessibility > 95;
+production env vars verified; promote the reviewed preview rather than rebuilding.
 
-### Android Version Mapping
+## Step 5: Rollback Paths
 
-```
-versionName: "2.5.3"              // User-visible version (SemVer)
-versionCode: 20503                // Play Store integer (must always increase)
+| Platform | Fastest | Full rollback |
+|---|---|---|
+| Android | Remote-config kill switch; halt staged rollout in Play Console (stops new installs) | Play will not re-promote an older build: rebuild the last good code with a **higher** `versionCode` and roll it out, or roll forward with a fix |
+| iOS | Kill switch; pause phased release | Approved versions can't be pulled — submit a fix and request expedited review |
+| Vercel | Instant rollback to the previous production deployment | Same |
+| Firebase Hosting | Console → Release history → Roll back | `firebase hosting:clone SITE_ID@VERSION_ID SITE_ID:live` |
 
-Version code formula:
-  MAJOR * 10000 + MINOR * 100 + PATCH
-  2.5.3  → 20503
-  2.5.4  → 20504
-  2.6.0  → 20600
-  3.0.0  → 30000
+Decision matrix: crash rate > 2× baseline → halt and investigate; > 5× or any data loss/corruption
+→ roll back now; ANR > 0.47% → halt; API error rate up > 1 pt → halt; revenue down > 10% vs
+forecast → halt; rating down > 0.3 stars → PM decides; security vulnerability → hotfix or roll back.
 
-For multi-ABI builds, add ABI offset:
-  arm64-v8a:  versionCode + 0
-  armeabi-v7a: versionCode + 1
-  x86_64:     versionCode + 2
+## Step 6: Changelogs and Release Notes
 
-// build.gradle.kts
-android {
-    defaultConfig {
-        versionName = "2.5.3"
-        versionCode = 20503
-    }
-}
-```
-
-### iOS Version Mapping
-
-```
-CFBundleShortVersionString: "2.5.3"   // User-visible version (SemVer)
-CFBundleVersion: "1"                   // Build number (reset per version or ever-incrementing)
-
-Strategy A: Reset build number per version (simpler)
-  2.5.3 (1), 2.5.3 (2) — for TestFlight iterations
-  2.5.4 (1) — reset on version bump
-
-Strategy B: Ever-incrementing build number (CI-friendly)
-  2.5.3 (456), 2.5.3 (457), 2.5.4 (458)
-  Build number = CI build number (always unique)
-
-Recommendation: Strategy B — avoids accidental duplicate build numbers
-```
-
-### Web Versioning
-
-```
-package.json version: "2.5.3"
-Git tag: v2.5.3
-Deploy label: deploy-2.5.3-abc1234 (version + short SHA)
-
-Vercel: automatic preview deployments per PR, promote to production
-Firebase Hosting: firebase deploy --only hosting (version in channel)
-```
-
-## Step 4: Release Checklist
-
-### Android Release Checklist
-
-```
-Pre-Release:
-  - [ ] Version bumped (versionName + versionCode) in build.gradle.kts
-  - [ ] All features complete and merged to release branch
-  - [ ] Feature flags configured for this version
-  - [ ] Translations complete for all supported locales
-  - [ ] ProGuard/R8 mapping file archived (for crash symbolication)
-  - [ ] QA sign-off on release candidate build
-
-Build & Test:
-  - [ ] Release build generated (signed with production keystore)
-  - [ ] Unit tests passing (100%)
-  - [ ] Instrumented tests passing on target API levels (min, target, latest)
-  - [ ] Lint checks passing with zero errors
-  - [ ] App size within budget (<50MB APK, <150MB AAB with on-demand modules)
-  - [ ] Baseline profile included (for startup performance)
-
-Play Store:
-  - [ ] Internal testing track upload → team verification (1-2 days)
-  - [ ] Closed testing track upload → beta testers (2-3 days)
-  - [ ] Production track upload → staged rollout (1% start)
-  - [ ] Release notes written (user-facing, per locale)
-  - [ ] What's New text updated
-  - [ ] Screenshots updated (if UI changed)
-  - [ ] Content rating questionnaire current
-  - [ ] Data safety section current
-
-Staged Rollout (Production):
-  Day 0:  1% rollout   — monitor crash rate, ANR rate, error rate
-  Day 1:  5% rollout   — if crash rate <1%, ANR <0.5%
-  Day 2:  10% rollout  — review user ratings and crash reports
-  Day 3:  25% rollout  — confirm no regression in key metrics
-  Day 5:  50% rollout  — broader monitoring
-  Day 7:  100% rollout — or halt if issues detected
-
-Rollback:
-  - Halt staged rollout in Play Console (instant — stops new users)
-  - If critical: promote previous version to 100%
-  - Feature flag kill switch for specific features
-```
-
-### iOS Release Checklist
-
-```
-Pre-Release:
-  - [ ] Version bumped (CFBundleShortVersionString + CFBundleVersion)
-  - [ ] All features complete and merged to release branch
-  - [ ] Feature flags configured for this version
-  - [ ] Translations complete for all supported locales
-  - [ ] dSYM files archived (for crash symbolication)
-  - [ ] QA sign-off on TestFlight build
-
-Build & Test:
-  - [ ] Archive build generated (signed with distribution certificate)
-  - [ ] Unit tests passing (100%)
-  - [ ] UI tests passing on target device matrix (iPhone, iPad if universal)
-  - [ ] SwiftLint/SwiftFormat passing with zero errors
-  - [ ] App size within budget (check App Thinning report)
-  - [ ] Memory profiling clean (no leaks in Instruments)
-
-TestFlight:
-  - [ ] Upload to App Store Connect
-  - [ ] Internal testers notified (auto-distributed)
-  - [ ] External TestFlight group updated (requires beta review)
-  - [ ] Beta testing period: 5-7 days minimum
-  - [ ] TestFlight crash reports reviewed
-
-App Store Submission:
-  - [ ] App Store review submission
-  - [ ] What's New text written (per locale)
-  - [ ] Screenshots updated (if UI changed, all device sizes)
-  - [ ] App preview video updated (if applicable)
-  - [ ] Privacy nutrition labels current
-  - [ ] In-app purchases / subscriptions configured
-  - [ ] Review notes for Apple (explain new features, provide test account)
-
-Phased Release:
-  Day 1:  1% of users
-  Day 2:  2% of users
-  Day 3:  5% of users
-  Day 4:  10% of users
-  Day 5:  20% of users
-  Day 6:  50% of users
-  Day 7:  100% of users
-
-  Note: Apple's phased release only applies to auto-updates.
-  Users who manually update will get the new version immediately.
-
-Rollback:
-  - Pause phased release (stops auto-updates)
-  - Cannot remove a version once approved — must submit a new version
-  - Expedited review available for critical fixes (use sparingly)
-  - Feature flag kill switch is the fastest rollback
-```
-
-### Web Release Checklist
-
-```
-Pre-Release:
-  - [ ] Version bumped in package.json
-  - [ ] All features complete and merged to release branch
-  - [ ] Feature flags configured
-  - [ ] Translations complete
-  - [ ] Environment variables verified for production
-
-Build & Test:
-  - [ ] Production build succeeds (next build)
-  - [ ] Unit tests passing (Vitest)
-  - [ ] E2E tests passing (Playwright against preview deployment)
-  - [ ] Lighthouse score within budget (Performance >90, Accessibility >95)
-  - [ ] Bundle size within budget (check with next/bundle-analyzer)
-  - [ ] No TypeScript errors
-
-Deployment:
-  Vercel:
-    - [ ] Preview deployment reviewed and approved
-    - [ ] Promote preview → production
-    - [ ] Verify production URL loads correctly
-    - [ ] CDN cache invalidated for changed assets
-
-  Firebase Hosting:
-    - [ ] firebase deploy --only hosting
-    - [ ] Verify live site
-    - [ ] Previous version available for instant rollback
-
-Rollback:
-  - Vercel: instant rollback to previous deployment
-  - Firebase Hosting: firebase hosting:clone PREVIOUS_VERSION live
-  - Feature flag kill switch for specific features
-```
-
-## Step 5: App Store Optimization (ASO)
-
-See [reference/details.md](reference/details.md) (section “Step 5: App Store Optimization (ASO)”) for full detail.
-
-## Step 6: Changelog Generation
-
-### Conventional Commits
-
-```
-Commit format:
-  type(scope): description
-
-  [optional body]
-
-  [optional footer: BREAKING CHANGE, Closes #123]
-
-Types:
-  feat:     New feature (→ MINOR bump)
-  fix:      Bug fix (→ PATCH bump)
-  perf:     Performance improvement (→ PATCH bump)
-  docs:     Documentation only
-  style:    Code style (formatting, no logic change)
-  refactor: Code change that neither fixes nor adds
-  test:     Adding or correcting tests
-  chore:    Build process, dependencies, CI changes
-  ci:       CI configuration changes
-
-Breaking changes:
-  feat!: remove legacy auth flow           (→ MAJOR bump)
-  feat(auth): new login screen
-
-  BREAKING CHANGE: Legacy email/password login has been removed.
-  Users must re-authenticate with the new OAuth flow.
-```
-
-### Automated Changelog Generation
-
-```
-User-facing changelog (for app stores):
-  - Include only feat and fix commits
-  - Group by category: "New Features", "Bug Fixes", "Performance"
-  - Write in user-friendly language (not technical commit messages)
-  - Maximum 500 characters for Play Store "What's New"
-  - Maximum 4000 characters for App Store "What's New"
-
-Developer changelog (for GitHub releases):
-  - Include all commit types
-  - Group by type
-  - Include PR links and contributor attribution
-  - Auto-generated via release-please or standard-version
-
-Template (user-facing):
-  What's New in v2.5.3:
-
-  New Features
-  - Redesigned profile page with customizable themes
-  - Added export to PDF for reports
-
-  Improvements
-  - Faster app startup (30% improvement)
-  - Smoother scrolling in long lists
-
-  Bug Fixes
-  - Fixed crash when opening notifications on Android 14
-  - Fixed incorrect total on order summary page
-```
+Two outputs, deliberately different:
+- **Developer changelog** (`CHANGELOG.md`, GitHub release) — generated from Conventional Commits
+  by release-please (or Changesets in JS monorepos). Don't hand-edit it; fix the commit messages.
+  (standard-version is deprecated.)
+- **User-facing release notes** (store "What's new") — a human curates these from the `feat`/`fix`
+  entries in plain language. Limits: Play 500 characters per locale, App Store 4,000.
 
 ## Step 7: Release Monitoring
 
-### Crash Rate Thresholds
+- Android vitals bad-behavior thresholds: user-perceived crash rate 1.09%, ANR 0.47%. Cure
+  targets: crash < 0.5%, ANR < 0.2%.
+- iOS: crash rate < 1% of sessions (target < 0.3%); watch hangs, terminations, disk writes.
+- Web: JS error rate < 0.1% of page loads; Core Web Vitals LCP < 2.5 s, INP < 200 ms, CLS < 0.1.
+- Alerts: crash > 2× baseline after rollout start → page on-call; > 3× → auto-halt; rating
+  drop > 0.2 stars in 48 h → product team.
 
-```
-Android (Play Console vitals):
-  - User-perceived crash rate: <1.09% (Play Console bad behavior threshold)
-  - User-perceived ANR rate: <0.47% (Play Console bad behavior threshold)
-  - Target: crash rate <0.5%, ANR rate <0.2%
+## Step 8: ASO and Fastlane
 
-iOS (Xcode Organizer / App Store Connect):
-  - Crash rate: <1% of sessions
-  - Target: crash rate <0.3%
-  - Monitor: terminations, disk writes, hangs
+Read [reference/details.md](reference/details.md) when the request covers store listing
+optimization (section "Step 5: App Store Optimization") or release automation — Fastlane lanes
+and the tag-triggered GitHub Actions release workflow (section "Step 8: Fastlane / CI Automation").
 
-Web:
-  - JavaScript error rate: <0.1% of page loads
-  - Core Web Vitals: LCP <2.5s, FID <100ms, CLS <0.1
-  - Target: zero unhandled promise rejections in production
+## Code/Artifact Generation
 
-Alerting:
-  - Crash rate >2x baseline after rollout start → page on-call
-  - Crash rate >3x baseline → halt rollout automatically
-  - New crash cluster (>100 occurrences in 1 hour) → alert release owner
-```
+Applies only when Step 1 identified **automation setup**. A plan/checklist request gets the plan;
+a **rollback now** request gets the Step 5 commands for the affected platform, nothing else.
+Check existing release config and `git tag --list` first, then write only what's missing:
 
-### Review Sentiment Monitoring
+| File | When |
+|---|---|
+| `fastlane/Fastfile` (beta + production lanes) | Mobile |
+| `release-please-config.json` + workflow, or `.changeset/` | No changelog automation yet |
+| `.github/workflows/release.yml` (tag-triggered, `production` environment approval) | No release workflow yet |
+| `scripts/bump-version.sh` | Version codes computed by hand today |
 
-```
-Monitor after each release:
-  - Play Store rating trend (7-day moving average)
-  - App Store rating trend
-  - New 1-star reviews mentioning recent changes
-  - Support ticket volume (compare to pre-release baseline)
+## Cross-References
 
-Automated alerts:
-  - Average rating drops >0.2 stars in 48 hours → alert product team
-  - 1-star review spike (>3x normal) → alert release owner
-  - "crash", "broken", "update" keyword spike in reviews → alert engineering
-
-Tools:
-  - AppFollow or AppBot for review monitoring
-  - Play Console "Ratings and reviews" dashboard
-  - App Store Connect "Ratings and Reviews"
-```
-
-### Rollback Decision Matrix
-
-```
-┌──────────────────────┬──────────────────┬──────────────────────────────┐
-│ Signal               │ Threshold        │ Action                       │
-├──────────────────────┼──────────────────┼──────────────────────────────┤
-│ Crash rate           │ >2x baseline     │ Halt rollout, investigate    │
-│ Crash rate           │ >5x baseline     │ Rollback immediately         │
-│ ANR rate (Android)   │ >0.47%           │ Halt rollout, investigate    │
-│ Error rate (API)     │ >1% increase     │ Halt rollout, investigate    │
-│ Revenue drop         │ >10% vs forecast │ Halt rollout, investigate    │
-│ Rating drop          │ >0.3 stars       │ Alert PM, consider halt      │
-│ Security vulnerability│ Any severity    │ Hotfix or rollback           │
-│ Data loss / corruption│ Any occurrence  │ Rollback immediately         │
-└──────────────────────┴──────────────────┴──────────────────────────────┘
-```
-
-## Step 8: Fastlane / CI Automation
-
-See [reference/details.md](reference/details.md) (section “Step 8: Fastlane / CI Automation”) for full detail.
-
-## Code Generation (Required)
-
-Generate actual release automation files using Write:
-
-1. **Fastlane** (if mobile): `fastlane/Fastfile` with lanes for beta and production
-2. **Changelog**: `CHANGELOG.md` with Keep a Changelog format, populated from git log
-3. **Version bump script**: `scripts/bump-version.sh` for semantic versioning
-4. **Release workflow**: `.github/workflows/release.yml` with approval gates
-5. **Rollback script**: `scripts/rollback.sh` that reverts to previous tagged version
-
-Before generating, use Glob to find existing release configs and Grep git tags (`git tag --list`) to understand versioning history.
+`ci-cd-pipeline` (workflow implementation), `feature-flags` (kill switches), `observability`
+(rollout dashboards and alerts), `incident-response` (when a release causes an incident).

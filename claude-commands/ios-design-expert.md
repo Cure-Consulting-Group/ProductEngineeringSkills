@@ -1,122 +1,86 @@
 # iOS Design Expert — Apple Human Interface Guidelines
 
-Deep expertise in Apple Human Interface Guidelines for iOS, iPadOS, watchOS, and visionOS. Designs platform-native experiences that feel like they belong on Apple devices. Every recommendation is grounded in HIG specifications and SwiftUI/UIKit implementation patterns.
-
-**Related skills**: `product-design` (cross-platform fundamentals), `ios-architect` (code scaffolding), `accessibility-audit` (WCAG compliance)
+**Outcome:** a screen, component, or navigation spec (or a design review) that reads as native on iOS 26+ with Liquid Glass, with every state, Dynamic Type behavior, and accessibility detail an engineer needs to build it in SwiftUI. Done when the spec covers the items in the Step 4 contract for its type; code is written only when Step 1 says so.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
+- Deployment target: !`grep -rhoE "IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+|\.iOS\(\.v[0-9]+\)" --include=project.pbxproj --include=Package.swift . 2>/dev/null | sort -u | head -3 || echo "(not found)"`
+- Existing design system: !`find . -path ./node_modules -prune -o \( -path "*DesignSystem*" -o -path "*/Theme/*" \) -name "*.swift" -print 2>/dev/null | head -8`
+- Custom glass / bar backgrounds: !`grep -rlE "glassEffect|toolbarBackground|UITabBarAppearance|UINavigationBarAppearance" --include=*.swift . 2>/dev/null | head -5 || echo "(none)"`
 
 ## Step 1: Classify the Request
 
-| Request | Action |
-|---------|--------|
-| Screen design / layout | Design per HIG layout and navigation patterns |
-| Component design | Spec per HIG component guidelines with all states |
-| Navigation architecture | Design NavigationStack, TabView, sidebar patterns |
-| Typography / Dynamic Type | Spec type styles with full Dynamic Type support |
-| Color / materials / vibrancy | Define color scheme with system materials |
-| SF Symbols usage | Select and configure symbols with rendering modes |
-| Animation / motion | Design per HIG motion principles |
-| Haptics | Specify haptic feedback patterns |
-| Widget / Live Activity | Design per widget HIG and StandBy guidelines |
-| visionOS / spatial | Design for spatial computing paradigm |
-| Design-to-SwiftUI handoff | Generate SwiftUI implementation specs |
-| Design system for iOS | Build token-based design system for Apple platforms |
+| Request | Output |
+|---|---|
+| Screen design / layout | Screen spec (Step 4) |
+| Component design | Component spec with all states |
+| Navigation architecture | Navigation spec (tab bar, stacks, split view, sheets) |
+| Design review of existing UI | Findings list — every issue with severity, no code |
+| Liquid Glass adoption / iOS 26 migration | Migration findings + changes (Step 3.1) |
+| Typography, color, SF Symbols, haptics, motion | Focused spec for that dimension |
+| Widget / Live Activity | Widget spec per family |
+| "Build it" / design-to-SwiftUI handoff | Spec, then Code/Artifact Generation |
 
 ## Step 2: Gather Context
 
-1. **Platform(s)** — iOS only? iPadOS? watchOS? visionOS? Universal?
-2. **Deployment target** — iOS 17+ (enables latest HIG patterns) or earlier?
-3. **Feature/screen** — what is being designed?
-4. **Device classes** — iPhone only? iPhone + iPad? All Apple devices?
-5. **Existing design language** — established colors, typography, brand constraints?
-6. **Accessibility level** — WCAG AA (standard) or AAA (enhanced)?
-7. **Implementation framework** — SwiftUI (preferred) or UIKit?
+Ask only what the auto-context didn't answer: platforms (iPhone, iPad, visionOS), deployment target (below iOS 26 means two appearances to design for), SwiftUI vs UIKit, brand constraints, and accessibility target (WCAG 2.2 AA is the Cure default).
 
-## Step 3: HIG Design Principles (Always Apply)
+## Step 3: Cure Defaults and Current-Platform Rules (always apply)
 
-See [reference/details.md](reference/details.md) (section “Step 3: HIG Design Principles (Always Apply)”) for full detail.
+### 3.1 Liquid Glass (iOS 26+)
 
-## Step 4: Output Format
+- **Layering.** Liquid Glass is the functional layer for controls and navigation (tab bars, toolbars, sidebars, sheets) floating above content. Don't put it in the content layer (cards, list rows, app backgrounds) — use standard materials there. Exception per HIG: transient controls like sliders and toggles take on glass while active.
+- **Use standard components first.** Bars, sheets, popovers, and controls adopt glass automatically. Remove custom backgrounds on `NavigationStack`, `NavigationSplitView`, `toolbar`, `UITabBar`, `UINavigationBar` — they fight the system glass and the scroll-edge effect.
+- **Custom glass sparingly**, on the few most important functional elements: `.glassEffect()` (default `.regular` in a capsule), `.glassEffect(.regular.tint(…).interactive())`, `.glassEffect(in: .rect(cornerRadius:))`; group multiple glass views in a `GlassEffectContainer` for performance and morphing; buttons use `.buttonStyle(.glass)` / `.glassProminent`.
+- **Variants.** `regular` for anything with text (alerts, sidebars, popovers). `clear` only over visually rich media; add a ~35% dark dimming layer if the media underneath is bright.
+- **No glass on glass**, and don't tint bar items the same hue as colorful content — prefer a monochrome tab bar over busy content.
+- **Opt-out is gone.** `UIDesignRequiresCompatibility` was a temporary iOS 26 escape hatch; the system ignores it when building with the iOS 27 SDK. Plan the redesign rather than relying on it.
+- **Test** with Reduce Transparency, Increase Contrast, Reduce Motion, and the user's Liquid Glass look preference; custom glass must stay legible in all of them.
 
-### For Screen Specs
-```
-1. Screen purpose and user goal
-2. Navigation context (how user arrives, where they can go)
-3. Layout anatomy (regions, components, spacing — with pt values)
-4. All screen states: Loading (skeleton), Empty, Content, Error, Partial
-5. Size class adaptations (compact width vs regular width)
-6. Dynamic Type behavior at standard and accessibility sizes
-7. Dark mode appearance
-8. VoiceOver reading order and accessibility tree
-9. Haptic feedback points
-10. SwiftUI view hierarchy recommendation
-```
+### 3.2 Navigation and bars
 
-### For Component Specs
-```
-1. Component anatomy (named parts)
-2. All states: default, highlighted/pressed, focused, disabled, selected, loading, error
-3. Size variants and .controlSize options
-4. Spacing spec (internal padding, margins — in pt)
-5. Typography styles used (system text style names)
-6. Color tokens (semantic system colors)
-7. SF Symbol names and rendering modes
-8. Animation/transition spec
-9. Haptic feedback (if interactive)
-10. Accessibility: role, label pattern, traits, hints, custom actions
-11. SwiftUI implementation skeleton
-12. Dynamic Type scaling behavior
-```
+- Tab bar (iPhone) floats at the bottom on glass. It may **minimize on scroll** — `.tabBarMinimizeBehavior(.onScrollDown)` — and an accessory (mini-player style) goes in `.tabViewBottomAccessory { }`, moving inline when minimized. Minimizing is fine; *hiding* the tab bar during normal navigation is not (modal covers are the exception).
+- Search goes in a dedicated trailing search tab, `Tab(role: .search)`, or `.searchable()` in the navigation bar.
+- iPadOS: the tab bar sits at the top; use `.tabViewStyle(.sidebarAdaptable)` for complex apps, `NavigationSplitView` for sidebar-only.
+- 3–5 tabs; avoid the overflow "More" tab; never disable or hide tab items — explain empty sections instead. Tabs navigate; actions go in toolbars.
+- Don't hard-code bar heights (49pt tab bar, 44pt nav bar are no longer reliable with floating glass bars); lay out against safe areas and let content scroll under bars.
+- Never replace the system back button or break swipe-back. Large titles on top-level screens, inline on pushed detail.
 
-### For Navigation Architecture
-```
-1. Navigation hierarchy diagram
-2. Tab bar configuration (icons, labels, badge patterns)
-3. NavigationStack/NavigationSplitView structure
-4. Modal presentation strategy (sheets, alerts, full-screen covers)
-5. Deep link URL scheme
-6. State restoration strategy
-7. iPad adaptation (split view, sidebar)
-```
+### 3.3 Type, color, symbols, touch
 
-## Code Generation (Required)
+- System text styles only (`.body`, `.headline` …); custom fonts scale via `@ScaledMetric` / `UIFontMetrics`. Layouts must reflow at AX5, not truncate primary content.
+- Semantic colors (`.label`, `.systemBackground`, grouped variants); every custom color has light, dark, and increased-contrast variants in the asset catalog. Color never carries meaning alone.
+- SF Symbols matched to adjacent text style and weight; filled variants in tab bars.
+- 44×44pt minimum hit target; one prominent primary action per screen; destructive actions confirmed via `.confirmationDialog`.
+- Continuous (squircle) corners; concentric radii for nested shapes inside glass containers.
 
-When designing for iOS, generate actual SwiftUI code using Write:
+Read [reference/details.md](reference/details.md) when you need exact values: size-class matrix, the Dynamic Type size table, system color and material names, SF Symbol rendering modes and effects, haptic generator mapping, widget families, and Live Activity regions.
 
-1. **Theme**: `DesignSystem/Theme.swift` — custom environment values for colors, fonts, spacing
-2. **Colors**: `DesignSystem/Colors.swift` — Color extension with brand palette and semantic colors
-3. **Typography**: `DesignSystem/Typography.swift` — Font extension with custom text styles
-4. **Component**: `Components/{Component}View.swift` — HIG-compliant component with all states
-5. **Preview**: Embedded #Preview blocks in each component file
+## Step 4: Output Contract
 
-Before generating, Glob for existing design system files (`**/DesignSystem/**`, `**/Theme/**`) and extend.
+- **Screen spec:** purpose and user goal; how the user arrives and leaves; layout regions (pt, safe-area relative); states — loading (skeleton), empty, content, error, partial; compact vs regular width; Dynamic Type at default and AX sizes; dark mode and Reduce Transparency appearance; VoiceOver order; haptic points; SwiftUI view hierarchy.
+- **Component spec:** anatomy; states (default, pressed, focused, disabled, selected, loading, error); `.controlSize` variants; spacing; text styles; semantic colors; SF Symbols + rendering mode; glass usage (if any, with variant); motion; accessibility label/traits/hints/actions.
+- **Navigation spec:** hierarchy diagram; tab configuration (icons, labels, badges, minimize behavior, accessory); stack/split structure; modal strategy; deep-link scheme; state restoration; iPad adaptation.
+- **Review:** every finding with severity (blocker / major / minor) and the HIG rule it breaks; don't filter to "top issues".
 
-## Step 5: Anti-Patterns (Never Do These)
+Match length to the need; no filler sections or restated summaries.
 
-```
-✗ Custom back buttons that break swipe-to-go-back gesture
-✗ Hiding the tab bar during non-fullscreen flows
-✗ Non-standard navigation patterns (hamburger menus on iOS)
-✗ Fixed font sizes that ignore Dynamic Type
-✗ Custom alert/action sheet implementations instead of system .alert()/.confirmationDialog()
-✗ Pixel-based (px) dimensions instead of points (pt)
-✗ Circular corner radius instead of continuous (squircle) curves
-✗ Custom pull-to-refresh instead of .refreshable {}
-✗ Tab bar with more than 5 visible tabs
-✗ Using bottom sheets as primary navigation (that's Android/Material pattern)
-✗ Putting destructive actions in easy-to-tap positions without confirmation
-✗ Ignoring safe areas (content under status bar, home indicator)
-✗ Skip links (that's a web pattern — iOS uses VoiceOver rotor)
-✗ Material Design ripple effects (that's Android — iOS uses highlight/opacity feedback)
-✗ Text that doesn't reflow at large Dynamic Type sizes
-```
+## Code/Artifact Generation
+
+Applies only when Step 1 classified the request as build/handoff or the user asked for code. Extend the existing design system found in auto-context rather than creating a parallel one. Typical files: `DesignSystem/Theme.swift`, `Colors.swift`, `Typography.swift`, and `Components/<Component>View.swift` with `#Preview` blocks covering light/dark and an AX Dynamic Type size. Write only what was asked; don't refactor adjacent views.
+
+## Step 5: Anti-Patterns
+
+- Custom back buttons that break swipe-back; hamburger menus; bottom sheets as primary navigation (Android pattern).
+- Hiding the tab bar during regular navigation; more than 5 tabs; custom opaque backgrounds on bars that block Liquid Glass.
+- Liquid Glass in the content layer, glass stacked on glass, or custom glass on many controls.
+- Fixed font sizes; text that truncates instead of reflowing at large sizes; hard-coded bar heights.
+- Custom alerts/action sheets instead of `.alert()` / `.confirmationDialog()`; custom pull-to-refresh instead of `.refreshable`.
+- Material ripple effects, web skip links, px units.
+- Easy-to-hit destructive actions without confirmation; content under the status bar or home indicator.
+
+## Related
+
+`ios-architect` (code scaffolding) · `product-design` (cross-platform specs) · `design-studio` (brand and full systems) · `accessibility-audit` (WCAG verification) · `stitch-design` (Stitch-generated screens)

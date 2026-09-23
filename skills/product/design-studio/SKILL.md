@@ -1,7 +1,7 @@
 ---
 name: design-studio
-description: "Full design studio: brand identity, UX architecture, wireframes, native iOS/Android/web screens, design systems, motion, production assets, Adobe and Figma hand-off"
-when_to_use: "Use for any design assignment, from idea, sketch, PRD, logo, or existing app to screens, system, and assets. NOT for platform code alone or Storybook governance."
+description: "Full design studio: brand, UX architecture, screens, design systems, assets. Use for any design assignment, from idea, sketch, PRD, or existing app to screens and hand-off."
+when_to_use: "NOT for UI code alone (ios/android/web-design-expert), Storybook governance (design-system), a one-screen spec or review (product-design), or Stitch."
 argument-hint: "[assignment or brand/product name]"
 ---
 
@@ -9,9 +9,9 @@ argument-hint: "[assignment or brand/product name]"
 
 A design expert first and an asset generator second. The studio behaves as one team: creative director, brand designer, product designer, UX architect, interaction designer, mobile and web specialists, design systems designer, motion designer, accessibility designer, production designer. It takes a project from ambiguity through research, concept, architecture, design, system, production assets, and implementation-ready specification.
 
-The standard for every deliverable: **could this plausibly have shipped from a top-tier product design team or an award-winning digital studio?** "Good AI-generated UI" fails.
+The standard for every deliverable: **could this plausibly have shipped from a top-tier product design team or an award-winning digital studio?** "Good AI-generated UI" fails. Done when the Step 9 critique gate holds and the Step 10 folder is complete for the classified DEPTH — no more. Match written length to the need; no filler sections or restated summaries.
 
-Bundled tooling lives next to this file. In Claude Code the directory is `${CLAUDE_PLUGIN_ROOT}/skills/product/design-studio`; in Gemini or Antigravity it is `.agents/skills/design-studio`. Commands below use `$STUDIO` for that directory.
+Bundled tooling lives next to this file. In Claude Code the directory is `${CLAUDE_PLUGIN_ROOT}/skills/product/design-studio`; in other runtimes it is the directory containing this SKILL.md (e.g. `.agents/skills/design-studio`). Commands below use `$STUDIO` for that directory.
 
 ## Tools
 
@@ -27,7 +27,7 @@ Bundled tooling lives next to this file. In Claude Code the directory is `${CLAU
 | `templates/illustrator/build_brand_master.jsx` | Five artboards, layer architecture, CMYK and spot swatches, `.ai` and `.eps` save | Illustrator |
 | `templates/photoshop/update_mockup.jsx` | Smart Object replacement in a PSD mockup, 300 DPI PNG export; refuses linked Smart Objects | Photoshop |
 
-Every script supports `--help`; none needs anything installed. None writes outside the paths you pass it. Nothing sends data anywhere except `figma_sync.py --apply` (api.figma.com) and `design_review_panel.py --run` (the local CLIs). Before every bridge call: print the full `.jsx`, state what it creates or overwrites, and wait for the user to confirm.
+Every script supports `--help` and is Python stdlib only; external needs are listed in the table above. None writes outside the paths you pass it. Nothing sends data anywhere except `figma_sync.py --apply` (api.figma.com) and `design_review_panel.py --run` (the local CLIs). Before every bridge call: print the full `.jsx`, state what it creates or overwrites, and wait for the user to confirm.
 
 ## References (read the ones the assignment needs)
 
@@ -44,15 +44,13 @@ Every script supports `--help`; none needs anything installed. None writes outsi
 
 ## Pre-Processing (Auto-Context)
 
-Values are injected inline; in an environment that does not execute them, run the commands.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Design context: !`cat DESIGN.md design/DESIGN.md 2>/dev/null | head -60 || echo "(no DESIGN.md)"`
-- Existing assets: !`ls design/ brand/ assets/brand/ public/brand/ tokens.json 2>/dev/null | head -20 || echo "(none)"`
-- Stack: !`head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Portfolio: !`sed -n '1,30p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
+- Design files: !`ls DESIGN.md design/DESIGN.md tokens.json design/tokens.json 2>/dev/null | head -4 | grep . || echo "(no DESIGN.md or tokens)"`
+- Existing assets: !`ls -d design/ brand/ assets/brand/ public/brand/ 2>/dev/null | head -4 | grep . || echo "(none)"`
+- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
 
-Honour what exists: an existing DESIGN.md, token file, or component library overrides every default below.
+Read any DESIGN.md or token file listed before Step 1. Honour what exists: an existing DESIGN.md, token file, or component library overrides every default below. Read PORTFOLIO.md when the work is for a portfolio brand.
 
 ## Step 1: Classify the assignment
 
@@ -96,14 +94,14 @@ Design every state. Empty and error states are designed screens with a next step
 
 ## Step 6: Systemise
 
-Write `design/tokens.json` in W3C format with primitive, semantic, and component tiers (`references/w3c_token_schema.json` is the starter); specify components with the template in `design-system-spec.md` §3; state the cross-platform mapping. Verify:
+Write `design/tokens.json` in W3C Design Tokens (DTCG) format — `$value`/`$type`, never Style Dictionary's legacy `value` — with primitive, semantic, and component tiers (`references/w3c_token_schema.json` is the starter); specify components with the template in `design-system-spec.md` §3; state the cross-platform mapping. Verify:
 
 ```bash
 python3 "$STUDIO/scripts/tokens_lint.py" --tokens design/tokens.json --modes light,dark
 python3 "$STUDIO/scripts/contrast_check.py" --tokens design/tokens.json     # pairs by convention, per mode
 ```
 
-For Storybook, Showkase, SwiftUI catalogues, and governance, hand the tokens and component specs to `design-system`.
+This skill is the library's source of truth for token format and tiers. For Storybook, Showkase, SwiftUI catalogues, and governance, hand the tokens and component specs to `design-system`.
 
 ## Step 7: Produce the work
 
@@ -123,7 +121,7 @@ Applies at `flow`, `product`, and `identity` depth. Creative Director, Product/U
 python3 "$STUDIO/scripts/design_review_panel.py" --brief design/brief.md --artifacts "design/**/*.md" "design/**/*.json" "design/**/*.html" --out design/review --emit
 ```
 
-In Claude Code run the three prompts as parallel subagents; with `cure-tri-lane` installed send the UX prompt to `codex-reviewer` and the systems prompt to `antigravity-analyst` so each verdict comes from a different model family; in a terminal with the CLIs, add `--run`. Label every finding Confirmed, Disputed, or Unverified; decide conflicts by the register and the ten questions; fold the strongest ideas into one direction. One panel per deliverable.
+If your runtime supports subagents, run the three prompts as three parallel subagents (no more); with `cure-tri-lane` installed send the UX prompt to `codex-reviewer` and the systems prompt to `antigravity-analyst` so each verdict comes from a different model family; in a terminal with the CLIs, add `--run`. Label every finding Confirmed, Disputed, or Unverified; decide conflicts by the register and the ten questions; fold the strongest ideas into one direction. One panel per deliverable.
 
 ## Step 9: Critique gate
 

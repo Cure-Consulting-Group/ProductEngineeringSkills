@@ -1,7 +1,7 @@
 ---
 name: rfp-evaluation
-description: "Evaluate an RFP/RFQ/ITB — extract every requirement, build the compliance matrix, map the scoring rubric to effort, track addenda"
-when_to_use: "Use when a solicitation has PASSED triage and you need to know what it requires and where the points are. NOT for first-pass screening (use solicitation-triage). NOT for the go/no-go call (use bid-decision). NOT for writing the response (use proposal-generator)."
+description: "Extracts every requirement from an RFP/RFQ into a compliance matrix and maps the rubric to effort. Use when a solicitation has passed triage and you need what it requires."
+when_to_use: "NOT for first-pass screening (use solicitation-triage), the go/no-go (use bid-decision), or drafting the response (use proposal-generator)."
 argument-hint: "[solicitation-number]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
 ---
@@ -14,7 +14,7 @@ The governing insight: **public-sector proposals are scored against a rubric by 
 
 ## Pre-Processing (Auto-Context)
 
-Solicitation context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them, run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
 - Bid folder: !`ls -d */ 2>/dev/null | head -10`
 - Source documents: !`ls *.pdf 00-source/*.pdf 2>/dev/null | head -20`
@@ -34,7 +34,7 @@ done
 
 `-layout` is mandatory — it preserves table columns, and requirement matrices and cost forms are always tables. Without it, requirement IDs separate from their text and the extraction is useless.
 
-If `pdftotext` is unavailable: `python3 -c "import pypdf"` then extract per page. If the PDF is a scan with no text layer, say so explicitly and stop — OCR output is not reliable enough to build a compliance matrix from.
+`00-source/` is the layout `solicitation-triage` already created; if triage extracted the text, skip this step. If `pdftotext` (poppler) is unavailable, use `pypdf` only if it is already installed, or macOS `textutil`/Preview export as a fallback. If the PDF is a scan with no text layer, say so explicitly and stop — OCR output is not reliable enough to build a compliance matrix from.
 
 ## Step 1: Classify the solicitation
 
@@ -173,7 +173,7 @@ Addenda change requirements, deadlines, and scope, and **failing to acknowledge 
 - Add an acknowledgement row to the compliance checklist for each
 - **Add a row for addenda not yet issued** if the buyer has signaled more are coming
 - Re-check the portal at T-24h and again on submission morning
-- When one lands, diff it against the base: `diff <(cat old.txt) <(cat new.txt)`
+- When one lands, extract it and diff against the base: `diff old.txt new.txt`
 
 If a pending addendum will answer questions material to pricing or scope, **do not finalize pricing before it lands**. Note this as a standing risk.
 
@@ -187,9 +187,10 @@ End the evaluation with an explicit uncertainty list. For each item: what is amb
 
 **"The RFI window has closed" is a material finding, not a footnote.** It means you are bidding blind on every ambiguity and cannot shape any requirement. Say so prominently.
 
-## Artifact Generation (Required)
+## Code/Artifact Generation
 
-Generate using Write, in the bid folder:
+Applies to a full evaluation (the usual case); a narrow question — "is there a page limit?" — gets
+the answer with its citation. In the bid folder:
 
 1. `01-analysis/requirements-matrix.md` — every requirement, verbatim, with complexity and response columns
 2. `01-analysis/compliance-checklist.md` — the responsiveness gate, fully cited
@@ -211,7 +212,6 @@ Generate using Write, in the bid folder:
 ## Handoff
 
 - This solicitation had not been screened → `solicitation-triage`
-
 - Go/no-go decision → `bid-decision`
 - Contract terms and insurance → `public-sector-contracting`
 - Effort and cost → `technical-estimation`, then `engineering-cost-model`

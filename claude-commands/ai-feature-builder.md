@@ -1,201 +1,97 @@
 # AI Feature Builder
 
-Build production AI features: LLM integration, RAG pipelines, voice/vision, and intelligent automation. Ship AI that's reliable, cost-aware, and safe — not a demo.
+**Outcome:** a shipped-quality AI feature in the product — typed LLM client, versioned prompts, streaming UI where it helps, a tested fallback path, a remote kill switch, and the responsible-AI checklist signed off. Done when the feature degrades gracefully with the model unavailable and can be turned off without a deploy.
+
+This skill is the entry point and router for AI features. It owns the product-side wiring; the specialist skills own their domains:
+
+| Need | Owner |
+|------|-------|
+| Single call vs workflow vs agent | `agent-workflow-designer` |
+| Agent tools, memory, termination | `agent-designer` |
+| Retrieval, chunking, embeddings, reranking | `rag-architect` |
+| Cost tracking, budgets, routing, eval pipelines, prompt versioning in prod | `llmops` |
+| PHI, HIPAA, BAAs | `compliance-architect` |
+
+Deliver the requested feature. This skill owns `src/llm/client.ts`, `src/llm/prompts/`, and `src/llm/guardrails.ts`; cost tracking, budgets, and routing (`src/llm/cost-tracker.ts`, `budget.ts`, `router.ts`) belong to llmops — one owner per path.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Stack: !`ls package.json pyproject.toml requirements.txt build.gradle.kts Package.swift 2>/dev/null | head -5 || echo "(none detected)"`
+- Existing LLM code: !`grep -rlE "@anthropic-ai|anthropic|openai|@google/genai|google.genai|vertexai|ai-sdk|from 'ai'" --include=*.ts --include=*.tsx --include=*.py --include=*.kt --include=*.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | head -8 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+Extend an existing client wrapper rather than adding a second one.
 
-Additionally gather (domain-specific):
-- Grep for existing LLM usage: `openai|anthropic|gemini|Claude|GPT|completion|embedding` to understand current AI integration
+## Step 1: Classify the Feature
 
-## Code Generation (Required)
-
-You MUST generate actual implementation code using Write, not just describe patterns:
-
-1. **LLM client wrapper**: `src/llm/client.ts` — type-safe wrapper with retry, timeout, streaming support
-2. **Prompt templates**: `src/llm/prompts/{feature}.ts` — versioned prompt templates with variable injection
-3. **Guardrails**: `src/llm/guardrails.ts` — input validation, output parsing, PII detection, content filtering
-4. **Cost tracker**: `src/llm/cost-tracker.ts` — token counting and cost logging middleware
-5. **Eval tests**: `tests/llm/{feature}.eval.ts` — golden dataset tests for prompt quality
-6. **RAG pipeline** (if applicable): `src/llm/rag/` — embedder, vector store client, retriever, reranker
-
-Before generating, Grep for existing LLM code and Read it to extend rather than duplicate.
-
-## Step 1: Classify the AI Feature Type
-
-| Feature | Architecture |
-|---------|-------------|
-| Chatbot / conversational | LLM + conversation memory + streaming UI |
-| Document processing | Upload → OCR/parse → LLM extract → structured output |
-| Smart search | Embeddings + vector DB + semantic search |
-| Recommendations | User data → embedding similarity → ranked results |
-| Content generation | LLM + prompt template + guardrails + human review |
-| Voice interaction | Speech-to-text → LLM → text-to-speech |
-| Image/vision analysis | Vision model → structured extraction |
-| Workflow automation | Trigger → LLM decision → action → verification |
-| RAG (retrieval-augmented) | Query → retrieve context → LLM with context → response |
+| Feature | Shape | Route elsewhere when… |
+|---------|-------|----------------------|
+| Chat / assistant | LLM + conversation state + streaming UI | it answers from your documents → `rag-architect` |
+| Document processing | Parse → LLM extract → schema-validated output | — |
+| Content generation | Prompt template + human review before publish | — |
+| Classification / tagging | Single call, structured output, small tier | — |
+| Voice | STT → LLM → TTS; latency budget per hop | — |
+| Vision | Vision-capable model → structured extraction | — |
+| Semantic search / Q&A over docs | — | always → `rag-architect` |
+| Multi-step actions with tools | — | → `agent-workflow-designer`, then `agent-designer` |
 
 ## Step 2: Gather Context
 
-1. **Feature description** — what should the AI do for the user?
-2. **Model provider** — OpenAI, Google Gemini, Anthropic Claude, or open-source?
-3. **Latency tolerance** — real-time (<2s), near-real-time (<10s), async (background)?
-4. **Data sensitivity** — PII, financial, health, children? (determines guardrails)
-5. **Volume** — expected requests per day/hour?
-6. **Budget** — cost ceiling per request or per month?
-7. **Fallback** — what happens when the AI fails or returns garbage?
+Ask only what isn't known: what the user gets from the feature; provider (and whether a BAA/DPA is needed); latency tolerance (<2s, <10s, background); data sensitivity (PII, financial, health, minors); volume; cost ceiling; what the user sees when the model fails.
 
-## Step 3: Architecture Patterns
+## Step 3: Cure Implementation Rules
 
-### Direct LLM Call (simplest)
-```
-User Input → Prompt Template → LLM API → Parse Response → UI
-```
-Use for: content generation, simple Q&A, classification
+**Prompts**
+- User input goes in the user turn, never concatenated into the system prompt.
+- Request structured output via the provider's native structured-output or strict-tool mode, and validate with a schema (Zod/Pydantic) anyway. Newer Claude models reject forced `tool_choice` (`any`/`tool`) — use `auto` + strict tools or structured outputs.
+- Don't tune temperature by habit: newer Claude models (Opus 5 and later) reject sampling parameters and steer depth with `effort` instead (verified 2026-09-23, platform.claude.com/docs/en/models/opus-5-5/migration-guide). Check other providers' docs per model.
+- Prompts are versioned files (`src/llm/prompts/{feature}.ts` or equivalent) with an ID logged on every call, so llmops can attribute regressions.
 
-### RAG (Retrieval-Augmented Generation)
-```
-User Query
-  → Embed query (text-embedding model)
-  → Search vector DB (Pinecone, Firestore vector, pgvector)
-  → Retrieve top-K relevant chunks
-  → Construct prompt: system + context chunks + user query
-  → LLM generates answer grounded in retrieved context
-  → Response with source citations
-```
-Use for: knowledge bases, documentation search, domain-specific Q&A
+**Model choice** — describe the tier (small/mid/frontier), not a model name baked into code; read the model ID from config so it can change without a deploy. Check the provider's current lineup at build time (Anthropic: platform.claude.com/docs/en/models/overview).
 
-### Agent / Multi-Step
-```
-User Request
-  → LLM plans steps (tool selection)
-  → Execute tool 1 → result
-  → Execute tool 2 → result
-  → LLM synthesizes final response
-```
-Use for: complex workflows, multi-source data, actions with side effects
+**Streaming** — stream anything conversational or longer than ~2s. Show a typing indicator until the first token; render partial output if the stream breaks, with a retry affordance.
 
-## Step 4: Implementation Rules
-
-### Prompt Engineering
-- **System prompt**: define role, constraints, output format. Keep under 500 tokens
-- **Few-shot examples**: include 2-3 input/output examples for complex tasks
-- **Output format**: always request structured output (JSON) for programmatic use
-- **Temperature**: 0-0.3 for factual/extraction, 0.7-1.0 for creative
-- **Never** put user input directly into system prompt — always in the user message
-
-### Guardrails (Non-Negotiable)
-```
-Input guardrails:
-  - Validate input length (reject > max tokens)
-  - Sanitize PII before sending to external LLM (if required by policy)
-  - Rate limit per user (prevent abuse / cost spikes)
-  - Content moderation on user input (if public-facing)
-
-Output guardrails:
-  - Parse structured output with schema validation (Zod)
-  - Reject responses that fail schema validation → fallback
-  - Content filtering on LLM output (profanity, harmful content)
-  - Confidence thresholds — low confidence → human review queue
-  - Never display raw LLM output without parsing
-```
-
-### Cost Management
-```
-Per-request cost formula:
-  (input_tokens × input_price) + (output_tokens × output_price)
-
-Cost controls:
-  - Set max_tokens on every request (prevents runaway responses)
-  - Cache identical requests (hash prompt → cache response, TTL 1hr+)
-  - Use smaller models for simple tasks (classification, extraction)
-  - Use larger models only for complex reasoning
-  - Log token usage per feature for cost attribution
-  - Set monthly budget alerts
-```
-
-### Streaming Responses
-```typescript
-// For chat/conversational features — always stream
-// Users perceive streaming as faster even when total time is the same
-
-// Server: return ReadableStream
-// Client: consume with async iterator, render token-by-token
-// Show typing indicator while first token loads
-// Handle stream interruption gracefully (partial response display)
-```
-
-## Step 5: Data Pipeline for RAG
+**Failure handling**
 
 ```
-Document Ingestion:
-  1. Upload document (PDF, DOCX, HTML, TXT)
-  2. Extract text (pdf-parse, mammoth, cheerio)
-  3. Chunk text (500-1000 tokens per chunk, 100 token overlap)
-  4. Generate embeddings (text-embedding-3-small or equivalent)
-  5. Store in vector DB with metadata (source, page, date)
-
-Query Pipeline:
-  1. Embed user query with same model
-  2. Vector similarity search (top 5-10 chunks)
-  3. Re-rank results (optional, improves quality)
-  4. Construct prompt with retrieved context
-  5. Generate response with citations
+429           → exponential backoff (1s, 2s, 4s), max 3 retries, honor retry-after
+5xx           → retry once, then fallback
+timeout       → cancel at the latency budget, show fallback UI
+schema fail   → one repair attempt, then fallback
+Fallback order: same model retry → configured backup model/provider
+                → cached or deterministic answer → graceful manual path
+Never: crash, hang, or render raw model output or raw provider errors
 ```
 
-## Step 6: Error Handling & Fallbacks
+A backup provider needs its own prompt tuning and eval run — a prompt tuned on one family is not a drop-in on another.
 
-```
-LLM API errors:
-  - 429 Rate Limited → exponential backoff (1s, 2s, 4s, max 3 retries)
-  - 500/503 Server Error → retry once, then fallback
-  - Timeout (>30s) → cancel, show fallback UI
-  - Invalid response → log, show "I couldn't process that" message
+**Kill switch** — every AI feature sits behind a remote flag (Firebase Remote Config or LaunchDarkly; see `feature-flags`) that disables it without a redeploy and shows the manual path.
 
-Fallback hierarchy:
-  1. Retry with same model
-  2. Try backup model (e.g., GPT-4 fails → try Gemini)
-  3. Return cached similar response (if available)
-  4. Show graceful error with manual alternative
-  5. Never: crash, hang, or show raw error to user
-```
+## Step 4: Testing
 
-## Step 7: Testing AI Features
+- Unit: prompt rendering, output parsing (valid, malformed, empty), fallback selection.
+- Integration: record real responses and replay them (VCR pattern); simulate 429/5xx/timeout to exercise every fallback branch.
+- Quality: ship with a golden set of ≥20 cases; the recurring eval pipeline is `llmops`.
 
-```
-Unit tests:
-  - Prompt template generates correct string for given inputs
-  - Output parser handles valid JSON, malformed JSON, empty response
-  - Guardrails block known-bad inputs
-  - Cost calculation is accurate
+## Step 5: Responsible-AI Checklist (ship gate)
 
-Integration tests (use recorded responses):
-  - Record real LLM responses → replay in tests (VCR pattern)
-  - Test full pipeline: input → prompt → (recorded) response → parsed output
-  - Test fallback paths with simulated errors
-
-Evaluation tests:
-  - Maintain a golden dataset (input → expected output pairs)
-  - Run weekly eval: measure accuracy, hallucination rate, relevance
-  - Track eval scores over time (regression detection)
-```
-
-## Step 8: Responsible AI Checklist
-
-Before shipping any AI feature:
-- [ ] Users know they're interacting with AI (transparency)
-- [ ] AI-generated content is labeled as such
-- [ ] User can report bad/harmful AI output (feedback loop)
-- [ ] PII handling complies with privacy policy
+- [ ] Users are told they're interacting with AI; generated content is labeled
+- [ ] Users can report bad output, and reports reach a triage queue
+- [ ] PII handling matches the privacy policy; provider data-retention and training terms checked
 - [ ] No training on user data without explicit consent
-- [ ] Bias testing done for the specific use case
-- [ ] Human review path exists for high-stakes decisions
-- [ ] Kill switch: feature can be disabled without redeployment (remote config)
+- [ ] Bias tested for this use case's affected groups
+- [ ] Human review path for high-stakes decisions (credit, health, employment, minors)
+- [ ] Kill switch tested in staging
+
+## Code/Artifact Generation
+
+Applies when the user asks to build or extend the feature (not for a review or a question). Write in the detected stack:
+
+1. LLM client wrapper — typed, timeout, retry policy above, streaming, model ID from config
+2. Versioned prompt module for the feature
+3. Feature integration (API route/Cloud Function + UI with streaming and fallback states)
+4. Kill-switch flag wiring
+5. Tests from Step 4, including recorded fixtures
+
+For cost tracking, budgets, and eval CI, hand off to `llmops`; for retrieval, to `rag-architect`. In Claude Code these are `/cure-product-engineering:<name>`; in Codex, `$<name>`.

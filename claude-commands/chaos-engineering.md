@@ -1,465 +1,142 @@
 # Chaos Engineering
 
+Resilience testing for Cure's Firebase/GCP stacks with mobile and web clients. **Done when** the
+deliverable for the Step-1 type exists: each failure mode has a steady-state hypothesis, an injection
+method with a blast-radius limit, an abort criterion, and an expected fallback. Chaos without
+observability is just breaking things — if alerts and dashboards don't exist, the first deliverable is
+the gap list, not an experiment. Match length to the need; no filler sections or restated summaries.
+
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Firebase config: !`(cat firebase.json 2>/dev/null || echo "(no firebase.json)") | head -25`
+- Existing resilience code: !`(grep -rlE 'circuit|retry|backoff|timeout' src functions/src lib app 2>/dev/null || echo "(none found)") | head -10`
+- CI workflows: !`(ls .github/workflows/ 2>/dev/null || echo "(none)") | head -10`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-Structured resilience testing framework for distributed systems. Use when verifying fault tolerance, planning game days, designing graceful degradation, or building automated chaos into CI/CD. Assumes Firebase + GCP infrastructure with mobile and web clients.
-
-## Step 1: Classify the Resilience Need
-
-| Type | When to Use | Output |
-|------|------------|--------|
-| Failure Mode Analysis | Before launch or after architecture changes — catalog what can break | Failure mode catalog with severity, likelihood, and mitigation |
-| Game Day Planning | Quarterly or before major launches — structured team exercise | Game day runbook with scope, safety controls, rollback plan |
-| Automated Chaos | Mature teams with solid monitoring — continuous resilience verification | CI-integrated fault injection with steady-state hypothesis checks |
-| Graceful Degradation Audit | After incidents or during architecture review — verify fallbacks work | Degradation matrix showing behavior under each failure mode |
+| Type | When | Output |
+|---|---|---|
+| Failure Mode Analysis | Before launch or after architecture change | Failure-mode catalog: severity, likelihood, detection, fallback |
+| Game Day Planning | Quarterly or before a major launch | Game-day runbook: scope, safety controls, abort criteria |
+| Automated Chaos | Teams at maturity level 2+ (below) | CI fault-injection workflow with steady-state checks |
+| Graceful Degradation Audit | After incidents or in architecture review | Degradation matrix: failure → observed vs expected behavior, with severity |
 
 ## Step 2: Gather Context
 
-1. **Architecture** -- what services exist, how do they communicate, what are the critical paths (auth, payments, data sync)?
-2. **Dependencies** -- external APIs (Stripe, SendGrid, OAuth providers), databases (Firestore, Cloud SQL), CDNs, third-party SDKs?
-3. **Monitoring maturity** -- do you have dashboards, alerts, error tracking, distributed tracing? Chaos without observability is just breaking things.
-4. **Team readiness** -- has the team run game days before? Is there an on-call rotation? Do runbooks exist for major failure modes?
-5. **Blast radius tolerance** -- can you test in production, or only staging? What is the acceptable impact window?
-6. **Recovery mechanisms** -- feature flags, rollback procedures, circuit breakers already in place?
-
-## Step 3: Failure Mode Catalog
-
-### Network Failures
-```
-Failure Mode         Likelihood  Impact   Detection
-─────────────────────────────────────────────────────────────
-Network partition    Medium      High     Health checks fail, timeout errors spike
-DNS resolution       Low         Critical All services unreachable
-TLS certificate      Low         Critical Browser warnings, API rejections
-High latency (>5s)   High        Medium   User abandonment, timeout cascades
-Packet loss (>10%)   Medium      Medium   Retries spike, throughput drops
-```
-
-### Service Failures
-```
-Failure Mode              Likelihood  Impact    Detection
-─────────────────────────────────────────────────────────────────
-Cloud Functions crash     High        High      Error rate spike in Cloud Monitoring
-Cloud Functions timeout   High        Medium    Timeout errors, 504 responses
-Cloud Run OOM kill        Medium      High      Instance restarts, 503 responses
-Auth provider down        Low         Critical  Login failures, session refresh fails
-Firestore unavailable     Low         Critical  All reads/writes fail
-Firestore quota exceeded  Medium      High      RESOURCE_EXHAUSTED errors
-```
-
-### Infrastructure Failures
-```
-Failure Mode              Likelihood  Impact    Detection
-─────────────────────────────────────────────────────────────────
-Disk full                 Medium      High      Write failures, log loss
-Memory exhaustion         Medium      High      OOM kills, service restarts
-CPU saturation            Medium      Medium    Latency increase, queue buildup
-Cold start storm          High        Medium    Latency spike after scale-to-zero
-Config/secret unavail.    Low         Critical  Service fails to start or auth fails
-```
-
-### Third-Party Failures
-```
-Failure Mode              Likelihood  Impact    Detection
-─────────────────────────────────────────────────────────────────
-Stripe API down           Low         Critical  Payment failures
-SendGrid/email down       Medium      Low       Delayed notifications
-OAuth provider down       Low         High      New logins fail
-CDN outage                Low         High      Static assets unavailable
-Analytics ingestion down  Medium      None      Data gap (no user impact)
-```
-
-## Step 4: Graceful Degradation Patterns
-
-### Circuit Breaker
-```typescript
-// Wrap every external dependency call in a circuit breaker.
-// After N consecutive failures, stop calling the dependency for a cooldown period.
-
-interface CircuitBreakerConfig {
-  failureThreshold: number;    // failures before opening (default: 5)
-  resetTimeoutMs: number;      // cooldown before half-open (default: 30000)
-  monitorWindowMs: number;     // window for counting failures (default: 60000)
-}
-
-// States:
-//   CLOSED  → normal operation, requests pass through
-//   OPEN    → dependency is down, return fallback immediately
-//   HALF-OPEN → allow one probe request to test recovery
-
-// Use for: Stripe API, external OAuth, third-party APIs
-// Do NOT use for: Firestore (Google handles retries), internal services on same VPC
-```
-
-### Bulkhead Isolation
-```
-Isolate failure domains so one broken service doesn't take down everything.
-
-Pattern                       Implementation
-──────────────────────────────────────────────────────────────
-Separate Cloud Functions      Each service = separate function with own memory/timeout
-Connection pooling            Limit connections per downstream dependency
-Queue-based decoupling        Pub/Sub between services — producer doesn't block on consumer
-Separate Firebase projects    Critical services on dedicated projects (billing isolation)
-Thread pool isolation         Cloud Run: separate containers per service domain
-```
-
-### Timeout + Retry with Backoff
-```
-Every network call MUST have:
-  1. Timeout — never wait forever (Cloud Functions: 60s default, reduce for user-facing)
-  2. Retry with exponential backoff — 1s, 2s, 4s, 8s, max 3 retries
-  3. Jitter — add random 0-500ms to avoid thundering herd
-  4. Idempotency — retried operations must be safe to repeat
-
-// Firebase SDK handles retries for Firestore/Auth automatically.
-// YOU must handle retries for: Stripe, SendGrid, custom APIs, webhooks.
-
-Timeout defaults:
-  User-facing API:       5 seconds (fail fast, show error)
-  Background job:        30 seconds (retry on failure)
-  Webhook processing:    10 seconds (acknowledge fast, process async)
-  Database migration:    300 seconds (long-running, no retry)
-```
-
-### Fallback Responses
-```
-Every degraded state must have a defined fallback:
-
-Service Down              Fallback Behavior
-──────────────────────────────────────────────────────────────
-Stripe API               Show "Payment temporarily unavailable, try again in a few minutes"
-                         Queue the payment intent for retry via Cloud Tasks
-Auth provider            Allow existing sessions to continue (cached tokens)
-                         Disable new signups/logins with clear messaging
-Firestore reads          Serve from local cache (Firebase SDK offline persistence)
-                         Show stale data with "Last updated X ago" indicator
-Firestore writes         Queue writes locally, sync when available
-                         Show "Saved offline, will sync automatically"
-Image/CDN               Serve placeholder images, lazy-load when available
-Analytics                Drop events silently — never block user actions for analytics
-Email/notifications      Queue for later delivery, no user-facing error
-Search service           Fall back to basic Firestore queries (slower, less relevant)
-```
-
-### Feature Flag Kill Switches
-```
-Every major feature MUST have a Remote Config kill switch:
-
-firebase.remoteConfig().defaultConfig = {
-  enable_payments: true,
-  enable_social_login: true,
-  enable_push_notifications: true,
-  enable_new_checkout_flow: true,
-  maintenance_mode: false,
-  force_update_version: "0.0.0",
-};
-
-Kill switch response time: < 1 minute (Remote Config fetch interval in crisis)
-Test kill switches monthly — they are useless if untested.
-```
-
-## Step 5: Game Day Planning
-
-### Pre-Game Day Checklist
-```
-1. SCOPE DEFINITION
-   - Which failure modes are we testing? (pick 2-3 per game day)
-   - Which environment? (staging first, production only for mature teams)
-   - What is the blast radius? (specific service, specific region, percentage of traffic)
-   - Duration: 1-2 hours maximum for the exercise
-
-2. SAFETY CONTROLS
-   - [ ] Kill switch to stop the experiment immediately
-   - [ ] Rollback procedure documented and tested
-   - [ ] On-call engineer designated and available
-   - [ ] Customer support notified (if production)
-   - [ ] Blast radius limited (percentage of traffic, single region)
-   - [ ] Monitoring dashboards open and visible to all participants
-
-3. PARTICIPANTS
-   - Experiment lead: drives the chaos injection
-   - Observer: watches dashboards, takes notes
-   - On-call: ready to intervene if blast radius exceeds plan
-   - Stakeholder: product/business person to assess user impact
-
-4. STEADY-STATE DEFINITION
-   - Define "normal" before you break things:
-     - Error rate: < X%
-     - P95 latency: < Xms
-     - Throughput: > X req/s
-     - Business metric: orders/min, signups/min
-```
-
-### Game Day Execution Template
-```
-TIME    ACTION
-─────────────────────────────────────────────────────────
-T-30    Verify monitoring dashboards, confirm steady state
-T-15    Brief all participants, confirm safety controls
-T-5     Final go/no-go decision
-T+0     Inject failure (see failure injection methods below)
-T+1     Observe: did alerts fire? Did fallbacks activate?
-T+5     Assess: is blast radius within bounds? Continue or abort?
-T+15    Extend or escalate the failure (if safe)
-T+30    Remove failure injection
-T+35    Verify full recovery to steady state
-T+45    Debrief: what worked, what didn't, action items
-
-ABORT CRITERIA (stop immediately if any):
-  - Blast radius exceeds plan (more users affected than expected)
-  - No rollback mechanism is working
-  - Real incident occurs unrelated to game day
-  - Any data loss or data corruption detected
-```
-
-### Failure Injection Methods
-```
-Firebase / GCP:
-  - Cloud Functions: deploy a version that returns 500 for X% of requests
-  - Firestore: modify security rules to deny reads on specific collection
-  - Auth: revoke service account tokens, disable OAuth provider in console
-  - Hosting: deploy a maintenance page to a percentage of traffic
-  - Cloud Run: set maxInstances=0 to simulate service unavailability
-
-Network:
-  - Vercel/Cloudflare: add latency rules in edge config
-  - Cloud Armor: block traffic from specific regions
-  - DNS: lower TTL before game day, point to wrong IP during test
-
-Mobile:
-  - Remote Config: enable maintenance_mode flag
-  - Force update: set force_update_version to current version
-  - Kill switch: disable specific feature via feature flag
-
-Application:
-  - Environment variable: set CHAOS_MODE=true to activate fault injection
-  - Feature flag: enable chaos-specific flags that inject delays/errors
-  - Dependency override: swap real client with failing mock via DI
-```
-
-## Step 6: Platform-Specific Resilience
-
-### Android
-```
-Failure Scenario                 Required Handling
-──────────────────────────────────────────────────────────────
-No network                       Offline-first with Room/Firestore cache
-                                 Show cached data with "Offline" indicator
-                                 Queue mutations for sync on reconnect
-Slow network (2G simulation)     Timeout after 10s, show loading skeleton
-                                 Progressive image loading (thumbnails first)
-Background process killed        Save state in onSaveInstanceState / ViewModel
-                                 Resume gracefully, re-fetch if state is stale
-Low memory                       Release caches in onTrimMemory()
-                                 Avoid holding references to large bitmaps
-Disk full                        Catch IOException on write, show storage warning
-                                 Degrade gracefully (skip caching, continue operation)
-
-Testing tools:
-  - Android Studio Network Profiler (throttle to 2G/3G)
-  - Firebase Test Lab (test on low-end devices)
-  - StrictMode (detect disk/network on main thread)
-  - LeakCanary (memory leak detection)
-```
-
-### iOS
-```
-Failure Scenario                 Required Handling
-──────────────────────────────────────────────────────────────
-No network                       NWPathMonitor for connectivity state
-                                 Offline queue with Core Data or Firestore cache
-Background termination           Save state in applicationDidEnterBackground
-                                 BGTaskScheduler for deferred work
-Memory pressure                  Respond to didReceiveMemoryWarning
-                                 Release image caches, cancel non-essential tasks
-App Transport Security           All connections HTTPS (enforced by default)
-                                 Certificate pinning for sensitive endpoints
-Push notification failure        Fallback to in-app polling for critical updates
-                                 Silent push for background data refresh
-
-Testing tools:
-  - Network Link Conditioner (simulate poor network)
-  - Xcode Memory Graph Debugger
-  - Instruments (Leaks, Time Profiler, Network)
-  - XCTest with simulated network conditions
-```
-
-### Firebase / Cloud Functions
-```
-Failure Scenario                 Required Handling
-──────────────────────────────────────────────────────────────
-Cold start latency               minInstances=1 for critical functions
-                                 Lazy initialization of heavy dependencies
-Timeout (default 60s)            Set explicit timeouts per function type
-                                 User-facing: 30s, Background: 300s
-Memory limit exceeded            Monitor memory usage, right-size per function
-                                 Stream large payloads instead of buffering
-Firestore contention             Avoid hotspots (distributed counters)
-                                 Use batched writes, avoid document-level contention
-Emulator-based testing           Run chaos scenarios against emulator suite
-                                 Simulate auth failures, permission denials
-
-Emulator chaos testing:
-  firebase emulators:start
-  # Then: modify security rules live to test denial scenarios
-  # Then: stop Firestore emulator to test offline handling
-  # Then: inject latency in function code with CHAOS_MODE env var
-```
-
-## Step 7: Automated Chaos in CI/CD
-
-### CI-Integrated Fault Injection
-```yaml
-# .github/workflows/chaos.yml
-name: Chaos Tests
-on:
-  schedule:
-    - cron: '0 3 * * 1'  # Weekly Monday 3 AM
-  workflow_dispatch:       # Manual trigger
-
-jobs:
-  chaos-test:
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to staging
-        run: firebase deploy --only functions --project staging
-
-      - name: Define steady state
-        run: |
-          # Record baseline metrics
-          curl -s https://staging.example.com/health | jq '.status' | grep -q "ok"
-          # Record baseline error rate and latency
-
-      - name: Inject failure — Cloud Functions timeout
-        run: |
-          # Deploy chaos version with 50% artificial timeout
-          CHAOS_MODE=timeout_50pct firebase deploy --only functions --project staging
-
-      - name: Verify graceful degradation
-        run: |
-          # Run integration tests — they should pass with degraded behavior
-          npm run test:chaos
-          # Verify: error rate < 10%, fallbacks activated, no data loss
-
-      - name: Remove failure
-        run: |
-          firebase deploy --only functions --project staging
-
-      - name: Verify recovery
-        run: |
-          sleep 30
-          curl -s https://staging.example.com/health | jq '.status' | grep -q "ok"
-          npm run test:integration
-```
-
-### Steady-State Hypothesis Verification
-```
-Before every chaos experiment, define what "normal" looks like:
-
-Hypothesis Template:
-  "When [failure is injected], the system should [expected behavior]
-   with [acceptable degradation] and recover within [time limit]."
-
-Examples:
-  "When Cloud Functions return 500 for 50% of requests,
-   the mobile app should show cached data for read operations
-   and queue write operations for retry,
-   with full recovery within 60 seconds of failure removal."
-
-  "When Stripe API is unreachable,
-   the checkout flow should show a clear error message
-   and offer to notify the user when payments are restored,
-   with no duplicate charges after recovery."
-
-  "When Firestore is unavailable for 5 minutes,
-   the web app should serve stale data from the browser cache
-   with a visible 'offline' indicator,
-   and automatically sync pending writes within 30 seconds of recovery."
-```
-
-### Chaos Maturity Model
-```
-Level 0 — Ad Hoc
-  No resilience testing. Hope things work. Fix after incidents.
-  → Start here: catalog failure modes, add basic health checks
-
-Level 1 — Manual Game Days
-  Quarterly game days in staging. Manual failure injection.
-  → Add: circuit breakers, timeouts, fallback responses
-
-Level 2 — Automated Staging Chaos
-  Weekly automated chaos in staging. Steady-state verification.
-  → Add: CI-integrated fault injection, automated recovery checks
-
-Level 3 — Production Chaos
-  Controlled chaos in production with traffic percentage limits.
-  → Add: canary analysis, automated rollback, per-request fault injection
-
-Level 4 — Continuous Verification
-  Every deploy includes resilience verification. Chaos is part of CI/CD.
-  → Add: pre-deploy chaos gates, SLO-based experiment abort
-```
-
-## Step 8: Output
-
-```
-CHAOS ENGINEERING REPORT
-System: [NAME]
-Date: [TODAY]
-Prepared by: [NAME]
-
-RESILIENCE SUMMARY
-┌──────────────────────────┬────────────────────────────────────┐
-│ Field                    │ Value                              │
-├──────────────────────────┼────────────────────────────────────┤
-│ Chaos Maturity Level     │ [0-4 from maturity model]          │
-│ Failure Modes Cataloged  │ [Count]                            │
-│ Degradation Patterns     │ [Circuit breaker, bulkhead, etc.]  │
-│ Game Days Conducted      │ [Count, last date]                 │
-│ Automated Chaos          │ [Yes/No, frequency]                │
-│ Recovery Time Target     │ [Seconds/minutes]                  │
-│ Kill Switches Deployed   │ [Count, last tested]               │
-└──────────────────────────┴────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Failure mode catalog with severity and likelihood
-  - [ ] Graceful degradation matrix (failure → fallback behavior)
-  - [ ] Circuit breaker and retry configuration
-  - [ ] Feature flag kill switches for critical features
-  - [ ] Game day runbook with safety controls
-  - [ ] Platform-specific resilience patterns (Android/iOS/Firebase)
-  - [ ] CI-integrated chaos test workflow
-  - [ ] Steady-state hypotheses for each failure mode
-  - [ ] Chaos maturity assessment with next-level recommendations
-
-RELATED SKILLS:
-  - /incident-response — when chaos reveals real problems
-  - /testing-strategy — unit and integration tests complement chaos tests
-  - /infrastructure-scaffold — infra configs that enable resilience
-  - /performance-review — performance under failure conditions
-```
-
-## Code Generation (Required)
-
-Generate chaos testing infrastructure using Write:
-
-1. **Fault injection middleware**: `src/middleware/chaos.ts` — conditional fault injection (latency, errors, timeouts)
-2. **Game day runbook**: `docs/game-day-runbook.md` — step-by-step chaos test procedure
-3. **Chaos CI workflow**: `.github/workflows/chaos-test.yml` — automated resilience testing
-4. **Circuit breaker**: `src/lib/circuit-breaker.ts` — circuit breaker implementation
-5. **Health check endpoint**: `src/health.ts` — deep health check that validates all dependencies
-
-Before generating, Grep for existing error handling patterns (`try/catch`, `retry`, `timeout`, `circuit`) to understand current resilience.
+Ask only what the repo doesn't show: critical paths (auth, payments, sync), external dependencies
+(Stripe, email, OAuth, CDNs), monitoring maturity (dashboards, alerts, tracing), on-call and
+runbooks, whether production testing is allowed, and existing recovery levers (flags, rollback).
+
+## Step 3: Failure-Mode Catalog (Cure stack starting set)
+
+| Failure | Likelihood | Impact | Detection |
+|---|---|---|---|
+| Cloud Functions / Cloud Run errors or timeouts | High | High | Error-rate / 5xx alert |
+| Cold-start storm after scale-to-zero | High | Medium | p95 latency spike |
+| Cloud Run OOM / instance crash | Medium | High | Restarts, 503s |
+| Firestore `RESOURCE_EXHAUSTED` / hotspot contention | Medium | High | Error codes in logs |
+| Firestore unavailable | Low | Critical | All reads/writes fail |
+| Auth provider / OAuth down | Low | Critical | Login and refresh failures |
+| Secret or config unavailable | Low | Critical | Startup or auth failures |
+| Stripe API down | Low | Critical | Payment failures |
+| Email/push provider down | Medium | Low | Delivery lag |
+| Analytics ingestion down | Medium | None | Data gap only |
+
+Extend with the project's own dependencies; drop rows that don't apply.
+
+## Step 4: Cure Resilience Defaults (what the experiments verify)
+
+**Timeouts — one table.** Client-side and server-side timeouts are different layers; set both.
+
+| Call | Timeout | Retry |
+|---|---|---|
+| Client → API (user waiting) | 5 s, then show an error or cached data | None automatic; offer retry |
+| Function/Cloud Run handling a user request | 30 s function timeout | — |
+| Server → third-party API (Stripe, email) | 10 s | 3 tries, exponential backoff + jitter, idempotency key required |
+| Webhook handler | Acknowledge < 10 s, process async (Cloud Tasks / Pub/Sub) | Provider retries |
+| Background / event function | 300 s (v2 event functions cap at 540 s) | Platform retry on, handler idempotent |
+
+Firebase client SDKs retry Firestore/Auth themselves — don't wrap them in circuit breakers. Use
+breakers only around third-party HTTP dependencies.
+
+**Fallbacks** (the degradation matrix checks these):
+Stripe down → "payments temporarily unavailable" + queue intent via Cloud Tasks, never a double
+charge on recovery · Auth down → existing sessions continue, new logins disabled with a message ·
+Firestore reads fail → offline cache with "last updated" indicator · writes fail → local queue,
+"saved offline" · analytics down → drop silently, never block the user · search down → basic
+Firestore query.
+
+**Kill switches.** Every major feature has a Remote Config flag (plus `maintenance_mode` and
+`force_update_version`). Use **real-time Remote Config** (`onConfigUpdate` listeners, available on
+Android, iOS, and web) so a kill switch lands in seconds; apps that only fetch on an interval wait
+for their fetch interval. Test each kill switch monthly — untested switches fail when needed.
+
+## Step 5: Game Day
+
+**Plan:** 2–3 failure modes per game day, staging first (production only at maturity 3+), explicit
+blast radius (one service, one region, or a traffic percentage), 1–2 hours. Roles: experiment lead,
+observer, on-call ready to intervene, a product stakeholder judging user impact. Write the steady
+state first: error rate < X%, p95 < X ms, a business metric (orders/min).
+
+**Safety controls (all required before T+0):** a tested way to stop the injection, a rollback
+procedure, on-call present, support notified (production), dashboards open.
+
+**Timeline:** T-30 confirm steady state · T-5 go/no-go · T+0 inject · T+1 did alerts fire and
+fallbacks engage? · T+5 blast radius within bounds? · T+30 remove injection · T+35 verify recovery ·
+T+45 debrief with owned action items.
+
+**Abort immediately** if blast radius exceeds plan, rollback doesn't work, an unrelated real incident
+starts, or any data loss or corruption appears.
+
+### Injection methods (Firebase / GCP)
+
+| Target | Method |
+|---|---|
+| Cloud Run / Functions v2 (both run on Cloud Run) — errors | Deploy a revision with fault injection enabled and send it a slice of traffic: `gcloud run services update-traffic SVC --to-revisions=FAULTY_REV=10` |
+| Cloud Run — full unavailability | `gcloud run services update SVC --ingress=internal` (external callers get 404/403), or remove the `roles/run.invoker` binding for the caller; restore after. (Setting max instances to 0 does **not** make a service unavailable.) |
+| Firestore — denial | Deploy security rules that deny one collection (staging, or emulator) |
+| Latency / errors in app code | `CHAOS_MODE` env var or a chaos Remote Config flag read by fault-injection middleware; DI swap to a failing client in tests |
+| Region / geography | Cloud Armor rule blocking a region in front of the LB |
+| Mobile | `maintenance_mode`, `force_update_version`, per-feature kill switches; Network Link Conditioner (iOS) / emulator network throttling (Android) |
+| Local | Firebase Emulator Suite: change rules live, stop the Firestore emulator, inject latency |
+
+## Step 6: Automated Chaos in CI
+
+Weekly scheduled workflow against **staging** only: deploy → record steady state → enable fault
+injection (flag or revision traffic split) → run `test:chaos` asserting degraded-but-correct behavior
+(error rate < 10%, fallbacks engaged, no data loss) → disable → assert recovery within the
+hypothesis window. Follow `rules/cicd.md` (SHA-pinned actions, keyless auth — see `ci-cd-pipeline`).
+
+**Hypothesis template:** "When [failure] is injected, the system [expected behavior] with [acceptable
+degradation] and recovers within [time]." Example: "When Stripe is unreachable, checkout shows a
+clear error and offers a notification, with no duplicate charges after recovery."
+
+**Maturity levels:** 0 ad hoc → 1 quarterly manual game days in staging → 2 weekly automated
+staging chaos → 3 controlled production chaos with traffic limits and automated rollback → 4
+SLO-gated resilience checks on every deploy. Recommend only the next level up.
+
+## Output
+
+Report: maturity level, failure modes cataloged, fallbacks verified vs missing (each gap with
+severity), game days run and last date, kill switches and last test date, and the next-level
+recommendations.
+
+## Code/Artifact Generation
+
+Applies only when Step 1 classified the request as below; adapt to existing resilience code first.
+
+| Classification | Write |
+|---|---|
+| Failure Mode Analysis | `docs/failure-modes.md` |
+| Game Day Planning | `docs/game-day-runbook.md` |
+| Automated Chaos | `src/middleware/chaos.ts` (flag-gated latency/error injection, off by default and impossible to enable in production without the flag), `.github/workflows/chaos.yml`, deep health check endpoint if none exists |
+| Graceful Degradation Audit | Findings only; a circuit breaker (`src/lib/circuit-breaker.ts`) only if the audit finds an unprotected third-party call and the user wants the fix |
+
+## Cross-References
+
+- `incident-response` — when chaos reveals a real problem
+- `disaster-recovery` — region-loss and data-corruption planning
+- `testing-strategy` — unit/integration tests that complement chaos tests
+- `performance-review` — load and latency under stress

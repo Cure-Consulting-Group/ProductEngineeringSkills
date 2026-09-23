@@ -1,419 +1,172 @@
 # FinOps
 
+**Outcome:** every dollar of cloud and API spend attributed to a product, environment, and
+feature, with guardrails (budgets, alerts, caps) and a ranked list of savings with estimated
+monthly impact. **Done when** the top cost drivers are named with numbers from the actual bill,
+each recommendation has an owner-ready change and a savings estimate, and every unit price you
+quote was looked up on the vendor's current pricing page and dated. Match length to the need; no
+filler sections or restated summaries.
+
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Portfolio: !`sed -n '1,20p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Firebase projects: !`cat .firebaserc 2>/dev/null | head -15 || echo "(no .firebaserc)"`
+- Function sizing: !`grep -rhoE "memory: *['\"]?[0-9]+[A-Za-z]*|minInstances: *[0-9]+|maxInstances: *[0-9]+" functions/src 2>/dev/null | sort | uniq -c | head -10 || echo "(no functions/src)"`
+- IaC surface: !`ls *.tf terraform/ 2>/dev/null | head -10 || echo "(no terraform)"`
+- Metered APIs: !`grep -oiE "\"(openai|@anthropic-ai/sdk|@google/genai|@sendgrid/mail|twilio|stripe)\"" package.json functions/package.json 2>/dev/null | sort -u || echo "(none found)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-Additionally gather (domain-specific):
-- `cat .firebaserc firebase.json 2>/dev/null | head -30` — Firebase projects and services in play
-- `ls functions/ 2>/dev/null && grep -m5 -rE "memory|minInstances|maxInstances" functions/src 2>/dev/null` — Cloud Functions sizing (the usual cost driver)
-- `ls *.tf terraform/ 2>/dev/null` — IaC surface for committed-use / right-sizing changes
-- `grep -m5 -riE "openai|anthropic|sendgrid|twilio|stripe" package.json 2>/dev/null` — metered third-party APIs on the bill
+| Type | When | Output |
+|------|------|--------|
+| Cost audit | Monthly, or after bill shock | Per-service breakdown, waste, ranked savings |
+| Budget setup | New project or fiscal period | Budgets, alert tiers, environment caps |
+| Optimization | Cost growing faster than usage | Right-sizing, architecture changes, commitments |
+| Cost allocation | Multiple products or teams | Label scheme, showback dashboard |
+| Forecast | Planning | Growth-driven projection with scenarios |
 
-Cloud financial operations framework for Firebase and GCP projects. Use when setting up cost visibility, optimizing spend, establishing budgets, or building a cost-aware engineering culture. Every dollar spent on infrastructure should be traceable to a feature or user segment.
-
-## Step 1: Classify the FinOps Need
-
-| Type | When to Use | Output |
-|------|------------|--------|
-| Cost Audit | Monthly or after bill shock — understand where money goes | Per-service cost breakdown, waste identification, optimization recommendations |
-| Budget Setup | New project or new fiscal period — set guardrails | Budget alerts, spending limits, anomaly detection |
-| Optimization Initiative | Costs growing faster than usage — reduce waste | Right-sizing plan, architecture changes, committed use discounts |
-| Cost Allocation | Multi-product or multi-team — assign costs to owners | Tagging strategy, per-team dashboards, chargeback model |
-| Forecasting | Planning phase — predict future spend | Growth-based projections, scenario modeling |
+A question ("why did the bill double?") gets a diagnosis, not the full program.
 
 ## Step 2: Gather Context
 
-1. **Cloud providers** -- Firebase + GCP (primary), Vercel, third-party APIs (Stripe, SendGrid, OpenAI)?
-2. **Current monthly spend** -- total and per-service breakdown. If unknown, that is the first deliverable.
-3. **Growth trajectory** -- user growth rate, request volume trend, storage growth?
-4. **Cost centers** -- single product or multiple? Multiple teams? Need chargeback or showback?
-5. **Budget authority** -- who approves spend increases? What is the monthly/quarterly budget cap?
-6. **Existing visibility** -- do billing dashboards exist? Are costs tagged? Is anyone reviewing spend regularly?
+Providers in play (Firebase/GCP, Vercel, AI APIs, email/SMS); the last 3 months of spend per
+service (if unknown, getting it is the first deliverable); growth trend; cost owners and who
+approves increases; whether billing export and labels already exist.
 
-## Step 3: Cost Visibility
+## Step 3: Visibility — the baseline every Cure project gets
 
-### Billing Dashboard Setup
-```
-Every project MUST have:
-  1. GCP Billing Export to BigQuery (enabled once, runs continuously)
-  2. Monthly cost report emailed to engineering lead + finance
-  3. Per-service cost dashboard (Looker Studio or Data Studio)
-  4. Anomaly alerts for >20% day-over-day increase
+Without these, spend cannot be attributed, and unattributed spend cannot be cut.
 
-Enable billing export:
-  GCP Console → Billing → Billing export → BigQuery export → Enable
-  Dataset: billing_export (create in same project)
+1. **Billing export to BigQuery** (Billing → Billing export → BigQuery), dataset `billing_export`.
+2. Per-service dashboard in **Looker Studio** on that export; monthly report to the eng lead and finance.
+3. **Labels on every resource** — `product`, `environment` (dev/staging/production), `team`,
+   `feature`, `cost-center`. Use the product slug from PORTFOLIO.md.
+   - Cloud Functions (v2): `setGlobalOptions({ labels: { product: "<slug>", ... } })`
+   - Cloud Run: `gcloud run services update SERVICE --update-labels=product=<slug>,environment=production`
+   - Cloud Storage: `gcloud storage buckets update gs://BUCKET --update-labels=product=<slug>`
+     (`gsutil` is legacy and leaves the gcloud CLI package after March 2027)
+   - Firestore: project-level labels
+4. Anomaly alert on > 20% day-over-day increase.
 
-  This gives you raw billing data for custom queries and dashboards.
-```
-
-### Cost Allocation Tags
-```
-Every GCP resource MUST be tagged:
-
-Required labels:
-  project: "antigravity"           — which product
-  environment: "production"        — dev / staging / production
-  team: "backend"                  — owning team
-  feature: "payments"              — specific feature (for per-feature cost tracking)
-  cost-center: "engineering"       — budget category
-
-Apply labels:
-  Cloud Functions:  setGlobalOptions({ labels: { project: "antigravity", ... } })
-  Cloud Run:        gcloud run services update SERVICE --labels=project=antigravity
-  Cloud Storage:    gsutil label set labels.json gs://BUCKET
-  Firestore:        labels set at project level in console
-
-Labels enable:
-  - Filter billing by team, feature, environment
-  - Answer "How much does the payments feature cost?"
-  - Answer "What percentage of spend is dev vs. production?"
-```
-
-### Per-Service Cost Breakdown
-```
-Service                Typical Cost Driver          How to Track
-──────────────────────────────────────────────────────────────────
-Cloud Functions        Invocations + compute time   Cloud Monitoring → function/execution_count
-Firestore              Reads/writes/deletes         Firebase Console → Usage tab
-Cloud Storage          Storage volume + egress      GCP Console → Storage → Usage
-Cloud Run              CPU + memory per request      Cloud Monitoring → container metrics
-Firebase Auth          Monthly active users (MAU)    Firebase Console → Auth → Usage
-Firebase Hosting       Bandwidth + storage           Firebase Console → Hosting → Usage
-Secret Manager         Access operations              GCP Console → Secret Manager
-Cloud Scheduler        Job executions                 Minimal cost, rarely an issue
-Networking/Egress      Cross-region data transfer     Often the hidden cost — monitor closely
-```
-
-### Per-Environment Breakdown
 ```sql
--- BigQuery query: monthly cost by environment
-SELECT
-  labels.value AS environment,
-  SUM(cost) AS total_cost,
-  SUM(cost) / SUM(SUM(cost)) OVER () * 100 AS pct_of_total
+-- Monthly cost by environment (target: production ≥ 70% of total)
+SELECT l.value AS environment, SUM(cost) AS total_cost,
+       SUM(cost) / SUM(SUM(cost)) OVER () * 100 AS pct_of_total
 FROM `PROJECT.billing_export.gcp_billing_export_v1_*`
-LEFT JOIN UNNEST(labels) AS labels ON labels.key = "environment"
+LEFT JOIN UNNEST(labels) AS l ON l.key = "environment"
 WHERE invoice.month = FORMAT_DATE('%Y%m', CURRENT_DATE())
-GROUP BY environment
-ORDER BY total_cost DESC;
-
--- Target: production < 70% of total, dev+staging < 30%
--- If dev/staging > 30%, you have waste to clean up
+GROUP BY environment ORDER BY total_cost DESC;
 ```
 
-## Step 4: Firebase-Specific Optimization
+Dev + staging above 30% of spend is waste to clean up. Egress and cross-region transfer are the
+usual hidden cost; check them explicitly.
 
-See [reference/details.md](reference/details.md) (section “Step 4: Firebase-Specific Optimization”) for full detail.
+## Step 4: Firebase optimization
 
-## Step 5: GCP Optimization
+Read the Firebase reference file (`reference/details.md`) when the audit shows Firestore,
+Cloud Functions, Storage, or Auth among the top cost drivers — it has the read-reduction
+patterns, function memory guide, lifecycle policy, and auth cost traps.
 
-### Committed Use Discounts
-```
-If your workload is predictable, commit for savings:
+## Step 5: GCP optimization
 
-Resource              On-Demand      1-Year CUD    3-Year CUD
-──────────────────────────────────────────────────────────────
-Cloud Run CPU         \$0.00002400    -17%          -40%
-Cloud Run Memory      \$0.00000250    -17%          -40%
-Compute Engine        varies         -37%          -55%
-Cloud SQL             varies         -25%          -52%
+**Commitments** — only for stable production load running > 6 months; never for dev/staging or
+projects under 3 months old (no data yet).
 
-When to commit:
-  ✅ Stable production workload running > 6 months
-  ✅ Baseline always-on compute (minInstances)
-  ❌ Never commit for dev/staging environments
-  ❌ Never commit for new projects (wait 3 months for data)
-```
+- Cloud Run: compute **flexible CUDs**, 28% (1-year) / 46% (3-year), apply to instance-based
+  billing, jobs, and worker pools (verified 2026-09-23, docs.cloud.google.com/run/cud).
+- Compute Engine and Cloud SQL: rates vary by machine family and CUD type — check the current
+  CUD page and the Billing → CUD recommender before committing.
 
-### Right-Sizing Recommendations
-```
-Review monthly — GCP provides right-sizing recommendations in Console:
-  GCP Console → Compute Engine → VM Instances → Right-sizing recommendations
-  GCP Console → Cloud Run → Services → Metrics (check actual vs. allocated)
+**Right-sizing** (monthly):
+- Cloud Run: peak memory < 50% of allocation → reduce; CPU consistently < 30% → reduce CPU or
+  raise concurrency; request-based billing (CPU only during requests) for spiky services.
+- Cloud Functions: short executions on 1 GiB → try 256–512 MiB; cold-start problems are fixed
+  with `minInstances`, not memory.
+- **Spot VMs** (up to 91% off on-demand, preemptible at any time) for CI runners, batch, and
+  training only — never user-facing or stateful services.
 
-Cloud Run right-sizing:
-  1. Check actual CPU/memory usage in Cloud Monitoring
-  2. If peak memory < 50% of allocation → reduce allocation
-  3. If CPU utilization consistently < 30% → reduce CPU or increase concurrency
-  4. Set CPU throttling = true (only charge for active request processing)
+## Step 6: AI/API cost management
 
-Cloud Functions right-sizing:
-  1. Check execution times in Firebase Console → Functions → Dashboard
-  2. If avg execution < 1s with 1GiB memory → try 256MiB
-  3. If cold start is the problem → increase minInstances, not memory
-```
+**Route by capability tier, not by model name.** Model lineups and prices change every few
+months, so look up current per-token prices on the provider's pricing page at the time of the
+analysis and date them in the report.
 
-### Preemptible / Spot Instances
-```
-For batch processing, ML training, CI/CD runners:
-  - Spot VMs: 60-91% discount, but can be preempted with 30s notice
-  - Use for: CI/CD build agents, batch data processing, ML training
-  - Never for: user-facing services, databases, stateful workloads
+| Tier | Typical models (families) | Use for |
+|---|---|---|
+| Fast / small | Claude Haiku, GPT mini/nano, Gemini Flash / Flash-Lite | Classification, extraction, validation, formatting |
+| Standard | Claude Sonnet, GPT standard, Gemini Pro | Most features, generation, code |
+| Frontier | Claude Opus, top GPT / Gemini tier | Hard reasoning, high-stakes review — justify per feature |
 
-  gcloud compute instances create batch-worker \
-    --provisioning-model=SPOT \
-    --instance-termination-action=STOP \
-    --machine-type=e2-standard-4
-```
+Levers, roughly in order of payoff:
+1. **Prompt caching** for long, stable system prompts and documents (large discount on cached
+   input tokens with Anthropic, OpenAI, and Google — check current terms).
+2. **Batch APIs** for anything not user-facing (typically ~50% off).
+3. Tier routing: classify with a fast model, escalate only when needed.
+4. Response caching: exact-match (hash prompt + model + params), TTL by content volatility;
+   track hit rate.
+5. Per-feature token budgets: daily cap → queue or downgrade tier; monthly cap → disable the
+   feature and alert.
 
-## Step 6: AI/API Cost Management
+Log cost per request by feature; this feeds per-feature unit cost (Step 8). For eval pipelines,
+prompt versioning, and model lifecycle, hand off to `llmops`.
 
-### Model Tier Routing
-```
-Not every request needs GPT-4 or Claude Opus.
-Route by complexity to minimize cost:
+## Step 7: Budgets and governance
 
-Tier        Model              Cost/1M tokens   Use For
-──────────────────────────────────────────────────────────────────
-Fast        GPT-4o-mini        \$0.15 input      Classification, extraction, simple Q&A
-            Claude Haiku       \$0.25 input      Validation, formatting, summarization
-Standard    GPT-4o             \$2.50 input      Most features, content generation
-            Claude Sonnet      \$3.00 input      Code generation, analysis
-Premium     GPT-4              \$30.00 input     Complex reasoning (rarely needed)
-            Claude Opus        \$15.00 input     Critical decisions, legal/financial
-
-Implementation:
-  1. Classify request complexity at the edge (use fast tier model)
-  2. Route to appropriate tier based on classification
-  3. Log cost per request for tracking
-  4. Set per-user or per-feature token budgets
-```
-
-### Token Budget Management
-```typescript
-// lib/ai-cost.ts — track and limit AI spend per feature
-interface TokenBudget {
-  feature: string;
-  dailyLimit: number;    // max tokens per day
-  monthlyLimit: number;  // max tokens per month
-  currentDaily: number;
-  currentMonthly: number;
-}
-
-// Budget defaults per feature:
-const BUDGETS: Record<string, { daily: number; monthly: number }> = {
-  "chat-assistant":    { daily: 500_000,   monthly: 10_000_000 },
-  "content-generator": { daily: 1_000_000, monthly: 20_000_000 },
-  "code-review":       { daily: 200_000,   monthly: 5_000_000 },
-  "search-summarize":  { daily: 300_000,   monthly: 8_000_000 },
-};
-
-// Check budget before every AI call:
-// If daily budget exceeded → queue for tomorrow or downgrade model tier
-// If monthly budget exceeded → disable feature, alert engineering
-```
-
-### Caching AI Responses
-```
-Cache identical or similar AI requests to avoid redundant API calls:
-
-Strategy                    Cache TTL     Estimated Savings
-──────────────────────────────────────────────────────────────
-Exact match (same prompt)   24 hours      20-40% for repeated queries
-Semantic similarity         1 hour        10-20% for similar queries
-Embedding cache             7 days        Avoids re-embedding same documents
-Precomputed responses       30 days       For known common questions
-
-Implementation:
-  1. Hash the prompt + model + temperature as cache key
-  2. Store in Redis/Firestore with TTL
-  3. Check cache before every API call
-  4. Log cache hit/miss ratio — target > 30% hit rate
-```
-
-## Step 7: Budget Alerts and Governance
-
-### Budget Alert Tiers
 ```bash
-# Set up three-tier budget alerts for every project
-gcloud billing budgets create \
-  --billing-account=BILLING_ACCOUNT_ID \
-  --display-name="PROJECT_NAME Monthly Budget" \
-  --budget-amount=500 \
-  --threshold-rule=percent=0.5,basis=CURRENT_SPEND \
-  --threshold-rule=percent=0.8,basis=CURRENT_SPEND \
-  --threshold-rule=percent=1.0,basis=CURRENT_SPEND \
-  --threshold-rule=percent=1.2,basis=CURRENT_SPEND \
+gcloud billing budgets create --billing-account=BILLING_ACCOUNT_ID \
+  --display-name="PROJECT Monthly Budget" --budget-amount=500USD \
+  --threshold-rule=percent=0.5 --threshold-rule=percent=0.8 \
+  --threshold-rule=percent=1.0 --threshold-rule=percent=1.2 \
+  --threshold-rule=percent=1.0,basis=forecasted-spend \
   --notifications-rule-pubsub-topic=projects/PROJECT_ID/topics/billing-alerts
-
-Alert tiers and response:
-  50%  — Informational: email to engineering lead
-  80%  — Warning: Slack alert to team channel, review spend
-  100% — Action required: freeze non-essential environments, investigate
-  120% — Escalation: alert CTO, consider emergency cost reduction
 ```
 
-### Anomaly Detection
-```
-Set up day-over-day anomaly detection:
+| Threshold | Response |
+|---|---|
+| 50% | Email the eng lead |
+| 80% | Team channel alert; review spend |
+| 100% (actual or forecast) | Freeze non-essential environments; investigate |
+| 120% | Escalate to CTO; emergency reduction |
 
-GCP Console → Billing → Budgets & alerts → Create budget
-  ✅ Enable "Forecasted spend" alerts
-  ✅ Set alert at 100% of forecasted budget
+Budgets alert; they don't stop spend. Hard caps need automation (a Pub/Sub-triggered function
+that scales dev to zero). Cure defaults for environment caps: dev \$50, staging \$200, shared
+services \$100, production by forecast — never auto-shutdown production. Dev shuts down nightly
+via Cloud Scheduler.
 
-Custom anomaly detection (Cloud Function):
-  1. Query BigQuery billing export daily
-  2. Compare today's spend to 7-day rolling average
-  3. Alert if > 50% above average (could indicate: runaway function, DDoS, misconfigured autoscaling)
-  4. Auto-scale-down non-production environments on anomaly detection
-```
+Any PR that adds > \$100/month needs a cost estimate in the description and eng-lead approval.
 
-### Per-Environment Spending Limits
-```
-Environment      Monthly Cap    Enforcement
-──────────────────────────────────────────────────────────────────
-Development      \$50            Auto-shutdown resources at cap
-Staging          \$200           Alert at 80%, review at 100%
-Production       \$2,000+        Alert tiers (50/80/100/120%)
-Shared services  \$100           Alert at 80%
+## Step 8: Unit cost per feature
 
-Enforcement:
-  - Dev environments: Cloud Scheduler job to shut down nightly
-  - Staging: reduce to zero instances outside business hours
-  - Production: never auto-shutdown, but alert aggressively
+Track monthly cost, users, and cost/user per feature from the labels. Use it to find features
+that cost more than they earn, to price AI-heavy features into upper tiers (hand the numbers to
+`saas-financial-model`), and to confirm optimizations worked (cost/user should fall). Review
+spend for 5 minutes in sprint planning and take one cost ticket per sprint.
 
-# Shut down dev Cloud Run services nightly
-gcloud scheduler jobs create http dev-shutdown \
-  --schedule="0 20 * * MON-FRI" \
-  --uri="https://REGION-PROJECT.cloudfunctions.net/shutdownDev" \
-  --http-method=POST
-```
+## Code/Artifact Generation
 
-### Approval Workflow for Cost Increases
-```
-Any change that increases monthly cost by >\$100 requires:
-  1. Cost estimate in the PR description
-  2. Approval from engineering lead
-  3. Updated budget if needed
+Applies to budget setup and optimization work, or when the user asks for files. An audit or a
+question gets the report only.
 
-PR template addition:
-  ## Cost Impact
-  - [ ] No cost change
-  - [ ] Estimated monthly increase: $___
-  - [ ] New service/resource: ___ at estimated $___/month
-  - [ ] Cost reviewed by: @engineering-lead
-```
+1. `docs/finops-report.md` — findings, ranked savings, dated price sources
+2. `monitoring/budget-alerts.tf` — budget and alert tiers
+3. `analytics/cost-queries.sql` — BigQuery cost queries
+4. `scripts/right-size-resources.sh` — read-only listing of over-provisioned resources
 
-## Step 8: FinOps Culture
-
-### Unit Economics Per Feature
-```
-Track cost-per-feature monthly:
-
-Feature              Monthly Cost    Users     Cost/User    Trend
-──────────────────────────────────────────────────────────────────
-Authentication       \$12             10,000    \$0.001       Stable
-Chat (AI-powered)    \$340            2,000     \$0.170       Growing
-Image uploads        \$85             5,000     \$0.017       Stable
-Search               \$45             8,000     \$0.006       Stable
-Notifications        \$20             10,000    \$0.002       Stable
-
-Use this to:
-  - Identify features that cost more than they're worth
-  - Set pricing tiers based on actual cost (AI features = premium tier)
-  - Justify infrastructure investments with per-user economics
-  - Track if optimization efforts are working (cost/user should decrease)
-```
-
-### Cost in Sprint Planning
-```
-Every sprint planning should include:
-  1. Review current month spend vs. budget (5 minutes)
-  2. Flag any infrastructure tickets with cost implications
-  3. Assign cost tags to new features before development starts
-  4. Review optimization backlog — pick 1 cost ticket per sprint
-
-Sprint board labels:
-  💰 cost-increase — this ticket will increase infrastructure spend
-  💰 cost-reduction — this ticket reduces infrastructure spend
-  💰 cost-neutral — no expected cost change
-```
-
-### Engineer Cost Awareness
-```
-Make costs visible to every engineer:
-
-1. Weekly cost Slack bot
-   Post to #engineering: "This week's cloud spend: $X (+Y% vs last week)"
-   Include top 3 cost drivers
-
-2. Per-PR cost estimation
-   GitHub Action that estimates cost impact of infrastructure changes
-   Flag PRs that add new Cloud Functions, increase memory, add services
-
-3. Monthly cost review
-   15-minute meeting: review spend, celebrate optimizations, plan reductions
-   Rotate presenter — every engineer should present once per quarter
-
-4. Cost leaderboard (gamification)
-   Track optimization wins per engineer
-   Celebrate biggest cost reductions in team retros
-```
-
-## Automated Cost Discovery
-
-Before analysis, gather infrastructure context:
-1. **Cloud costs**: Read existing billing configs, budget alerts
-2. **Resource inventory**: Glob for Terraform state, Docker configs, firebase.json
-3. **WebSearch**: Fetch current pricing for detected services
-
-## Artifact Generation (Required)
-
-Generate using Write:
-1. **Cost optimization report**: `docs/finops-report.md` — findings with projected savings
-2. **Budget alert config**: `monitoring/budget-alerts.tf` — Terraform budget alerts
-3. **Right-sizing script**: `scripts/right-size-resources.sh` — identify over-provisioned resources
-4. **Cost queries**: `analytics/cost-queries.sql` — BigQuery queries for cost analysis
-
-## Step 9: Output
+## Output
 
 ```
-FINOPS REPORT
-Project: [NAME]
-Date: [TODAY]
-Prepared by: [NAME]
-
-COST SUMMARY
-┌──────────────────────────┬────────────────────────────────────┐
-│ Field                    │ Value                              │
-├──────────────────────────┼────────────────────────────────────┤
-│ Current Monthly Spend    │ $[X]                               │
-│ Budget                   │ $[X]                               │
-│ Spend vs. Budget         │ [X%]                               │
-│ Month-over-Month Change  │ [+/-X%]                            │
-│ Top Cost Driver          │ [Service name: $X]                 │
-│ Optimization Potential   │ $[X] / month                       │
-│ Cost per User            │ $[X]                               │
-│ FinOps Maturity          │ [Crawl / Walk / Run]               │
-└──────────────────────────┴────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Per-service cost breakdown with trend analysis
-  - [ ] Cost allocation tags applied to all resources
-  - [ ] Budget alerts configured (50%, 80%, 100%, 120%)
-  - [ ] Firebase optimization recommendations with estimated savings
-  - [ ] GCP right-sizing recommendations
-  - [ ] AI/API cost management strategy
-  - [ ] Per-environment spending limits
-  - [ ] Cost approval workflow for PRs
-  - [ ] Monthly cost review process established
-  - [ ] Unit economics per feature calculated
-
-RELATED SKILLS:
-  - /engineering-cost-model — project-level cost estimation
-  - /infrastructure-scaffold — infra configs with cost defaults
-  - /saas-financial-model — pricing tiers based on actual costs
-  - /performance-review — performance optimization often reduces cost
+FINOPS REPORT — [PROJECT] — [DATE]
+Spend $X/mo | budget $X | MoM ±X% | top driver [service: $X]
+Findings (all, each with severity and estimated $/mo):
+  1. [finding] — [evidence from bill/config] — [change] — [$X/mo]
+Guardrails: budgets [y/n] | labels [% of spend labeled] | anomaly alert [y/n]
+Prices quoted: [vendor page, date checked]
 ```
+
+Related: `engineering-cost-model` (pre-build estimates), `infrastructure-scaffold` (infra with
+cost defaults), `saas-financial-model` (pricing from costs), `llmops` (LLM operations).
 
 ## Recurring Mode
 
@@ -423,4 +176,4 @@ This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-aut
 - **Session loop:** none — session loops expire after 7 days, so a weekly cadence never fires in-session; it belongs in the cloud routine below.
 - **Unattended:** cloud routine — Weekly cloud-cost delta review: flag anomalies vs last run, right-sizing candidates, budget-alert drift. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~100k tokens/run; cap at one run per weekly period.
-- **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver cost report as a report file or issue; report on failure rather than retrying.
+- **Guardrails:** writes only the cost report (file or issue); no infra, config, or Terraform changes (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); report on failure rather than retrying.
