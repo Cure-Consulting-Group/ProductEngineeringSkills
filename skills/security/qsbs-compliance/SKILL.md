@@ -13,6 +13,8 @@ context: fork
 > **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
 > mutating commands, and do not create or delete resources. Under Claude Code
 > the `disallowed-tools` frontmatter above blocks Write and Edit.
+> Bash stays available for read-only inspection (grep, git log, scanners), so even
+> under Claude Code "no mutating commands" is advisory, not enforced.
 > **Other runtimes do not enforce it** — Codex and Antigravity ignore those
 > fields, and activation there can widen rather than narrow file access — so on
 > any runtime other than Claude Code this paragraph is the only guardrail.

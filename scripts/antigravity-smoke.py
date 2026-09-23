@@ -4,7 +4,7 @@
 Builds the flat plugin with scripts/export-antigravity.py (unless --plugin-dir is given), drops it
 into a throwaway git workspace as `.agents/plugins/cure/`, and runs the two free slash commands
 `agy -p "/skills"` and `agy -p "/agents"` with `--add-dir <workspace>` (headless agy has no
-workspace without it). No model turn is spent and nothing global (~/.gemini) is touched.
+workspace without it). No model turn is spent. The plugin is not installed globally, but `agy` runs with your real HOME and may write its own session/log files under ~/.gemini.
 
 Asserts: every exported skill appears as `cure:<name>`, every exported persona appears in
 /agents. Skips cleanly (exit 0, status "skipped") when agy is not installed or not signed in,

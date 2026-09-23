@@ -1,6 +1,6 @@
 # Stitch MCP Tool Schemas
 
-Complete reference for all tools exposed by the `stitch-mcp` proxy (`@_davideast/stitch-mcp`).
+Complete reference for all tools exposed by the `stitch-mcp` proxy (`@_davideast/stitch-mcp`). Pinned to `0.9.0` (latest on npm, verified 2026-09-23): it is an individual-maintained package that runs with your Google credentials, so bump the pin deliberately after reading its changelog.
 
 ## Namespace Discovery
 
@@ -312,13 +312,13 @@ These commands run directly via the stitch-mcp CLI, not through the MCP protocol
 
 | Command | Description |
 |---|---|
-| `npx @_davideast/stitch-mcp init` | Guided setup: auth, gcloud, MCP config |
-| `npx @_davideast/stitch-mcp serve -p <id>` | Local dev server for project screens |
-| `npx @_davideast/stitch-mcp site -p <id>` | Generate Astro project from screens |
-| `npx @_davideast/stitch-mcp view` | Interactive terminal browser |
-| `npx @_davideast/stitch-mcp tool [name]` | Invoke any MCP tool from CLI |
-| `npx @_davideast/stitch-mcp tool -s` | List all tools with schemas |
-| `npx @_davideast/stitch-mcp proxy` | Run MCP proxy for IDE agents |
+| `npx @_davideast/stitch-mcp@0.9.0 init` | Guided setup: auth, gcloud, MCP config |
+| `npx @_davideast/stitch-mcp@0.9.0 serve -p <id>` | Local dev server for project screens |
+| `npx @_davideast/stitch-mcp@0.9.0 site -p <id>` | Generate Astro project from screens |
+| `npx @_davideast/stitch-mcp@0.9.0 view` | Interactive terminal browser |
+| `npx @_davideast/stitch-mcp@0.9.0 tool [name]` | Invoke any MCP tool from CLI |
+| `npx @_davideast/stitch-mcp@0.9.0 tool -s` | List all tools with schemas |
+| `npx @_davideast/stitch-mcp@0.9.0 proxy` | Run MCP proxy for IDE agents |
 
 ## Environment Variables
 

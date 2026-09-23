@@ -80,21 +80,36 @@ def mode_prompt(d):
               "before any irreversible action.")
 
 
+def target_path(ti):
+    return ti.get("file_path") or ti.get("notebook_path") or ""
+
+
+def proposed_content(ti):
+    """Everything an Edit/Write/MultiEdit/NotebookEdit call would put on disk."""
+    parts = [ti.get("content") or "", ti.get("new_string") or "", ti.get("new_source") or ""]
+    for e in ti.get("edits") or []:
+        if isinstance(e, dict):
+            parts.append(e.get("new_string") or "")
+    return "\n".join(parts)
+
+
 def mode_edit(d):
-    path = tool_input(d).get("file_path") or ""
-    if not path or ENV_ALLOWED.search(path):
+    path = target_path(tool_input(d))
+    if not path:
         return
-    for pat, msg in PROTECTED:
+    for i, (pat, msg) in enumerate(PROTECTED):
+        if i == 0 and ENV_ALLOWED.search(path):
+            continue  # .env.example etc. are templates; other rules still apply
         if pat.search(path):
             block(msg)
 
 
 def mode_skill_content(d):
     ti = tool_input(d)
-    path = ti.get("file_path") or ""
+    path = target_path(ti)
     if not LIBRARY_PATH.search(path):
         return
-    content = (ti.get("content") or "") + (ti.get("new_string") or "")
+    content = proposed_content(ti)
     for pat, why in CONTENT_PATTERNS:
         if re.search(pat, content):
             block(f"proposed skill/agent/persona content {why}. If intentional, get it "
@@ -104,6 +119,7 @@ def mode_skill_content(d):
 
 def mode_bash(d):
     cmd = tool_input(d).get("command") or ""
+    cmd = re.sub(r"[\"']", "", cmd)  # `rm -rf "/"` must not slip past on quoting
     for pat in BASH_PATTERNS:
         if pat.search(cmd):
             block("Dangerous system command detected.")

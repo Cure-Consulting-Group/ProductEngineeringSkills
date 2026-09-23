@@ -59,7 +59,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | data-migration | Plans and runs data migrations: ETL, backfills, dual-write, zero-downtime cutover, rollback. Use when moving or reshaping existing data across databases, Firestore, or legacy systems. | default |
 | database-architect | Designs schemas, indexes, and query plans for Firestore, PostgreSQL, SQLite/Room. Use when choosing a database, modeling data, adding indexes, or fixing slow queries. | default |
 | e2e-testing | Writes E2E test suites (Playwright, Compose/Espresso, XCUITest) with page objects and CI wiring. Use when adding E2E, smoke, or visual regression tests for a user flow or fixing flaky E2E tests. | default |
-| env-secrets-manager | Read-only .env and secrets audits. Use when designing an .env schema, scanning for leaked keys, responding to a leak, planning rotation, or moving to a secret manager. | Read, Grep, Glob, Bash |
+| env-secrets-manager | Read-only .env and secrets audits. Use when designing an .env schema, scanning for leaked keys, responding to a leak, planning rotation, or moving to a secret manager. | Read, Grep, Glob |
 | firebase-architect | Designs Firestore data models, security rules, Cloud Functions v2, and App Check. Use when building a Firebase feature, writing rules or triggers, or wiring a Firestore data layer. | default |
 | git-worktree-manager | Sets up git worktrees with isolated ports, env files, and databases. Use when running parallel features, a hotfix, or a PR review without stashing or switching the main checkout. | default |
 | i18n | Internationalization and localization for Android, iOS, and Next.js. Use when externalizing strings, adding a locale, supporting RTL, fixing plurals or date/currency formatting, or setting up a translation pipeline. | default |
@@ -287,8 +287,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | PostToolUseFailure |  | command | python3 -c " |
 | UserPromptSubmit |  | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" prompt |
-| PreToolUse | Edit\|Write | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" edit |
-| PreToolUse | Edit\|Write | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" skill-content |
+| PreToolUse | Edit\|Write\|MultiEdit\|NotebookEdit | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" edit |
+| PreToolUse | Edit\|Write\|MultiEdit\|NotebookEdit | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" skill-content |
 | PreToolUse | Bash | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" bash |
 | PreToolUse | Skill | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" telemetry |
 | Stop |  | prompt | You are a quality gate reviewing the end of a Claude Code turn. Context: $ARGUMENTS |

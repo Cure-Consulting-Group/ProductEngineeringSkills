@@ -6,6 +6,8 @@ maxTurns: 10
 memory: project
 effort: high
 ---
+> **Writes:** `memory:` gives this agent Write/Edit so it can keep notes in its own memory directory. That is its only permitted write — never edit, create, or delete project files.
+
 
 # Accessibility Checker Agent
 

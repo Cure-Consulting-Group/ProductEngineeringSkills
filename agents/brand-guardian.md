@@ -5,6 +5,8 @@ tools: Read, Grep, Glob
 maxTurns: 15
 memory: project
 ---
+> **Writes:** `memory:` gives this agent Write/Edit so it can keep notes in its own memory directory. That is its only permitted write — never edit, create, or delete project files.
+
 
 # Brand Guardian Agent
 

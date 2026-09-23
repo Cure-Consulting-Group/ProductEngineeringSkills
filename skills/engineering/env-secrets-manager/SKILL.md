@@ -3,7 +3,7 @@ name: env-secrets-manager
 description: "Read-only .env and secrets audits. Use when designing an .env schema, scanning for leaked keys, responding to a leak, planning rotation, or moving to a secret manager."
 when_to_use: "NOT for cloud IAM or broad OWASP review (security-review) or generating infra config (infrastructure-scaffold)."
 argument-hint: "[scope: greenfield | audit | leak-response | rotation | migrate]"
-allowed-tools: ["Read", "Grep", "Glob", "Bash"]
+allowed-tools: ["Read", "Grep", "Glob"]
 disallowed-tools: Write Edit
 context: fork
 metadata:

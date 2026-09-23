@@ -74,11 +74,17 @@ def run_in_sandbox(cmd: str, cwd: Path, timeout: int) -> tuple[int, str]:
     """Graders execute lane-written code; keep that inside the codex sandbox when available."""
     env = dict(os.environ, TMPDIR=str(cwd / ".eval-tmp"))
     (cwd / ".eval-tmp").mkdir(exist_ok=True)
-    if shutil.which("codex") and not os.environ.get("TRI_LANE_EVAL_UNSANDBOXED"):
+    if os.environ.get("TRI_LANE_EVAL_UNSANDBOXED"):
+        # Explicit operator opt-in only: runs lane-written code as you, with no sandbox.
+        rc, out, err = sh(cmd, cwd=str(cwd), env=env, timeout=timeout, shell=True)
+    elif shutil.which("codex"):
         argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "--", "sh", "-c", cmd]
         rc, out, err = sh(argv, cwd=str(cwd), env=env, timeout=timeout)
     else:
-        rc, out, err = sh(cmd, cwd=str(cwd), env=env, timeout=timeout, shell=True)
+        # Same stance as lane-report.py: never silently run lane-written code unsandboxed.
+        shutil.rmtree(cwd / ".eval-tmp", ignore_errors=True)
+        return 127, ("refusing to run grader command without a sandbox: codex is not installed. "
+                     "Install codex, or set TRI_LANE_EVAL_UNSANDBOXED=1 to accept the risk.\n")
     shutil.rmtree(cwd / ".eval-tmp", ignore_errors=True)
     return rc, out + err
 
