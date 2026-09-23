@@ -77,11 +77,11 @@ These are unforgiving:
 | **§83(b)** | **30 days from transfer**, no extensions | Ordinary income on every vesting tranche at then-FMV; QSBS clock delayed. Form 15620 may be used. |
 | **S corporation election (Form 2553)** | 2 months 15 days into the year | Taxed as C-corp for the year (late relief under Rev. Proc. 2013-30 may apply) |
 | **§41(h) payroll offset** | On the **timely filed original return** | Credit becomes a carryforward instead of cash |
-| **Retirement plan adoption** | 401(k) by year end for deferrals; SEP by the return due date incl. extensions | Deduction lost for the year |
+| **Retirement plan adoption** | 401(k): may be adopted after year end, by the employer's return due date, for employer contributions (SECURE Act §201); a sole proprietor/single-member LLC in the plan's **first year** may also make employee deferrals up to the return due date (SECURE 2.0 §317 — confirm whether extensions count). Otherwise, deferrals need a plan in place by year end. SEP by the return due date incl. extensions | Deduction lost for the year |
 | **NY PTET election** | **March 15** of the tax year | Entire SALT workaround unavailable for that year |
 | **§1045 QSBS rollover** | 60 days from sale | Gain fully recognized |
 | **§1031 exchange** | 45-day ID / 180-day close | Full gain recognition |
-| **Form 8850 (WOTC)** | 28 days from hire | Credit lost |
+| **Form 8850 (WOTC)** | 28 days from hire | Credit lost. §51 lapsed for hires after 2025-12-31 — confirm reauthorization before use (unverified as of 2026-09-23) |
 | **§475(f) mark-to-market** | Due date of the *prior* year's return | Wait a full year |
 
 `reference/strategy-playbook.md` carries the deadline for every strategy listed.

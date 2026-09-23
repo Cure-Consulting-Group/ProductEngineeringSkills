@@ -214,7 +214,7 @@ Generates a new screen from a natural language prompt.
   "arguments": {
     "projectId": "13534454087919359824",
     "prompt": "A modern checkout page with order summary, payment form with card inputs, and a green 'Complete Purchase' CTA button. Clean white background with subtle gray card containers.",
-    "designSystem": "# Design System: Vendly\n## Color Palette\n- Primary: #00A859...",
+    "designSystem": "# Design System: Example App\n## Color Palette\n- Primary: #00A859...",
     "deviceType": "mobile"
   }
 }

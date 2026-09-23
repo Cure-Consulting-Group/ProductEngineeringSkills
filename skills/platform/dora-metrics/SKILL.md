@@ -374,18 +374,18 @@ Before analysis, gather actual DORA data from the project:
 
 This skill bundles the following stdlib-only scripts under `scripts/`. Each supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
 
-- `scripts/deployment_frequency.py` — Count deployments per day/week from a git repo or JSON log; reports DORA tier.
+- `scripts/deployment_frequency.py` — Count deployments per day/week from a git repo or JSON log; reports DORA tier. With the plugin enabled it is also on PATH as `cure-deploy-frequency` (same flags).
   ```bash
-  python3 skills/dora-metrics/scripts/deployment_frequency.py \
+  python3 skills/platform/dora-metrics/scripts/deployment_frequency.py \
     --repo /path/to/repo --since 2025-01-01 --until 2025-03-31 --json
   ```
-- `scripts/mttr_calculator.py` — Mean / median / p90 / p95 MTTR from an incidents CSV (`id, opened_at, resolved_at[, severity]`).
+- `scripts/mttr_calculator.py` — Mean / median / p90 / p95 MTTR from an incidents CSV (`id, opened_at, resolved_at[, severity]`). With the plugin enabled it is also on PATH as `cure-mttr` (same flags).
   ```bash
-  python3 skills/dora-metrics/scripts/mttr_calculator.py --csv incidents.csv --json
+  python3 skills/platform/dora-metrics/scripts/mttr_calculator.py --csv incidents.csv --json
   ```
-- `scripts/change_failure_rate.py` — Change Failure Rate % from a deployments CSV (`id, deployed_at, caused_incident`).
+- `scripts/change_failure_rate.py` — Change Failure Rate % from a deployments CSV (`id, deployed_at, caused_incident`). With the plugin enabled it is also on PATH as `cure-change-failure-rate` (same flags).
   ```bash
-  python3 skills/dora-metrics/scripts/change_failure_rate.py --csv deployments.csv --json
+  python3 skills/platform/dora-metrics/scripts/change_failure_rate.py --csv deployments.csv --json
   ```
 
 ## Code Generation (Required)

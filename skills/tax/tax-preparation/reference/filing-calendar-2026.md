@@ -31,7 +31,7 @@ substitute the real states of formation and nexus.
 | **Sep 15** | **Q3 2026 estimated payment** | Individual, corps |
 | **Sep 15** | Extended Form 1065 / 1120-S | If extended |
 | **Oct 15** | Extended Form 1120 / 1040 | If extended |
-| **Dec 31** | **401(k) plan must be ADOPTED for 2026 deferrals** | any sponsoring entity |
+| **Dec 31** | **401(k) deferral elections in place for 2026** (existing plans / employees). Exception: a sole prop or single-member LLC adopting its **first** plan may make 2026 deferrals up to the 2026 return due date (SECURE 2.0 §317) | any sponsoring entity |
 | **Dec 31** | Last day for most 2026 tax-year actions: asset placed in service, charitable gifts, Roth conversions, loss harvesting | all |
 
 ## The following filing season
@@ -51,7 +51,7 @@ substitute the real states of formation and nexus.
 | Trigger | Deadline |
 |---|---|
 | Stock issued subject to vesting | **§83(b) within 30 days** |
-| New hire from a targeted group | Form 8850 within 28 days |
+| New hire from a targeted group | Form 8850 within 28 days (§51 lapsed for post-2025 hires — confirm reauthorization before use) |
 | QSBS sold, rollover desired | §1045 within 60 days |
 | Property sold, §1031 intended | 45-day ID / 180-day close |
 | New entity formed | 8832 (75 days retro) / 2553 (2mo 15d); §1244 papers at issuance |

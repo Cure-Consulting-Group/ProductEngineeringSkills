@@ -54,6 +54,11 @@ Dollar figures marked `[constants]` come from the `constants` binding.
   unemployed, SNAP recipients, ex-felons, designated community residents).
 - **Hard deadline**: Form 8850 must be filed with the state workforce agency
   **within 28 days of the employee's start date**. Miss it and the credit is gone.
+- **Status — confirm before use (unverified as of 2026-09-23).** §51 authorization
+  ended for individuals who begin work after **2025-12-31** (CRS R43729, May 2026);
+  reauthorization bills were pending. Do not count WOTC for a 2026 hire unless an
+  extension has been enacted. Filing Form 8850 within 28 days still preserves the
+  claim if Congress extends retroactively.
 
 ### §44 — Disabled access credit
 - 50% of eligible access expenditures between $250 and $10,250 → max $5,000.
@@ -84,27 +89,43 @@ Dollar figures marked `[constants]` come from the `constants` binding.
 - Requires Form 1098-T. Phase-outs apply — `VERIFY` current ranges.
 
 ### §21 — Child and dependent care credit
-- 20–35% of up to $3,000 (one qualifying person) / $6,000 (two or more).
+- Expense base $3,000 (one qualifying person) / $6,000 (two or more).
+- Rate: 20–35% through 2025. **From 2026 (OBBBA) the maximum rate rises to 50%**,
+  phasing down with AGI to 35% and then to a 20% floor — confirm the exact AGI
+  breakpoints before use (unverified as of 2026-09-23).
 - Requires **earned income by both spouses** (or student/disabled status).
 - Provider TIN required on Form 2441 — a common failure point.
-- Coordinates with §129 dependent care FSA (same $ can't be used twice).
+- Coordinates with §129 dependent care FSA (same $ can't be used twice). The §129
+  exclusion rises from $5,000 to **$7,500** ($3,750 MFS) for 2026+, not indexed
+  (verified 2026-09-23, IRS OBBB family-provisions guidance).
 
 ### §25B — Saver's credit
 - 10/20/50% of up to $2,000 contributed to a retirement plan, by AGI tier.
 - Low AGI only — usually irrelevant here, but screen it in loss years.
 
-### §25D — Residential clean energy
-- 30% of solar, solar water heating, fuel cell, wind, geothermal, and **battery
-  storage ≥3 kWh**. No dollar cap for most property.
-- **Personal residence only** — a business-use portion goes to §48 instead.
-- Nonrefundable but carries forward.
+### §25D — Residential clean energy — TERMINATED after 2025
+- **Not available for expenditures made after 2025-12-31** (OBBBA; verified
+  2026-09-23, IRS FAQs on OBBB modification of §§25C/25D and Form 5695
+  instructions). Relevant only to a 2025-or-earlier return or to a §25D
+  carryforward from a prior year.
+- Historic rule: 30% of solar, solar water heating, fuel cell, wind, geothermal,
+  and battery storage ≥3 kWh; personal residence only; nonrefundable, carries
+  forward.
+
+### §25C — Energy efficient home improvement — TERMINATED after 2025
+- **Not available for property placed in service after 2025-12-31** (OBBBA; same
+  sources). Historic rule: 30% up to $3,200/yr for heat pumps, insulation,
+  windows, doors. Do not present it for a 2026 return.
 
 ### §30D / §25E / §45W — Clean vehicle credits
 - Up to $7,500 new (§30D), $4,000 used (§25E), commercial (§45W).
 - Subject to MSRP caps, income caps, North American final assembly, and critical
   mineral / battery component sourcing.
-- **Statutory termination dates were accelerated by OBBBA — `VERIFY` whether the
-  credit is still available for the placed-in-service date before claiming.**
+- **TERMINATED for vehicles acquired after 2025-09-30** (OBBBA). "Acquired" = a
+  binding written contract plus a payment (including a nominal downpayment or
+  trade-in) on or before that date; such a vehicle may still qualify when placed
+  in service later (verified 2026-09-23, IRS FAQs on OBBB modification of §§25E,
+  30D, 45W). Not available for a 2026 purchase.
 
 ### §32 — Earned income credit
 - `[constants]` phase-out tables by dependent count.
@@ -122,12 +143,14 @@ Dollar figures marked `[constants]` come from the `constants` binding.
 ## Screening checklist
 
 ```
-[ ] Any wages paid?              → §41(h), §45S, §51, §45F
+[ ] Any wages paid?              → §41(h), §45S, §45F, §51 (lapsed for post-2025 hires — confirm)
 [ ] Any R&D or software dev?     → §41 (+ §174A deduction)
 [ ] Children under 17?           → §24
 [ ] Anyone in school?            → §25A
 [ ] Paid for child care?         → §21, §129
-[ ] Solar / battery / EV?        → §25D, §30D (check termination dates)
+[ ] Solar / battery / EV?        → §25C/§25D ended 2025-12-31; §30D/§25E/§45W ended
+                                   for vehicles acquired after 2025-09-30 — prior-year
+                                   carryforwards only
 [ ] Foreign tax withheld?        → §901
 [ ] Accessibility improvements?  → §44 + §190
 [ ] Unused credits from prior yr?→ §39 carryforward — check the schedule

@@ -100,9 +100,9 @@ For organizations with multiple products sharing a design foundation:
 ```
 design-systems/
 ├── base.design.md          ← Shared tokens (spacing, motion, elevation)
-├── vendly.design.md        ← Product-specific (colors, typography, locale)
-├── initiated.design.md     ← Product-specific
-└── autograph.design.md     ← Product-specific
+├── product-a.design.md     ← Product-specific (colors, typography, locale)
+├── product-b.design.md     ← Product-specific
+└── product-c.design.md     ← Product-specific
 ```
 
 ### Sync Strategy
@@ -115,7 +115,7 @@ design-systems/
 ### Version Control
 
 - Commit DESIGN.md alongside code changes
-- Use descriptive commit messages: `design: add error state tokens to Vendly palette`
+- Use descriptive commit messages: `design: add error state tokens to product palette`
 - Review DESIGN.md changes in PRs — treat them as API changes
 
 ## Anti-Patterns to Avoid

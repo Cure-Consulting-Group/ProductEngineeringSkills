@@ -36,7 +36,7 @@ Calculate value beyond the forecast period:
 
 ### 5. Enterprise & Equity Value
 - **Enterprise Value**: PV of Forecast UFCFs + PV of Terminal Value.
-- **Equity Value**: Enterprise Value - Net Debt - Minority Interest + Cash.
+- **Equity Value**: Enterprise Value − Net Debt − Minority Interest − Preferred Equity (+ non-operating assets not already in the cash flows, e.g. equity investments). Net Debt = Debt − Cash, so cash is already counted — **do not add cash back** after subtracting net debt.
 - **Per Share Value**: Equity Value / Diluted Shares Outstanding.
 
 ## Standard Output Format

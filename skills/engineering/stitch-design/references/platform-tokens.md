@@ -62,16 +62,16 @@ Maps DESIGN.md tokens to platform-specific implementations for Android Compose, 
 
 ```kotlin
 // Color.kt — Generated from DESIGN.md
-val VendlyPrimary = Color(0xFF00A859)
-val VendlyOnPrimary = Color(0xFFFFFFFF)
-val VendlySurface = Color(0xFFF8FAF9)
-val VendlyOnSurface = Color(0xFF1A1A2E)
+val AppPrimary = Color(0xFF00A859)
+val AppOnPrimary = Color(0xFFFFFFFF)
+val AppSurface = Color(0xFFF8FAF9)
+val AppOnSurface = Color(0xFF1A1A2E)
 
-val VendlyLightColorScheme = lightColorScheme(
-    primary = VendlyPrimary,
-    onPrimary = VendlyOnPrimary,
-    surface = VendlySurface,
-    onSurface = VendlyOnSurface,
+val AppLightColorScheme = lightColorScheme(
+    primary = AppPrimary,
+    onPrimary = AppOnPrimary,
+    surface = AppSurface,
+    onSurface = AppOnSurface,
     // ...
 )
 ```
@@ -127,7 +127,7 @@ val VendlyLightColorScheme = lightColorScheme(
 
 ```kotlin
 // Typography.kt
-val VendlyTypography = Typography(
+val AppTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = InterFontFamily,
         fontWeight = FontWeight.Bold,
@@ -163,7 +163,7 @@ export default {
   theme: {
     fontFamily: {
       sans: ['Inter', 'system-ui', 'sans-serif'],
-      display: ['Bebas Neue', 'Inter', 'sans-serif'], // The Initiated
+      display: ['Bebas Neue', 'Inter', 'sans-serif'], // display-heavy brand example
     },
     fontSize: {
       'display-lg': ['3.75rem', { lineHeight: '1.1', fontWeight: '700' }],

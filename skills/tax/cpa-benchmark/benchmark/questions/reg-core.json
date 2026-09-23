@@ -5,10 +5,10 @@
   "questions": [
     {
       "id": "REG-001", "area": "Ethics/Professional Responsibility", "type": "mcq", "difficulty": "application",
-      "q": "A preparer discovers that a client's prior-year return, prepared by another firm, materially understated income. Under SSTS No. 6 and Circular 230 §10.21, what must the preparer do?",
+      "q": "A preparer discovers that a client's prior-year return, prepared by another firm, materially understated income. Under SSTS §1.2 and Circular 230 §10.21, what must the preparer do?",
       "choices": {"A": "Notify the IRS immediately", "B": "Inform the client of the error and its consequences, and recommend corrective action", "C": "Refuse to prepare the current-year return until the prior year is amended", "D": "Amend the prior-year return without the client's consent"},
       "answer": "B",
-      "cite": "SSTS No. 6; Circular 230 §10.21",
+      "cite": "SSTS §1.2; Circular 230 §10.21",
       "why": "The duty runs to the client, not the IRS. Notifying the IRS without permission may violate §7216 confidentiality. The preparer may withdraw if the client refuses to correct a material error, but cannot self-report or amend unilaterally."
     },
     {

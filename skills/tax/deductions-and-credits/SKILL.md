@@ -69,7 +69,8 @@ Additional gates that kill otherwise-valid deductions:
 - **§183 hobby loss** — no profit motive, no deduction. *Screen any activity with
   consecutive loss years: it fails the 3-of-5 presumption.*
 - **§280E** — cannabis trafficking disallows everything but COGS. *Applies to
-  any cannabis activity once it begins trafficking.*
+  any cannabis activity once it begins trafficking. Confirm the marijuana
+  rescheduling status before use (unverified as of 2026-09-23).*
 - **§274(d)** — no substantiation, no deduction, regardless of merit.
 - **§267** — related-party payment not deductible until includible by the payee.
 
@@ -80,16 +81,21 @@ Ask these, in this order, when hunting for missed benefit:
 - **Is there a business?** If yes, a large class of otherwise-personal spend
   (phone, internet, home office, vehicle, education, travel, health insurance)
   becomes partially deductible.
-- **Is there payroll?** Payroll unlocks §41(h) payroll offset, §45S, §45F, §51,
+- **Is there payroll?** Payroll unlocks §41(h) payroll offset, §45S, §45F, §51 (lapsed for post-2025 hires — confirm before use),
   retirement plan deductions, and the §199A W-2 wage limit. *A company with no
   payroll has zero wage QREs, which is the most common reason an R&D credit comes
   out a fraction of what the work was worth.*
 - **Are there children, education, or dependents?** §24, §25A, §21, §129.
+  (OBBBA raised §21 and §129 from 2026 — see `reference/credits-catalog.md`.)
+- **Home energy or EV purchases?** §25C and §25D terminated after 2025-12-31;
+  §30D/§25E/§45W ended for vehicles acquired after 2025-09-30. None is available
+  for 2026 spending — only carryforwards from earlier years.
 - **Is there equipment, software, or a vehicle?** §179, §168(k), §179A, §168(n).
 - **Is there R&D or software development?** §174A + §41. Frequently missed by
   founders who think "we're not a lab."
 - **Is there retirement capacity?** The largest single deduction available to a
-  profitable owner-operator — see `retirement-plan` and the `tax-strategies` skill.
+  profitable owner-operator — see the `tax-strategies` skill (retirement-plan
+  design) and `tax-recommendations` for sizing.
 - **Is there health insurance?** §162(l) above-the-line, or an HRA/ICHRA.
 - **Did anything get sold, lost, or abandoned?** §165, §1244, §1231.
 

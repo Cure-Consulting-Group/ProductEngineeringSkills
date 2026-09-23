@@ -36,7 +36,7 @@ Tax shelter or reportable transaction?     → More likely than not (>50%) requi
 ```
 
 Details and the full authority ladder are in the `irc-lookup` skill's
-`reference/authority-hierarchy.md`. Penalty consequences are in
+`tax/irc-lookup/reference/authority-hierarchy.md`. Penalty consequences are in
 `audit-risk-substantiation`.
 
 **Never** let audit probability enter the analysis. "They won't catch it" is not a
@@ -68,17 +68,25 @@ compute with worksheets, apply the knowledge requirement, and retain the records
 Penalty is **per failure, per return** — four credits on one return means four
 penalties.
 
-## AICPA SSTS — the seven duties
+## AICPA SSTS — the revised standards (effective 2024-01-01)
 
-| SSTS | Duty | Practical rule |
+The pre-2024 seven statements ("SSTS No. 1–7") were replaced by four statements
+with numbered sections (verified 2026-09-23, AICPA *Statements on Standards for Tax
+Services No. 1–4*, effective January 1, 2024). Cite by section, not the old numbers.
+
+| Section | Duty | Practical rule |
 |---|---|---|
-| **No. 1** | Tax return positions | Do not recommend or sign a position lacking a realistic possibility of success unless it is not frivolous **and** is disclosed. Advise the client of penalty risk and the opportunity to disclose. |
-| **No. 2** | Answers on returns | Make a **reasonable effort to obtain answers to all questions** on the return. Blank is not an answer. |
-| **No. 3** | Procedural aspects | May rely in good faith on client information without verification, but must inquire when it appears incorrect/inconsistent/incomplete, and must consider prior-year returns when feasible. |
-| **No. 4** | Use of estimates | Estimates are permitted where records are unavailable and the amounts are reasonable — but **must not be presented to imply greater accuracy than exists**, and are unavailable where the Code demands strict substantiation (§274(d)). |
-| **No. 5** | Departing from a prior position | A prior year's treatment (even one settled on audit) does not bind the current year. |
-| **No. 6** | Knowledge of an error | On discovering an error, **inform the client promptly**, recommend corrective action, and explain the consequences. **Do not** notify the IRS without the client's permission — doing so may violate confidentiality. If the client refuses to correct a material error, consider withdrawal. |
-| **No. 7** | Form and content of advice | No standard form required, but advice must reflect professional competence and serve the client's needs. Update advice only when specifically undertaken to do so. |
+| **1.1** Advising on tax positions | Position standard (advice) | Comply with the **taxing authority's standard** where it has one — for federal returns that is §6694/Circular 230 (substantial authority; reasonable basis with disclosure; more likely than not for tax shelters/reportable transactions). The SSTS "realistic possibility" floor applies **only** where the taxing authority has no written standard. Never advise a position that exploits audit selection. |
+| **1.2** Knowledge of errors | Error discovered | **Inform the client promptly**, recommend corrective action, and explain the consequences. **Do not** notify the IRS without the client's permission. If the client refuses to correct a material error, consider withdrawal. |
+| **1.3** Data protection (new) | Safeguard taxpayer data | Reasonable safeguards for taxpayer information; ties to §7216 and the FTC Safeguards Rule. |
+| **1.4** Reliance on tools (new) | Software and other tools | A tool's output is the member's responsibility — exercise judgment over what the software or model produced. |
+| **2.1** Tax return positions | Position standard (returns) | Same ladder as 1.1 for positions on a return you prepare or sign. Advise the client of penalty risk and the opportunity to disclose. |
+| **2.2** Tax return questions | Answers on returns | Make a **reasonable effort to obtain answers to all questions** on the return. Blank is not an answer. |
+| **2.3** Reliance on information from others | Procedural diligence | May rely in good faith on client information without verification, but must inquire when it appears incorrect/inconsistent/incomplete, and should consider prior-year returns when feasible. |
+| **2.4** Use of estimates | Estimates | Permitted where records are unavailable and the amounts are reasonable — but **must not imply greater accuracy than exists**, and are unavailable where the Code demands strict substantiation (§274(d)). |
+| **2.5** Departure from previous positions | Prior-year treatment | A prior year's treatment (even one settled on audit) does not bind the current year. |
+| **No. 3** Tax consulting services | Form and content of advice | Advice must reflect professional competence and serve the client's needs; no duty to update unless specifically undertaken. |
+| **No. 4** Tax representation services | Representation before a taxing authority | Standards for representing the taxpayer in examinations, appeals and other proceedings. |
 
 ## Recordkeeping and workpapers
 

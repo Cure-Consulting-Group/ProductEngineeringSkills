@@ -45,7 +45,7 @@ const eventNames = Object.keys(grouped);
 <% grouped[name].forEach((e, j) => {
      const reminder = `${e.label}: consider running ${e.skills.join(', ')}`;
      const cmd = e.bashPattern
-       ? `CMD=$(echo $CLAUDE_TOOL_INPUT | python3 -c \\"import sys,json; d=json.load(sys.stdin); print(d.get('command',''))\\" 2>/dev/null); case \\"$CMD\\" in *'${e.bashPattern}'*) echo '{\\"reminder\\": \\"${reminder}\\"}' ;; esac`
+       ? `CMD=$(python3 -c \\"import sys,json; d=json.load(sys.stdin); print((d.get('tool_input') or {}).get('command',''))\\" 2>/dev/null); case \\"$CMD\\" in *'${e.bashPattern}'*) echo '{\\"reminder\\": \\"${reminder}\\"}' ;; esac`
        : `echo '{\\"reminder\\": \\"${reminder}\\"}'`;
 -%>
       {

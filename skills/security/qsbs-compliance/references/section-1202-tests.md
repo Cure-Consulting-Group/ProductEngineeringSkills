@@ -14,6 +14,7 @@ Aggregate gross assets = sum of:
 - Using FMV instead of adjusted basis (makes the number too high)
 - Forgetting to include subsidiary assets
 - Not tracking assets at each issuance date (the test applies at each issuance)
+- Applying the wrong threshold: $50M for stock issued on or before 2025-07-04, $75M (indexed from 2027) for stock issued after
 
 ## Active Business Test: Revenue Classification
 
@@ -37,7 +38,7 @@ Aggregate gross assets = sum of:
 
 ## Holding Period: Key Dates
 
-The 5-year clock starts on the **date of issuance**, not the date of payment or the date of a SAFE.
+The holding clock (more than 5 years for stock issued on or before 2025-07-04; 3/4/5-year tiers at 50/75/100% for stock issued after) starts on the **date of issuance**, not the date of payment or the date of a SAFE.
 
 | Event | Clock Start |
 |-------|-------------|

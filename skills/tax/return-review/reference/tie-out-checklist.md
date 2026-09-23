@@ -48,7 +48,7 @@ Gross receipts        ≈ merchant deposits + direct receipts − refunds/charge
 COGS                  = beginning inventory + purchases − ending inventory
 Line 13 depreciation  = Form 4562 total for this activity
 Line 30 home office   = Form 8829 line 36 OR simplified (≤300 sq ft × $5)
-Line 9 car expense    = business miles × 0.725 (2026) OR actual × business %
+Line 9 car expense    = business miles × 0.725 (Jan 1–Jun 30, 2026) + miles × 0.76 (Jul 1–Dec 31, 2026; IRS mid-year increase, verified 2026-09-23) OR actual × business %
 Net profit line 31    → Schedule SE AND Schedule 1
 ```
 
@@ -90,7 +90,8 @@ If taxable income > threshold:
    Wage/UBIA limit                  = greater of (50% × W-2 wages)
                                        or (25% × W-2 wages + 2.5% × UBIA)
    Phase-in                         over $75,000 single / $150,000 MFJ (2026)
-   SSTB                             fully phased out at $276,775 / $553,500
+   SSTB                             fully phased out at $276,750 single / $276,775 MFS / $553,500 MFJ
+                                    (verified 2026-09-23, Rev. Proc. 2025-32)
 Overall limit                       = 20% × (taxable income − net capital gain)
 Minimum (2026+)                     $400 if active QBI ≥ $1,000
 ```

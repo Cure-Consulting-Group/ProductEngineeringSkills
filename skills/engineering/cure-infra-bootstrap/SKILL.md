@@ -9,12 +9,12 @@ context: fork
 
 # Claude Bootstrap
 
-> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
-> mutating commands, and do not create or delete resources. Under Claude Code
-> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
-> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
-> fields, and activation there can widen rather than narrow file access — so on
-> any runtime other than Claude Code this paragraph is the only guardrail.
+> **This skill writes files.** `init` and `apply` create or rewrite `CLAUDE.md`,
+> `STATE.md`, `.claude/` and `claude.manifest.json` in the target project;
+> `doctor` and `inventory` are read-only. Before any `init`/`apply`, run the same
+> command with `--dry-run`, show the user the per-file plan, and write only after
+> they confirm. No runtime enforces this for you (`allowed-tools` grants, it does
+> not restrict), so the confirm step is the guardrail.
 
 Provisions and maintains the `.claude/` development surface area in any project.
 
@@ -69,12 +69,14 @@ For `init`, surface the detected defaults and let the user override:
 
 ## Step 4: Run the CLI
 
-Build the command from the chosen options. Examples:
+Build the command from the chosen options. `init` requires `--skills-version`: pin the
+version the skills source actually ships (read from its `.claude-plugin/plugin.json`, the
+library's single version source) — never a hand-typed number. Examples:
 
 ```bash
 # init for a new web/firebase project with PCI+GDPR
 node <path-to-bootstrap>/bin/claude-bootstrap.mjs init \
-  --skills-version 5.0.0 \
+  --skills-version "$(node -p "require('<path-to-ProductEngineeringSkills>/.claude-plugin/plugin.json').version")" \
   --skills-source <path-to-ProductEngineeringSkills> \
   --name <project-name> \
   --skill stripe-integration --skill firebase-architect --skill feature-audit \

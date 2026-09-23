@@ -32,6 +32,7 @@ jobs:
         # Hard spec violations (invalid names, broken preload refs) fail the
         # build. Threshold is a floor, not a target — raise it as quality rises.
         run: |
+          python3 scripts/audit-library.py --self-test
           python3 scripts/audit-library.py
           python3 scripts/audit-library.py --fail-under 9.0 --min-item 7.0
 
@@ -76,6 +77,16 @@ jobs:
           git config --global user.email ci@cure && git config --global user.name ci
           python3 -m unittest discover -s tri-lane/tests -v
           python3 -c "import json;json.load(open('tri-lane/.claude-plugin/plugin.json'));json.load(open('tri-lane/skills/tri-lane/models.json'))"
+
+      - name: Plugin hook guards — stdin contract + regression matrix (stdlib, no tokens)
+        # Wave 5 (T52): until v7.9.1 five hooks read a nonexistent CLAUDE_TOOL_INPUT env
+        # var and silently no-op'd. Hook input is JSON on stdin; logic lives in
+        # hooks/cure_guard.py and is exercised here with real hook-shaped payloads.
+        run: |
+          python3 hooks/test_cure_guard.py
+          if grep -n 'CLAUDE_TOOL_INPUT' hooks/hooks.json; then
+            echo "hooks.json reads CLAUDE_TOOL_INPUT — not a real variable; hook input arrives on stdin"; exit 1
+          fi
 
       - name: type:prompt hooks only on low-frequency events, with timeouts
         # Wave 2 (BACKLOG T10/T11) deliberately ships two LLM-evaluating hooks:

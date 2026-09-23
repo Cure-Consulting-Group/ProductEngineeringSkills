@@ -144,7 +144,7 @@ Screen width > 1024px → Navigation Drawer (M3) / NavigationSplitView (HIG) / P
 Material 3 generates a 13-tone palette from a seed color. When Stitch outputs a primary color, map it to the full tonal system:
 
 ```
-Seed: #00A859 (Vendly Green)
+Seed: #00A859 (example brand green)
   ↓ HCT color space transformation
 Tonal palette (13 tones):
   T0:   #000000   T10:  #002110   T20:  #003919

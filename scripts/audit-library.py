@@ -32,9 +32,11 @@ SKILL_FIELDS = {
     "disable-model-invocation", "user-invocable", "allowed-tools",
     "disallowed-tools", "model", "context", "paths", "effort", "shell",
     "agent", "hooks",
+    # documented per code.claude.com/docs/en/skills (verified 2026-09-23)
+    "metadata", "background", "license", "compatibility",
 }
 # Tolerated-but-non-functional skill fields (no penalty beyond a note)
-SKILL_FIELDS_INERT = {"version", "compatibility"}
+SKILL_FIELDS_INERT = {"version"}
 
 AGENT_FIELDS = {
     "name", "description", "tools", "disallowedTools", "model", "permissionMode",
@@ -58,6 +60,353 @@ TIME_SENSITIVE_RE = re.compile(
     r"\b(as of (?:January|February|March|April|May|June|July|August|September|"
     r"October|November|December|20\d\d)|before 20\d\d|after 20\d\d|"
     r"in 20\d\d you|currently in 20\d\d)\b", re.I)
+
+
+# --- T52: runtime-portability lints ------------------------------------------
+# Codex and Antigravity parse frontmatter with a strict YAML parser and
+# silently DROP a skill whose frontmatter is invalid; Claude tolerates it.
+# `parse_frontmatter` below is deliberately naive, so it cannot catch this —
+# `frontmatter_yaml_errors` does. PyYAML is used when importable (it is not
+# installed in CI — validate.yml is stdlib-only), and a stdlib structural
+# checker ALWAYS runs so local and CI verdicts agree on the common failure
+# classes (orphan indented keys under a scalar, duplicate keys, unterminated
+# quotes, unquoted `: ` in a plain scalar).
+try:
+    import yaml as _yaml  # optional; never required
+except Exception:  # pragma: no cover - depends on environment
+    _yaml = None
+
+# Trigger phrase that must appear early in `description` (T52 advisory; T53
+# tightens). Codex truncates descriptions to ~110 chars at our library size
+# and neither Codex nor Antigravity reads `when_to_use`.
+DESC_TRIGGER_WINDOW = 110
+DESC_TRIGGER_RE = re.compile(r"\b(use when|use for|use this|use to|use on|use before|use after|when)\b", re.I)
+# Session /loop tasks expire after 7 days, so an interval >= 7d never fires.
+LOOP_MAX_SECONDS = 7 * 86400
+LOOP_UNIT_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 7 * 86400}
+# Hyphenated Claude Code built-in / sibling-plugin slash commands that are
+# legitimately referenced as `/name` and are not skills in this library.
+BUILTIN_SLASH = {
+    "add-dir", "pr-comments", "release-notes", "output-style", "install-github-app",
+    "terminal-setup", "privacy-settings", "code-review", "fewer-permission-prompts",
+    "skill-doctor", "update-config", "tri-lane", "security-review",
+}
+KEBAB = r"[a-z][a-z0-9]*(?:-[a-z0-9]+)+"
+# Currency (feeds T59): `metadata.verified: YYYY-MM-DD` on every skill. LOW
+# when absent or older than VERIFIED_STALE_DAYS; HIGH for client-facing
+# regulated skills older than VERIFIED_STALE_DAYS_STRICT. Advisory-only
+# (no score effect, never fails) until STALENESS_ENFORCED flips — no skill
+# carries the field yet (Wave 5 T53/T59 add it).
+STALENESS_ENFORCED = False
+VERIFIED_STALE_DAYS = 180
+VERIFIED_STALE_DAYS_STRICT = 365
+STRICT_CURRENCY_DOMAINS = {"tax", "legal"}
+STRICT_CURRENCY_SKILLS = {"compliance-architect", "qsbs-compliance"}
+
+
+def _split_frontmatter_raw(text):
+    """Return (raw_frontmatter, error) using the same `---` delimiting that
+    Codex/agy use: an opening `---` line and a closing `---` line."""
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None, None  # no frontmatter; other checks report missing fields
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            return "\n".join(lines[1:i]), None
+    return None, "frontmatter opened with `---` but never closed"
+
+
+def _stdlib_yaml_errors(raw):
+    """Minimal strict checker for the flat frontmatter subset this library
+    uses. Not a YAML parser — it flags the structures a strict parser rejects."""
+    errs = []
+    seen = set()
+    # state of the last top-level key: 'open' (empty value -> nested block
+    # allowed), 'block' (| or > scalar), 'quoted' (multi-line quoted scalar
+    # still open), 'flow' (multi-line [..]/{..}), or 'scalar' (closed).
+    state, quote_ch, flow_depth = None, None, 0
+    for ln, line in enumerate(raw.splitlines(), 1):
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        indented = line[0] in " \t"
+        if state == "quoted":
+            if quote_ch in line:
+                state = "scalar"
+            continue
+        if state == "flow":
+            flow_depth += line.count("[") + line.count("{") - line.count("]") - line.count("}")
+            if flow_depth <= 0:
+                state = "scalar"
+            continue
+        if indented:
+            if state in ("open", "block"):
+                continue
+            errs.append(f"line {ln}: indented `{line.strip()[:40]}` under a scalar value "
+                        f"(orphan key — strict YAML parsers reject the whole frontmatter)")
+            continue
+        m = re.match(r"^([A-Za-z0-9_-]+):(?:\s+(.*)|\s*)$", line)
+        if not m:
+            errs.append(f"line {ln}: `{line.strip()[:40]}` is not a `key: value` pair")
+            state = "scalar"
+            continue
+        key, val = m.group(1), (m.group(2) or "").rstrip()
+        if key in seen:
+            errs.append(f"line {ln}: duplicate key `{key}`")
+        seen.add(key)
+        if not val:
+            state = "open"
+        elif re.match(r"^[|>][+-]?\d*$", val):
+            state = "block"
+        elif val[0] in "\"'":
+            q = val[0]
+            rest = val[1:]
+            if q == '"':
+                rest = re.sub(r'\\.', "", rest)
+                close = rest.find('"')
+            else:
+                close = rest.replace("''", "").find("'")
+                rest = rest.replace("''", "")
+            if close == -1:
+                state, quote_ch = "quoted", q
+            else:
+                tail = rest[close + 1:].strip()
+                if tail and not tail.startswith("#"):
+                    errs.append(f"line {ln}: `{key}` has text after its closing quote")
+                state = "scalar"
+        elif val[0] in "[{":
+            flow_depth = val.count("[") + val.count("{") - val.count("]") - val.count("}")
+            state = "flow" if flow_depth > 0 else "scalar"
+        else:
+            if val[0] in "@`%":
+                errs.append(f"line {ln}: `{key}` plain value starts with reserved `{val[0]}` — quote it")
+            elif re.search(r":\s", val) or val.endswith(":"):
+                errs.append(f"line {ln}: `{key}` unquoted value contains `: ` — quote it")
+            state = "scalar"
+    if state == "quoted":
+        errs.append("unterminated quoted value")
+    return errs
+
+
+def frontmatter_yaml_errors(text, force_stdlib=False):
+    """Strict-parse errors for a file's frontmatter (empty list = valid)."""
+    raw, err = _split_frontmatter_raw(text)
+    if err:
+        return [err]
+    if raw is None:
+        return []
+    errs = _stdlib_yaml_errors(raw)
+    if _yaml is not None and not force_stdlib:
+        try:
+            data = _yaml.safe_load(raw)
+            if data is not None and not isinstance(data, dict):
+                errs.append("frontmatter is not a mapping")
+            elif isinstance(data, dict):
+                for k in ("name", "description", "when_to_use", "argument-hint"):
+                    if k in data and data[k] is not None and not isinstance(data[k], str):
+                        errs.append(f"`{k}` parses as {type(data[k]).__name__}, not a string — quote it")
+        except Exception as e:  # yaml.YAMLError and friends
+            msg = " ".join(str(e).split())[:160]
+            if not errs:  # stdlib checker missed it; report the parser's view
+                errs.append(f"PyYAML: {msg}")
+    return errs
+
+
+_NAME_SETS = None
+
+
+def name_sets():
+    """Known names for cross-reference resolution (cached)."""
+    global _NAME_SETS
+    if _NAME_SETS is None:
+        _NAME_SETS = {
+            "skills": {p.parent.name for p in SKILLS_DIR.rglob("SKILL.md")},
+            "agents": {p.stem for p in AGENTS_DIR.glob("*.md")},
+            "workflows": {p.stem for p in (ROOT / "workflows").glob("*.js")},
+            "styles": {p.name for p in (ROOT / "output-styles").iterdir() if p.is_dir()}
+                      if (ROOT / "output-styles").is_dir() else set(),
+            "domains": {p.name for p in SKILLS_DIR.iterdir() if p.is_dir()},
+        }
+    return _NAME_SETS
+
+
+def _line_of(text, pos):
+    return text[:pos].count("\n") + 1
+
+
+def cross_ref_issues(text, names, check_slash=True):
+    """Broken /cure-product-engineering:<x>, `/x`, "see `x`", "`x` skill",
+    "(use x)" routing references. Returns list of messages."""
+    skills, agents = names["skills"], names["agents"]
+    invocable = skills | names["workflows"]
+    known_any = skills | agents | names["workflows"] | names["styles"]
+    out = []
+
+    def add(n, ln, why):
+        out.append(f"line {ln}: references nonexistent {why} `{n}`")
+
+    for m in re.finditer(r"/cure-product-engineering:([a-z0-9-]+)", text):
+        n = m.group(1)
+        if n not in invocable:
+            add(n, _line_of(text, m.start()),
+                "skill (agents are not slash commands)" if n in agents else "skill")
+    if check_slash:
+        # `/name` exactly (closing backtick or space follows; paths like
+        # `/api-v1/users` are excluded by the lookahead).
+        for m in re.finditer(r"`/(" + KEBAB + r")(?=[`\s])", text):
+            n = m.group(1)
+            if n not in invocable and n not in BUILTIN_SLASH:
+                add(n, _line_of(text, m.start()),
+                    "slash command (agents are not slash commands)" if n in agents else "slash command")
+    for m in re.finditer(r"\bsee\s+(?:the\s+)?`/?(" + KEBAB + r")`", text, re.I):
+        if m.group(1) not in known_any:
+            add(m.group(1), _line_of(text, m.start()), "skill")
+    for m in re.finditer(r"`/?(" + KEBAB + r")`\s*\(?when available", text, re.I):
+        if m.group(1) not in skills:
+            add(m.group(1), _line_of(text, m.start()), "skill")
+    for m in re.finditer(r"`/?(" + KEBAB + r")`\s+(skill|agent)\b", text):
+        n, kind = m.group(1), m.group(2)
+        if n not in (skills if kind == "skill" else agents):
+            add(n, _line_of(text, m.start()), kind)
+    return out
+
+
+def routing_ref_issues(meta):
+    """`(use x)` / `(use x agent)` / `(use x, then y)` in description or
+    when_to_use must name a real skill (or agent when suffixed `agent`)."""
+    names = name_sets()
+    out = []
+    for grp in re.findall(r"\(use ([^)]*)\)", meta):
+        for tok in re.split(r",|\bthen\b|\bor\b|\band\b", grp):
+            tok = tok.strip()
+            m = re.match(r"^(" + KEBAB + r"|[a-z0-9]+)(\s+agent)?(\s+when available)?$", tok)
+            if not m:
+                continue
+            n, is_agent = m.group(1), bool(m.group(2))
+            if is_agent:
+                if n not in names["agents"]:
+                    out.append(f"routes to nonexistent agent `{n}`")
+            elif n not in names["skills"] and ("-" in n or m.group(3)):
+                out.append(f"routes to nonexistent skill `{n}`" +
+                           (" (\"when available\" placeholder)" if m.group(3) else ""))
+    return out
+
+
+def path_ref_issues(body, skill_dir):
+    """Relative links / backticked reference|references|scripts paths must
+    exist relative to the skill dir; `python3 skills/...` must exist from ROOT."""
+    names = name_sets()
+    out = []
+    for m in re.finditer(r"\[[^\]]*\]\(([^)\s]+)\)", body):
+        u = m.group(1).split("#")[0]
+        if not u or re.match(r"^[a-z][a-z0-9+.-]*:", u, re.I) or u.startswith("/"):
+            continue
+        if not (skill_dir / u).exists():
+            out.append(f"line {_line_of(body, m.start())}: broken relative link `{u}`")
+    # `reference/x.md`, `references/x`, `${CLAUDE_SKILL_DIR}/scripts/x.py`, `scripts/x.py`.
+    # Must start the backtick span (so `irc-lookup/reference/x.md` and
+    # `$STUDIO/scripts/x.py` are out of scope). Non-.py `scripts/*` paths are
+    # files the skill GENERATES in the consumer repo, not bundled — skipped.
+    for m in re.finditer(r"`(?:\$\{CLAUDE_SKILL_DIR\}/|\./)?((?:references?/[^`\s]+)|(?:scripts/[\w.-]+\.py))", body):
+        u = m.group(1).rstrip(".,;:)")
+        if "*" in u or "<" in u or "{" in u:
+            continue
+        if not (skill_dir / u).exists():
+            out.append(f"line {_line_of(body, m.start())}: `{u}` does not exist in the skill dir")
+    for m in re.finditer(r"\bpython3?\s+(skills/[^\s`'\"]+)", body):
+        u = m.group(1)
+        parts = u.split("/")
+        if len(parts) < 2 or parts[1] not in names["domains"]:
+            out.append(f"line {_line_of(body, m.start())}: stale script path `{u}` "
+                       f"(missing domain folder: skills/<domain>/<name>/…)")
+        elif not (ROOT / u).exists():
+            out.append(f"line {_line_of(body, m.start())}: script path `{u}` does not exist")
+    return out
+
+
+def loop_interval_issues(body):
+    out = []
+    for m in re.finditer(r"/loop\s+(\d+)\s*([smhdw])\b", body):
+        secs = int(m.group(1)) * LOOP_UNIT_SECONDS[m.group(2)]
+        if secs >= LOOP_MAX_SECONDS:
+            out.append(f"line {_line_of(body, m.start())}: `/loop {m.group(1)}{m.group(2)}` "
+                       f"never fires — session loops expire after 7 days (use /schedule)")
+    return out
+
+
+def t42_skill_issues(text, fm, body, skill_dir):
+    """All T52 checks for one SKILL.md. Returns list of (severity, msg)."""
+    issues = []
+    for e in frontmatter_yaml_errors(text):
+        issues.append(("CRIT", f"invalid YAML frontmatter: {e} — Codex/Antigravity silently drop this skill (T52)"))
+    for e in path_ref_issues(body, skill_dir):
+        issues.append(("CRIT", f"{e} (T52)"))
+    names = name_sets()
+    for e in cross_ref_issues(body, names):
+        issues.append(("CRIT", f"{e} (T52)"))
+    for e in routing_ref_issues(fm.get("description", "") + " " + fm.get("when_to_use", "")):
+        issues.append(("CRIT", f"frontmatter {e} (T52)"))
+    for e in loop_interval_issues(body):
+        issues.append(("CRIT", f"{e} (T52)"))
+    desc = fm.get("description", "")
+    if desc and not DESC_TRIGGER_RE.search(desc[:DESC_TRIGGER_WINDOW]):
+        issues.append(("WARN", f"no trigger phrase ('Use when…') in first {DESC_TRIGGER_WINDOW} chars of "
+                               f"description — Codex truncates there and ignores when_to_use (T52 advisory; T53)"))
+    return issues
+
+
+def parse_metadata(text):
+    """Return the `metadata:` map (one level: block or inline flow) as
+    {key: str}. parse_frontmatter is top-level only, so nested keys need this."""
+    raw, _ = _split_frontmatter_raw(text)
+    if not raw:
+        return {}
+    out, inside = {}, False
+    for line in raw.splitlines():
+        m = re.match(r"^metadata:\s*(.*)$", line)
+        if m:
+            val = m.group(1).strip()
+            if val.startswith("{") and val.endswith("}"):
+                for part in val[1:-1].split(","):
+                    if ":" in part:
+                        k, v = part.split(":", 1)
+                        out[k.strip()] = v.strip().strip("'\"")
+                return out
+            inside = not val
+            continue
+        if inside:
+            if line.strip() and line[0] not in " \t":
+                break
+            m = re.match(r"^\s+([A-Za-z0-9_.-]+):\s*(.*)$", line)
+            if m and re.match(r"^\s{1,4}\S", line):
+                out[m.group(1)] = m.group(2).strip().strip("'\"")
+    return out
+
+
+def currency_issues(text, skill_dir, today=None):
+    """metadata.verified staleness (see STALENESS_ENFORCED)."""
+    import datetime
+    today = today or datetime.date.today()
+    rel = skill_dir.relative_to(SKILLS_DIR).parts if SKILLS_DIR in skill_dir.parents else ()
+    strict = bool(rel) and (rel[0] in STRICT_CURRENCY_DOMAINS or skill_dir.name in STRICT_CURRENCY_SKILLS)
+    tag = "" if STALENESS_ENFORCED else " — advisory until enforced (T59)"
+    v = parse_metadata(text).get("verified", "")
+    if not v:
+        return [("LOW", f"no `metadata.verified: YYYY-MM-DD` (currency tracking){tag}")]
+    try:
+        d = datetime.date.fromisoformat(v[:10])
+    except ValueError:
+        return [("LOW", f"`metadata.verified` is not an ISO date: `{v}`{tag}")]
+    age = (today - d).days
+    if strict and age > VERIFIED_STALE_DAYS_STRICT:
+        return [("HIGH", f"`metadata.verified` {v} is {age}d old (>{VERIFIED_STALE_DAYS_STRICT}d; regulated content){tag}")]
+    if age > VERIFIED_STALE_DAYS:
+        return [("LOW", f"`metadata.verified` {v} is {age}d old (>{VERIFIED_STALE_DAYS}d){tag}")]
+    return []
+
+
+def is_t42_hard(issue):
+    sev, msg = issue
+    return sev == "CRIT" and msg.endswith("(T52)")
 
 
 def parse_frontmatter(text):
@@ -195,6 +544,20 @@ def score_skill(path):
             if not re.match(r"^([-*]|\d+\.|`)", nxt):
                 issues.append(("HIGH", f"dangling gather header at body line {i+1}: no bullet list follows (prose splice)")); score -= 1.5
 
+    # --- T52 runtime-portability lints: strict YAML, path + cross-skill refs,
+    # >=7d loops, stale script paths (CRIT, hard-fail); description trigger
+    # position (WARN, advisory, no score effect).
+    for iss in t42_skill_issues(text, fm, body, path.parent):
+        issues.append(iss)
+        if iss[0] == "CRIT":
+            score -= 4 if iss[1].startswith("invalid YAML") else 1.0
+
+    # --- currency: metadata.verified staleness (advisory until enforced) ---
+    for iss in currency_issues(text, path.parent):
+        issues.append(iss)
+        if STALENESS_ENFORCED:
+            score -= 1.5 if iss[0] == "HIGH" else 0.1
+
     # --- nested references (deeper than one level) heuristic ---
     md_links = re.findall(r"\[[^\]]+\]\(([^)]+\.md)\)", body)
     # Not penalized automatically (needs graph walk) — reported as info.
@@ -276,6 +639,12 @@ def score_agent(path, skill_idx):
     for k in fm:
         if k not in AGENT_FIELDS:
             issues.append(("LOW", f"unknown frontmatter field `{k}`")); score -= 0.25
+
+    # T52: strict YAML + slash-command references (agents are not slash commands)
+    for e in frontmatter_yaml_errors(text):
+        issues.append(("CRIT", f"invalid YAML frontmatter: {e} (T52)")); score -= 4
+    for e in cross_ref_issues(body, name_sets(), check_slash=False):
+        issues.append(("CRIT", f"{e} (T52)")); score -= 1.0
 
     return {
         "name": name or path.stem,
@@ -371,6 +740,110 @@ def flat_name_conflicts():
     return mismatches, duplicates
 
 
+def self_test():
+    """T52 regression fixtures. Each BAD fixture must trip its lint; the GOOD
+    fixture must trip none. Returns a process exit code."""
+    import tempfile
+    names = {"skills": {"finops", "security-review"}, "agents": {"code-reviewer"},
+             "workflows": {"cure-code-audit"}, "styles": {"runbook"},
+             "domains": {"business", "security"}}
+    failures = []
+
+    def expect(label, got, want):
+        if bool(got) != want:
+            failures.append(f"{label}: expected {'a hit' if want else 'no hit'}, got {got!r}")
+
+    # 1. strict YAML — the stitch-design shape (orphan keys under a scalar)
+    stitch = ('---\nname: x\ndescription: "d"\nargument-hint: "[a]"\n'
+              '  tools: [stitch-mcp]\n  env: [KEY]\n---\nbody\n')
+    expect("yaml/orphan-keys (stdlib)", frontmatter_yaml_errors(stitch, force_stdlib=True), True)
+    expect("yaml/orphan-keys", frontmatter_yaml_errors(stitch), True)
+    expect("yaml/duplicate-key", frontmatter_yaml_errors('---\nname: a\nname: b\n---\n', force_stdlib=True), True)
+    expect("yaml/colon-in-plain", frontmatter_yaml_errors('---\ndescription: NOT for x: use y\n---\n', force_stdlib=True), True)
+    expect("yaml/unclosed", frontmatter_yaml_errors('---\nname: a\n', force_stdlib=True), True)
+    good_fm = ('---\nname: x\ndescription: "Does x. Use when y: z."\nhooks:\n  Stop:\n    - a\n'
+               'paths: [a, b]\nwhen_to_use: >\n  folded\n  text\n---\n')
+    expect("yaml/good (stdlib)", frontmatter_yaml_errors(good_fm, force_stdlib=True), False)
+    expect("yaml/good", frontmatter_yaml_errors(good_fm), False)
+
+    # 3. cross-skill references
+    expect("xref/plugin-slash", cross_ref_issues("run /cure-product-engineering:nope", names), True)
+    expect("xref/agent-as-slash", cross_ref_issues("`/code-reviewer` for x", names), True)
+    expect("xref/see", cross_ref_issues("see `retirement-plan` and", names), True)
+    expect("xref/when-available", cross_ref_issues("use `corp-finance-ops` (when available)", names), True)
+    expect("xref/routing", routing_ref_issues_with(names, "NOT for NIL (use nil-contracts when available)"), True)
+    expect("xref/routing-agent", routing_ref_issues_with(names, "NOT for rules (use rules-auditor agent)"), True)
+    expect("xref/good", cross_ref_issues(
+        "`/finops`, /cure-product-engineering:cure-code-audit, see `runbook` output style, "
+        "the `security-review` skill, `/api-v1/users`, use `aria-live`, `/add-dir`", names), False)
+    expect("xref/routing-good", routing_ref_issues_with(names, "(use finops, then security-review) (use code-reviewer agent) (use 1-2 max)"), False)
+
+    # 4. loop interval
+    expect("loop/1w", loop_interval_issues("/loop 1w /x"), True)
+    expect("loop/7d", loop_interval_issues("/loop 7d /x"), True)
+    expect("loop/1d", loop_interval_issues("/loop 1d /x and /loop 30m y and /loop.md"), False)
+
+    # 2 + 5. paths (needs a real dir)
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(tmp)
+        (d / "reference").mkdir()
+        (d / "reference" / "ok.md").write_text("x")
+        global _NAME_SETS
+        saved, _NAME_SETS = _NAME_SETS, names
+        try:
+            expect("path/missing-ref", path_ref_issues("see `reference/missing.md`", d), True)
+            expect("path/missing-link", path_ref_issues("[x](reference/nope.md)", d), True)
+            expect("path/missing-py", path_ref_issues("run `scripts/gone.py`", d), True)
+            expect("path/stale-python", path_ref_issues("python3 skills/finops/scripts/a.py", d), True)
+            expect("path/good", path_ref_issues(
+                "[x](reference/ok.md) `reference/ok.md` [u](https://e.com) [a](#top) "
+                "`irc-lookup/reference/z.md` `scripts/deploy.sh` `$STUDIO/scripts/q.py`", d), False)
+        finally:
+            _NAME_SETS = saved
+
+    # metadata map: must be valid YAML, parse one level, and drive currency
+    import datetime
+    meta_fm = ('---\nname: x\ndescription: "d"\nmetadata:\n  verified: 2026-09-23\n'
+               '  requires-env: [A, B]\nargument-hint: "[a]"\n---\nbody\n')
+    expect("metadata/yaml (stdlib)", frontmatter_yaml_errors(meta_fm, force_stdlib=True), False)
+    expect("metadata/yaml", frontmatter_yaml_errors(meta_fm), False)
+    if parse_metadata(meta_fm) != {"verified": "2026-09-23", "requires-env": "[A, B]"}:
+        failures.append(f"metadata/parse: got {parse_metadata(meta_fm)!r}")
+    if parse_metadata('---\nmetadata: {verified: 2026-01-01}\n---\n').get("verified") != "2026-01-01":
+        failures.append("metadata/parse-flow")
+    tax_dir, eng_dir = SKILLS_DIR / "tax" / "x", SKILLS_DIR / "engineering" / "x"
+    fresh = datetime.date(2026, 10, 1)
+    expect("currency/fresh", currency_issues(meta_fm, eng_dir, fresh), False)
+    expect("currency/absent", currency_issues("---\nname: x\n---\n", eng_dir, fresh), True)
+    old = datetime.date(2027, 10, 1)  # 373 days after verified
+    sev = [s for s, _ in currency_issues(meta_fm, tax_dir, old)]
+    if sev != ["HIGH"]:
+        failures.append(f"currency/strict-stale: expected HIGH, got {sev}")
+    sev = [s for s, _ in currency_issues(meta_fm, eng_dir, old)]
+    if sev != ["LOW"]:
+        failures.append(f"currency/stale: expected LOW, got {sev}")
+
+    # 6. description trigger window (advisory)
+    late = "x" * 120 + " Use when y"
+    expect("trigger/late", not DESC_TRIGGER_RE.search(late[:DESC_TRIGGER_WINDOW]), True)
+    expect("trigger/early", not DESC_TRIGGER_RE.search("Does x. Use when y."[:DESC_TRIGGER_WINDOW]), False)
+
+    for f in failures:
+        print(f"SELF-TEST FAIL: {f}", file=sys.stderr)
+    print(f"T52 self-test: {'FAIL' if failures else 'OK'} "
+          f"(PyYAML {'present' if _yaml else 'absent — stdlib checker only'})")
+    return 1 if failures else 0
+
+
+def routing_ref_issues_with(names, meta):
+    global _NAME_SETS
+    saved, _NAME_SETS = _NAME_SETS, names
+    try:
+        return routing_ref_issues(meta)
+    finally:
+        _NAME_SETS = saved
+
+
 def grade(score):
     if score >= 9: return "A"
     if score >= 8: return "B"
@@ -384,7 +857,11 @@ def main():
     ap.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     ap.add_argument("--fail-under", type=float, default=None, help="exit 1 if mean score below threshold (CI gate)")
     ap.add_argument("--min-item", type=float, default=None, help="exit 1 if any single item scores below threshold")
+    ap.add_argument("--self-test", action="store_true",
+                    help="run the T52 lint regression fixtures (no library scan) and exit")
     args = ap.parse_args()
+    if args.self_test:
+        sys.exit(self_test())
 
     skills, agents = collect()
     all_items = skills + agents
@@ -427,6 +904,20 @@ def main():
         print()
 
     fail = False
+    # T52: runtime-portability CRITs hard-fail regardless of score — a skill
+    # that Codex/agy silently drop, or that routes to a skill that does not
+    # exist, is broken however clean the rest of it is.
+    hard = [(it["path"], msg) for it in all_items for sev, msg in it["issues"] if is_t42_hard((sev, msg))]
+    for p in sorted(PERSONAS_DIR.glob("*.md")) if PERSONAS_DIR.is_dir() else []:
+        ptext = p.read_text(encoding="utf-8", errors="replace")
+        for e in frontmatter_yaml_errors(ptext):
+            hard.append((str(p.relative_to(ROOT)), f"invalid YAML frontmatter: {e} (T52)"))
+        for e in cross_ref_issues(parse_frontmatter(ptext)[1], name_sets(), check_slash=False):
+            hard.append((str(p.relative_to(ROOT)), f"{e} (T52)"))
+    for path, msg in hard:
+        print(f"FAIL: {path}: {msg}", file=sys.stderr)
+    if hard:
+        fail = True
     mismatches, duplicates = flat_name_conflicts()
     for m in mismatches:
         print(f"FAIL: skill name must equal its directory name — {m}", file=sys.stderr)

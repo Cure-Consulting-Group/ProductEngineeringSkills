@@ -459,7 +459,7 @@ Related skills for investor reporting workflows:
 This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
 
 - **Cadence:** monthly
-- **Session loop:** `/loop 4w /cure-product-engineering:investor-reporting`
+- **Session loop:** none — session loops expire after 7 days, so a monthly cadence never fires in-session; it belongs in the cloud routine below.
 - **Unattended:** cloud routine — Monthly draft of the investor update from repo/metrics state. Draft only: never auto-send. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~120k tokens/run; cap at one run per monthly period.
 - **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver draft update as a report file — a human always reviews before anything is sent; report on failure rather than retrying.

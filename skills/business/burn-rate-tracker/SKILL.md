@@ -388,9 +388,9 @@ Generate using Write:
 
 This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
 
-- `scripts/runway_calculator.py` — Runway in months with best/expected/worst scenarios from `--cash`, `--monthly-burn`, optional `--monthly-revenue`, `--revenue-growth`, `--burn-growth`.
+- `scripts/runway_calculator.py` — Runway in months with best/expected/worst scenarios from `--cash`, `--monthly-burn`, optional `--monthly-revenue`, `--revenue-growth`, `--burn-growth`. With the plugin enabled it is also on PATH as `cure-runway` (same flags).
   ```bash
-  python3 skills/burn-rate-tracker/scripts/runway_calculator.py \
+  python3 skills/business/burn-rate-tracker/scripts/runway_calculator.py \
     --cash 1500000 --monthly-burn 120000 --monthly-revenue 30000 \
     --revenue-growth 0.10 --burn-growth 0.02 --json
   ```
@@ -443,7 +443,7 @@ RELATED SKILLS:
 This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
 
 - **Cadence:** weekly
-- **Session loop:** `/loop 1w /cure-product-engineering:burn-rate-tracker`
+- **Session loop:** none — session loops expire after 7 days, so a weekly cadence never fires in-session; it belongs in the cloud routine below.
 - **Unattended:** cloud routine — Weekly burn/runway refresh from the latest actuals; alert if runway crosses a scenario threshold. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~60k tokens/run; cap at one run per weekly period.
 - **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver runway summary appended to the finance report; report on failure rather than retrying.

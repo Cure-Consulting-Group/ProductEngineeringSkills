@@ -4,7 +4,7 @@ fix-library.py — Systemic, idempotent auto-fixes for skills and agents,
 bringing the library into line with the official Anthropic spec.
 
 Skill fixes:
-  - Remove inert `version:` / `compatibility:` frontmatter (not read by harness).
+  - Remove inert `version:` frontmatter (not read by harness). `compatibility` is an Agent Skills spec field (kept since Wave 5).
   - Add a sensible `argument-hint:` where missing.
 
 Agent fixes:
@@ -71,7 +71,7 @@ def fix_skill(path, changes):
     out, touched = [], False
 
     for ln in lines:
-        if re.match(r"^\s*(version|compatibility)\s*:", ln):
+        if re.match(r"^\s*(version)\s*:", ln):
             changes.append(f"{path.parent.name}: drop `{ln.split(':')[0].strip()}`")
             touched = True
             continue

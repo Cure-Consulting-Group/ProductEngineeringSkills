@@ -201,7 +201,7 @@ echo "Worktree $WORKTREE_NAME initialized. Ports offset by $PORT_OFFSET."
 
 - `.env*` must be in `.gitignore` at the repo root before any worktree is created.
 - Never `git add -f` an env file from a worktree.
-- A pre-commit hook should refuse any staged `.env*` (see `rules/cicd.md` and `/git-workflow`).
+- A pre-commit hook should refuse any staged `.env*` (see `rules/cicd.md` and `/ci-cd-pipeline`).
 
 ## Step 6: Database Considerations
 
@@ -339,7 +339,7 @@ wtrm() {
 
 ## Cross-References
 
-- `/git-workflow` — for the team-wide branching and PR conventions worktrees support
+- `/ci-cd-pipeline` — for the team-wide branching strategy and PR checks worktrees support
 - `/ci-cd-pipeline` — when running ephemeral CI workers as worktrees on a host
 - `/project-bootstrap` — for `scripts/worktree-init.sh` template at project setup
 - `rules/cicd.md` — for pre-commit hook standards that prevent committed env files

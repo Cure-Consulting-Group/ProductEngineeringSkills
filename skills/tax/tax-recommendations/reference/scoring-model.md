@@ -85,7 +85,7 @@ any given taxpayer requires their actual profile.
 | §41(h) payroll offset election | Converts dead credit to cash | Conservative | Trivial | **Highest** | **Timely filed original return — cannot be added later** |
 | Written capitalization policy (de minimis safe harbor) | Small, recurring | Conservative | Trivial | High | **Must be in place Jan 1** |
 | Paper intercompany services agreements | Defensive, not dollar-generating | Conservative | Moderate | Medium | Before the spinout closes |
-| §174A retroactive review for 2022–2024 | Potentially large one-time | Moderate | Moderate | High | Form 3115 with the return |
+| §174A catch-up of unamortized 2022–2024 domestic R&E (the small-business retroactive election expired 2026-07-06) | Potentially large one-time | Conservative | Moderate | High | Automatic method-change statement with the first tax year beginning after 2024 (Rev. Proc. 2025-28) |
 | §531 monitoring | Preventive | Conservative | Trivial | Low now | As earnings grow |
 
 Note the pattern: the **highest-scoring item is a trivial-effort election with a
