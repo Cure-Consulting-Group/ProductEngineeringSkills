@@ -319,10 +319,10 @@ Run automated tools as a **supplement** to manual testing. Automated tools catch
 
 This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
 
-- `scripts/wcag_check.py` — Static WCAG 2.2 smoke check on an HTML file or URL. Catches missing alt text, unlabeled inputs, headings that skip levels, missing `lang`, suspicious ARIA roles, removed focus outlines. Use as a pre-audit filter, not a replacement for manual screen-reader testing.
+- `scripts/wcag_check.py` — Static WCAG 2.2 smoke check on an HTML file or URL. Catches missing alt text, unlabeled inputs, headings that skip levels, missing `lang`, suspicious ARIA roles, removed focus outlines. Use as a pre-audit filter, not a replacement for manual screen-reader testing. With the plugin enabled it is also on PATH as `cure-wcag-check` (same flags).
   ```bash
-  python3 skills/accessibility-audit/scripts/wcag_check.py --html-file page.html --json
-  python3 skills/accessibility-audit/scripts/wcag_check.py --url https://example.com --json
+  python3 skills/security/accessibility-audit/scripts/wcag_check.py --html-file page.html --json
+  python3 skills/security/accessibility-audit/scripts/wcag_check.py --url https://example.com --json
   ```
 
 ## Step 9: Audit Report Output
@@ -414,7 +414,7 @@ NEXT ACTIONS CHECKLIST
 This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
 
 - **Cadence:** weekly or per release
-- **Session loop:** `/loop 1w /cure-product-engineering:accessibility-audit`
+- **Session loop:** session loops expire after 7 days, so a weekly cadence never fires in-session; it belongs in the cloud routine below. In-session alternative, during an active UI push: `/loop 1d /cure-product-engineering:accessibility-audit`.
 - **Unattended:** cloud routine — Weekly WCAG 2.2 sweep of changed screens; full sweep per release. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~100k tokens/run; cap at one run per weekly period.
 - **Guardrails:** read-only run; deliver WCAG violations as issues, deduplicated against open ones; report on failure rather than retrying.

@@ -14,8 +14,12 @@ as padding.
 
 1. **Quantified or omitted.** Every recommendation carries a dollar estimate with
    its assumptions stated. "Consider a retirement plan" is not a recommendation;
-   "Adopt a solo 401(k) by 12/31 — \$24,500 (indexed annually — confirm for the
-   tax year via the `constants` binding) deferral saves ~\$8,900 federal + SE"
+   "Adopt a solo 401(k) and defer \$24,500 (2026 limit; verified 2026-09-23,
+   IRS Notice 2025-67) — saves ~\$7,800 federal income tax at a 32% marginal
+   rate, before any §199A interaction. No SE-tax saving: §1402 is computed before
+   the deferral. Deadline: a sole proprietor/single-member LLC adopting its first
+   plan may make first-year deferrals up to the return due date (SECURE 2.0
+   §317); an existing plan's deferral elections follow the plan's own rules"
    is.
 2. **Ranked by net after-tax benefit**, not by how interesting it is.
 3. **Deadline-first ordering when a deadline is near.** A \$2,000 item due in three

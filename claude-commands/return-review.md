@@ -97,7 +97,7 @@ Review is also the last chance to catch what was not claimed.
 [ ] Every election reviewed against elections-and-deadlines.md
 [ ] Retirement contribution maximized (many can still be funded post-year-end)
 [ ] Carryforwards actually USED where they should be, not just carried
-[ ] Accounting method opportunities (§174A retroactive, §471(c))
+[ ] Accounting method opportunities (§174A catch-up of unamortized 2022–2024 R&E, §471(c)); the small-business retroactive election expired 2026-07-06
 [ ] Anything the strategy playbook flags for this entity that was not executed
 ```
 

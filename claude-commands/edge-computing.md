@@ -87,6 +87,8 @@ export default {
 // middleware.ts — runs before every matched request
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+// Next 15+ removed request.geo/.ip — Vercel: @vercel/functions; other hosts: provider headers
+import { geolocation, ipAddress } from "@vercel/functions";
 
 export const config = {
   matcher: [
@@ -99,7 +101,7 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // Geolocation routing
-  const country = request.geo?.country || "US";
+  const country = geolocation(request).country ?? "US";
   response.headers.set("x-user-country", country);
 
   // Security headers (applied at edge, before origin)
@@ -265,7 +267,7 @@ export async function middleware(request: NextRequest) {
 ```typescript
 // Route users to region-appropriate content or services
 export function middleware(request: NextRequest) {
-  const country = request.geo?.country || "US";
+  const country = geolocation(request).country ?? "US";
   const url = request.nextUrl.clone();
 
   // Compliance: redirect EU users to EU-hosted version
@@ -313,17 +315,19 @@ export function middleware(request: NextRequest) {
 
 ### Rate Limiting at Edge
 ```typescript
-// Basic edge rate limiting using KV store
+// Basic edge rate limiting using Upstash Redis (Vercel KV was retired → Upstash via Marketplace)
+import { Redis } from "@upstash/redis"; // + ipAddress import from the block above
+const kv = Redis.fromEnv();
+
 export async function middleware(request: NextRequest) {
   if (!request.nextUrl.pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
+  const ip = ipAddress(request) ?? request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
   const key = `rate-limit:${ip}`;
 
-  // In production, use Vercel KV, Cloudflare KV, or Upstash Redis
-  // Edge-compatible KV stores only — no Node.js Redis clients
+  // Edge-compatible KV stores only (Upstash, Cloudflare KV) — no Node.js Redis clients
   const current = await kv.incr(key);
   if (current === 1) await kv.expire(key, 60); // 60-second window
 
@@ -344,7 +348,7 @@ export async function middleware(request: NextRequest) {
 ```
 Store                 Provider      Consistency    Use For
 ──────────────────────────────────────────────────────────────────
-Vercel KV             Vercel        Eventual       Session data, rate limits, feature flags
+Upstash Redis         Vercel Mkt    Eventual       Session data, rate limits, feature flags
 Cloudflare KV         Cloudflare    Eventual       Config, A/B assignments, cached responses
 Upstash Redis         Multi-CDN     Eventual       Rate limiting, session, real-time counters
 Vercel Edge Config    Vercel        Strong-ish     Feature flags, redirects (< 1s propagation)

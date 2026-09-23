@@ -68,7 +68,7 @@ Activate this skill when the user's prompt matches ANY of these:
 | "pull screens from Stitch" | "Sync the latest designs from Stitch" |
 | "export design" or "export components" | "Export the dashboard as React components" |
 
-**Rule:** If a new screen, mockup, or UI component is being discussed, this skill fires. Be aggressive — design intent triggers this skill even without explicit "Stitch" mentions.
+**Scope:** use this skill when the work runs through Stitch (explicit Stitch/DESIGN.md mention, or a project already using `.stitch/`). NOT for general design direction (use `/design-studio` or `/product-design`), platform design guidance (`/android-design-expert`, `/ios-design-expert`, `/web-design-expert`), or token governance (`/design-system`).
 
 ## 4. Prompt Enhancement Protocol
 
@@ -297,20 +297,11 @@ After generating screens, append to the project's CLAUDE.md:
 
 ## 10. Per-Product Context
 
-| Product | DESIGN.md Seed | Platform | Key Rules |
-|---|---|---|---|
-| **Vendly** | `DESIGN.md.vendly` | Android (Compose) | Material 3, green #00A859 primary, Inter font, es-DO locale, high-contrast for outdoor POS, RTL-ready |
-| **The Initiated** | `DESIGN.md.initiated` | Android + Web | Dark-first, gold #C9A84C primary, navy #1B2A4A surface, Bebas Neue/Inter fonts, card-heavy editorial, athletic energy |
-| **Autograph** | `DESIGN.md.default` + overrides | Web | HIPAA-neutral density, physician dashboard, high information density, clinical color palette, no decorative elements |
-| **Default** | `DESIGN.md.default` | Web | Clean neutral, Inter font, blue #2563EB primary, light-first with dark mode defined |
-
-For Autograph: start with the default seed, then override surface colors to clinical whites/grays, increase information density spacing, and add HIPAA compliance notes.
+Product-specific design systems (brand colors, fonts, locale, density rules) live in each client project, not in this skill — look for the project's own `.stitch/DESIGN.md`, or the design entry for that product in `PORTFOLIO.md` / the project's docs. If none exists, start from the generic seed and save the result to `.stitch/DESIGN.md` in that project.
 
 ### Seed Files
 
-- [assets/DESIGN.md.vendly](assets/DESIGN.md.vendly) — Vendly POS design system
-- [assets/DESIGN.md.initiated](assets/DESIGN.md.initiated) — The Initiated design system
-- [assets/DESIGN.md.default](assets/DESIGN.md.default) — Generic fallback
+- [assets/DESIGN.md.default](assets/DESIGN.md.default) — Generic fallback (clean neutral, Inter, blue #2563EB primary, light-first with dark mode)
 
 See [references/platform-tokens.md](references/platform-tokens.md) for token translation tables and [references/platform-patterns.md](references/platform-patterns.md) for Material 3, Apple HIG, and Web component pattern mappings.
 

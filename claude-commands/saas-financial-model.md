@@ -248,9 +248,9 @@ Generate using Write:
 
 This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
 
-- `scripts/unit_economics.py` — ARR, ARPU, LTV, LTV:CAC ratio, payback period from `--mrr`, `--customers`, `--churn-rate`, `--cac`. Optional `--gross-margin` for margin-adjusted LTV.
+- `scripts/unit_economics.py` — ARR, ARPU, LTV, LTV:CAC ratio, payback period from `--mrr`, `--customers`, `--churn-rate`, `--cac`. Optional `--gross-margin` for margin-adjusted LTV. With the plugin enabled it is also on PATH as `cure-unit-economics` (same flags).
   ```bash
-  python3 skills/saas-financial-model/scripts/unit_economics.py \
+  python3 skills/business/saas-financial-model/scripts/unit_economics.py \
     --mrr 50000 --customers 200 --churn-rate 0.03 --cac 800 --gross-margin 0.75 --json
   ```
 

@@ -224,12 +224,7 @@ Products to register:
 
 ## Step 4: Shared Infrastructure Map
 
-```markdown
----
-
-## Shared Infrastructure
-
-See [reference/details.md](reference/details.md) (section “Shared Infrastructure”) for full detail.
+Read [reference/details.md](reference/details.md) (section "Shared Infrastructure") when writing this section — it holds the full template (auth, data, hosting, CI/CD, secrets).
 
 ## Step 5: Technology Radar Summary
 
@@ -293,7 +288,7 @@ Brief overview linking to full `/technology-radar` output if available.
 
 ## Step 7: Portfolio Health Scorecard
 
-```markdown
+````markdown
 ---
 
 ## Portfolio Health Scorecard
@@ -333,43 +328,17 @@ Compliance:
   Y: Minor gaps, documentation stale, audit due soon
   R: Compliance violation risk, missing required controls, audit overdue
 ```
-```
+````
 
 ## Step 8: Cross-Product Dependencies
 
-```markdown
----
-
-## Cross-Product Dependencies
-
-### Dependency Matrix
-
-| From | To | Type | What | Risk if Broken | Mitigation |
-|------|----|------|------|----------------|------------|
-| Vendly | Shared Firebase | Infrastructure | Auth, Firestore, Cloud Functions | All auth fails, data inaccessible | Multi-region, failover config |
-| Autograph | OpenAI API | External vendor | GPT-4 for medical transcription | Core feature unusable | Fallback to Claude, queue system |
-| The Initiated | Vendly design tokens | Design | Shared spacing, grid, type scale | Inconsistent UI | Tokens versioned, pinned |
-| Antigravity | VS Code upstream | Open source | Fork base, extension API | Feature divergence, security patches | Weekly upstream sync, patch process |
-| All products | GitHub Actions | CI/CD | Build, test, deploy pipelines | No deploys, no PR checks | Local build fallback documented |
-| All products | Firebase Auth | Identity | User authentication | Complete auth failure | Status page monitoring, cached tokens |
-
-### Dependency Rules
-- Every external dependency must have a documented fallback or degradation strategy
-- Shared infrastructure changes require notification to ALL dependent product teams
-- Breaking changes to shared services require 2-week migration window minimum
-- Vendor dependencies must be evaluated quarterly for cost, reliability, and alternatives
-- Cross-product data flows must be documented in security review scope
-
-### Circular Dependency Check
-[List any circular dependencies — these are architectural red flags that need resolution]
-- [None / List if found]
-```
+Read [reference/details.md](reference/details.md) (section "Cross-Product Dependencies") when writing this section — dependency matrix template, dependency rules, and the circular-dependency check.
 
 ## Step 9: AI Session Context Block
 
 The most-used section. This is the copy-paste block that gives any AI assistant instant portfolio awareness.
 
-```markdown
+````markdown
 ---
 
 ## AI Session Context
@@ -397,13 +366,13 @@ Shared infra: Firebase Auth (shared identity), GitHub Actions, shared design tok
 Total burn: $[X]/mo | Runway: [X] months
 Active priorities: [top 3 this month]
 Hard constraints: HIPAA (Autograph), NCAA (The Initiated), LATAM fintech (Vendly)
-Skill library: github.com/Cure-Consulting-Group/ProductEngineeringSkills (29+ skills)
+Skill library: github.com/Cure-Consulting-Group/ProductEngineeringSkills (100+ skills)
 ```
-```
+````
 
 ## Step 10: Maintenance Rules and Lifecycle
 
-```markdown
+````markdown
 ---
 
 ## Maintenance Schedule
@@ -443,7 +412,7 @@ A PORTFOLIO.md is STALE if:
 
 When stale: run /portfolio-registry with "health check" mode to refresh.
 ```
-```
+````
 
 ## Output Delivery
 

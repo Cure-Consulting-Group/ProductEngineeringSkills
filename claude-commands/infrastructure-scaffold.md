@@ -99,9 +99,12 @@ export const config = {
   matcher: ["/dashboard/:path*", "/api/:path*"],
 };
 
+// Next.js 15+ removed request.geo / request.ip — on Vercel use @vercel/functions
+import { geolocation } from "@vercel/functions";
+
 export function middleware(request: NextRequest) {
   // Geo-based routing, auth checks, rate limiting at the edge
-  const country = request.geo?.country || "US";
+  const country = geolocation(request).country ?? "US";
   const response = NextResponse.next();
   response.headers.set("x-country", country);
   return response;
@@ -247,25 +250,29 @@ export async function traceOperation<T>(name: string, operation: () => Promise<T
 ```
 
 ### Cloud Monitoring Alerting Policies
+2nd-gen Cloud Functions run on Cloud Run, so alert on `cloud_run_revision` metrics (the 1st-gen
+`cloudfunctions.googleapis.com/*` metrics miss them). A ratio needs a denominator, so use a policy file.
+```yaml
+# monitoring/functions-5xx-ratio.yaml — error ratio > 5% for 5 min
+displayName: "Functions 5xx ratio > 5%"
+combiner: OR
+conditions:
+- displayName: "5xx / all requests > 5%"
+  conditionThreshold:
+    filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_count" AND metric.labels.response_code_class="5xx"'
+    aggregations: [{alignmentPeriod: 60s, perSeriesAligner: ALIGN_RATE, crossSeriesReducer: REDUCE_SUM, groupByFields: ["resource.label.service_name"]}]
+    denominatorFilter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_count"'
+    denominatorAggregations: [{alignmentPeriod: 60s, perSeriesAligner: ALIGN_RATE, crossSeriesReducer: REDUCE_SUM, groupByFields: ["resource.label.service_name"]}]
+    comparison: COMPARISON_GT
+    thresholdValue: 0.05
+    duration: 300s
+# monitoring/functions-p95-latency.yaml — same shape, no denominator:
+#   filter: resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_latencies"
+#   perSeriesAligner: ALIGN_PERCENTILE_95, thresholdValue: 2000 (ms)
+```
 ```bash
-# Alert on Cloud Functions error rate > 5%
-gcloud monitoring policies create \
-  --display-name="Cloud Functions Error Rate" \
-  --condition-display-name="Error rate exceeds 5%" \
-  --condition-filter='resource.type="cloud_function" AND metric.type="cloudfunctions.googleapis.com/function/execution_count" AND metric.labels.status!="ok"' \
-  --condition-threshold-value=0.05 \
-  --condition-threshold-comparison=COMPARISON_GT \
-  --notification-channels=CHANNEL_ID \
-  --combiner=OR
-
-# Alert on high latency (p95 > 2s)
-gcloud monitoring policies create \
-  --display-name="API Latency Alert" \
-  --condition-display-name="P95 latency exceeds 2 seconds" \
-  --condition-filter='resource.type="cloud_function" AND metric.type="cloudfunctions.googleapis.com/function/execution_times"' \
-  --condition-threshold-value=2000 \
-  --condition-threshold-comparison=COMPARISON_GT \
-  --notification-channels=CHANNEL_ID
+gcloud monitoring policies create --policy-from-file=monitoring/functions-5xx-ratio.yaml \
+  --notification-channels=CHANNEL_ID   # or set notificationChannels in the file
 ```
 
 ### Error Reporting (Sentry)
@@ -410,7 +417,7 @@ export const dailyCleanup = onSchedule({
 Cost Control Checklist:
   ✅ Set monthly budget with 50%, 80%, 100% alerts
   ✅ Cap Cloud Functions maxInstances (never unlimited)
-  ✅ Set Firestore daily spending limit in console
+  ✅ Firestore has no spending cap — rely on budget alerts (optionally a budget → Pub/Sub → function that disables billing) and per-query cost reviews
   ✅ Use storage lifecycle rules to auto-archive/delete
   ✅ Enable per-service billing export to BigQuery
   ✅ Review billing dashboard weekly
