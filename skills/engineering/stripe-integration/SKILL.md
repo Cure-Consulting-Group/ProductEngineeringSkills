@@ -1,6 +1,6 @@
 ---
 name: stripe-integration
-description: "Stripe payments and subscriptions through Firebase Cloud Functions. Use when adding checkout, subscriptions, billing portal, saved cards, or Stripe webhooks with Firestore sync to a mobile or web app."
+description: "Cure's default payments stack: Stripe via Firebase Cloud Functions. Use when adding checkout, paid subscriptions, a billing portal, saved cards, or payment webhooks synced to Firestore in a mobile or web app."
 when_to_use: "NOT for pricing or plan design (use saas-financial-model) or Stripe Connect marketplaces (no Cure skill covers Connect)."
 argument-hint: "[payment-feature]"
 metadata:
