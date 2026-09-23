@@ -6,6 +6,13 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 A **Claude Code plugin** containing 103 production-grade skills (organized into 9 domain folders), 40 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
+## Machine Setup (every machine, every release)
+
+Codex and Antigravity hold snapshots of this library. On any machine with this repo, run
+`scripts/install-runtimes.sh` once after checkout and again after every release — details and
+the done criteria are in `STATE.md`. If `STATE.md`'s "Machines verified" row doesn't list this
+machine, offer to run it.
+
 ## Repository Structure
 
 ```
@@ -33,6 +40,8 @@ scripts/generate-overview.py   — Regenerates docs/OVERVIEW.md from frontmatter
 scripts/verify-skill-scripts.sh — Smoke-tests every bundled skill script via --help
 scripts/export-antigravity.py  — Builds the flat Antigravity plugin (dist/antigravity/cure, gitignored); --install for agy
 scripts/antigravity-smoke.py   — Zero-model agy listing check (skips when agy is absent)
+scripts/install-runtimes.sh    — Per-machine Codex + Antigravity install/refresh + verify (see STATE.md)
+STATE.md                       — Machine setup steps and current library state
 hooks/cure_guard.py            — Stdin-JSON hook guard (edit/bash/skill-content/telemetry); tests: hooks/test_cure_guard.py
 docs/AUTHORING.md              — How a skill is written for Claude Code, Codex, and Antigravity (Wave 5 standard)
 BACKLOG.md                     — Internal improvement backlog (not for distribution)
