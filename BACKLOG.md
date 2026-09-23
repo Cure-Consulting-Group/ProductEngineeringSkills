@@ -20,7 +20,7 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 | T57 | ✅ Done | SKILL.md bodies 28,558 → 15,006 lines (−47%); "Generation (Required)" 56 → 0; 40 agents + 4 personas also rewritten (findings contract on 14 reviewers, 22 preloads trimmed) |
 | T58 | ⏸ Deferred | Gate unmet: usage telemetry was dead (see T52), so no usage evidence exists yet. Candidates recorded below + agent merges from the agents pass (code-reviewer→pr-reviewer, 3 finance-deal agents→1, content-strategist ∩ technical-content-strategist, metrics-dashboard ∩ data-analyst). Re-evaluate after one quarter of real telemetry + T60 Δ |
 | T59 | ✅ Done | 73/103 skills carry `metadata.verified: 2026-09-23`; the other 30 deliberately don't (claims not all source-checked). Staleness lint advisory until next quarter |
-| T60 | ⏳ Next | Scheduled for v7.11.0 after the rewrite lands — measuring Δ on the rewritten corpus is the point |
+| T60 | ✅ Built; full sweep pending owner OK | `plugin-evals/` (40 cases, 32 skills) on `claude plugin eval`; Ring 0 rewired, cost-capped. **Pilot (8 cases × 1 run, \$3.90): WITH 1.00 / W/OUT 1.00 on 7/8 — no measurable plugin Δ under Opus 5.5** on generic-correctness graders. Implication: skill value must be graded on Cure-specific conventions (next wave's grader work), not generic correctness the bare model already has. One routing miss fixed (stripe-integration). Full sweep ≈ \$60–90 |
 
 **Owner decisions surfaced by the pass (not made by the agents):** proposed Cure SOW defaults in
 `legal-doc-scaffold` (5-day acceptance, 12-month liability cap — labeled "proposed" in the skill);

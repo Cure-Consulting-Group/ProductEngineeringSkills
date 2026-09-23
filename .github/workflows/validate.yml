@@ -54,6 +54,13 @@ jobs:
       - name: Doc claims (no dead references in prose docs)
         run: python3 scripts/check-doc-claims.py
 
+      - name: plugin-evals suite is well-formed (zero cost — no model calls)
+        # Every case under the manifest's experimental.evals dir has prompt.md or
+        # case.yaml, >=1 grader of a known type, only CLI-accepted prompt.md keys,
+        # skill-name tags that exist, and its scaffold_script. The real run
+        # (claude plugin eval) is local-only: release.sh Ring 0 + quarterly sweep.
+        run: python3 scripts/check-plugin-evals.py
+
       - name: Eval harness self-test (mock backend — no tokens spent)
         # CI has no authenticated agent CLI, so the REAL Ring-0 gate
         # (run-evals.py --changed origin/main) runs locally via release.sh.
