@@ -1,0 +1,448 @@
+{
+  "mode": "skill",
+  "stamp": "2026-09-23-1611",
+  "summary": {
+    "t03-safe-migration|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t03-safe-migration|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t07-hotfix-worktree|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t07-hotfix-worktree|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t11-finops-review|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t11-finops-review|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t13-a11y-fixture|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t13-a11y-fixture|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t14-dockerfile|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t14-dockerfile|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t16-substitution-integrity|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t16-substitution-integrity|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t17-brand-vector-engineering|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t17-brand-vector-engineering|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t18-illustrator-production|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t18-illustrator-production|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|off": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|on": {
+      "pass_rate": 1.0,
+      "n": 1,
+      "ci95": [
+        0.207,
+        1
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|off": {
+      "pass_rate": 0.0,
+      "n": 1,
+      "ci95": [
+        0,
+        0.793
+      ],
+      "flaky": false
+    }
+  },
+  "runs": [
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 30.4,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 29.9,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 41.3,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t07-hotfix-worktree",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 30.4,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 57.1,
+      "timeout_seconds": 600,
+      "files_written": 2,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 45.5,
+      "timeout_seconds": 600,
+      "files_written": 2,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t13-a11y-fixture",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 35.0,
+      "timeout_seconds": 600,
+      "files_written": 2,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t13-a11y-fixture",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 46.0,
+      "timeout_seconds": 600,
+      "files_written": 2,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t14-dockerfile",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 42.2,
+      "timeout_seconds": 600,
+      "files_written": 3,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t14-dockerfile",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 33.5,
+      "timeout_seconds": 600,
+      "files_written": 3,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t16-substitution-integrity",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 12.0,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t16-substitution-integrity",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 8.0,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 289.8,
+      "timeout_seconds": 1200,
+      "files_written": 3,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 244.5,
+      "timeout_seconds": 1200,
+      "files_written": 3,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 163.8,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 209.9,
+      "timeout_seconds": 600,
+      "files_written": 1,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 293.5,
+      "timeout_seconds": 1200,
+      "files_written": 2,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 361.6,
+      "timeout_seconds": 1200,
+      "files_written": 2,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "status": "pass",
+      "agent_exit_ok": true,
+      "seconds": 301.3,
+      "timeout_seconds": 1200,
+      "files_written": 10,
+      "gate_output": "",
+      "kept_workdir": null
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "status": "fail",
+      "agent_exit_ok": true,
+      "seconds": 355.1,
+      "timeout_seconds": 1200,
+      "files_written": 11,
+      "gate_output": "Traceback (most recent call last):\n  File \"<stdin>\", line 5, in <module>\nAssertionError: no fixed region",
+      "kept_workdir": "evals/results/workdirs/2026-09-23-1211-t20-product-ux-architecture-claude-off"
+    }
+  ]
+}
