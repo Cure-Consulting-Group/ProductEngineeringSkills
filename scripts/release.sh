@@ -68,6 +68,15 @@ if [ -n "$LAST_TAG" ]; then
       --no-publish --max-cost-usd "${RING0_MAX_COST:-15}" \
       || { echo "Ring 0 eval regression — fix before releasing"; exit 1; }
   fi
+  # t16 (\$N substitution integrity, statledger F-1) needs a project-level fixture
+  # skill, which `claude plugin eval` never loads (plugin-only sessions) — so it
+  # stays on the legacy harness and runs on every release. ~20 s, skill arm only.
+  if [ "$DRY" = "1" ]; then
+    echo "    would run: run-evals.py --tasks t16-substitution-integrity --skill on --reps 1"
+  else
+    python3 scripts/run-evals.py --tasks t16-substitution-integrity --skill on --reps 1 \
+      || { echo "t16 substitution-integrity regression — fix before releasing"; exit 1; }
+  fi
 fi
 
 if [ "$DRY" = "1" ]; then
