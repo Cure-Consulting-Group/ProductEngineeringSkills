@@ -9,7 +9,7 @@
     {
       "name": "cure-product-engineering",
       "source": "./",
-      "version": "7.10.0",
+      "version": "7.10.1",
       "description": "Complete product engineering skill library \u2014 103 skills (domain-organized) with bundled stdlib Python tooling. In Codex only the skills load: Claude Code hooks are fenced off, and the 40 agents and 4 personas stay Claude-side. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
       "author": {
         "name": "Cure Consulting Group",
