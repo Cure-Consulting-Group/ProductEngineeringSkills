@@ -24,14 +24,13 @@ plugin-evals/results/                run output (gitignored)
   and `route-proposal-no-auto` (tag `negative`) assert the
   `disable-model-invocation` skills are **never** auto-invoked (`min: 0, max: 0,
   arm: both`).
-- **Every case** (except t16) has a `tool_used: Skill` grader (a with-only "plugin fired"
+- **Every case** has a `tool_used: Skill` grader (a with-only "plugin fired"
   indicator in two-arm runs; scored under `--ablation none`) and a
   deterministic result grader. No `llm` graders yet — nothing needed one.
-- `t16-substitution-integrity` still guards the `\$N` escaping bug: its fixture
-  skill must deliver `PRICE=$0.15 / SHELL=$1 / CAP=$2,000` verbatim.
-  It is slash-invoked (no `Skill` call), so its process grader is a `Write` of
-  `DELIVERED.txt`, and the no-plugin arm loads no skills — its `W/OUT` is 0 by
-  construction; read `WITH` only.
+- `t16-substitution-integrity` (the `\$N` escaping guard) is **not** in `plugin-evals/`:
+  its fixture is a project-level skill, and `claude plugin eval` runs plugin-only
+  sessions that never load it (the port scored 0 in the v7.10.0 Ring 0). It stays in
+  `evals/tasks/` on the legacy harness, and `release.sh` runs it on every release.
 - Fixtures are `fixture.sh` scaffolds → the run needs `--scaffold`. File-writing
   cases need `--allow-tools Write Edit`; `t20` also needs `"Bash(python3 *)"`
   for `wireframe.py`.
