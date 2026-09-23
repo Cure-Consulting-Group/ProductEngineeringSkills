@@ -6,9 +6,9 @@ This skill **owns the Cure definitions** of the delivery metrics, including reco
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
-- Release tags: !`git tag --list --sort=-creatordate 2>/dev/null | head -10 || echo "(no tags)"`
-- Deploy workflows: !`ls .github/workflows/ 2>/dev/null | head -10 || echo "(no GitHub workflows)"`
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
+- Release tags: `git tag --list --sort=-creatordate 2>/dev/null | head -10 || echo "(no tags)"`
+- Deploy workflows: `ls .github/workflows/ 2>/dev/null | head -10 || echo "(no GitHub workflows)"`
 
 ## Step 1: Classify the Metrics Need
 

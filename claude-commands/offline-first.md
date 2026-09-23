@@ -6,9 +6,9 @@ Local-first persistence, deterministic sync, conflict resolution decided per ent
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Local data layer in use: !`grep -rlE "androidx.room|SwiftData|CoreData|dexie|idb|persistentLocalCache|enableIndexedDbPersistence|WorkManager|BGTaskScheduler" --include=*.kts --include=*.gradle --include=*.swift --include=*.ts --include=*.json . 2>/dev/null | grep -v node_modules | head -10 || echo "(none found)"`
+- Local data layer in use: `grep -rlE "androidx.room|SwiftData|CoreData|dexie|idb|persistentLocalCache|enableIndexedDbPersistence|WorkManager|BGTaskScheduler" --include=*.kts --include=*.gradle --include=*.swift --include=*.ts --include=*.json . 2>/dev/null | grep -v node_modules | head -10 || echo "(none found)"`
 
 ## Invariants
 

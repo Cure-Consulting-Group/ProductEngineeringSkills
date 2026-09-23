@@ -11,11 +11,11 @@ for Routing Middleware, cdn-caching for cache debugging, vercel-firewall for WAF
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Next.js version: !`(grep -E '"next"|"@vercel/functions"|"@upstash/' package.json 2>/dev/null || echo "(no Next.js)") | head -5`
-- Proxy/middleware file: !`(ls proxy.ts src/proxy.ts middleware.ts src/middleware.ts 2>/dev/null || echo "(none)") | head -4`
-- Hosting config: !`(ls vercel.json vercel.ts firebase.json apphosting.yaml 2>/dev/null || echo "(none)") | head -4`
+- Next.js version: `(grep -E '"next"|"@vercel/functions"|"@upstash/' package.json 2>/dev/null || echo "(no Next.js)") | head -5`
+- Proxy/middleware file: `(ls proxy.ts src/proxy.ts middleware.ts src/middleware.ts 2>/dev/null || echo "(none)") | head -4`
+- Hosting config: `(ls vercel.json vercel.ts firebase.json apphosting.yaml 2>/dev/null || echo "(none)") | head -4`
 
 ## Step 1: Classify
 

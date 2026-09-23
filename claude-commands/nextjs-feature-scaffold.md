@@ -4,12 +4,12 @@
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Versions: !`grep -oE '"(next|react|zod|tailwindcss|vitest|@playwright/test|firebase)": *"[^"]+"' package.json 2>/dev/null | head -8 || echo "(no package.json)"`
-- Config flags: !`grep -hoE "output: *['\"][a-z]+['\"]|cacheComponents: *(true|false)|reactCompiler: *(true|false)" next.config.* 2>/dev/null | head -4 || echo "(defaults)"`
-- Request interception: !`ls proxy.ts src/proxy.ts middleware.ts src/middleware.ts 2>/dev/null || echo "(none)"`
-- Existing routes: !`find src/app app -maxdepth 3 -name page.tsx 2>/dev/null | head -12`
+- Versions: `grep -oE '"(next|react|zod|tailwindcss|vitest|@playwright/test|firebase)": *"[^"]+"' package.json 2>/dev/null | head -8 || echo "(no package.json)"`
+- Config flags: `grep -hoE "output: *['\"][a-z]+['\"]|cacheComponents: *(true|false)|reactCompiler: *(true|false)" next.config.* 2>/dev/null | head -4 || echo "(defaults)"`
+- Request interception: `ls proxy.ts src/proxy.ts middleware.ts src/middleware.ts 2>/dev/null || echo "(none)"`
+- Existing routes: `find src/app app -maxdepth 3 -name page.tsx 2>/dev/null | head -12`
 
 ## Step 1: Classify the Feature Type
 

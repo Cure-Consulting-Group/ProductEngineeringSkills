@@ -12,12 +12,12 @@ per-worktree config, or submodules use relative paths (test first).
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Worktrees: !`git worktree list 2>/dev/null | head -10 || echo "(not a git repo)"`
-- Env files: !`ls -a .env* 2>/dev/null | head -8 || echo "(none)"`
-- Env ignored?: !`git check-ignore -q .env.local 2>/dev/null && echo "yes" || echo "NO — .env.local is not gitignored"`
-- Listening dev ports: !`lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | grep -oE ':(30|50|80)[0-9]{2} ' | sort -u | head -8 || echo "(none)"`
+- Worktrees: `git worktree list 2>/dev/null | head -10 || echo "(not a git repo)"`
+- Env files: `ls -a .env* 2>/dev/null | head -8 || echo "(none)"`
+- Env ignored?: `git check-ignore -q .env.local 2>/dev/null && echo "yes" || echo "NO — .env.local is not gitignored"`
+- Listening dev ports: `lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | grep -oE ':(30|50|80)[0-9]{2} ' | sort -u | head -8 || echo "(none)"`
 
 ## Step 1: Classify the Use Case
 

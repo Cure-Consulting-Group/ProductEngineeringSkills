@@ -10,11 +10,11 @@ already has `claude.manifest.json`, stop and use that skill instead — hand edi
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing agent files: !`ls CLAUDE.md AGENTS.md GEMINI.md STATE.md claude.manifest.json 2>/dev/null || echo "(none)"`
-- Stack manifest: !`ls package.json build.gradle.kts Podfile pubspec.yaml Cargo.toml go.mod pyproject.toml 2>/dev/null || echo "(none detected)"`
-- Portfolio: !`sed -n '1,20p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Existing agent files: `ls CLAUDE.md AGENTS.md GEMINI.md STATE.md claude.manifest.json 2>/dev/null || echo "(none)"`
+- Stack manifest: `ls package.json build.gradle.kts Podfile pubspec.yaml Cargo.toml go.mod pyproject.toml 2>/dev/null || echo "(none detected)"`
+- Portfolio: `sed -n '1,20p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
 
 ## Step 1: Inspect the codebase (silently)
 

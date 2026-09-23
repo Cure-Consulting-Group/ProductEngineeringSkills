@@ -15,10 +15,10 @@ Scope: AI workflows *inside a product*. Automating the coding harness itself (lo
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack: !`ls package.json pyproject.toml requirements.txt go.mod build.gradle.kts Package.swift 2>/dev/null | head -5 || echo "(none detected)"`
-- Existing LLM orchestration: !`grep -rlE "RunnableSequence|StateGraph|orchestrator|evaluator|tool_use|tool_choice" --include=*.ts --include=*.py --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | head -5 || echo "(none)"`
+- Stack: `ls package.json pyproject.toml requirements.txt go.mod build.gradle.kts Package.swift 2>/dev/null | head -5 || echo "(none detected)"`
+- Existing LLM orchestration: `grep -rlE "RunnableSequence|StateGraph|orchestrator|evaluator|tool_use|tool_choice" --include=*.ts --include=*.py --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | head -5 || echo "(none)"`
 
 If orchestration code exists, read it and classify the current shape before recommending a new one.
 

@@ -7,10 +7,10 @@ no filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Framework: !`grep -m2 -oE '"(next|astro|gatsby|nuxt|@remix-run/react)": *"[^"]+"' package.json 2>/dev/null | grep . || echo "(no web framework in package.json)"`
-- SEO files: !`ls app/sitemap.ts app/robots.ts src/app/sitemap.ts next-sitemap.config.js public/robots.txt 2>/dev/null | head -5 | grep . || echo "(none found)"`
+- Framework: `grep -m2 -oE '"(next|astro|gatsby|nuxt|@remix-run/react)": *"[^"]+"' package.json 2>/dev/null | grep . || echo "(no web framework in package.json)"`
+- SEO files: `ls app/sitemap.ts app/robots.ts src/app/sitemap.ts next-sitemap.config.js public/robots.txt 2>/dev/null | head -5 | grep . || echo "(none found)"`
 
 ## Step 1: Classify
 

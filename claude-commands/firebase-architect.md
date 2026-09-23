@@ -4,11 +4,11 @@
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Firebase files: !`ls firebase.json firestore.rules storage.rules firestore.indexes.json 2>/dev/null || echo "(none)"`
-- Databases and functions config: !`grep -nE '"(database|source|runtime)"' firebase.json 2>/dev/null | head -8 || echo "(no firebase.json)"`
-- Functions runtime: !`grep -nE '"(node|firebase-functions|firebase-admin)"' functions/package.json 2>/dev/null | head -4 || echo "(no functions/)"`
+- Firebase files: `ls firebase.json firestore.rules storage.rules firestore.indexes.json 2>/dev/null || echo "(none)"`
+- Databases and functions config: `grep -nE '"(database|source|runtime)"' firebase.json 2>/dev/null | head -8 || echo "(no firebase.json)"`
+- Functions runtime: `grep -nE '"(node|firebase-functions|firebase-admin)"' functions/package.json 2>/dev/null | head -4 || echo "(no functions/)"`
 
 ## Step 1: Classify
 

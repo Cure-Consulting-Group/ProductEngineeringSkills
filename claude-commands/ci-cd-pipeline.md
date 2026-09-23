@@ -7,11 +7,11 @@ path per platform. Deliver the requested workflows; don't refactor app code or a
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing workflows: !`(ls .github/workflows/ 2>/dev/null || echo "(none)") | head -15`
-- Scripts: !`(grep -A15 '"scripts"' package.json 2>/dev/null || echo "(no package.json)") | head -16`
-- Platforms: !`(ls -d android ios functions app apps firebase.json apphosting.yaml vercel.json 2>/dev/null || echo "(none detected)") | head -10`
+- Existing workflows: `(ls .github/workflows/ 2>/dev/null || echo "(none)") | head -15`
+- Scripts: `(grep -A15 '"scripts"' package.json 2>/dev/null || echo "(no package.json)") | head -16`
+- Platforms: `(ls -d android ios functions app apps firebase.json apphosting.yaml vercel.json 2>/dev/null || echo "(none detected)") | head -10`
 
 Read any existing workflow before writing a new one — adapt, don't duplicate.
 

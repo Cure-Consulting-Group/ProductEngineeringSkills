@@ -17,10 +17,10 @@ is listed as not performed), and the report below is filled. Match length to the
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack manifest: !`head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- UI layout: !`ls src/ app/ lib/ 2>/dev/null | head -20 || echo "(no src/app/lib)"`
+- Stack manifest: `head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- UI layout: `ls src/ app/ lib/ 2>/dev/null | head -20 || echo "(no src/app/lib)"`
 
 ## Step 1: Classify Audit Scope
 

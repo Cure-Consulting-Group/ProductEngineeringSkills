@@ -20,12 +20,12 @@ This skill owns the **Cure branch and release policy**; `ci-cd-pipeline` and
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Recent tags: !`git tag --sort=-creatordate 2>/dev/null | head -5 || echo "(no tags)"`
-- Commits since last tag: !`git log --oneline "$(git describe --tags --abbrev=0 2>/dev/null)..HEAD" 2>/dev/null | head -15 || echo "(none)"`
-- Versions: !`grep -hE "versionName|versionCode|MARKETING_VERSION|\"version\":" app/build.gradle.kts package.json *.xcodeproj/project.pbxproj 2>/dev/null | sort -u | head -6 || echo "(not found)"`
-- Release tooling: !`ls fastlane/Fastfile release-please-config.json .changeset .github/workflows/release*.yml 2>/dev/null || echo "(none)"`
+- Recent tags: `git tag --sort=-creatordate 2>/dev/null | head -5 || echo "(no tags)"`
+- Commits since last tag: `git log --oneline "$(git describe --tags --abbrev=0 2>/dev/null)..HEAD" 2>/dev/null | head -15 || echo "(none)"`
+- Versions: `grep -hE "versionName|versionCode|MARKETING_VERSION|\"version\":" app/build.gradle.kts package.json *.xcodeproj/project.pbxproj 2>/dev/null | sort -u | head -6 || echo "(not found)"`
+- Release tooling: `ls fastlane/Fastfile release-please-config.json .changeset .github/workflows/release*.yml 2>/dev/null || echo "(none)"`
 
 ## Step 1: Classify the Release
 

@@ -14,11 +14,11 @@ every secret in a `.env` file is one careless commit away from public. Match len
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Committed env files (red flag): !`git ls-files 2>/dev/null | grep -E '(^|/)\.env($|\.)' | grep -v '\.example$' | head -10 || echo "(none)"`
-- Secret surface: !`find . -maxdepth 4 \( -name ".env*" -o -name ".envrc" -o -name "*serviceAccount*.json" -o -path "*/secrets/*" \) -not -path "*/node_modules/*" 2>/dev/null | head -10`
-- Deploy target hints: !`ls vercel.json firebase.json app.yaml Dockerfile fly.toml 2>/dev/null | head -5`
+- Committed env files (red flag): `git ls-files 2>/dev/null | grep -E '(^|/)\.env($|\.)' | grep -v '\.example$' | head -10 || echo "(none)"`
+- Secret surface: `find . -maxdepth 4 \( -name ".env*" -o -name ".envrc" -o -name "*serviceAccount*.json" -o -path "*/secrets/*" \) -not -path "*/node_modules/*" 2>/dev/null | head -10`
+- Deploy target hints: `ls vercel.json firebase.json app.yaml Dockerfile fly.toml 2>/dev/null | head -5`
 
 Never print actual secret values. If a secret value is detected during scanning, redact it as `[REDACTED:KEY_NAME]` in all output.
 

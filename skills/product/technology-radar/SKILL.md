@@ -16,10 +16,10 @@ restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Prior radar: !`grep -m1 -i "last updated" docs/TECHNOLOGY_RADAR.md TECHNOLOGY_RADAR.md 2>/dev/null || echo "(no prior radar)"`
-- Portfolio products: !`grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Prior radar: `grep -m1 -i "last updated" docs/TECHNOLOGY_RADAR.md TECHNOLOGY_RADAR.md 2>/dev/null || echo "(no prior radar)"`
+- Portfolio products: `grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
 
 Read the prior radar in full before proposing ring movements.
 

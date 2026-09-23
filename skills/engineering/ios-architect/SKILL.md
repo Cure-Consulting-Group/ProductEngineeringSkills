@@ -17,11 +17,11 @@ container and navigation, and the view-model and use-case tests pass. Mirrors
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Toolchain / settings: !`grep -rhoE "SWIFT_VERSION = [0-9.]+|IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+|SWIFT_DEFAULT_ACTOR_ISOLATION = [A-Za-z]+|SWIFT_STRICT_CONCURRENCY = [a-z]+" --include=project.pbxproj . 2>/dev/null | sort | uniq -c | head -8 || echo "(no Xcode project)"`
-- Packages: !`grep -hoE 'url: "[^"]+"|swift-tools-version:[0-9.]+|defaultIsolation\([^)]*\)' Package.swift 2>/dev/null | head -8 || echo "(no Package.swift)"`
-- Existing features: !`find . -name "*ViewModel.swift" -not -path "*/.build/*" 2>/dev/null | head -6`
+- Toolchain / settings: `grep -rhoE "SWIFT_VERSION = [0-9.]+|IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+|SWIFT_DEFAULT_ACTOR_ISOLATION = [A-Za-z]+|SWIFT_STRICT_CONCURRENCY = [a-z]+" --include=project.pbxproj . 2>/dev/null | sort | uniq -c | head -8 || echo "(no Xcode project)"`
+- Packages: `grep -hoE 'url: "[^"]+"|swift-tools-version:[0-9.]+|defaultIsolation\([^)]*\)' Package.swift 2>/dev/null | head -8 || echo "(no Package.swift)"`
+- Existing features: `find . -name "*ViewModel.swift" -not -path "*/.build/*" 2>/dev/null | head -6`
 
 Match existing features' structure and naming before applying the defaults below.
 

@@ -13,12 +13,12 @@ metadata:
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Styling deps: !`grep -oE '"(tailwindcss|@tailwindcss/[a-z-]+|next|react|class-variance-authority|tailwind-merge|tw-animate-css|tailwindcss-animate)": *"[^"]+"' package.json 2>/dev/null | head -10 || echo "(no package.json)"`
-- Tailwind v3 config present: !`ls tailwind.config.* 2>/dev/null || echo "(none — v4 CSS-first or no Tailwind)"`
-- Theme CSS: !`grep -rlE "@theme|@import \"tailwindcss\"|@tailwind base" --include=*.css . 2>/dev/null | grep -v node_modules | head -3`
-- UI components: !`ls components/ui src/components/ui 2>/dev/null | head -15`
+- Styling deps: `grep -oE '"(tailwindcss|@tailwindcss/[a-z-]+|next|react|class-variance-authority|tailwind-merge|tw-animate-css|tailwindcss-animate)": *"[^"]+"' package.json 2>/dev/null | head -10 || echo "(no package.json)"`
+- Tailwind v3 config present: `ls tailwind.config.* 2>/dev/null || echo "(none — v4 CSS-first or no Tailwind)"`
+- Theme CSS: `grep -rlE "@theme|@import \"tailwindcss\"|@tailwind base" --include=*.css . 2>/dev/null | grep -v node_modules | head -3`
+- UI components: `ls components/ui src/components/ui 2>/dev/null | head -15`
 
 ## Step 1: Classify the Request
 

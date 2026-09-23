@@ -9,10 +9,10 @@ Every run is scoped to one product. Multi-market products get localized variants
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Portfolio products: !`grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Market research: !`ls docs/market-research.md docs/icp.md docs/gtm-plan.md 2>/dev/null | grep . || echo "(none)"`
+- Portfolio products: `grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Market research: `ls docs/market-research.md docs/icp.md docs/gtm-plan.md 2>/dev/null | grep . || echo "(none)"`
 
 If research docs exist, pull ICP pains, trigger events, differentiation, and channel choices from them
 before writing. With no ICP research, say so and suggest the market-research skill.

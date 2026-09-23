@@ -17,11 +17,11 @@ Match length to the need; no filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing specs (numbering and format to follow): !`{ ls docs/adr docs/rfcs docs/prd docs/epics 2>/dev/null || echo "(none)"; } | head -20`
-- Issue templates in force: !`ls .github/ISSUE_TEMPLATE 2>/dev/null || echo "(none)"`
-- Stack manifests: !`ls package.json build.gradle.kts Podfile pyproject.toml go.mod 2>/dev/null || echo "(none)"`
+- Existing specs (numbering and format to follow): `{ ls docs/adr docs/rfcs docs/prd docs/epics 2>/dev/null || echo "(none)"; } | head -20`
+- Issue templates in force: `ls .github/ISSUE_TEMPLATE 2>/dev/null || echo "(none)"`
+- Stack manifests: `ls package.json build.gradle.kts Podfile pyproject.toml go.mod 2>/dev/null || echo "(none)"`
 
 ## Step 1: Classify
 

@@ -4,11 +4,11 @@
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Deployment target: !`grep -rhoE "IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+|\.iOS\(\.v[0-9]+\)" --include=project.pbxproj --include=Package.swift . 2>/dev/null | sort -u | head -3 || echo "(not found)"`
-- Existing design system: !`find . -path ./node_modules -prune -o \( -path "*DesignSystem*" -o -path "*/Theme/*" \) -name "*.swift" -print 2>/dev/null | head -8`
-- Custom glass / bar backgrounds: !`grep -rlE "glassEffect|toolbarBackground|UITabBarAppearance|UINavigationBarAppearance" --include=*.swift . 2>/dev/null | head -5 || echo "(none)"`
+- Deployment target: `grep -rhoE "IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+|\.iOS\(\.v[0-9]+\)" --include=project.pbxproj --include=Package.swift . 2>/dev/null | sort -u | head -3 || echo "(not found)"`
+- Existing design system: `find . -path ./node_modules -prune -o \( -path "*DesignSystem*" -o -path "*/Theme/*" \) -name "*.swift" -print 2>/dev/null | head -8`
+- Custom glass / bar backgrounds: `grep -rlE "glassEffect|toolbarBackground|UITabBarAppearance|UINavigationBarAppearance" --include=*.swift . 2>/dev/null | head -5 || echo "(none)"`
 
 ## Step 1: Classify the Request
 

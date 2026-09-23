@@ -27,9 +27,9 @@ fundraising-materials link here instead of restating them.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Portfolio: `sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
 
 Product names, stages, and revenue models come from PORTFOLIO.md (maintained by the
 `portfolio-registry` skill). Don't hard-code a product list; if the file is absent, ask which

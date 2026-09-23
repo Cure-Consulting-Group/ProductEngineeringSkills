@@ -347,12 +347,33 @@ def t42_skill_issues(text, fm, body, skill_dir):
         issues.append(("CRIT", f"frontmatter {e} (T52)"))
     for e in loop_interval_issues(body):
         issues.append(("CRIT", f"{e} (T52)"))
+    for e in injection_permission_issues(fm, body):
+        issues.append(("CRIT", e))
     desc = fm.get("description", "")
     if desc and not DESC_TRIGGER_RE.search(desc[:DESC_TRIGGER_WINDOW]):
         issues.append(("WARN", f"no trigger phrase ('Use when…') in first {DESC_TRIGGER_WINDOW} chars of "
                                f"description — Codex truncates there and ignores when_to_use (T52 advisory; T53)"))
     return issues
 
+
+
+# Inline `!`cmd`` context injection runs through the Bash permission check at
+# skill-load time. If Bash isn't pre-approved (headless -p, CI, routines,
+# restrictive modes) the check is denied and the WHOLE skill fails to load —
+# measured in the Wave 5 eval sweep (69 skills affected). Injection is allowed
+# only when the skill's allowed-tools pre-approves Bash; otherwise write the
+# commands as "run these first" prose, which degrades gracefully.
+_INJECTION_RE = re.compile(r"!`[^`\n]+`")
+
+
+def injection_permission_issues(fm, body):
+    if not _INJECTION_RE.search(body):
+        return []
+    if "Bash" in str(fm.get("allowed-tools", "")):
+        return []
+    n = len(_INJECTION_RE.findall(body))
+    return [f"{n} inline !`cmd` injection(s) without Bash in allowed-tools — the skill fails to load "
+            f"wherever Bash isn't pre-approved; convert to run-first prose (Wave 5)"]
 
 def parse_metadata(text):
     """Return the `metadata:` map (one level: block or inline flow) as
@@ -780,6 +801,9 @@ def self_test():
 
     # 4. loop interval
     expect("loop/1w", loop_interval_issues("/loop 1w /x"), True)
+    expect("inject/no-bash", injection_permission_issues({"allowed-tools": '["Read"]'}, "- x: !`git log`"), True)
+    expect("inject/bash-ok", injection_permission_issues({"allowed-tools": '["Read", "Bash"]'}, "- x: !`git log`"), False)
+    expect("inject/prose-ok", injection_permission_issues({}, "- x: `git log`"), False)
     expect("loop/7d", loop_interval_issues("/loop 7d /x"), True)
     expect("loop/1d", loop_interval_issues("/loop 1d /x and /loop 30m y and /loop.md"), False)
 

@@ -7,10 +7,10 @@ the need; no filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Portfolio products: !`grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Analytics SDKs: !`grep -m4 -ohE '"(firebase|@amplitude/[a-z-]+|mixpanel[a-z-]*|posthog-js|@segment/[a-z-]+)"' package.json 2>/dev/null | grep . || echo "(none in package.json)"`
+- Portfolio products: `grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Analytics SDKs: `grep -m4 -ohE '"(firebase|@amplitude/[a-z-]+|mixpanel[a-z-]*|posthog-js|@segment/[a-z-]+)"' package.json 2>/dev/null | grep . || echo "(none in package.json)"`
 
 ## Step 1: Classify
 

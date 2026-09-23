@@ -7,10 +7,10 @@ against acceptance criteria. Match length to the need; no filler sections or res
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Specs and criteria: !`ls docs/prd docs/stories docs/uat 2>/dev/null | head -8 | grep . || echo "(no docs/prd, docs/stories, or docs/uat)"`
-- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
+- Specs and criteria: `ls docs/prd docs/stories docs/uat 2>/dev/null | head -8 | grep . || echo "(no docs/prd, docs/stories, or docs/uat)"`
+- Platforms present: `ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
 
 Before planning, read the PRD/stories for the feature and search for the feature flags that gate it.
 

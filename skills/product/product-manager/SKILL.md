@@ -14,10 +14,10 @@ summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Portfolio products: !`grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Existing roadmap/briefs: !`ls docs/roadmap.md docs/briefs/ 2>/dev/null | head -5 | grep . || echo "(none)"`
+- Portfolio products: `grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Existing roadmap/briefs: `ls docs/roadmap.md docs/briefs/ 2>/dev/null | head -5 | grep . || echo "(none)"`
 
 Read the matching PORTFOLIO.md section for stage, priority, and metrics when the product is in it.
 

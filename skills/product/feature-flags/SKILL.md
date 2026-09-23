@@ -21,10 +21,10 @@ Invariants (each exists because it has burned a release):
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Flag provider in use: !`grep -rlE "remote-config|RemoteConfig|launchdarkly|LaunchDarkly|@vercel/edge-config|statsig|flagsmith" --include=*.json --include=*.kts --include=Podfile --include=Package.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | head -4 | grep . || echo "(no flag SDK detected)"`
-- Flag registry: !`ls config/feature-flags.yml flags.yml 2>/dev/null | head -2 | grep . || echo "(no registry)"`
+- Flag provider in use: `grep -rlE "remote-config|RemoteConfig|launchdarkly|LaunchDarkly|@vercel/edge-config|statsig|flagsmith" --include=*.json --include=*.kts --include=Podfile --include=Package.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | head -4 | grep . || echo "(no flag SDK detected)"`
+- Flag registry: `ls config/feature-flags.yml flags.yml 2>/dev/null | head -2 | grep . || echo "(no registry)"`
 
 ## Step 1: Classify
 

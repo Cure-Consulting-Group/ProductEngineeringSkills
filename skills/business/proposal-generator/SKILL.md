@@ -27,10 +27,10 @@ termination. engineering-cost-model and technical-estimation supply the cost bas
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Portfolio (for relevant past work in "Why Cure"): !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Prior proposals: !`ls docs/proposals/ 2>/dev/null | head -10 || echo "(none)"`
+- Portfolio (for relevant past work in "Why Cure"): `sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Prior proposals: `ls docs/proposals/ 2>/dev/null | head -10 || echo "(none)"`
 
 The current repository is usually not the client's; don't infer the client's stack from it.
 

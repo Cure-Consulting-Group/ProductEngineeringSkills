@@ -14,11 +14,11 @@ Cure default: pnpm workspaces + Turborepo for JS/TS. Nx if the team is already o
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Workspace markers: !`ls pnpm-workspace.yaml nx.json turbo.json lerna.json WORKSPACE MODULE.bazel 2>/dev/null || echo "(no workspace config)"`
-- Workspace/task config: !`cat pnpm-workspace.yaml turbo.json 2>/dev/null | head -40`
-- CI caching/affected logic: !`grep -lE "affected|--filter|turbo|nx " .github/workflows/*.yml 2>/dev/null | head -5 || echo "(none)"`
+- Workspace markers: `ls pnpm-workspace.yaml nx.json turbo.json lerna.json WORKSPACE MODULE.bazel 2>/dev/null || echo "(no workspace config)"`
+- Workspace/task config: `cat pnpm-workspace.yaml turbo.json 2>/dev/null | head -40`
+- CI caching/affected logic: `grep -lE "affected|--filter|turbo|nx " .github/workflows/*.yml 2>/dev/null | head -5 || echo "(none)"`
 
 Use this to skip questions already answered in Step 2.
 

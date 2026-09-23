@@ -38,12 +38,19 @@ metadata:
 
 Injection runs only in Claude Code; Codex and Antigravity show the line as literal text.
 
+**Default: don't inject.** An inline `` !`cmd` `` goes through the Bash permission check when
+the skill loads, and if Bash isn't pre-approved (headless `claude -p`, CI, routines, restrictive
+permission modes) the check is denied and **the whole skill fails to load** — measured in the
+Wave 5 eval sweep, where 69 skills silently never loaded. Write context commands as plain
+`` `cmd` `` bullets the model runs first; that degrades gracefully everywhere. Use `` !`cmd` ``
+only in a skill whose `allowed-tools` pre-approves Bash (the audit fails otherwise).
+
 - Inject **only what changes the output** of *this* skill. A tax, legal, marketing, sales, or
   comms skill does not need `package.json` or `git log`. Many skills need nothing at all.
 - Every injected command is bounded (`head -n 20`, `2>/dev/null || echo "(none)"`) and the
   whole block stays ≤10 lines of output.
-- Always introduce the block with the portable line:
-  `Context (pre-filled in Claude Code; in other runtimes run these commands first):`
+- Introduce the block with: `Context — run these read-only commands first; skip any that fail
+  or aren't permitted (they only tailor the output):`
 - Don't rely on `$ARGUMENTS` / `$0` substitution in prose — they stay literal outside Claude.
   Escape literal dollars before digits as `\$` (CLAUDE.md).
 

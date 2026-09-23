@@ -8,11 +8,11 @@ rather than replaced. Deliver what was asked; don't add unrequested services.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing configs: !`ls firebase.json .firebaserc vercel.json Dockerfile docker-compose.yml cloud-run-service.yaml .env.example 2>/dev/null || echo "(none)"`
-- Firebase projects: !`head -20 .firebaserc 2>/dev/null || echo "(no .firebaserc)"`
-- Stack: !`head -25 package.json 2>/dev/null || echo "(no package.json)"`
+- Existing configs: `ls firebase.json .firebaserc vercel.json Dockerfile docker-compose.yml cloud-run-service.yaml .env.example 2>/dev/null || echo "(none)"`
+- Firebase projects: `head -20 .firebaserc 2>/dev/null || echo "(no .firebaserc)"`
+- Stack: `head -25 package.json 2>/dev/null || echo "(no package.json)"`
 
 ## Step 1: Classify the Infrastructure Need
 

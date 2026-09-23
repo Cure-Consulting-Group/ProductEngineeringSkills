@@ -15,10 +15,10 @@ in with evidence. Cure rule: no service goes to production without this baseline
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack: !`head -30 package.json 2>/dev/null || head -30 app/build.gradle.kts 2>/dev/null || echo "(no package.json / gradle)"`
-- Monitoring SDKs: !`grep -rhoE "@sentry/[a-z-]+|[d]d-trace|@opentelemetry/[a-z-]+|firebase-crashlytics|pino|winston" --include=package.json --include=*.gradle.kts --include=Podfile . 2>/dev/null | sort -u | head -12 || echo "(none found)"`
+- Stack: `head -30 package.json 2>/dev/null || head -30 app/build.gradle.kts 2>/dev/null || echo "(no package.json / gradle)"`
+- Monitoring SDKs: `grep -rhoE "@sentry/[a-z-]+|[d]d-trace|@opentelemetry/[a-z-]+|firebase-crashlytics|pino|winston" --include=package.json --include=*.gradle.kts --include=Podfile . 2>/dev/null | sort -u | head -12 || echo "(none found)"`
 
 ## Step 1: Classify the Observability Need
 

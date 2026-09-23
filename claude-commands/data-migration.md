@@ -10,11 +10,11 @@
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing migrations: !`find . -maxdepth 4 -path "*/node_modules" -prune -o -type d -name "migrations" -print 2>/dev/null | head -3 || echo "(none)"`
-- Firebase config: !`ls firebase.json firestore.rules firestore.indexes.json 2>/dev/null || echo "(no Firebase config)"`
-- Stack manifest: !`head -25 package.json 2>/dev/null || echo "(no package.json)"`
+- Existing migrations: `find . -maxdepth 4 -path "*/node_modules" -prune -o -type d -name "migrations" -print 2>/dev/null | head -3 || echo "(none)"`
+- Firebase config: `ls firebase.json firestore.rules firestore.indexes.json 2>/dev/null || echo "(no Firebase config)"`
+- Stack manifest: `head -25 package.json 2>/dev/null || echo "(no package.json)"`
 
 ## Step 1: Classify
 
