@@ -16,6 +16,11 @@ no fleet-rollout work.
 **The one rule: never bypass `scripts/release.sh`.** It is the only path that
 cannot ship a half-synced or below-bar release.
 
+## Per release (every machine)
+
+Run `scripts/install-runtimes.sh` on each consultant machine after a release lands — Codex and
+Antigravity install snapshots and do not auto-update (see `STATE.md`).
+
 ## Monthly (~30 minutes)
 
 1. **Run bare `/loop` on this repo.** Eat our own maintenance loop: dependency
