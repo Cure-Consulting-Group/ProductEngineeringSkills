@@ -8,9 +8,9 @@
   "plugins": [
     {
       "name": "cure-product-engineering",
-      "source": ".",
+      "source": "./",
       "version": "7.9.1",
-      "description": "Complete product engineering skill library \u2014 89 skills (domain-organized), 39 agents (engineering, product, marketing, business, data, security), 4 personas (cross-domain engagement archetypes), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering, bundled stdlib Python tooling, MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
+      "description": "Complete product engineering skill library \u2014 103 skills (domain-organized) with bundled stdlib Python tooling. In Codex only the skills load: Claude Code hooks are fenced off, and the 40 agents and 4 personas stay Claude-side. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -37,12 +37,17 @@
         "llmops",
         "testing",
         "infrastructure"
-      ]
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Coding"
     },
     {
       "name": "cure-tri-lane",
       "source": "./tri-lane",
-      "version": "1.14.2",
+      "version": "1.14.4",
       "description": "Opt-in multi-vendor orchestration: Claude architect, Codex implementation and correctness lanes (codex exec), Antigravity system-review lane (agy) in read-only worktrees, and a fresh-context advisor. Uses existing ChatGPT and Google logins; independent of cure-product-engineering.",
       "author": {
         "name": "Cure Consulting Group",
@@ -54,7 +59,12 @@
         "antigravity",
         "cross-vendor-review",
         "worktrees"
-      ]
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Coding"
     }
   ]
 }

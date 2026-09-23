@@ -1,266 +1,125 @@
 ---
 name: infrastructure-scaffold
-description: "Generate cloud infrastructure configs for Firebase, GCP, Vercel, and Docker with IaC templates and environment management"
-when_to_use: "Use when generating cloud infrastructure configs for Firebase, GCP, Vercel, or Docker with IaC templates. NOT for Terraform-specific guidance (follow rules/terraform.md)."
+description: "Generates Firebase, GCP, Vercel, and Docker configs with dev/staging/prod separation and cost guards. Use when setting up hosting, Cloud Run, Functions, secrets, environments, or budgets for a project."
+when_to_use: "NOT for Firestore schema/rules design (use firebase-architect), CI workflows (use ci-cd-pipeline), or Terraform modules (follow rules/terraform.md)."
 argument-hint: "[project-name]"
 ---
 
 # Infrastructure Scaffold
 
-Cloud infrastructure configuration generator for Firebase, GCP, Vercel, and Docker. Firebase-first, GCP cloud approach aligned with Cure Consulting Group standards. Every project ships with production-ready infrastructure configs, environment separation, and monitoring from day one.
+Outcome: working infrastructure config for the classified need — Firebase-first on GCP, Vercel
+for Next.js when chosen, Docker for Cloud Run — with separate projects per environment, secrets
+out of the repo, capped scaling, and budget alerts. Done when the configs deploy to a dev project
+without edits beyond placeholders (`PROJECT_ID`, `ORG/REPO`) and existing configs were extended
+rather than replaced. Deliver what was asked; don't add unrequested services.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
+- Existing configs: !`ls firebase.json .firebaserc vercel.json Dockerfile docker-compose.yml cloud-run-service.yaml .env.example 2>/dev/null || echo "(none)"`
+- Firebase projects: !`head -20 .firebaserc 2>/dev/null || echo "(no .firebaserc)"`
+- Stack: !`head -25 package.json 2>/dev/null || echo "(no package.json)"`
 
 ## Step 1: Classify the Infrastructure Need
 
 | Need | Scope |
 |------|-------|
-| New project setup | Full infrastructure scaffold from scratch — Firebase, hosting, Docker, CI/CD integration |
-| Environment management | Dev / staging / production separation, secret management, feature flags |
-| Scaling config | Cloud Functions concurrency, Cloud Run autoscaling, CDN caching, database connection pooling |
-| Monitoring setup | Performance monitoring, error reporting, uptime checks, alerting policies |
-| Cost optimization | Billing alerts, instance limits, storage lifecycle, budget quotas |
+| New project setup | Firebase projects, hosting, functions, Docker, env template |
+| Environment management | Dev / staging / prod separation, secrets, flags |
+| Scaling config | Functions/Cloud Run concurrency and instance caps, CDN caching, pooling |
+| Monitoring setup | Uptime checks, alert policies, log sinks (instrumentation code → `observability`) |
+| Cost optimization | Budgets, instance caps, storage lifecycle |
 
 ## Step 2: Gather Context
 
-1. **Cloud provider** — Firebase + GCP (default), Vercel, AWS, or hybrid?
-2. **Project type** — web app (Next.js), mobile (Android/iOS), API backend, full stack?
-3. **Expected scale** — users, requests/sec, storage volume, geographic regions?
-4. **Compliance requirements** — HIPAA, SOC 2, GDPR, data residency?
-5. **Team size** — solo dev, small team (2-5), or larger org with role separation?
+Ask only for what's missing: provider mix (Firebase + GCP default, Vercel, AWS), project type
+(Next.js, mobile backend, API), expected scale and regions, compliance (HIPAA → only
+BAA-covered services, see `compliance-architect`; data residency → region pin), team size.
 
-## Step 3: Firebase Infrastructure
+## Step 3: Firebase and GCP
 
-See [reference/details.md](reference/details.md) (section “Step 3: Firebase Infrastructure”) for full detail.
+Cure defaults: one Firebase project per environment (`NAME-dev`, `NAME-staging`, `NAME-prod`),
+Functions 2nd gen (`firebase-functions/v2`) with `maxInstances` always set, Cloud Run for
+containers, Secret Manager for server secrets, Workload Identity Federation for CI (no JSON
+service-account keys), `gcloud storage` (not `gsutil`), Direct VPC egress over connectors.
+Read [reference/details.md](reference/details.md) (sections "Step 3" and "Step 4") when writing
+`firebase.json`, `.firebaserc`, rules/index stubs, emulator setup, Cloud Run service YAML,
+buckets, Secret Manager, Scheduler, VPC, or the CI service account.
 
-## Step 4: GCP Infrastructure
+## Step 4: Vercel
 
-See [reference/details.md](reference/details.md) (section “Step 4: GCP Infrastructure”) for full detail.
-
-## Step 5: Vercel / Hosting Infrastructure
-
-### vercel.json
 ```json
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
   "installCommand": "npm ci",
   "regions": ["iad1"],
   "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, must-revalidate" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
-      ]
-    }
-  ],
-  "redirects": [
-    { "source": "/old-path", "destination": "/new-path", "statusCode": 301 }
-  ],
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" }
+    { "source": "/api/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/(.*)", "headers": [
+      { "key": "X-Frame-Options", "value": "DENY" },
+      { "key": "X-Content-Type-Options", "value": "nosniff" },
+      { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+    ] }
   ]
 }
 ```
 
-### Environment Variables Management
-```bash
-# Set variables per environment
-vercel env add NEXT_PUBLIC_FIREBASE_PROJECT_ID     # prompted for value and environment
-vercel env add STRIPE_SECRET_KEY                    # production only, encrypted
+- Pin `regions` next to the database (e.g. `iad1` for us-east Firestore/Postgres); a function far
+  from its data costs more latency than the edge saves.
+- Env vars: `vercel env add NAME <environment>`, `vercel env pull .env.local`. Production = the
+  production branch, Preview = PRs; server secrets never get `NEXT_PUBLIC_`.
+- Next.js 16 renamed `middleware.ts` to `proxy.ts` (Node runtime by default). `request.geo` and
+  `request.ip` were removed in Next 15 — use `geolocation()` / `ipAddress()` from `@vercel/functions`:
 
-# Pull env vars locally
-vercel env pull .env.local
-
-# Environment scoping
-#   Production  → main branch deploys
-#   Preview     → PR and branch deploys
-#   Development → local via vercel dev
-```
-
-### Edge Functions Config
 ```typescript
-// middleware.ts (Next.js Edge Middleware on Vercel)
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-
-export const config = {
-  matcher: ["/dashboard/:path*", "/api/:path*"],
-};
-
-// Next.js 15+ removed request.geo / request.ip — on Vercel use @vercel/functions
+// proxy.ts
+import { NextResponse, type NextRequest } from "next/server";
 import { geolocation } from "@vercel/functions";
 
-export function middleware(request: NextRequest) {
-  // Geo-based routing, auth checks, rate limiting at the edge
-  const country = geolocation(request).country ?? "US";
+export const config = { matcher: ["/dashboard/:path*"] };
+
+export function proxy(request: NextRequest) {
   const response = NextResponse.next();
-  response.headers.set("x-country", country);
+  response.headers.set("x-country", geolocation(request).country ?? "US");
   return response;
 }
 ```
 
-### Domain and DNS Setup
-```bash
-# Add custom domain
-vercel domains add example.com
-vercel domains add www.example.com
+- Domains: `vercel domains add example.com`, then copy the DNS values shown in the project's
+  Domains settings. Subdomain CNAMEs are project-specific; the apex A record `76.76.21.21` is still
+  accepted, but prefer the value the dashboard shows. Certificates are automatic.
 
-# DNS records required:
-#   A     @    76.76.21.21
-#   CNAME www  cname.vercel-dns.com
+## Step 5: Docker
 
-# SSL is automatic via Let's Encrypt
-```
+Multi-stage, non-root user, `npm ci --omit=dev`, current LTS base image (`node:24-alpine`),
+`HEALTHCHECK`, port 8080 for Cloud Run; no `version:` key in Compose files. See `rules/docker.md`.
+Read [reference/details.md](reference/details.md) (section "Step 6: Docker Configuration") when
+writing the Dockerfile or `docker-compose.yml`.
 
-### Preview Deployments
-```
-Every pull request gets a unique preview URL automatically:
-  https://PROJECT-NAME-git-BRANCH-NAME-TEAM.vercel.app
+## Step 6: Environments and Secrets
 
-Configure in vercel.json or dashboard:
-  - Auto-assign custom preview domain
-  - Comment on PR with preview link
-  - Run checks before promoting to production
-```
+Branch-to-environment mapping follows the Cure branch and release policy owned by
+`release-management` (main → staging auto-deploy; production from a release tag with manual
+approval in a protected CI environment). Don't restate a different policy here.
 
-## Step 6: Docker Configuration
+| Secret | Store | Access |
+|---|---|---|
+| Firebase web config | `.env.local` (gitignored) | `NEXT_PUBLIC_*` — not secret, but still per-environment |
+| Server API keys, DB URLs | Secret Manager | `defineSecret()` in Functions v2, `--set-secrets` on Cloud Run |
+| CI credentials | Workload Identity Federation | `google-github-actions/auth`; no keys stored |
+| Encryption keys | Cloud KMS | KMS client |
 
-See [reference/details.md](reference/details.md) (section “Step 6: Docker Configuration”) for full detail.
+Commit `.env.example` with every variable named and empty; never commit `.env*`, `*-sa-key.json`,
+`*.p12`, `*.keystore`. Feature flags → `feature-flags` skill (Remote Config).
 
-## Step 7: Environment Management
+## Step 7: Monitoring Infrastructure
 
-### Environment Separation Strategy
-```
-Environment     Firebase Project         Branch        Auto-Deploy
-───────────────────────────────────────────────────────────────────
-development     PROJECT_NAME-dev         feature/*     No (manual)
-staging         PROJECT_NAME-staging     main          Yes
-production      PROJECT_NAME-prod        release/*     Yes (with approval)
-```
+2nd-gen Functions run on Cloud Run, so alert on `cloud_run_revision` metrics; 1st-gen
+`cloudfunctions.googleapis.com/*` metrics miss them. An error-rate alert needs a denominator:
 
-Rules:
-- Each environment is a **separate Firebase project** — never share projects across environments
-- Production deploys require **manual approval** via GitHub Environment protection rules
-- Staging mirrors production config but with test data
-
-### Secret Management
-```
-Secret Type             Where to Store                  Access Method
-────────────────────────────────────────────────────────────────────────
-Firebase config         .env.local (gitignored)         NEXT_PUBLIC_* vars
-API keys (server)       GCP Secret Manager              secretmanager.accessSecretVersion()
-API keys (CI/CD)        GitHub Secrets                  ${{ secrets.KEY_NAME }}
-Service accounts        GCP Secret Manager / GitHub     JSON key (never in repo)
-Database URLs           GCP Secret Manager              Runtime injection
-Encryption keys         GCP KMS                         kms.encrypt() / decrypt()
-```
-
-Never commit: `.env`, `*-sa-key.json`, `*.p12`, `*.keystore`, `serviceAccountKey.json`
-
-### Environment Variable Templates (.env.example)
-```bash
-# .env.example — commit this file, never commit .env or .env.local
-
-# Firebase (client-side, safe to expose)
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=
-
-# Server-side only (never prefix with NEXT_PUBLIC_)
-FIREBASE_SERVICE_ACCOUNT_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-SENDGRID_API_KEY=
-DATABASE_URL=
-
-# App config
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_ENVIRONMENT=development
-```
-
-### Feature Flags Infrastructure
-```typescript
-// lib/feature-flags.ts
-import { getRemoteConfig, fetchAndActivate, getValue } from "firebase/remote-config";
-
-const remoteConfig = getRemoteConfig();
-remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hour in prod
-
-// Default values
-remoteConfig.defaultConfig = {
-  enable_new_checkout: false,
-  enable_dark_mode: false,
-  max_upload_size_mb: 10,
-  maintenance_mode: false,
-};
-
-export async function initFeatureFlags() {
-  await fetchAndActivate(remoteConfig);
-}
-
-export function isEnabled(flag: string): boolean {
-  return getValue(remoteConfig, flag).asBoolean();
-}
-
-export function getConfigValue(key: string): string {
-  return getValue(remoteConfig, key).asString();
-}
-```
-
-## Step 8: Monitoring & Observability
-
-### Firebase Performance Monitoring
-```typescript
-// lib/firebase-perf.ts
-import { getPerformance, trace } from "firebase/performance";
-
-const perf = getPerformance();
-
-// Custom trace for critical operations
-export async function traceOperation<T>(name: string, operation: () => Promise<T>): Promise<T> {
-  const t = trace(perf, name);
-  t.start();
-  try {
-    const result = await operation();
-    t.putAttribute("status", "success");
-    return result;
-  } catch (error) {
-    t.putAttribute("status", "error");
-    throw error;
-  } finally {
-    t.stop();
-  }
-}
-```
-
-### Cloud Monitoring Alerting Policies
-2nd-gen Cloud Functions run on Cloud Run, so alert on `cloud_run_revision` metrics (the 1st-gen
-`cloudfunctions.googleapis.com/*` metrics miss them). A ratio needs a denominator, so use a policy file.
 ```yaml
-# monitoring/functions-5xx-ratio.yaml — error ratio > 5% for 5 min
+# monitoring/functions-5xx-ratio.yaml — 5xx ratio > 5% for 5 min
 displayName: "Functions 5xx ratio > 5%"
 combiner: OR
 conditions:
@@ -273,217 +132,57 @@ conditions:
     comparison: COMPARISON_GT
     thresholdValue: 0.05
     duration: 300s
-# monitoring/functions-p95-latency.yaml — same shape, no denominator:
-#   filter: resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_latencies"
-#   perSeriesAligner: ALIGN_PERCENTILE_95, thresholdValue: 2000 (ms)
+# p95 latency: same shape without a denominator —
+#   metric.type="run.googleapis.com/request_latencies", ALIGN_PERCENTILE_95, thresholdValue: 2000 (ms)
 ```
+
 ```bash
 gcloud monitoring policies create --policy-from-file=monitoring/functions-5xx-ratio.yaml \
-  --notification-channels=CHANNEL_ID   # or set notificationChannels in the file
-```
-
-### Error Reporting (Sentry)
-```typescript
-// lib/sentry.ts
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  environment: process.env.NEXT_PUBLIC_ENVIRONMENT,
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-  integrations: [
-    Sentry.replayIntegration(),
-    Sentry.browserTracingIntegration(),
-  ],
-  ignoreErrors: [
-    "ResizeObserver loop limit exceeded",
-    "Non-Error promise rejection captured",
-  ],
-});
-```
-
-### Uptime Checks
-```bash
-# Create uptime check for production
-gcloud monitoring uptime create PROJECT_NAME-web \
-  --display-name="Production Web App" \
-  --uri="https://example.com" \
-  --http-method=GET \
-  --check-interval=300 \
-  --timeout=10 \
-  --regions=usa,europe,asia
-
-# Create uptime check for API
-gcloud monitoring uptime create PROJECT_NAME-api \
-  --display-name="Production API Health" \
-  --uri="https://api.example.com/health" \
-  --http-method=GET \
-  --check-interval=60 \
-  --timeout=10
-```
-
-### Log Aggregation
-```bash
-# Create log sink to BigQuery for analysis
+  --notification-channels=CHANNEL_ID
+gcloud monitoring uptime create NAME-api --uri="https://api.example.com/health" \
+  --http-method=GET --period=1 --timeout=10
 gcloud logging sinks create bigquery-logs \
   bigquery.googleapis.com/projects/PROJECT_ID/datasets/app_logs \
-  --log-filter='resource.type="cloud_function" OR resource.type="cloud_run_revision"'
-
-# Create log-based metric for business events
-gcloud logging metrics create user-signups \
-  --description="Count of user signups" \
-  --log-filter='resource.type="cloud_function" AND jsonPayload.event="user_signup"'
-
-# Structured logging in Cloud Functions
-import { logger } from "firebase-functions/v2";
-
-logger.info("User signed up", {
-  event: "user_signup",
-  userId: user.uid,
-  method: user.providerData[0]?.providerId,
-});
+  --log-filter='resource.type="cloud_run_revision"'
 ```
 
-## Step 9: Cost Optimization
+SLO targets and burn-rate alerting come from `observability`; this step only provisions them.
 
-### Firebase Billing Alerts
-```bash
-# Set budget alert at project level
-gcloud billing budgets create \
-  --billing-account=BILLING_ACCOUNT_ID \
-  --display-name="PROJECT_NAME Monthly Budget" \
-  --budget-amount=500 \
-  --threshold-rule=percent=0.5 \
-  --threshold-rule=percent=0.8 \
-  --threshold-rule=percent=1.0 \
-  --notifications-rule-pubsub-topic=projects/PROJECT_ID/topics/billing-alerts \
-  --notifications-rule-monitoring-notification-channels=CHANNEL_ID
-```
+## Step 8: Cost Controls
 
-### Cloud Functions Min/Max Instances
-```typescript
-// Cost-optimized function configuration
-import { onRequest } from "firebase-functions/v2/https";
-import { onSchedule } from "firebase-functions/v2/scheduler";
+- **Budget** with 50/80/100% alerts on every billing account:
+  `gcloud billing budgets create --billing-account=ID --display-name="NAME monthly" --budget-amount=500 --threshold-rule=percent=0.5 --threshold-rule=percent=0.8 --threshold-rule=percent=1.0`.
+  Budgets alert; they don't stop spend. For a hard stop, wire budget → Pub/Sub → a function that
+  disables billing (dev projects only — it takes production down).
+- **Firestore has no spending cap.** Guard it with budget alerts, App Check (blocks scripted
+  abuse), query/index review, and per-collection read monitoring.
+- **Functions/Cloud Run:** always set `maxInstances`; `minInstances: 0` except latency-critical
+  APIs (1); `concurrency: 80` on v2 HTTP functions; scheduled jobs `maxInstances: 1`.
+- **Storage lifecycle:** delete `tmp/` at 7 days; Nearline at 30, Coldline at 90 for backups;
+  delete logs at 365 unless compliance says otherwise.
+- Export billing to BigQuery. For price estimates, use the current GCP/Firebase pricing pages for
+  the chosen region — rates differ between regional and multi-region locations (confirm before use).
 
-// Low-traffic endpoint — scale to zero
-export const webhook = onRequest({
-  minInstances: 0,
-  maxInstances: 10,
-  memory: "256MiB",
-  timeoutSeconds: 30,
-}, handler);
+## Code/Artifact Generation
 
-// High-traffic API — keep warm, cap max
-export const api = onRequest({
-  minInstances: 1,       // avoid cold starts
-  maxInstances: 50,      // cap costs
-  memory: "512MiB",
-  concurrency: 80,       // handle multiple requests per instance
-}, handler);
+Applies only when Step 1 classified the request as new project setup, environment management,
+scaling config, monitoring setup, or cost optimization with a request to build. Check existing
+configs first and extend them.
 
-// Scheduled job — minimal resources
-export const dailyCleanup = onSchedule({
-  schedule: "every day 03:00",
-  memory: "256MiB",
-  maxInstances: 1,
-  timeoutSeconds: 540,
-}, handler);
-```
+| Classification | Files |
+|---|---|
+| New project setup | `firebase.json`, `.firebaserc`, `firestore.indexes.json`, rules stubs (design via `firebase-architect`), `functions/src/index.ts`, `Dockerfile`, `.dockerignore`, `docker-compose.yml`, `vercel.json` (if Vercel), `.env.example` |
+| Environment management | `.firebaserc` aliases, `.env.example`, Secret Manager / WIF commands |
+| Scaling config | Function options, `cloud-run-service.yaml`, `vercel.json` regions |
+| Monitoring setup | `monitoring/*.yaml` policies, uptime and sink commands |
+| Cost optimization | Budget command, lifecycle JSON, instance caps |
 
-### Storage Lifecycle Policies
-```json
-{
-  "lifecycle": {
-    "rule": [
-      {
-        "action": { "type": "Delete" },
-        "condition": { "age": 7, "matchesPrefix": ["tmp/", "cache/"] }
-      },
-      {
-        "action": { "type": "SetStorageClass", "storageClass": "NEARLINE" },
-        "condition": { "age": 30, "matchesPrefix": ["uploads/"] }
-      },
-      {
-        "action": { "type": "SetStorageClass", "storageClass": "COLDLINE" },
-        "condition": { "age": 90, "matchesPrefix": ["backups/"] }
-      },
-      {
-        "action": { "type": "Delete" },
-        "condition": { "age": 365, "matchesPrefix": ["logs/"] }
-      }
-    ]
-  }
-}
-```
-
-### Budget Alerts and Quotas
-```
-Cost Control Checklist:
-  ✅ Set monthly budget with 50%, 80%, 100% alerts
-  ✅ Cap Cloud Functions maxInstances (never unlimited)
-  ✅ Firestore has no spending cap — rely on budget alerts (optionally a budget → Pub/Sub → function that disables billing) and per-query cost reviews
-  ✅ Use storage lifecycle rules to auto-archive/delete
-  ✅ Enable per-service billing export to BigQuery
-  ✅ Review billing dashboard weekly
-  ✅ Set up anomaly detection alerts
-  ✅ Use committed use discounts for predictable workloads
-
-Estimated Costs (small-medium project):
-  Firebase Hosting        — free tier covers most projects
-  Cloud Functions         — \$0.40/million invocations + compute time
-  Firestore               — \$0.06/100K reads, \$0.18/100K writes
-  Cloud Storage           — \$0.020/GB/month (Standard)
-  Cloud Run               — \$0 when idle, ~\$30-50/month at moderate traffic
-  Secret Manager          — \$0.06/10K access operations
-```
-
-## Code Generation (Required)
-
-You MUST generate actual config files using the Write tool:
-
-Based on detected stack, generate the appropriate configs:
-- **Firebase**: `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`
-- **Docker**: `Dockerfile` (multi-stage), `docker-compose.yml`, `.dockerignore`
-- **Vercel**: `vercel.json`
-- **Terraform**: `main.tf`, `variables.tf`, `outputs.tf`, `providers.tf`, `backend.tf`
-- **Environment**: `.env.example` with all required variables documented
-
-Before generating, use Glob to find existing configs and Read them. Enhance rather than replace.
+Terraform is out of scope here — if the client needs IaC modules, follow `rules/terraform.md`
+and say so rather than emitting `.tf` files from this skill.
 
 ## Cross-References
 
-- `/ci-cd-pipeline` — for GitHub Actions workflows that deploy these infrastructure configs
-- `/firebase-architect` — for Firestore schema and security rules design
-- `/security-review` — for IAM least-privilege, secret management, and network security standards
-- `/database-architect` — for database instance configuration and connection pooling
-
-## Step 10: Output
-
-Generate all configuration files as ready-to-use artifacts:
-
-```
-project-root/
-├── firebase.json
-├── .firebaserc
-├── firestore.rules
-├── firestore.indexes.json
-├── storage.rules
-├── Dockerfile
-├── docker-compose.yml
-├── .dockerignore
-├── vercel.json                   (if using Vercel)
-├── cloud-run-service.yaml        (if using Cloud Run)
-├── .env.example
-├── lib/
-│   ├── feature-flags.ts
-│   ├── firebase-perf.ts
-│   └── sentry.ts
-└── functions/
-    └── src/
-        └── index.ts
-```
-
-Deliver each file with environment-specific placeholders (`PROJECT_NAME`, `PROJECT_ID`) for the team to fill in. All configs should be production-ready with security defaults, cost controls, and monitoring enabled from day one.
+`firebase-architect` (schema, rules, indexes), `ci-cd-pipeline` (deploy workflows, WIF auth
+step), `release-management` (branch and release policy), `observability` (SLOs, SDK
+instrumentation), `security-review` (IAM least privilege), `database-architect` (Postgres sizing
+and pooling).

@@ -1,271 +1,107 @@
 # SaaS Financial Model
 
-> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
-> mutating commands, and do not create or delete resources. Under Claude Code
-> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
-> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
-> fields, and activation there can widen rather than narrow file access — so on
-> any runtime other than Claude Code this paragraph is the only guardrail.
+> **Advisory skill — writes reports only.** It may write the model files listed under Artifact
+> Generation when the user wants them; it never edits billing configuration, price IDs, or
+> source data. `allowed-tools` only pre-approves tools and other runtimes ignore it, so this
+> paragraph is the guardrail in every runtime.
+
+**Outcome:** unit economics (margin-adjusted LTV, CAC, LTV:CAC, payback) and, when asked, a
+12-month MRR projection or tier recommendation, each with its assumptions listed.
+**Done when** every metric shows its inputs and every benchmark comparison cites a dated source.
+Match length to the need; no filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
 - Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
 
-Use this context to tailor all output to the actual project.
+Take the product's revenue model and stage from PORTFOLIO.md; ask if it is absent.
 
-Unit economics, revenue modeling, and financial projections for SaaS and subscription businesses. Make pricing decisions with math, not vibes.
-
-## Step 1: Classify the Financial Need
+## Step 1: Classify
 
 | Need | Output |
 |------|--------|
-| Unit economics | CAC, LTV, payback period, margins |
-| Revenue model | MRR/ARR projections with assumptions |
-| Pricing analysis | Tier comparison, willingness-to-pay, margin impact |
-| Fundraising model | 12-24 month projection, burn rate, runway |
-| Break-even analysis | When does this product cover its costs? |
-| Plan comparison | Free vs freemium vs paid — which model wins? |
+| Unit economics | LTV, CAC, LTV:CAC, payback, gross margin |
+| Revenue projection | Month-by-month customers and MRR with cost lines |
+| Pricing / tiers | Tier structure, value metric, margin per tier |
+| Plan comparison | Free vs freemium vs paid-only, modeled side by side |
+| Break-even | Customers needed to cover fixed costs |
+
+Runway, raise timing, and cut decisions go to `burn-rate-tracker`, which owns the runway
+thresholds. Don't restate them here.
 
 ## Step 2: Gather Context
 
-1. **Product** — what SaaS/subscription product?
-2. **Pricing** — current tiers, prices, billing (monthly/annual)?
-3. **Current metrics** — users, paying customers, MRR (if exists)?
-4. **Acquisition** — how do customers find you? Cost per channel?
-5. **Churn** — current monthly churn rate (if known)?
-6. **Team cost** — monthly burn (salaries, infra, services)?
+Pricing and billing cadence; paying customers and MRR; monthly logo churn; sales and marketing
+spend and new customers (for CAC); variable cost per customer (infra, AI tokens, payment fees,
+support) for gross margin. Mark each input actual vs. assumed.
 
-## Step 3: Core SaaS Metrics
+## Step 3: Cure conventions and gotchas
 
-```
-MRR (Monthly Recurring Revenue):
-  = sum of all active subscriptions per month
-  Components: New MRR + Expansion MRR - Churned MRR - Contraction MRR
+- **Margin-adjusted is the default.** LTV = ARPU × gross margin ÷ monthly churn. Payback =
+  CAC ÷ (ARPU × gross margin). Revenue-only LTV overstates value and understates payback;
+  show it only alongside the margin-adjusted figure, labeled.
+- **Churn cap for LTV:** if monthly churn is under 1%, cap lifetime at 60 months (common practice); otherwise one
+  small churn number produces an absurd LTV.
+- **CAC is fully loaded:** ads, content, sales salaries and tools, divided by new *paying*
+  customers in the same period (not signups).
+- **AI features change gross margin.** Put per-customer token cost in COGS; a product with
+  heavy LLM usage rarely hits 70%+ margin without caching and model routing (`finops`).
+- Healthy bars Cure uses: LTV:CAC ≥ 3:1, payback ≤ 12 months, gross margin ≥ 70%
+  (≥ 60% for AI-heavy products), NRR ≥ 100%.
+- Break-even customers = fixed costs ÷ (ARPU − variable cost per customer).
 
-ARR (Annual Recurring Revenue):
-  = MRR × 12
+Compute with the bundled script rather than by hand:
 
-ARPU (Average Revenue Per User):
-  = MRR / total paying customers
-
-CAC (Customer Acquisition Cost):
-  = total sales & marketing spend / new customers acquired
-  Include: ads, content, sales salaries, tools
-
-LTV (Lifetime Value):
-  = ARPU / monthly churn rate
-  Alternative: ARPU × average customer lifespan (months)
-
-LTV:CAC Ratio:
-  Target: > 3:1 (healthy)
-  Warning: < 3:1 (spending too much to acquire)
-  Danger:  < 1:1 (losing money on every customer)
-
-Payback Period:
-  = CAC / ARPU (in months)
-  Target: < 12 months
-
-Monthly Churn Rate:
-  = customers lost this month / customers at start of month
-  Target: < 5% for SMB, < 2% for mid-market, < 1% for enterprise
-
-Net Revenue Retention (NRR):
-  = (Starting MRR + Expansion - Contraction - Churn) / Starting MRR
-  Target: > 100% (expansion revenue exceeds churn)
-  Best-in-class: > 120%
+```bash
+cure-unit-economics --mrr 50000 --customers 200 --churn-rate 0.03 --cac 800 \
+  --gross-margin 0.75 --json
 ```
 
-## Step 4: Revenue Projection Model
+`cure-unit-economics` is on PATH while the plugin is enabled; otherwise run
+`python3 <plugin-root>/skills/business/saas-financial-model/scripts/unit_economics.py` with the
+same flags. It reports both revenue and margin-adjusted LTV and margin-adjusted payback
+(default gross margin 0.75 — always pass the real one).
+
+## Step 4: Revenue projection
+
+Monthly: starting customers + new − churned = ending; MRR = ending × ARPU; add expansion and
+contraction when the product has seat or usage pricing. Costs = fixed + variable × customers +
+new customers × CAC. Show cumulative P&L so the break-even month is visible.
+
+## Step 5: Pricing tiers (this skill owns tier structure)
+
+- At most three paid tiers plus an optional free tier; enterprise is "contact us," annual only.
+- Annual discount 15–20% (two months free is the common framing).
+- A free tier only with a product-led motion and a named upgrade trigger.
+- The value metric must scale with customer success and be forecastable by the customer.
+- Tier **names** come from the product's pricing page or PORTFOLIO.md; don't invent them.
+  Launch messaging for the tiers belongs to `go-to-market`.
+- Show margin per tier; AI-heavy features belong in the upper tiers.
+
+## Step 6: Benchmarks
+
+Search the web for current SaaS benchmarks by stage and segment (for example "SaaS median CAC
+payback by segment", "net revenue retention benchmarks", "Rule of 40 by stage"). Use named,
+dated sources (e.g. the KeyBanc/Sapphire SaaS survey, ICONIQ, SaaS Capital) and cite the year. Treat any undated benchmark table, including one in this
+library, as unreliable.
+
+## Artifact Generation
+
+Applies when the user asks for a model document. Otherwise answer inline.
+
+1. `docs/financial-model.md` — assumptions, unit economics, 12-month projection, break-even
+2. `docs/pricing-analysis.md` — only for a pricing request
+3. `docs/unit-economics.md` — only when asked separately, with a sensitivity table on churn and CAC
+
+## Output
 
 ```
-Month-by-month model:
-
-Starting Customers  = previous month ending customers
-New Customers       = marketing leads × conversion rate
-Churned Customers   = starting customers × churn rate
-Ending Customers    = starting + new - churned
-
-MRR                 = ending customers × ARPU
-New MRR             = new customers × ARPU
-Churned MRR         = churned customers × ARPU
-Net New MRR         = new MRR - churned MRR
-
-Costs:
-  Infrastructure    = base + (per-user cost × customers)
-  Team              = salaries + benefits + contractors
-  Marketing         = new customers × CAC
-  Tools/Services    = fixed monthly costs
-
-Profit/Loss         = MRR - total costs
-Cumulative P&L      = running total (shows path to profitability)
-```
-
-## Step 5: Pricing Tier Analysis
-
-```
-Pricing framework:
-
-| Tier | Monthly | Annual (discount) | Target Segment | Margin |
-|------|---------|-------------------|----------------|--------|
-| Free | \$0 | - | Lead generation, product-led growth | Negative |
-| Starter | $X | $X×10 (17% off) | Solo/small teams, price-sensitive | 60%+ |
-| Pro | $Y | $Y×10 (17% off) | Growing teams, power users | 70%+ |
-| Enterprise | Custom | Annual only | Large orgs, compliance needs | 80%+ |
-
-Pricing rules:
-  - 3 paid tiers maximum (paradox of choice)
-  - 10x value gap between cheapest and most expensive
-  - Annual discount: 15-20% (improves cash flow + retention)
-  - Free tier: only if product-led growth model, with clear upgrade trigger
-  - Enterprise: always custom/contact-us (higher deal size)
-```
-
-### Value Metric Selection
-```
-The value metric is what you charge based on. It should:
-  ✅ Scale with the customer's success (they pay more as they get more value)
-  ✅ Be easy to understand (no complex formulas)
-  ✅ Be predictable (customer can forecast their bill)
-
-Common value metrics:
-  - Per seat/user (Slack, Notion)
-  - Per usage/volume (Stripe, Twilio)
-  - Per feature tier (most SaaS)
-  - Flat rate (Basecamp)
-
-Best for small business clients: feature-based tiers with clear upgrade triggers
-```
-
-## Step 6: Break-Even Analysis
-
-```
-Fixed costs (don't change with customers):
-  Team salaries, office, tools, base infrastructure
-
-Variable costs (scale with customers):
-  Per-user infrastructure, support time, payment processing fees
-
-Gross margin:
-  = (Revenue - Variable Costs) / Revenue
-  Target: > 70% for SaaS
-
-Break-even point:
-  = Fixed Costs / (ARPU - Variable Cost Per Customer)
-  = number of customers needed to cover all costs
-
-Example:
-  Fixed costs:     \$15,000/month (team + tools)
-  ARPU:            \$49/month
-  Variable cost:   \$5/customer/month (infra + Stripe fees)
-  Break-even:      \$15,000 / (\$49 - \$5) = 341 customers
-```
-
-## Step 7: Runway Calculation
-
-```
-Cash runway (months):
-  = Cash in bank / Monthly burn rate
-
-Monthly burn rate:
-  = Total monthly expenses - Total monthly revenue
-
-Example:
-  Cash: \$200,000
-  Monthly expenses: \$25,000
-  Monthly revenue: \$8,000
-  Burn rate: \$17,000
-  Runway: 11.8 months
-
-Rules of thumb:
-  - Raise when you have 6+ months runway remaining
-  - Default alive: revenue growing fast enough to cover costs before cash runs out
-  - Default dead: burn rate exceeds growth trajectory
-```
-
-## Step 8: Financial Model Output
-
-```
-FINANCIAL MODEL — [PRODUCT NAME]
-Date: [TODAY]
-Projection Period: 12 months
-
-ASSUMPTIONS
-  Starting customers: X
-  Monthly new customers: X (growing Y% month-over-month)
-  Monthly churn rate: X%
-  ARPU: $X
-  CAC: $X
-  Monthly fixed costs: $X
-  Variable cost per customer: $X
-
-UNIT ECONOMICS
-  LTV: $X
-  LTV:CAC: X:1
-  Payback period: X months
-  Gross margin: X%
-
-12-MONTH PROJECTION
-| Month | Customers | MRR | Costs | Net | Cumulative |
-|-------|-----------|-----|-------|-----|------------|
-| 1     | ...       | ... | ...   | ... | ...        |
-| ...   |           |     |       |     |            |
-| 12    | ...       | ... | ...   | ... | ...        |
-
-BREAK-EVEN
-  Customers needed: X
-  Projected month: Month X
-
-KEY RISKS
-  - [Risk 1] — [Impact if realized]
-  - [Risk 2] — [Impact if realized]
-
-RECOMMENDATIONS
-  - [Pricing/growth/cost recommendation]
-```
-
-## Live Benchmarking
-
-Use WebSearch to fetch current SaaS benchmarks:
-- "SaaS median CAC by segment 2025"
-- "SaaS net revenue retention benchmarks"
-- "SaaS Rule of 40 benchmarks by stage"
-
-Compare project metrics against benchmarks and flag outliers.
-
-## Artifact Generation (Required)
-
-Generate using Write:
-1. **Financial model**: `docs/financial-model.md` with all metrics, assumptions, and scenarios
-2. **Pricing analysis**: `docs/pricing-analysis.md` — tier comparison with value metrics
-3. **Unit economics**: `docs/unit-economics.md` — CAC, LTV, payback period with sensitivity analysis
-
-## Scripts
-
-This skill bundles a stdlib-only script under `scripts/`. Supports `--help` and `--json`. See `docs/SCRIPTS_CONVENTION.md` for the contract.
-
-- `scripts/unit_economics.py` — ARR, ARPU, LTV, LTV:CAC ratio, payback period from `--mrr`, `--customers`, `--churn-rate`, `--cac`. Optional `--gross-margin` for margin-adjusted LTV. With the plugin enabled it is also on PATH as `cure-unit-economics` (same flags).
-  ```bash
-  python3 skills/business/saas-financial-model/scripts/unit_economics.py \
-    --mrr 50000 --customers 200 --churn-rate 0.03 --cac 800 --gross-margin 0.75 --json
-  ```
-
-## Step 9: SaaS Benchmarks
-
-```
-For comparison against industry norms:
-
-| Metric | Seed | Series A | Series B+ |
-|--------|------|----------|-----------|
-| MRR | \$10-50K | \$100-500K | \$1M+ |
-| Growth (MoM) | 15-20% | 10-15% | 5-10% |
-| Churn (monthly) | 5-7% | 3-5% | 1-3% |
-| LTV:CAC | 2-3x | 3-5x | 5x+ |
-| Gross Margin | 60-70% | 70-80% | 80%+ |
-| NRR | 90-100% | 100-110% | 110-130% |
-| Payback (months) | 12-18 | 8-12 | 3-8 |
+FINANCIAL MODEL — [PRODUCT] — [DATE]
+Inputs: ARPU $X | churn X%/mo | CAC $X | gross margin X% (actual/assumed per line)
+LTV (margin-adj.) $X | LTV:CAC X:1 | payback X mo | break-even X customers (month X)
+Benchmark: [metric] vs [source, year] → [above/below]
+Risks: [the two assumptions that move the answer most]
+Recommendation: [pricing / growth / cost]
 ```

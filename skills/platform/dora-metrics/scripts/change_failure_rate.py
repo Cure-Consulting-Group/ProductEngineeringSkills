@@ -54,13 +54,15 @@ def parse_ts(s: str) -> datetime | None:
 
 
 def dora_tier(cfr_pct: float) -> str:
-    if cfr_pct <= 15:
+    # DORA 2024 cluster CFRs: Elite ~5%, Medium ~10%, High ~20%, Low ~40%
+    # (non-monotonic in 2024; DORA 2025 dropped tiers for team archetypes).
+    if cfr_pct <= 5:
         return "Elite"
-    if cfr_pct <= 30:
-        return "High"
-    if cfr_pct <= 45:
-        return "Medium"
-    return "Low"
+    if cfr_pct <= 20:
+        return "High/Medium"
+    if cfr_pct <= 40:
+        return "Low"
+    return "Below Low"
 
 
 def main() -> int:

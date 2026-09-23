@@ -1,12 +1,17 @@
 ---
 name: technical-blog-writer
-description: "Crafts high-impact technical blog posts modeled after Netflix/Uber engineering blogs, translated for business owners. Use when you need to explain complex engineering feats using the 'Famous Actor' simple-explanation tone with clear visual concepts."
+description: "Writes one engineering blog post for business readers, Netflix/Uber style. Use when turning a scaling, cost, or reliability win into a plain-language post with visuals."
+when_to_use: "NOT for a multi-post content program (technical-content-strategist agent), SEO plans (seo-content-engine), or social posts (product-marketing)."
 argument-hint: "[topic-or-title]"
 ---
 
 # Technical Blog Writer Skill
 
 This skill translates deep engineering complexity into high-leverage business narratives. It balances the technical authority of a "Tier 1" engineering blog (Netflix, Uber, Square) with the accessibility of a "Famous Actor" explaining a product to a common person.
+
+**Outcome:** one publish-ready post (typically 800–1,500 words) plus 2–3 visual briefs, where every metric comes from the source material. Done when it passes the Quality Standards below. Match length to the story; no filler sections or restated summaries.
+
+**Accuracy invariant:** use only numbers, names, and outcomes that appear in the code, PR, incident, or notes you were given — this post carries Cure's and the client's name. If a "Scale Fact" or savings figure is missing, ask for it or leave a marked placeholder; never estimate one into the copy. Get client approval before naming a client.
 
 ## The "Famous Actor" Tone
 Do not "dumb down" the tech; "smart up" the context.
@@ -83,3 +88,4 @@ Describe 2-3 visual concepts that pass the "Grunt Test" (understandable in 5 sec
 - **Grunt Test**: Can a non-technical person understand the diagrams?
 - **Grandfather Test**: Can you explain the core concept without using its technical name?
 - **No Fluff**: Every sentence must provide either technical authority or business clarity.
+- **Sourced**: every number traces to the input material; placeholders are clearly marked.

@@ -74,11 +74,17 @@ def run_in_sandbox(cmd: str, cwd: Path, timeout: int) -> tuple[int, str]:
     """Graders execute lane-written code; keep that inside the codex sandbox when available."""
     env = dict(os.environ, TMPDIR=str(cwd / ".eval-tmp"))
     (cwd / ".eval-tmp").mkdir(exist_ok=True)
-    if shutil.which("codex") and not os.environ.get("TRI_LANE_EVAL_UNSANDBOXED"):
+    if os.environ.get("TRI_LANE_EVAL_UNSANDBOXED"):
+        # Explicit operator opt-in only: runs lane-written code as you, with no sandbox.
+        rc, out, err = sh(cmd, cwd=str(cwd), env=env, timeout=timeout, shell=True)
+    elif shutil.which("codex"):
         argv = ["codex", "sandbox", "-c", "sandbox_mode=workspace-write", "-c", "sandbox_workspace_write.exclude_slash_tmp=true", "--", "sh", "-c", cmd]
         rc, out, err = sh(argv, cwd=str(cwd), env=env, timeout=timeout)
     else:
-        rc, out, err = sh(cmd, cwd=str(cwd), env=env, timeout=timeout, shell=True)
+        # Same stance as lane-report.py: never silently run lane-written code unsandboxed.
+        shutil.rmtree(cwd / ".eval-tmp", ignore_errors=True)
+        return 127, ("refusing to run grader command without a sandbox: codex is not installed. "
+                     "Install codex, or set TRI_LANE_EVAL_UNSANDBOXED=1 to accept the risk.\n")
     shutil.rmtree(cwd / ".eval-tmp", ignore_errors=True)
     return rc, out + err
 
@@ -407,14 +413,17 @@ def lane_agy(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[s
     if task["role"] not in ("review", "whole-repo"):
         raise SystemExit("Antigravity lanes run review and whole-repo roles only (doctrine: the Antigravity lane never writes)")
     eff = {"low": "low", "medium": "medium", "high": "high"}.get(effort, "high")
+    sys.path.insert(0, str(HERE))
+    from lane_toolchains import agy_workspace_path  # noqa: E402
+    ws = agy_workspace_path(work)  # trusted form, never the physical /Volumes path (lanes.md failure table)
     if task["role"] == "review":
-        prompt = f"You are reviewing the repository at {work.resolve()}. Do not modify any file. Answer only with the JSON schema provided.\n\n" + task["spec"]
+        prompt = f"You are reviewing the repository at {ws}. Do not modify any file. Answer only with the JSON schema provided.\n\n" + task["spec"]
     else:
-        prompt = f"You are reading the repository at {work.resolve()}. Do not modify any file. End with the exact answer lines the INTERFACES section asks for.\n\n" + task["spec"]
+        prompt = f"You are reading the repository at {ws}. Do not modify any file. End with the exact answer lines the INTERFACES section asks for.\n\n" + task["spec"]
     out = run_dir / "agy.json"
     env = dict(os.environ, TMPDIR=str(run_dir / "tmp"))
     (run_dir / "tmp").mkdir(exist_ok=True)
-    argv = ["agy", "-p", prompt, "--add-dir", str(work.resolve()), "--model", lane, "--effort", eff, "--mode", "plan", "--sandbox",
+    argv = ["agy", "-p", prompt, "--add-dir", ws, "--model", lane, "--effort", eff, "--mode", "plan", "--sandbox",
             "--output-format", "json", "--print-timeout", f"{task.get('timeout', 900) // 60}m"] + (["--json-schema", str(SCHEMA)] if task["role"] == "review" else [])
     rc, so, se = sh(argv, cwd=str(work), env=env, timeout=task.get("timeout", 900) + 60)
     out.write_text(so)

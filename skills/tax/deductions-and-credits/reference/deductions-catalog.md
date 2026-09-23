@@ -11,14 +11,11 @@ maximize these before itemized deductions.
 
 | Deduction | Section | Test / limit |
 |---|---|---|
-| **Self-employed retirement** | §404(a)(8), §401(c) | Largest lever available. SEP: 25% of net SE income (effectively 20% of net SE earnings after the SE-tax adjustment), cap `[constants]` $72,000 (2026). Solo 401(k): employee deferral `[constants]` $24,500 + $8,000 catch-up at 50, plus employer share, total cap $72,000. Defined benefit: §415(b) annual-benefit limit `[constants]` $290,000; the deductible contribution to fund it can far exceed DC limits for older high earners. (2026 figures verified 2026-09-23, IRS Notice 2025-67.) Elective deferrals reduce income tax only, not SE tax. |
+| **Self-employed retirement** | §404(a)(8), §401(c) | Largest lever available. SEP: 25% of net SE income (effectively 20% of net SE earnings after the SE-tax adjustment), cap `[constants]` $72,000 (2026). Solo 401(k): employee deferral `[constants]` $24,500 + $8,000 catch-up at 50 ($11,250 at ages 60–63 instead), plus employer share, total cap $72,000 plus catch-up. **Mandatory Roth catch-up**: a participant whose prior-year FICA wages from the sponsor exceeded $150,000 must make catch-ups as Roth — relevant to S-corp owners on W-2, not to Schedule C income. Defined benefit: §415(b) annual-benefit limit `[constants]` $290,000; the deductible contribution to fund it can far exceed DC limits for older high earners. (2026 figures verified 2026-09-23, IRS Notice 2025-67.) Elective deferrals reduce income tax only, not SE tax. |
 | **Self-employed health insurance** | §162(l) | 100% of premiums for taxpayer, spouse, dependents, and children under 27. **Limited to net SE income** from the business, and **not available for any month eligible for subsidized employer coverage** (including a spouse's plan). Does **not** reduce SE tax. For a >2% S-corp shareholder, premiums must run through W-2 wages (§1372) to qualify. |
-| **HSA contribution** | §223 | `[constants]` 2026: $4,400 self / $8,750 family, +$1,000 catch-up at 55. Requires HDHP coverage and no disqualifying coverage. Deductible even without itemizing; triple-tax-advantaged. |
+| **HSA contribution** | §223 | `[constants]` 2026: $4,400 self / $8,750 family (verified 2026-09-23, Rev. Proc. 2025-19), +$1,000 catch-up at 55 (statutory). Requires HDHP coverage and no disqualifying coverage. Deductible even without itemizing; triple-tax-advantaged. |
 | **One-half of SE tax** | §164(f) | Automatic — 50% of the §1401 tax. |
-| **Educator expenses** | §62(a)(2)(D) | Small; screen only if applicable. |
-| **Student loan interest** | §221 | Up to $2,500, phased out by MAGI. |
-| **Early withdrawal penalty** | §62(a)(9) | Forfeited CD interest. |
-| **Alimony (pre-2019 decrees only)** | §215 | Repealed for post-2018 agreements. |
+| **Student loan interest** | §221 | Up to $2,500; 2026 phase-out $85k–$100k MAGI ($175k–$205k MFJ) (verified 2026-09-23, Rev. Proc. 2025-32). |
 
 ## Tier 2 — Business deductions (§162)
 
@@ -53,13 +50,15 @@ plus the expense must be for a trade or business *carried on* (§183 profit moti
 | Employer retirement contributions | §404 |
 | Employer health premiums | §162, §106 |
 | Payroll taxes | §164(a) |
-| Educational assistance ≤ $5,250 | §127 (permanent, indexed; covers student loan payments) |
+| Educational assistance ≤ $5,250 | §127 (permanent; covers student loan payments; indexed only after 2026 — Rev. Proc. 2025-32 §2.09) |
 | Accountable-plan reimbursements | Reg. §1.62-2 — deductible to the entity, **excluded** from employee income. Requires business connection, substantiation within a reasonable time, and return of excess. Without a plan, reimbursements are taxable wages. |
 
 ## Tier 3 — OBBBA Schedule 1-A deductions (2025–2028)
 
 **Available in addition to the standard deduction or itemized deductions.** Do
-not treat these as itemized. All `[constants]`.
+not treat these as itemized. Amounts are statutory and not indexed (P.L. 119-21).
+From 2026, non-itemizers also get a charitable deduction for cash gifts to public
+charities — $1,000 / $2,000 MFJ (§170(p); confirm before use).
 
 | Deduction | 2026 amount | Phase-out |
 |---|---|---|
@@ -75,13 +74,13 @@ profile before computing these deductions.
 
 | Deduction | Section | Limit |
 |---|---|---|
-| **State and local taxes** | §164 | `[constants]` 2026 cap $40,400 ($20,200 MFS), **phasing down 30% of MAGI over ~$505,000 to a $10,000 floor**. Election between income tax and sales tax. **PTET payments made by the entity bypass the cap entirely** — see `tax-strategies`. |
+| **State and local taxes** | §164 | `[constants]` 2026 cap $40,400 ($20,200 MFS), **phasing down by 30% of MAGI over $505,000 ($252,500 MFS) to a $10,000 floor**; +1%/yr through 2029, flat $10,000 from 2030 (statutory; verified 2026-09-23, 26 U.S.C. §164(b)(7)). Election between income tax and sales tax. **PTET payments made by the entity bypass the cap entirely** — see `tax-strategies`. |
 | **Mortgage interest** | §163(h) | Acquisition indebtedness up to $750,000 ($375,000 MFS) for post-2017 debt; $1M grandfathered. Home equity interest deductible only if used to buy/build/improve the residence. |
-| **Charitable contributions** | §170 | 60% of AGI for cash to public charities, 30% for appreciated property (deducted at FMV if long-term capital gain property), 5-year carryforward. **New 0.5%-of-AGI floor under OBBBA — `VERIFY`.** Contributions ≥$250 need a contemporaneous written acknowledgment; >$5,000 non-cash needs a qualified appraisal. |
+| **Charitable contributions** | §170 | 60% of AGI for cash to public charities, 30% for appreciated property (deducted at FMV if long-term capital gain property), 5-year carryforward. **From 2026, only gifts above 0.5% of the contribution base count** (§170(b)(1)(I); verified 2026-09-23, 26 U.S.C. §170 text). Contributions ≥$250 need a contemporaneous written acknowledgment; >$5,000 non-cash needs a qualified appraisal. |
 | **Medical** | §213 | Only the excess over **7.5% of AGI**. Rarely clears in a high-income year. |
 | **Casualty losses** | §165(h) | **Federally declared disaster areas only** post-2017. |
 | **Investment interest** | §163(d) | Limited to net investment income; carries forward. |
-| **Gambling losses** | §165(d) | To the extent of winnings. **OBBBA limited this to 90% of losses — `VERIFY`.** |
+| **Gambling losses** | §165(d) | To the extent of winnings. **OBBBA limits this to 90% of losses from 2026 — confirm before use.** |
 
 **Repealed through 2025 and made permanent by OBBBA**: miscellaneous itemized
 deductions subject to the 2% floor (unreimbursed employee expenses, investment
@@ -92,10 +91,7 @@ advisory fees, tax prep fees). Do not claim these.
 | Exclusion | Section | Note |
 |---|---|---|
 | **§280A(g) "Augusta rule"** | §280A(g) | Rent your residence to your business for **≤14 days per year**: the entity deducts, you exclude the income entirely. Requires documented FMV (comparable venue quotes), a written lease, a genuine business purpose (board meetings), and minutes. See `tax-strategies`. |
-| Employer health coverage | §106 | |
-| HSA distributions for medical | §223(f) | |
 | §127 educational assistance | §127 | $5,250 |
-| De minimis fringe, working condition fringe | §132 | |
 | **QSBS gain** | §1202 | The largest exclusion in the Code — see `tax-strategies`. |
 | Principal residence gain | §121 | $250k / $500k MFJ, 2-of-5-year ownership and use. |
 | Municipal bond interest | §103 | Watch: still counts for Social Security taxability and IRMAA. |

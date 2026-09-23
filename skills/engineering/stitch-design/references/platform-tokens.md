@@ -76,21 +76,31 @@ val AppLightColorScheme = lightColorScheme(
 )
 ```
 
-### Tailwind/shadcn Example
+### Tailwind v4 / shadcn Example
 
 ```css
-/* globals.css — Generated from DESIGN.md */
-@layer base {
-  :root {
-    --primary: 153 100% 33%;        /* #00A859 in HSL */
-    --primary-foreground: 0 0% 100%;
-    --background: 150 20% 97%;      /* #F8FAF9 */
-    --foreground: 240 25% 13%;      /* #1A1A2E */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 150 10% 85%;
-    --ring: 153 100% 33%;
-  }
+/* globals.css — generated from DESIGN.md (Tailwind v4: CSS-first, no tailwind.config.ts) */
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --primary: #00A859;             /* shadcn's own themes use oklch(); hex is valid too */
+  --primary-foreground: #FFFFFF;
+  --background: #F8FAF9;
+  --foreground: #1A1A2E;
+  --destructive: #EF4444;
+  --border: #D1D5DB;
+  --ring: #00A859;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
 }
 ```
 
@@ -155,27 +165,16 @@ val AppTypography = Typography(
 )
 ```
 
-### Tailwind Config Example
+### Tailwind v4 Example
 
-```typescript
-// tailwind.config.ts
-export default {
-  theme: {
-    fontFamily: {
-      sans: ['Inter', 'system-ui', 'sans-serif'],
-      display: ['Bebas Neue', 'Inter', 'sans-serif'], // display-heavy brand example
-    },
-    fontSize: {
-      'display-lg': ['3.75rem', { lineHeight: '1.1', fontWeight: '700' }],
-      'display-md': ['3rem', { lineHeight: '1.15', fontWeight: '700' }],
-      'headline-lg': ['1.875rem', { lineHeight: '1.3', fontWeight: '600' }],
-      'headline-md': ['1.5rem', { lineHeight: '1.35', fontWeight: '600' }],
-      'body-lg': ['1rem', { lineHeight: '1.5', fontWeight: '400' }],
-      'body-md': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }],
-      'label-lg': ['0.875rem', { lineHeight: '1.4', fontWeight: '500' }],
-      'label-md': ['0.75rem', { lineHeight: '1.4', fontWeight: '500' }],
-    },
-  },
+```css
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Bebas Neue", "Inter", sans-serif;  /* display-heavy brand example */
+  --text-display-lg: 3.75rem;   --text-display-lg--line-height: 1.1;
+  --text-headline-lg: 1.875rem; --text-headline-lg--line-height: 1.3;
+  --text-body-lg: 1rem;         --text-body-lg--line-height: 1.5;
+  --text-label-md: 0.75rem;     --text-label-md--line-height: 1.4;
 }
 ```
 

@@ -1,7 +1,7 @@
 ---
 name: buyer-intelligence
-description: "Turn solicitations you cannot win into a durable buyer, incumbent, and renewal-date database — harvest sole source and award notices, and time the approach"
-when_to_use: "Use after a DECLINE verdict, on any sole source or award notice, or when building a target-buyer dossier. NOT for sourcing or the target profile (use capture-management). NOT for screening a solicitation (use solicitation-triage)."
+description: "Builds a buyer, incumbent, and renewal-date database from declined bids and award notices. Use when a bid is declined, a sole source or award notice appears, or building a buyer dossier."
+when_to_use: "NOT for screening a live solicitation (use solicitation-triage)."
 argument-hint: "[buyer-or-notice]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch", "WebFetch"]
 ---
@@ -24,6 +24,8 @@ available to a firm that cannot outspend or out-credential the incumbents.
 > and almost nobody reads them, because you cannot bid them.
 
 ## Pre-Processing (Auto-Context)
+
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
 - Existing dossiers: !`ls buyers/*.md ../buyers/*.md 2>/dev/null || grep -l "Buyer intelligence" PIPELINE.md ../PIPELINE.md 2>/dev/null || echo "(no dossiers yet)"`
 - Pipeline buyer table: !`sed -n '/Buyer intelligence/,/^$/p' PIPELINE.md ../PIPELINE.md ../../PIPELINE.md 2>/dev/null | head -30 || echo "(none)"`
@@ -158,17 +160,10 @@ day you decline it.**
 
 ## Step 5: Source ahead of the portal
 
-Everything on a bid portal arrives after the requirements were written. These do not.
-
-| Source | Cadence | What it tells you |
-|---|---|---|
-| **Council / board / legislature agendas and minutes** | Weekly | Budget approvals and contract awards appear here months before any RFP. **Highest-leverage source available** |
-| **Adopted operating and capital budgets** | Annual | Funded line items, by department, with dollar amounts |
-| **Grant award announcements to the agency** | Monthly | Funded programs must be spent, and spending requires procurement |
-| **Agency IT strategic plans and roadmaps** | Annual | Published, ignored, and explicitly forward-looking |
-| **Audit reports (state comptroller, internal audit, IG)** | As issued | Names failing systems and vendors, on the record |
-| **Portal award-notice feeds** | Weekly | Free incumbent and budget data across every buyer at once |
-| **Regulatory compliance deadlines** | Known in advance | A jurisdiction-wide forcing function — see below |
+Everything on a bid portal arrives after the requirements were written. The pre-solicitation
+sources — council and board agendas, adopted budgets, grant awards, agency IT plans, audit
+reports, award-notice feeds — are owned by `capture-management` (Step 2); use that table and log
+what each source reveals about a dossiered buyer here.
 
 ### Compliance deadlines create buyers on a schedule
 
@@ -192,7 +187,7 @@ Intelligence is worth nothing if acting on it damages the relationship.
 | **Time unrelated approaches after award** | An unrelated capabilities briefing request is legitimate — send it after the notice's procurement closes, not during |
 | **Ask for a capabilities briefing directly** | Most agencies will take one. It requires no RFP, no window, and no competition |
 | **Respond to every RFI in your market** | The single highest-leverage legal activity in the cycle |
-| **Request a debrief on every loss** | Most public agencies must provide one. For a firm's first bids, it is worth more than the contract |
+| **Request a debrief on every loss** | See `bid-decision` Step 7; file what you learn in the buyer's dossier |
 
 Everything here is ordinary, legal market engagement — what every established government contractor
 does, and what new entrants skip.

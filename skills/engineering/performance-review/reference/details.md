@@ -1,133 +1,35 @@
-# performance-review: detailed reference
+# performance-review: Cure optimization playbook
 
-> Reference material for the `performance-review` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read this at Step 5 when choosing fixes. It lists stack-specific levers and gotchas Cure has hit, not generic advice. Each item names the metric it moves.
 
-## Contents
-- Step 5: Optimization Strategies
+## Web (Next.js App Router)
 
-## Step 5: Optimization Strategies
+- **LCP**: the LCP image gets `next/image` with `priority` (or `fetchPriority="high"`) and explicit `sizes`; never lazy-load it. Hero images as AVIF/WebP, ≤200 KB.
+- **LCP/TTFB**: static or cached rendering by default; in Next 16 opt dynamic routes into caching with Cache Components (`'use cache'`, `cacheLife`, `cacheTag`) rather than making whole pages dynamic. A single `cookies()`/`headers()` read in a shared layout makes every child route dynamic — move it down the tree or behind Suspense.
+- **INP**: long tasks >50 ms on input; break up with `startTransition`, `scheduler.yield()` where supported, and moving work off the main thread. Third-party tags (chat widgets, tag managers) are the usual culprit — load with `next/script` `strategy="lazyOnload"` or behind interaction.
+- **CLS**: reserve space for images, embeds, ads, and cookie banners; `next/font` to avoid font-swap shift.
+- **Bundle**: barrel files (`index.ts` re-exporting a library) defeat tree-shaking — use `optimizePackageImports` or direct imports; `lodash` → per-function imports or native; date libraries → `Intl`/`date-fns` per-function.
+- **Caching headers**: hashed static assets `max-age=31536000, immutable`; public API responses `s-maxage` + `stale-while-revalidate` at the CDN.
 
-### Web Optimization
+## Mobile
 
-```
-Code splitting:
-  - Route-based splitting with next/dynamic or React.lazy
-  - Split vendor chunks > 50 KB into separate bundles
-  - Defer below-fold component loading with Intersection Observer
-  - Use barrel file elimination (avoid re-exporting entire modules)
+- **Startup (Android)**: Baseline Profiles (and Startup Profiles) cut cold start materially — generate with Macrobenchmark; defer SDK init (analytics, crash, ads) until after first frame via App Startup lazy initializers; no disk or network on the main thread (StrictMode in debug).
+- **Startup (iOS)**: fewer dynamic frameworks (static linking / mergeable libraries), no work in `+load` or static initializers, defer SDK init until after first frame; measure with Instruments App Launch.
+- **Scrolling**: Compose — stable keys in `LazyColumn`, avoid unstable lambdas/collections causing recomposition (check with Layout Inspector recomposition counts). SwiftUI — stable `id`s, avoid heavy work in `body`, prefer `List`/`LazyVStack` over `VStack` for long content.
+- **Images**: decode at display size (Coil `size()`, `UIImage` downsampling via ImageIO); disk cache sized to the feed, not unbounded.
+- **Size**: Android App Bundle + R8 full mode + resource shrinking; iOS asset catalogs with app thinning, on-demand resources for large packs.
 
-Image optimization:
-  - Serve WebP/AVIF with <picture> fallback
-  - Use next/image with width/height (prevents CLS)
-  - Implement responsive srcset (mobile: 640w, tablet: 1024w, desktop: 1920w)
-  - Lazy load below-fold images (loading="lazy")
-  - Use blur placeholder for hero images
+## Backend
 
-Caching:
-  - Static assets: Cache-Control max-age=31536000, immutable
-  - API responses: stale-while-revalidate pattern
-  - Service worker: cache-first for static, network-first for API
-  - ISR (Incremental Static Regeneration): revalidate=60 for semi-static pages
+- **Queries**: `EXPLAIN (ANALYZE, BUFFERS)` anything >50 ms at p95; index WHERE + ORDER BY together; keyset pagination instead of OFFSET beyond page ~10.
+- **Connections**: serverless + Postgres needs a pooler (PgBouncer transaction mode, or the provider's pooled endpoint); per-instance pools of 1–5, not 20.
+- **Cold starts**: min instances ≥1 for auth, payments, and webhooks; lazy-import heavy libraries; keep the deploy package small; Cloud Run for sustained traffic over per-invocation functions.
+- **Caching**: cache computed results, not raw rows; event-driven invalidation where the write path is known; watch hit rate (<70% means the key or TTL is wrong).
 
-Rendering:
-  - SSG for marketing/content pages (build-time generation)
-  - SSR for personalized/dynamic pages
-  - Streaming SSR with React Suspense for progressive loading
-  - Edge rendering for geo-sensitive content (Vercel Edge, Cloudflare Workers)
+## Firestore
 
-CDN:
-  - All static assets served from CDN (Vercel, CloudFront, Cloudflare)
-  - API responses cached at edge for public data (Cache-Control: s-maxage=60)
-  - Purge strategy: deploy-time invalidation for static, TTL for dynamic
-```
-
-### Mobile Optimization (Android & iOS)
-
-```
-Lazy initialization:
-  - Defer non-critical SDK init to after first frame
-  - Use lazy properties (Kotlin: by lazy {}, Swift: lazy var)
-  - Initialize analytics/crash reporting after UI is interactive
-  - Background-init heavy singletons (database, image cache)
-
-Image caching:
-  - Android: Coil with disk cache (250 MB limit), memory cache (25% of heap)
-  - iOS: Kingfisher with disk cache (300 MB), memory cache (100 MB)
-  - Downscale images to display size before decoding
-  - Prefetch next-screen images during idle time
-
-List performance:
-  - RecyclerView with DiffUtil (Android) / LazyColumn with keys (Compose)
-  - UICollectionView with DiffableDataSource (iOS)
-  - Pagination: 20 items per page, prefetch at 80% scroll position
-  - Avoid nested scrollable containers
-
-Threading:
-  - Android: Dispatchers.IO for network/disk, Dispatchers.Default for computation
-  - iOS: async/await with TaskGroup, never block MainActor
-  - Image decoding on background thread (always)
-  - JSON parsing off main thread for payloads > 1 KB
-```
-
-### Backend Optimization
-
-```
-Query optimization:
-  - Add indexes for all WHERE/ORDER BY fields
-  - Use EXPLAIN ANALYZE for queries > 50ms
-  - Avoid N+1 queries: use JOINs or batch fetching
-  - Paginate all list endpoints (max 100 items per page)
-
-Connection pooling:
-  - PostgreSQL: PgBouncer with transaction mode, pool size = (CPU cores * 2) + disk spindles
-  - MySQL: ProxySQL for connection multiplexing
-  - Close idle connections after 300s
-  - Monitor pool utilization — alert at 80%
-
-Caching layers:
-  - L1: In-memory (application-level, <1ms, 100 MB limit)
-  - L2: Redis/Memcached (<5ms, session data, computed results)
-  - L3: CDN edge cache (<50ms, public API responses)
-  - Cache invalidation: event-driven (pub/sub) over TTL when possible
-  - Redis: set maxmemory-policy allkeys-lru, monitor hit rate
-
-Denormalization:
-  - Precompute aggregations for dashboard queries
-  - Store derived fields (e.g., order_total) to avoid joins
-  - Use materialized views for complex reporting queries
-  - Rebuild strategy: async job, not in request path
-
-Serverless cold start mitigation:
-  - Minimum instances: 1-3 for critical functions (auth, payments, webhooks)
-  - Keep dependencies minimal (< 50 MB deployment package)
-  - Use lazy imports for heavy libraries
-  - Prefer Cloud Run over Cloud Functions for sustained traffic
-```
-
-### Firebase-Specific Optimization
-
-```
-Firestore read optimization:
-  - Design documents for read patterns (denormalize, don't normalize)
-  - Keep documents < 10 KB for fast reads
-  - Use subcollections for 1:N relationships (not arrays)
-  - Limit query results: .limit(20) on all list queries
-  - Use select() to fetch only needed fields
-
-Composite indexes:
-  - Create for all multi-field queries (equality + range + orderBy)
-  - Monitor index usage in Firebase Console
-  - Remove unused indexes (they cost write performance)
-
-Offline persistence:
-  - Enable on mobile: FirebaseFirestore.setSettings { isPersistenceEnabled = true }
-  - Set cache size: 100 MB minimum for offline-first apps
-  - Use source: .cache for non-critical reads
-  - Implement optimistic UI updates with rollback on sync failure
-
-Batch operations:
-  - Use writeBatch() for multi-document writes (max 500 per batch)
-  - Batch reads with getAll() instead of sequential gets
-  - Transaction retry: max 5 attempts with exponential backoff
-  - Use Firestore BulkWriter for server-side migrations
-```
+- Reads are billed per document: cap list queries with `.limit()`, paginate with cursors, denormalize the fields a list screen needs into the list document.
+- Sustained writes to a single document are limited to about 1 per second — use distributed counters or aggregation queries (`count()`, `sum()`, `average()`) instead of hot counter documents.
+- Offline cache: web `persistentLocalCache`, Android `PersistentCacheSettings` (the older `enableIndexedDbPersistence` / `isPersistenceEnabled` APIs are deprecated); see the `offline-first` skill.
+- Bulk server-side writes: `BulkWriter`, not loops of 500-op batches.
+- Remove unused composite indexes; each one costs write latency and storage.

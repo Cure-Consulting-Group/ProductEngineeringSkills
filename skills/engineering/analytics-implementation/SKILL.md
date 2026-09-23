@@ -1,227 +1,126 @@
 ---
 name: analytics-implementation
-description: "Design event taxonomy, tracking plans, funnels, dashboards, and privacy/consent flows"
-when_to_use: "Use when designing event tracking, analytics funnels, or dashboard instrumentation. NOT for KPI definitions (use metrics-dashboard agent)."
+description: "Designs analytics event taxonomies, tracking plans, funnels, and consent flows. Use when instrumenting product analytics (GA4/Firebase, Mixpanel, PostHog) or auditing events."
+when_to_use: "NOT for KPIs/dashboards (metrics-dashboard agent), experiment stats (ab-test-analyst agent), growth loops (growth-engineering), or flag infra (feature-flags)."
 argument-hint: "[product-name]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Analytics Implementation
 
+**Outcome:** a tracking plan engineering can implement without questions — event names, triggers, typed properties, priorities — plus consent handling that is correct for the product's jurisdictions. Done when every P0 event maps to a decision someone will make with it, and no event fires before the consent state allows it.
+
+Measure what drives decisions, not everything.
+
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Stack: !`ls package.json build.gradle.kts Podfile Package.swift pubspec.yaml 2>/dev/null | head -5 || echo "(none detected)"`
+- Existing tracking calls: !`grep -rhoE "(logEvent|trackEvent|analytics\.track|posthog\.capture|mixpanel\.track|gtag)\(\s*['\"][A-Za-z0-9_]+" --include=*.ts --include=*.tsx --include=*.js --include=*.kt --include=*.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | sort | uniq -c | sort -rn | head -10 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+If events exist, audit them against Step 3 before proposing new ones; report the count of unique event names and naming violations.
 
-Instrument event tracking, funnels, and dashboards across mobile and web. Measure what matters, not everything.
-
-## Step 1: Classify the Analytics Need
+## Step 1: Classify the Need
 
 | Need | Output |
 |------|--------|
-| Event taxonomy | Structured event naming + properties |
-| Tracking plan | Full event spec for engineering implementation |
-| Funnel analysis | Conversion funnel definition + instrumentation |
-| Dashboard design | KPI dashboard layout + data sources |
-| A/B test setup | Experiment design + tracking instrumentation |
-| Attribution | Channel attribution model + UTM strategy |
+| Event taxonomy | Naming + property standards |
+| Tracking plan | Full event spec (Step 4) |
+| Funnel instrumentation | Funnel steps mapped to events; activation event named |
+| Consent / privacy | Consent flow + SDK wiring (Step 6) |
+| Attribution | UTM strategy + first-touch capture |
+| Instrumentation audit | Findings on existing events (all of them, with severity) |
+
+Experiment design and dashboards route to the `ab-test-analyst` and `metrics-dashboard` agents.
 
 ## Step 2: Gather Context
 
-1. **Product** — what app/platform are we instrumenting?
-2. **Analytics tool** — Firebase Analytics, Mixpanel, Amplitude, PostHog, custom?
-3. **Key business metrics** — what decisions will this data inform?
-4. **Current state** — starting from zero or improving existing?
-5. **Privacy requirements** — GDPR consent, CCPA opt-out, COPPA?
+Ask only what's unknown: product and platforms; analytics tool(s); the 3–5 decisions this data must inform; greenfield or existing; jurisdictions and audiences (EEA/UK, California and other US states, children under 13).
 
-## Step 3: Event Taxonomy Standards
+## Step 3: Taxonomy Standards
 
-### Naming Convention
-```
-Format: object_action
-Case:   snake_case
-Tense:  past tense for completed actions
+- **Names:** `object_action`, snake_case, past tense — `account_created`, `item_added_to_cart`, `payment_completed`. Not `createAccount`, `click_button`.
+- **Prefer GA4 recommended events** where they fit (`sign_up`, `login`, `purchase`, `add_to_cart`) when GA4/Firebase is the tool — they unlock built-in reports. Keep Cure naming for custom events.
+- **Global properties on every event:** `user_id` (when authenticated), `platform`, `app_version`; timestamps and session IDs come from the SDK.
+- **Property rules:** snake_case keys; lowercase enum values; numbers as numbers; no PII in properties (email, name, phone, precise location, free-text input).
+- **GA4/Firebase hard limits** (verified 2026-09-23, support.google.com/analytics/answer/9267744): event and parameter names ≤40 chars; parameter values ≤100 chars; ≤25 parameters per event; 500 distinct event names per app user on app streams (unlimited on web); user properties ≤25 per property, names ≤24 chars, values ≤36 chars. Names starting with `firebase_`, `google_`, or `ga_` are reserved. Violations are dropped silently — lint for them.
 
-Examples:
-  account_created        (not: create_account, userSignedUp)
-  item_added_to_cart     (not: addToCart, cart_add)
-  payment_completed      (not: pay, purchase_made)
-  search_performed       (not: search, user_searched)
-  screen_viewed          (not: pageView, open_screen)
-```
-
-### Event Categories
-```
-Lifecycle:    app_opened, session_started, app_backgrounded
-Auth:         account_created, login_completed, logout_completed
-Navigation:   screen_viewed, tab_selected, deep_link_opened
-Engagement:   feature_used, item_viewed, content_shared
-Conversion:   trial_started, subscription_created, payment_completed
-Error:        error_occurred, crash_detected, api_error
-```
-
-### Property Standards
-```
-Every event includes:
-  timestamp        — ISO 8601 (auto-captured by most SDKs)
-  user_id          — authenticated user ID (if logged in)
-  session_id       — auto-generated per session
-  platform         — android / ios / web
-  app_version      — semantic version
-
-Event-specific properties:
-  screen_viewed:    { screen_name: "home", previous_screen: "login" }
-  item_viewed:      { item_id: "123", item_type: "product", source: "search" }
-  payment_completed:{ amount: 29.99, currency: "USD", method: "card" }
-  error_occurred:   { error_code: "AUTH_EXPIRED", screen: "checkout" }
-
-Rules:
-  - Property names: snake_case, no abbreviations
-  - String values: lowercase (no "Home" vs "home" inconsistency)
-  - Numbers: raw numbers, not strings ("amount": 29.99, not "29.99")
-  - No PII in event properties (no email, name, phone, IP)
-```
-
-## Step 4: Tracking Plan Template
+## Step 4: Tracking Plan
 
 ```markdown
-## Tracking Plan — [Product Name]
-
-| Event | Trigger | Properties | Priority |
-|-------|---------|-----------|----------|
-| screen_viewed | Every screen load | screen_name, previous_screen | P0 |
-| account_created | After successful signup | method (email/google/apple) | P0 |
-| feature_used | Core action completed | feature_name, duration_ms | P0 |
-| payment_completed | Successful charge | amount, currency, plan_id | P0 |
-| error_occurred | Unhandled error | error_code, screen, stack_hash | P0 |
-| search_performed | Search submitted | query_length, results_count | P1 |
-| item_shared | Share button tapped | item_id, share_method | P2 |
-
-Priority: P0 = must ship with feature, P1 = next sprint, P2 = nice to have
+| Event | Trigger (exact moment) | Properties (type) | Decision it informs | Priority |
+|-------|------------------------|-------------------|---------------------|----------|
+| account_created | Server confirms signup | method (email/google/apple) | Signup channel mix | P0 |
+| payment_completed | Payment provider success callback | value (number), currency (ISO 4217), plan_id | Revenue funnel | P0 |
 ```
 
-## Step 5: Funnel Definitions
+P0 ships with the feature; P1 next sprint; P2 only if a named decision needs it. Fire conversion events from the server-confirmed moment, not the button tap. Name one **activation event** per product — the action that best predicts retention — and define funnels as ordered event sequences from it.
 
-### Standard SaaS Funnel
-```
-1. Visitor         → screen_viewed (landing page)
-2. Signed Up       → account_created
-3. Activated       → [core_action]_completed (define per product)
-4. Engaged         → session_started (day 2-7 return)
-5. Converted       → subscription_created / payment_completed
-6. Retained        → session_started (day 30+)
-7. Referred        → referral_sent
-```
+**UTMs:** require `utm_source`, `utm_medium`, `utm_campaign` on marketing links; capture on first visit (first-touch), persist, and attach to `account_created`.
 
-### E-Commerce Funnel
-```
-1. Browse          → item_viewed
-2. Add to Cart     → item_added_to_cart
-3. Begin Checkout  → checkout_started
-4. Payment         → payment_completed
-5. Repeat          → second payment_completed (within 90 days)
-```
+## Step 5: Implementation Patterns
 
-Define activation metric per product — the single action that predicts retention.
+One wrapper per platform so call sites never import a vendor SDK directly; the wrapper checks consent and fans out to providers.
 
-## Step 6: Implementation Patterns
-
-### Firebase Analytics (Mobile)
 ```kotlin
-// Android
-analytics.logEvent("payment_completed") {
-    param("amount", 29.99)
-    param("currency", "USD")
-    param("plan_id", "pro_monthly")
+// Android — firebase-analytics (KTX modules were removed in BoM 34.0.0; APIs live in the main module)
+Firebase.analytics.logEvent("payment_completed") {
+    param("value", 29.99); param("currency", "USD"); param("plan_id", "pro_monthly")
 }
 ```
 
 ```swift
 // iOS
-Analytics.logEvent("payment_completed", parameters: [
-    "amount": 29.99,
-    "currency": "USD",
-    "plan_id": "pro_monthly"
-])
+Analytics.logEvent("payment_completed", parameters: ["value": 29.99, "currency": "USD", "plan_id": "pro_monthly"])
 ```
 
-### Web (Next.js)
 ```typescript
-// Wrapper function — swap provider without changing call sites
-export function trackEvent(name: string, properties?: Record<string, unknown>) {
-  // Firebase Analytics
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', name, properties);
-  }
-  // Add other providers here (Mixpanel, Amplitude, etc.)
+// Web — typed wrapper; EVENT_NAMES is the tracking-plan const
+export function track<E extends EventName>(name: E, props: EventProps[E]) {
+  if (!consent.analytics) return;
+  window.gtag?.('event', name, props);   // add Mixpanel/PostHog fan-out here
 }
 ```
 
-### UTM Tracking
-```
-Required UTM params for all marketing links:
-  utm_source     — where traffic comes from (google, linkedin, email)
-  utm_medium     — marketing medium (cpc, social, email, referral)
-  utm_campaign   — campaign name (spring_launch, black_friday)
+## Step 6: Privacy & Consent
 
-Capture UTMs on first visit, persist in cookie/localStorage, attach to account_created event.
-```
+These are legal requirements, and getting them wrong exposes the client to regulators and ad-platform penalties.
 
-## Step 7: Privacy & Consent
+**EEA/UK — Google Consent Mode v2** (verified 2026-09-23, developers.google.com/tag-platform/security/guides/consent; support.google.com/google-ads/answer/13695607)
+- Send all four signals: `ad_storage`, `analytics_storage`, `ad_user_data`, `ad_personalization`. The last two were added in v2 (Nov 2023) and are required for EEA traffic to keep Google Ads measurement and personalization.
+- Default every signal to `denied` before any tag fires; update from the CMP (use a Google-certified CMP when running Google Ads).
+- *Basic* mode blocks tags until consent; *advanced* mode loads tags with cookieless pings while denied (enables modeling). Cure default: basic, unless the client's counsel approves advanced.
+- "Decline all" means no analytics storage — not degraded tracking.
 
-```
-GDPR (EU users):
-  - Show consent banner before any tracking
-  - No analytics fired until consent given
-  - Respect "decline all" — zero tracking, not degraded tracking
-  - Provide data deletion on request
+**California — CPRA** (Cal. Civ. Code §1798.135)
+- If the product sells *or shares* personal information (sharing includes cross-context behavioral advertising, e.g. ad pixels), provide a "Do Not Sell or Share My Personal Information" link — the old "Do Not Sell" wording is outdated.
+- Honor Global Privacy Control (GPC) as an opt-out of sale/sharing. Other US state laws have similar opt-outs — confirm before use for each state in scope.
 
-CCPA (California):
-  - "Do Not Sell My Personal Information" link
-  - Honor Global Privacy Control (GPC) signal
+**Children:** under-13 audiences fall under COPPA — disable ad signals and advertising identifiers entirely; route to `compliance-architect`.
 
-Implementation:
-  - Consent state stored in cookie/localStorage
-  - Analytics wrapper checks consent before firing
-  - Firebase: Analytics.setAnalyticsCollectionEnabled(userConsented)
-```
+**SDK wiring (platform-correct):**
 
-## Automated Event Discovery
+| Platform | Collection on/off | Consent signals | Default-denied config |
+|----------|-------------------|-----------------|-----------------------|
+| Android | `Firebase.analytics.setAnalyticsCollectionEnabled(bool)` | `Firebase.analytics.setConsent { analyticsStorage(...); adStorage(...); adUserData(...); adPersonalization(...) }` | Manifest `<meta-data>`: `google_analytics_default_allow_analytics_storage`, `_ad_storage`, `_ad_user_data`, `_ad_personalization_signals` = `false` |
+| iOS | `Analytics.setAnalyticsCollectionEnabled(_:)` | `Analytics.setConsent([.analyticsStorage: .denied, ...])` | Info.plist `GOOGLE_ANALYTICS_DEFAULT_ALLOW_ANALYTICS_STORAGE`, `_AD_STORAGE`, `_AD_USER_DATA`, `_AD_PERSONALIZATION_SIGNALS` = `false` |
+| Web | `setAnalyticsCollectionEnabled(analytics, bool)` (modular) | `setConsent({...})` from `firebase/analytics`, or `gtag('consent','update', {...})` | `setConsent` with all four `'denied'` before `getAnalytics()` — SDK consent defaults to `granted` |
 
-Before defining tracking plan, scan existing implementation:
+Store the consent state once (CMP or first-party cookie) and have every platform wrapper read it before firing.
 
-1. **Find existing events**: Grep for tracking calls:
-   - `trackEvent|logEvent|analytics.track|posthog.capture|mixpanel.track`
-2. **Find untracked interactions**: Grep for click handlers, form submissions, and navigations without tracking
-3. **Count total events**: Report how many unique event names exist
+## Output
 
-## Code Generation (Required)
+For a plan: the tracking-plan table, taxonomy rules applied, consent matrix per jurisdiction, and the activation event. For an audit: every finding (naming, PII, limit violations, missing consent gating, duplicate events) with severity and a fix. Match length to the need; no filler sections or restated summaries.
 
-Generate analytics infrastructure using Write:
+## Code/Artifact Generation
 
-1. **Event taxonomy**: `src/analytics/events.ts` — TypeScript enum/const of all event names
-2. **Analytics wrapper**: `src/analytics/tracker.ts` — type-safe wrapper with platform detection
-3. **Tracking plan**: `docs/tracking-plan.md` — complete event documentation
+Applies when the user asks to implement instrumentation (not for a plan review or a question). Detect platforms and write only for those present:
 
-## Step 8: Dashboard Design
+1. Event name constants and typed property map (`src/analytics/events.ts` or platform equivalent)
+2. Consent-aware tracker wrapper per platform
+3. `docs/tracking-plan.md` from Step 4
+4. A lint/test that fails on names or parameters over the GA4 limits
 
-```
-Executive Dashboard (weekly review):
-  - Active users (DAU, WAU, MAU)
-  - Activation rate (% of signups completing core action)
-  - Conversion rate (% of active → paid)
-  - Revenue (MRR, new MRR, churned MRR)
-  - Retention curve (day 1, 7, 30)
-
-Engineering Dashboard (daily monitoring):
-  - Error rate by screen
-  - API latency (p50, p95, p99)
-  - Crash-free user rate
-  - App load time
-  - Feature adoption (% of users using new feature)
-```
+Extend an existing wrapper rather than adding a second one.

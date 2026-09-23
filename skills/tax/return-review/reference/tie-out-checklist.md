@@ -1,7 +1,8 @@
 # Tie-Out Checklist — Cross-Form Relationships
 
 Relationships that must hold arithmetically. A break is an error, not a rounding
-difference.
+difference. Dollar figures are for TY2026 (checked 2026-09-23 against Rev. Proc.
+2025-32 or the Code); re-check them for any other year.
 
 ## Form 1040 chain
 
@@ -25,7 +26,7 @@ Estimated payments                  → 1040 line 26  (tie to IRS transcript)
 
 ### AGI-driven items — confirm each was actually applied
 ```
-[ ] SALT cap phase-down          30% of MAGI over ~$505,000 (2026), floor $10,000
+[ ] SALT cap phase-down          30% of MAGI over $505,000 (2026, §164(b)(7)), floor $10,000
 [ ] Child tax credit             $50 per $1,000 over $200k/$400k
 [ ] Tips deduction               $100 per $1,000 over $150k/$300k
 [ ] Overtime deduction           $100 per $1,000 over $150k/$300k
@@ -35,7 +36,7 @@ Estimated payments                  → 1040 line 26  (tie to IRS transcript)
 [ ] Student loan interest        §221
 [ ] Education credits            §25A
 [ ] Medical floor                7.5% of AGI
-[ ] Charitable ceilings          60% / 30% of AGI (+ new 0.5% floor — VERIFY)
+[ ] Charitable ceilings          60% / 30% of AGI (+ 0.5% floor from 2026, §170(b)(1)(I))
 [ ] NIIT                         §1411, $200k/$250k MAGI
 [ ] Additional Medicare          §3101(b)(2), $200k/$250k
 ```
@@ -103,7 +104,7 @@ Prior-year ending basis
   + current-year additions (at cost, placed-in-service date verified)
   − dispositions (with gain/loss and §1245/§1250 recapture computed)
   = current-year depreciable base
-§179 claimed                ≤ $2,560,000 (2026), reduced above $4,090,000
+§179 claimed                ≤ $2,560,000 (2026), reduced above $4,090,000 (Rev. Proc. 2025-32)
 §179 claimed                ≤ business taxable income (excess carries forward)
 Bonus                       100% of remaining basis unless elected out by class
 Total Form 4562             → Schedule C line 13 / 1120 line 20 / 1065 line 16

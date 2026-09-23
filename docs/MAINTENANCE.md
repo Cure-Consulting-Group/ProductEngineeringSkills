@@ -61,6 +61,18 @@ Re-run the Wave 2 process against the then-current platform:
 4. **Execute** — feature branch, per-release `release.sh` commits, PR, CI,
    merge, tags. Dry-run any new workflow against this repo before shipping it
    (Wave 2's dry-run caught a real CI blocker pre-merge).
+5. **Evidence sweep (T60)** — measure every covered skill's with/without Δ and
+   routing on the current model, from the repo root:
+
+   ```bash
+   claude plugin eval . --trust-plugin --scaffold -j 4 \
+     --allow-tools Write Edit "Bash(python3 *)" --threshold 0.67 --max-cost-usd 150
+   ```
+
+   40 cases × 3 runs × 2 arms (see `evals/README.md`). Any case with `Δ ≤ 0`,
+   or a failing skill-fired indicator (routing miss), becomes a ticket in the
+   wave. Then run the non-Claude matrix: `python3 scripts/run-evals.py --mode
+   model --backends codex,gemini`.
 
 ### Standing watchlist (re-check every quarter)
 

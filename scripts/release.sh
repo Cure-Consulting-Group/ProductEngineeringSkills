@@ -43,12 +43,31 @@ python3 scripts/fix-library.py --check >/dev/null
 python3 scripts/check-doc-claims.py >/dev/null
 echo "    audit + compliance + doc-claims OK"
 
-# Ring 0 (T30): eval-gate any skills changed since the last tag. Runs the
-# real agent CLI locally (CI can't). Skips cleanly when nothing covered changed.
+# Ring 0 (T30 → T60): eval-gate any skills changed since the last tag with
+# `claude plugin eval` (plugin-evals/, cases tagged by skill name). With-arm
+# only, 1 run: routing (`tool_used: Skill`) is scored under --ablation none,
+# so a T53-style description regression fails here. Runs the real agent CLI
+# locally on the maintainer's plan (CI can't). Skips cleanly when nothing
+# covered changed. Override the bar with RING0_THRESHOLD (default 0.5).
 LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 if [ -n "$LAST_TAG" ]; then
   echo "==> Ring 0 eval gate (changed skills vs $LAST_TAG)"
-  python3 scripts/run-evals.py --changed "$LAST_TAG" || { echo "Ring 0 eval regression — fix before releasing"; exit 1; }
+  RING0_TAGS=$(python3 scripts/check-plugin-evals.py --changed-tags "$LAST_TAG") \
+    || { echo "plugin-evals/ is invalid — fix before releasing"; exit 1; }
+  if [ -z "$RING0_TAGS" ]; then
+    echo "    no eval-covered skills changed — pass"
+  elif [ "$DRY" = "1" ]; then
+    echo "    would run: claude plugin eval . --tag $RING0_TAGS (1 run, with-arm only)"
+  elif ! command -v claude >/dev/null 2>&1; then
+    echo "Ring 0 needs the claude CLI (v2.1.269+) on PATH"; exit 1
+  else
+    # shellcheck disable=SC2086  # RING0_TAGS is a space-separated list of skill names
+    claude plugin eval . --tag $RING0_TAGS \
+      --runs 1 --ablation none -j 4 --threshold "${RING0_THRESHOLD:-0.5}" \
+      --trust-plugin --scaffold --allow-tools Write Edit "Bash(python3 *)" \
+      --no-publish --max-cost-usd "${RING0_MAX_COST:-15}" \
+      || { echo "Ring 0 eval regression — fix before releasing"; exit 1; }
+  fi
 fi
 
 if [ "$DRY" = "1" ]; then

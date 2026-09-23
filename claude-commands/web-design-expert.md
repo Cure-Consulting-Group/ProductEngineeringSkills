@@ -1,134 +1,75 @@
 # Web Design Expert — Modern Web Design Systems
 
-Deep expertise in modern web design: responsive layouts, CSS architecture, design tokens, component patterns, accessibility-first design, and performance-conscious UI. Every recommendation maps to production CSS/Tailwind implementation and follows WCAG 2.2 AA standards.
-
-**Related skills**: `product-design` (cross-platform fundamentals), `nextjs-feature-scaffold` (code scaffolding), `accessibility-audit` (WCAG compliance)
+**Outcome:** a page, component, or token spec (or a design review) that an engineer can implement directly in Tailwind v4 / CSS, WCAG 2.2 AA by construction, with every state and breakpoint defined. Done when the spec meets the Step 4 contract for its type; files are written only when Step 1 says so.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
+- Styling deps: !`grep -oE '"(tailwindcss|@tailwindcss/[a-z-]+|next|react|class-variance-authority|tailwind-merge|tw-animate-css|tailwindcss-animate)": *"[^"]+"' package.json 2>/dev/null | head -10 || echo "(no package.json)"`
+- Tailwind v3 config present: !`ls tailwind.config.* 2>/dev/null || echo "(none — v4 CSS-first or no Tailwind)"`
+- Theme CSS: !`grep -rlE "@theme|@import \"tailwindcss\"|@tailwind base" --include=*.css . 2>/dev/null | grep -v node_modules | head -3`
+- UI components: !`ls components/ui src/components/ui 2>/dev/null | head -15`
 
 ## Step 1: Classify the Request
 
-| Request | Action |
-|---------|--------|
-| Page design / layout | Design responsive page with breakpoint strategy |
-| Component design | Spec component with all states, variants, and responsive behavior |
-| Design system / tokens | Build token architecture with CSS custom properties |
-| Navigation pattern | Design responsive nav (mobile menu, desktop nav, sidebar) |
-| Typography system | Spec fluid type scale with responsive behavior |
-| Color system / dark mode | Design semantic color scheme with dark mode |
-| Spacing / grid system | Define spacing scale and responsive grid |
-| Form design | Design accessible form patterns with validation |
-| Animation / motion | Design performant CSS animations and transitions |
-| Design-to-code handoff | Generate Tailwind/CSS implementation specs |
-| Landing page / marketing | Design conversion-optimized page layouts |
-| Dashboard / app UI | Design data-dense application interface |
+| Request | Output |
+|---|---|
+| Page layout / landing / dashboard | Page spec |
+| Component design | Component spec with all states and variants |
+| Tokens / theming / dark mode | Token spec (primitive → semantic → component) |
+| Typography, spacing, motion system | Focused scale spec |
+| Design review of existing UI | Findings — every issue with severity, no code |
+| Tailwind v3 → v4 migration of a theme | Migration plan + changed CSS |
+| "Build it" / design-to-code handoff | Spec, then Code/Artifact Generation |
 
 ## Step 2: Gather Context
 
-1. **Project type** — Marketing site? SaaS app? E-commerce? Blog? Dashboard?
-2. **Framework** — Next.js, React, Vue, Svelte, or static HTML?
-3. **CSS approach** — Tailwind CSS (preferred), CSS Modules, vanilla CSS, styled-components?
-4. **Responsive targets** — Mobile-first? Desktop-first? Specific breakpoints?
-5. **Design system** — Building new? Extending existing? Using a library (shadcn/ui, Radix)?
-6. **Brand constraints** — Colors, fonts, imagery style?
-7. **Accessibility level** — WCAG AA (standard) or AAA (enhanced)?
-8. **Performance budget** — Critical rendering path constraints, LCP targets?
+Ask only what auto-context didn't answer: project type (marketing, SaaS app, dashboard, e-commerce), framework, existing design system or component library (shadcn/ui, Radix), brand constraints, and performance targets. Cure default stack: Next.js App Router + Tailwind v4 + shadcn/ui; WCAG 2.2 AA.
 
-## Step 3: Web Design Foundations (Always Apply)
+## Step 3: Cure Defaults (always apply)
 
-See [reference/details.md](reference/details.md) (section “Step 3: Web Design Foundations (Always Apply)”) for full detail.
+**Tailwind v4 is CSS-first.** Tokens live in CSS under `@theme { --color-*, --font-*, --text-*, --spacing, --radius-*, --shadow-*, --breakpoint-* }`, which also generates the utilities. There is no `tailwind.config.ts` by default (a legacy JS config needs an explicit `@config`). Runtime-switchable values (theme colors) are plain CSS variables on `:root`/`.dark`, mapped into utilities with `@theme inline`. Class-based dark mode: `@custom-variant dark (&:where(.dark, .dark *));`. shadcn/ui on v4 uses OKLCH colors and `tw-animate-css` (replacing `tailwindcss-animate`). When a v3 config exists, say so and propose the migration (`npx @tailwindcss/upgrade`) rather than extending it.
 
-## Step 4: Output Format
+**Token layers.** Primitive (`--color-blue-600`) → semantic (`--color-primary`, `--color-surface`, `--color-text-secondary`, `--color-border-focus`) → component (`--button-primary-bg`). Components reference semantic tokens only; dark mode swaps semantic values, never primitives. Token file format for cross-platform export is owned by `design-studio` (W3C DTCG `$value`).
 
-### For Page Specs
-```
-1. Page purpose and user goals
-2. Layout strategy (Grid/Flexbox) with responsive breakdowns
-3. Content hierarchy and visual weight distribution
-4. All page states: Loading (skeleton), Empty, Content, Error, Offline
-5. Responsive behavior at each breakpoint (320, 640, 768, 1024, 1280, 1536)
-6. Typography assignments (token names for every text element)
-7. Color token assignments for every element
-8. Dark mode appearance
-9. SEO: heading hierarchy, meta description, structured data
-10. Accessibility: landmark regions, heading levels, skip links, focus order
-11. Performance: LCP element, critical rendering path, lazy loading strategy
-12. CSS/Tailwind implementation skeleton
-```
+**Layout.** Mobile-first `min-width` queries; Tailwind default breakpoints (sm 640, md 768, lg 1024, xl 1280, 2xl 1536). Container queries (`@container`, `@md:`) for components reused at different widths. Everything usable at 320 CSS px with no horizontal scroll. Body measure 65–75ch. Grid for page layout, flex for components, `gap` instead of child margins.
 
-### For Component Specs
-```
-1. Component anatomy (named parts)
-2. All states: default, hover, focus-visible, active, disabled, loading, error, selected
-3. Size variants with exact dimensions
-4. Color tokens per state
-5. Typography tokens
-6. Spacing (padding, margin, gap — in px/rem using token names)
-7. Border radius and shadow tokens
-8. Animation/transition spec (property, duration, easing)
-9. Responsive behavior (breakpoints or container queries)
-10. Accessibility: role, aria attributes, keyboard behavior, screen reader announcements
-11. Dark mode appearance
-12. CSS/Tailwind class list
-```
+**Type.** Root 16px, never changed; `rem` sizes; fluid `clamp()` only for display sizes; body line-height 1.5–1.6, headings 1.1–1.3; ≤2 font families; `font-display: swap` plus a metric-matched fallback (`size-adjust`, or `next/font`, which does this automatically) to avoid CLS.
 
-### For Design System Specs
-```
-1. Token architecture (primitives → semantic → component)
-2. Color palette with light/dark mode mappings
-3. Typography scale with font loading strategy
-4. Spacing scale
-5. Shadow/elevation scale
-6. Border radius scale
-7. Breakpoint system
-8. Component inventory with state matrix
-9. Animation/motion tokens
-10. Icon system (source, sizing, coloring)
-11. CSS custom properties file
-12. Tailwind theme extension config
-```
+**Color and dark mode.** Contrast ≥4.5:1 body, ≥3:1 large text and UI boundaries, checked in both themes. Dark mode redesigns surfaces (dark grays, elevation by lightness, borders instead of shadows) — not inversion. Respect `prefers-color-scheme` by default, offer a toggle, persist it, and set the class before paint to avoid a flash.
 
-## Code Generation (Required)
+**Interaction.** Visible `:focus-visible` ring (never bare `outline: none`); 24×24px minimum target (WCAG 2.5.8), 44×44px for primary touch controls; visible labels on inputs; one primary action per view; native `<dialog>` for modals with focus return; skip link as the first focusable element.
 
-When designing for web, generate actual files using Write:
+**Motion.** Animate `transform`/`opacity` only; 100–200ms micro, 200–300ms standard; honor `prefers-reduced-motion`; View Transitions API as progressive enhancement.
 
-1. **Tailwind config**: `tailwind.config.ts` — brand colors, fonts, spacing, breakpoints as design tokens
-2. **CSS variables**: `styles/tokens.css` — CSS custom properties for all tokens
-3. **Component**: `components/ui/{Component}.tsx` — accessible component with variants (using cva or class-variance-authority)
-4. **cn utility**: `lib/cn.ts` — className merge utility (clsx + tailwind-merge)
-5. **Responsive test matrix**: `docs/responsive-test-matrix.md` — viewport checklist for QA
+**Performance.** Design for LCP < 2.5s, INP < 200ms, CLS < 0.1 (p75). Explicit image dimensions or `aspect-ratio`; `loading="eager"` + `fetchpriority="high"` on the LCP image only; skeletons over spinners; virtualize lists over ~100 rows.
 
-Before generating, Read existing `tailwind.config.ts` and Glob for `components/ui/**` to understand current design system.
+Read [reference/details.md](reference/details.md) when a spec needs the exact scales: fluid type table, spacing scale, shadow/radius scale, semantic color token set, component size tables (buttons, inputs, modals), and the Tailwind v4 `@theme` starter.
 
-## Step 5: Anti-Patterns (Never Do These)
+## Step 4: Output Contract
 
-```
-✗ Placeholder-only labels on form inputs (must have visible <label>)
-✗ outline: none without a replacement focus indicator
-✗ Fixed-width layouts that break on small screens
-✗ Pixel font sizes (use rem/em for scalability)
-✗ z-index wars (use a managed z-index scale: --z-dropdown: 10, --z-modal: 50, etc.)
-✗ !important for styling (only for utility overrides and reduced motion)
-✗ Layout animation (animating width/height/top/left — use transform instead)
-✗ Auto-playing video with sound (autoplay is muted-only)
-✗ Infinite scroll without a "load more" fallback and visible item count
-✗ Carousel as the only way to see content (all items must be reachable)
-✗ Text over images without sufficient contrast overlay
-✗ Custom scrollbars that break keyboard scrolling
-✗ Hover-only interactions with no touch/keyboard alternative
-✗ Light gray text on white backgrounds (contrast ratio < 4.5:1)
-✗ Hamburger menu on desktop (only mobile/tablet)
-✗ Modal overload — popups on page load, stacked modals, modals for simple messages
-✗ Disabled buttons without explanation of why (use tooltip or helper text)
-✗ Content that requires horizontal scrolling at 320px viewport width
-✗ Images without width/height causing layout shift (CLS)
-```
+- **Page spec:** purpose and user goal; layout (grid/flex) per breakpoint; content hierarchy; states — loading, empty, content, error, offline; token assignments for text and color; dark-mode appearance; landmarks, heading levels, focus order; LCP element and loading strategy; Tailwind class skeleton.
+- **Component spec:** anatomy; states (default, hover, focus-visible, active, disabled, loading, error, selected); size variants; tokens per state; transition (property, duration, easing); responsive or container-query behavior; ARIA role/attributes and keyboard behavior; class list (cva variants if the project uses cva).
+- **Token spec:** the three layers, light/dark mappings, type/spacing/radius/shadow/motion scales, and the `@theme` CSS.
+- **Review:** every finding with severity (blocker / major / minor), the rule or WCAG criterion it breaks, and the fix. Don't filter to "top issues".
+
+Match length to the need; no filler sections or restated summaries.
+
+## Code/Artifact Generation
+
+Applies only when Step 1 classified the request as build/handoff or the user asked for files. Extend what auto-context found; don't create a parallel system. Typical files: the global CSS with `@theme` / `@theme inline` tokens (e.g. `app/globals.css`), `components/ui/<Component>.tsx` using `class-variance-authority` for variants, and `lib/utils.ts` `cn()` (clsx + tailwind-merge) if absent. Write only what was asked; don't restyle adjacent components.
+
+## Step 5: Anti-Patterns
+
+- Placeholder-only labels; `outline: none` without replacement; hover-only interactions; disabled buttons with no explanation.
+- Pixel font sizes; horizontal scroll at 320px; images without dimensions (CLS).
+- Arbitrary values instead of tokens; z-index wars (use a token scale); `!important` outside reduced-motion overrides.
+- Animating width/height/top/left; autoplay with sound; carousels as the only path to content; infinite scroll without a load-more fallback.
+- Text over images without a contrast overlay; light gray text under 4.5:1.
+- Hamburger menus on desktop; modals on page load or stacked modals.
+- New `tailwind.config.ts` in a v4 project; HSL-triplet shadcn tokens copied from v3 examples.
+
+## Related
+
+`nextjs-feature-scaffold` (feature code) · `design-studio` (brand, full design systems, DTCG tokens) · `design-system` (Storybook and governance) · `accessibility-audit` (WCAG verification) · `performance-review` (measured Core Web Vitals)

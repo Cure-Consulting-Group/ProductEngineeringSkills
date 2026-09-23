@@ -1,168 +1,86 @@
 ---
 name: stripe-integration
-description: "Integrate Stripe payments and subscriptions via Firebase Cloud Functions with webhook handling"
-when_to_use: "Use when integrating Stripe subscriptions, one-time payments, or billing portal via Firebase Cloud Functions. NOT for marketplace/Connect flows (not covered by any Cure skill)."
+description: "Cure's default payments stack: Stripe via Firebase Cloud Functions. Use when adding checkout, paid subscriptions, a billing portal, saved cards, or payment webhooks synced to Firestore in a mobile or web app."
+when_to_use: "NOT for pricing or plan design (use saas-financial-model) or Stripe Connect marketplaces (no Cure skill covers Connect)."
 argument-hint: "[payment-feature]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Stripe Integration
 
-Full Stripe integration: Android SDK → Firebase Functions → Stripe API → Firestore sync. Secret keys never touch the Android client. All payment operations are server-side.
+Client (Android / iOS / web) → Firebase Callable Functions v2 → Stripe API → webhook → Firestore. Secret keys never reach a client; every money-moving call is server-side.
+
+**Done when:** the requested flow works end-to-end in a Stripe sandbox (test card or test clock), the webhook handler is idempotent and signature-verified, and the client reads entitlement from Firestore only. Deliver the requested flow; don't add unrequested billing features.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Stripe SDK in use: !`grep -h '"stripe"\|com.stripe\|stripe-ios\|@stripe/' functions/package.json package.json app/build.gradle.kts Package.resolved 2>/dev/null | head -8 || echo "(no Stripe dependency found)"`
+- Existing Stripe code: !`grep -rlE "stripe|Stripe" functions/src src app 2>/dev/null | grep -v node_modules | head -10 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify the Integration
 
-## Integration Architecture
+| Need | Server function | Client |
+|------|-----------------|--------|
+| Subscription | `createCheckoutSession` or `createSubscription` | Checkout (web) / PaymentSheet (mobile) |
+| One-time payment | `createPaymentIntent` | PaymentSheet / Payment Element |
+| Save a card | `createSetupIntent` | PaymentSheet in setup mode |
+| Self-serve management | `createPortalSession` | open returned URL |
+| Webhook sync only | `stripeWebhook` (HTTP) | — |
+| Full paywall | all of the above | — |
 
-```
-Android App
-  └── StripeDataSource (Android SDK + PaymentSheet)
-        ↓ Firebase Callable Function
-  Cloud Functions
-    ├── createPaymentIntent / createSubscription
-    ├── createSetupIntent (save card)
-    ├── stripeWebhook (HTTP — Stripe → Firebase)
-    └── createPortalSession (manage subscription)
-          ↓ Stripe API (secret key, server-side only)
-  Stripe
-    └── Events → stripeWebhook → Firestore sync
-```
-
-## Step 1: Classify the Integration Type
-
-| Need | Primary Function |
-|------|-----------------|
-| Subscriptions (recurring) | `createSubscription` |
-| One-time payment | `createPaymentIntent` |
-| Save payment method | `createSetupIntent` |
-| Manage subscription | `createPortalSession` |
-| Webhook handling | `stripeWebhook` |
-| Android UI (PaymentSheet) | PaymentSheet SDK |
-| Full paywall screen | All of above |
+A question or review gets an answer or findings; generate code only when Step 1 calls for building.
 
 ## Step 2: Gather Context
 
-1. **Payment type** — subscription / one-time / both?
-2. **Plan tiers** — names, prices, billing intervals
-3. **Trial period** — yes/no, how many days?
-4. **Free tier** — yes/no?
-5. **Payment UI** — use Stripe PaymentSheet (recommended) or custom UI?
-6. **Existing Stripe account** — test mode / live mode setup?
+Payment type (subscription / one-time / both), plan tiers and intervals, trial length, free tier, platforms in scope, and whether the Stripe account already has products/prices and a pinned API version.
 
 ## Step 3: Security Rules (Always Apply)
 
-**Client (Android) can:**
-- Call Firebase Callable Functions (authenticated)
-- Use Stripe Android SDK for UI (PaymentSheet, CardElement)
-- Read own subscription status from Firestore
+These protect money and entitlement, so they are not negotiable:
 
-**Client CANNOT:**
-- Hold or use Stripe secret key
-- Create/modify subscriptions directly via Stripe API
-- Write to subscription documents in Firestore (Cloud Functions only)
-- Access other users' payment data
+- Clients may call authenticated Callable Functions, use Stripe client SDKs with the **publishable** key, and read their own subscription doc.
+- Clients may not hold the secret key, call the Stripe API directly, write subscription docs (Functions-only in `firestore.rules`), or read other users' payment data.
+- Secret key and webhook signing secret live in Secret Manager (`defineSecret`), never in env files or Remote Config. Price IDs may live in Remote Config so they change without a release.
 
-## Stripe Config & Keys
+## Step 4: Cure Decisions and Gotchas
 
-```
-Publishable Key → Android app (safe to expose)
-Secret Key      → Firebase Secret Manager only (never in client)
-Webhook Secret  → Firebase Secret Manager only
-Price IDs       → Firebase Remote Config (safe to expose)
-```
+- **Pin the API version** in the server SDK (`new Stripe(key, { apiVersion })`) and on the webhook endpoint. Current: stripe-node 22.x, which pins `2026-08-26.dahlia`; monthly releases under a major name are backward-compatible, majors are not.
+- **Billing periods live on subscription items** since `2025-03-31.basil`: read `subscription.items.data[0].current_period_start/end`, not `subscription.current_period_*` (removed). Older tutorials are wrong here.
+- **Webhook signature needs the raw body.** In Cloud Functions use `req.rawBody` with `stripe.webhooks.constructEvent(req.rawBody, sig, secret)`; a parsed JSON body always fails verification. This is the most common production bug.
+- **Idempotency:** store processed `event.id`s (e.g., `stripe_events/{eventId}`) and skip repeats; Stripe retries and may deliver out of order, so re-fetch the subscription from Stripe on each subscription event instead of trusting event order.
+- **Events to handle:** `checkout.session.completed` (provision), `customer.subscription.created|updated|deleted` (sync status/plan/period), `invoice.paid` (extend access — prefer it over `invoice.payment_succeeded`, which misses out-of-band payments), `invoice.payment_failed` (notify, grace period), `customer.subscription.trial_will_end` (3 days before), `charge.refunded` if refunds change entitlement. Ignore unknown event types gracefully.
+- **Mobile UI:** PaymentSheet on Android and iOS; don't build custom card fields (`CardInputWidget` is legacy and widens PCI scope). Web: Checkout or Payment Element.
+- **Accounts v2 "customer-configured Accounts"** are in public preview for non-Connect users; stay on v1 `Customer` unless the client opts in (confirm before use).
 
-## Price ID Management
-
-Store price IDs in Firebase Remote Config so they can be updated without app release:
-
-```kotlin
-// Android — fetch from Remote Config
-val priceIds = mapOf(
-    "starter_monthly" to remoteConfig.getString("stripe_price_starter_monthly"),
-    "pro_monthly" to remoteConfig.getString("stripe_price_pro_monthly"),
-    "pro_annual" to remoteConfig.getString("stripe_price_pro_annual")
-)
-```
-
-## Webhook Events to Handle
-
-Always implement idempotent handlers for:
-
-```typescript
-// Critical — must handle
-'checkout.session.completed'        // Initial subscription
-'customer.subscription.updated'     // Plan changes, renewals
-'customer.subscription.deleted'     // Cancellation
-'invoice.payment_succeeded'         // Successful payment
-'invoice.payment_failed'            // Failed payment
-
-// Recommended
-'customer.subscription.trial_will_end'  // 3 days before trial ends
-'payment_method.attached'               // New payment method saved
-```
-
-## Firestore Subscription Document Shape
+### Firestore subscription document (`users/{uid}/subscription/current`)
 
 ```typescript
 interface UserSubscription {
   stripeCustomerId: string;
   subscriptionId: string;
-  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
-  planId: string;
+  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'incomplete_expired' | 'paused';
   priceId: string;
-  currentPeriodStart: Timestamp;
-  currentPeriodEnd: Timestamp;
+  currentPeriodStart: Timestamp; // from items.data[0].current_period_start
+  currentPeriodEnd: Timestamp;   // from items.data[0].current_period_end
   cancelAtPeriodEnd: boolean;
   trialEnd: Timestamp | null;
-  createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 ```
 
-## Test Cards
+### Testing
 
-```
-Success:          4242 4242 4242 4242
-Decline:          4000 0000 0000 0002
-Requires auth:    4000 0025 0000 3155
-Insufficient:     4000 0000 0000 9995
-```
+Test cards: `4242 4242 4242 4242` success, `4000 0000 0000 0002` decline, `4000 0025 0000 3155` requires 3DS, `4000 0000 0000 9995` insufficient funds. Use `stripe listen --forward-to` for local webhooks and test clocks for renewals and trials (up to 3 customers per clock, 3 subscriptions per customer; clocks auto-delete after 30 days). Coverage targets come from the `testing-strategy` skill.
 
-## Code Generation (Required)
+## Code/Artifact Generation
 
-You MUST generate actual Stripe integration code using Write:
+Applies when Step 1 calls for building. Grep existing Stripe code first and extend it. Generate only the pieces the classified flow needs, for the platforms in scope:
 
-1. **Webhook handler**: `functions/src/stripe/webhook.ts` — handles all critical Stripe events:
-   - `checkout.session.completed` → provision access
-   - `invoice.paid` → extend subscription
-   - `invoice.payment_failed` → notify user, grace period
-   - `customer.subscription.deleted` → revoke access
-   - `charge.refunded` → handle refund logic
-2. **Checkout session creator**: `functions/src/stripe/create-checkout.ts` — creates Stripe Checkout sessions
-3. **Customer portal**: `functions/src/stripe/customer-portal.ts` — creates billing portal sessions
-4. **Subscription types**: `src/types/subscription.ts` — TypeScript types for plans, subscription states
-5. **Firestore schema**: `functions/src/stripe/sync-to-firestore.ts` — syncs Stripe data to Firestore
-6. **Security rules**: Append subscription-aware rules to `firestore.rules`
-7. **Android client**: `data/repository/SubscriptionRepository.kt` — checks subscription status
-8. **iOS client**: `Data/Repositories/SubscriptionRepository.swift` — checks subscription status
-
-Before generating, Grep for existing Stripe references (`stripe|Stripe|subscription|checkout`) to understand current integration state.
-
-## Tech Stack
-
-```yaml
-android: Stripe Android SDK (PaymentSheet)
-backend: Firebase Cloud Functions v2 (TypeScript)
-stripe_sdk: stripe@14.x (Node.js)
-firestore: subscription status sync
-remote_config: price IDs
-secret_manager: Stripe secret key + webhook secret
-```
+1. `functions/src/stripe/webhook.ts` — signature-verified, idempotent handler for the events above
+2. `functions/src/stripe/checkout.ts` / `payment-intent.ts` / `portal.ts` — callable functions
+3. `functions/src/stripe/sync.ts` — Stripe → Firestore mapping (item-level periods)
+4. `firestore.rules` additions — subscription docs read-own, write-none
+5. Client repository per platform in scope (`SubscriptionRepository.kt`, `SubscriptionRepository.swift`, or a web hook) that reads Firestore entitlement

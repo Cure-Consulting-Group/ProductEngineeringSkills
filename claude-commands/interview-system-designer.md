@@ -1,21 +1,16 @@
 # Interview System Designer
 
-Hiring is a system. Most engineering loops are not designed — they are accreted, copied from a previous employer, and never measured. This skill produces a loop that is calibrated to the role, defensible to candidates, and predictive of on-the-job performance. Cure ships these to clients who ask "help us hire engineers" and get a working interview system instead of a folder of leetcode questions.
+**Outcome:** a loop the hiring manager can run without Cure in the room — stage map with time budget, per-stage rubrics with behavioral anchors, a rotated question bank with interviewer guides, an AI-assistant policy, debrief rules, and the metrics that prove the loop predicts performance. Done when every stage maps to a must-have signal and the candidate-time total sits in the 3–8 hour band.
+
+Most loops are accreted, copied from a previous employer, and never measured. Cure ships a designed, measured system instead of a folder of leetcode questions.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run this command first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Existing hiring materials: !`find . -maxdepth 3 \( -iname 'interview*' -o -iname 'hiring*' -o -iname 'rubric*' \) -not -path '*/node_modules/*' 2>/dev/null | head -10`
 
-Use this context to tailor all output to the actual project.
-
-Additionally gather (domain-specific):
-- Glob for: `INTERVIEW*.md`, `HIRING*.md`, `interview-loop*`, `rubric*` to find any existing materials
-- Note the client's stack so technical questions match the actual job (don't ask Rust questions for a TypeScript role)
+Read any existing materials before designing. Ask for the role's actual stack so technical stages match the job (no Rust questions for a TypeScript role).
 
 ## Step 1: Classify the Engagement
 
@@ -40,7 +35,7 @@ Cross-classify on the role tier. A senior IC loop and an EM loop share scaffoldi
    - **Poor 6-month performance correlation** → loop measures the wrong things.
 5. **Interviewer pool** — how many people, what seniority mix? A loop that requires 4 staff engineers for every onsite is a loop that won't run.
 6. **Time budget** — total candidate time end-to-end. Senior IC: 4-6 hours of interviewing. Staff+: 6-8 hours plus a take-home or async exercise. Contractor: 90 minutes max.
-7. **Compliance constraints** — EEOC, ban-the-box, salary history bans, geographies with specific rules.
+7. **Compliance constraints** — EEOC, ban-the-box, salary-history bans, and AI-in-hiring rules if any screening tool scores candidates (e.g. NYC Local Law 144 requires an independent bias audit and candidate notice for automated employment decision tools, enforced since July 2023; other jurisdictions — confirm before use). Route legal questions to counsel.
 
 ## Step 3: Loop Design
 
@@ -97,6 +92,19 @@ If the loop exceeds 8 hours of candidate time across all stages, you will lose c
 | Difficulty | Solvable in 35-45 minutes by a strong candidate, leaving time for discussion | Time pressure should never be the bar |
 | What you measure | Problem decomposition, communication, code clarity, test thinking, debugging when stuck | Not: did they finish, did they remember the trick |
 
+### AI-Assistant Policy (decide per stage, publish to candidates)
+
+Engineers use AI coding assistants daily, and remote candidates can use them undetected. Every loop states, in writing and before the interview, which stages allow them. Cure default:
+
+| Stage | Policy | What it measures |
+|-------|--------|------------------|
+| Technical screen | No AI assistance; candidate narrates | Fundamentals, reading code, communication |
+| Onsite coding | AI allowed with screen share; task sized so the assistant alone doesn't finish it | Decomposition, prompting judgment, reviewing and correcting generated code, tests |
+| System design | No AI; discussion-based | Tradeoff reasoning in real time |
+| Take-home (if used) | AI allowed, disclosed; debrief walks through every choice | Ownership of the submitted code |
+
+Rubrics score *judgment over the output* (did they catch the wrong suggestion, did they test it), not keystrokes. Undisclosed use where banned is handled via follow-up probing on the candidate's own code, not detection software. Revisit the policy quarterly.
+
 ### System Design Stage
 
 | Seniority | Scope | Target Signal |
@@ -146,26 +154,12 @@ SIGNALS MEASURED:
   - Test thinking
   - Communication under uncertainty
 
-SCORING:
-┌────────────────┬──────────────────────────────────────────────────────┐
-│ Score          │ Behavioral Anchor                                    │
-├────────────────┼──────────────────────────────────────────────────────┤
-│ STRONG NO HIRE │ Could not progress without leading; code did not run;│
-│                │ no test thinking; gave up under uncertainty          │
-├────────────────┼──────────────────────────────────────────────────────┤
-│ NO HIRE        │ Reached partial solution with significant prompting; │
-│                │ code worked for happy path only; mentioned tests but │
-│                │ didn't write any                                     │
-├────────────────┼──────────────────────────────────────────────────────┤
-│ HIRE           │ Reached working solution with minor prompting; code  │
-│                │ handled obvious edge cases; wrote 2-3 tests; talked  │
-│                │ through tradeoffs clearly                            │
-├────────────────┼──────────────────────────────────────────────────────┤
-│ STRONG HIRE    │ Reached working solution unprompted; identified non- │
-│                │ obvious edge cases; wrote tests first or alongside;  │
-│                │ proposed a refactor or alternative approach unprompt-│
-│                │ ed; communicated continuously                        │
-└────────────────┴──────────────────────────────────────────────────────┘
+SCORING (behavioral anchors):
+  STRONG NO HIRE — couldn't progress without leading; code didn't run; no test thinking
+  NO HIRE        — partial solution with heavy prompting; happy path only; no tests written
+  HIRE           — working solution with minor prompting; obvious edge cases; 2-3 tests; clear tradeoffs
+  STRONG HIRE    — unprompted working solution; non-obvious edge cases; tests alongside;
+                   proposed an alternative; communicated continuously
 
 LEVELING SIGNALS:
   - L4 (Mid): HIRE on coding alone is sufficient
@@ -224,25 +218,22 @@ If 6-month performance correlation is near zero or negative: the loop is theater
 
 - **Sourcing / pipeline strategy** — different problem; this skill assumes you have candidates.
 - **Compensation benchmarking** — use levels.fyi data and a comp consultant.
-- **Performance management of existing employees** — use `/performance-review`.
+- **Performance management of existing employees** — out of scope; the library's `performance-review` skill is about *system* performance, not people.
 - **Non-engineering roles** — this skill is calibrated to engineering signals; sales / marketing / design loops have different shape.
 - **Single-hire boutique searches** where the candidate is identified by name — design a custom diligence process, not a generalized loop.
 
-## Anti-Patterns (All Findings in a Loop Audit)
+## Anti-Patterns (report every one found in a loop audit, with severity)
 
-- **Brainteasers** ("how many golf balls fit in a 747") — measure verbal puzzle skill, not job performance. Banned.
+- **Brainteasers and trick questions** with a single "aha" answer — measure whether you've heard the trick. Banned.
 - **Language-specific gotchas** — testing JS coercion quirks or Python GIL trivia. Measures memorization, not engineering.
-- **Single decision-maker** — one person can hire or veto unilaterally. Path to nepotism and bias.
+- **Single decision-maker** or no debrief — one person writes, scores, and decides. Path to bias; no calibration signal.
 - **No rubric** — "I'll know it when I see it." Indefensible to candidates, undetectable bias.
-- **Interviewer as judge and jury** — the same person writes the question, scores it, and makes the hire decision with no oversight.
-- **Take-homes over 4 hours** with no compensation. Selection bias.
-- **Trick questions** with a single "aha" answer. Measures whether you've heard the trick.
 - **Gauntlet onsite** of 6+ hours with no breaks. Measures stamina.
 - **Whiteboard coding without execution** for senior roles. The job is to ship working code.
 - **No structured behavioral** — vibes-based culture fit. Banned.
+- **Unstated AI policy** — candidates guess, interviewers score inconsistently. Publish it per stage.
 - **Asking the candidate to debug your actual production code** for free. Predatory.
 - **Re-interviewing rejected candidates** after 6 months without process change. The loop is the same; you're hoping the candidate changed.
-- **No debrief** — interviewers submit scores in isolation, hiring manager decides alone. You lose calibration signal.
 - **Process drift** — the loop on paper is not the loop being run. Audit by observing 3 actual interviews.
 
 ## Output
@@ -253,12 +244,11 @@ Generate the deliverable matched to the engagement type from Step 1:
 - **Calibration**: targeted diagnosis (which stage, which signal, evidence from current data) + specific changes + measurement plan to verify the fix in 90 days.
 - **Leaky loop fix**: root-cause analysis with data + intervention + monitoring plan.
 
-Format the loop spec as a one-page summary table that the hiring manager can hand to every interviewer, plus per-stage detail pages. The hiring manager should be able to run a debrief from the materials alone, without you in the room.
+Match length to the need; no filler sections or restated summaries. Format the loop spec as a one-page summary table that the hiring manager can hand to every interviewer, plus per-stage detail pages. The hiring manager should be able to run a debrief from the materials alone, without you in the room.
 
 ## Cross-References
 
-- The `qa-engineer` agent — for designing the technical question bank when the role is QA-focused.
-- `/performance-review` — for the post-hire 6-month and 12-month evaluation that closes the loop on interview validity.
-- `/legal-doc-scaffold` — for offer letter and contractor agreement templates.
-- `/client-handoff` — when handing the running interview system back to the client team.
-- `/project-manager` — for hires into TPM-adjacent roles where the rubric needs program-management signals.
+- `qa-engineer` agent — question bank for QA-focused roles.
+- `legal-doc-scaffold` skill — offer letter and contractor agreement templates.
+- `client-handoff` skill — handing the running interview system to the client team.
+- `project-manager` skill — program-management signals for TPM-adjacent roles.

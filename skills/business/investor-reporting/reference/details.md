@@ -1,11 +1,15 @@
 # investor-reporting: detailed reference
 
-> Reference material for the `investor-reporting` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Reference for the `investor-reporting` skill. Read the section you need: board deck, portfolio
+> financial report, cap table, data room, or KPI definitions. Product names come from PORTFOLIO.md;
+> `[Product A]`… below are placeholders.
 
 ## Contents
 - Step 4: Quarterly Board Deck
 - Step 5: Portfolio Financial Report
 - Step 6: Cap Table Modeling
+- Step 8: Data Room
+- Step 9: KPI Definitions by Business Model
 
 ## Step 4: Quarterly Board Deck
 
@@ -31,11 +35,9 @@ Slide 3: PORTFOLIO HEALTH SCORECARD
 ┌─────────────┬────────┬──────────┬──────────┬───────────┬───────┐
 │ Product     │ Stage  │ Revenue  │ Growth   │ Health    │ Trend │
 ├─────────────┼────────┼──────────┼──────────┼───────────┼───────┤
-│ Vendly      │ [X]    │ $XX,XXX  │ XX% QoQ  │ Green     │ Up    │
-│ Autograph   │ [X]    │ $XX,XXX  │ XX% QoQ  │ Yellow    │ Flat  │
-│ Initiated   │ [X]    │ $XX,XXX  │ XX% QoQ  │ Green     │ Up    │
-│ Antigravity │ [X]    │ $XX,XXX  │ XX% QoQ  │ Yellow    │ Up    │
-│ TwntyHoops  │ [X]    │ $XX,XXX  │ XX% QoQ  │ Green     │ Up    │
+│ [Product A] │ [X]    │ $XX,XXX  │ XX% QoQ  │ Green     │ Up    │
+│ [Product B] │ [X]    │ $XX,XXX  │ XX% QoQ  │ Yellow    │ Flat  │
+│ …one row per product in PORTFOLIO.md                            │
 └─────────────┴────────┴──────────┴──────────┴───────────┴───────┘
 
   Health criteria:
@@ -70,12 +72,7 @@ Slides 7-10: PRODUCT DEEP DIVES (one per active product, 1 slide each)
     - Next quarter's #1 priority
     - 1 chart showing the metric that matters most
 
-  Per-product focus:
-    Vendly:       GMV, merchant count, take rate, merchant retention
-    Autograph:    Provider count, scribes completed, time saved per provider, pilot conversions
-    The Initiated: Coach accounts, athlete profiles, matching rate, platform engagement
-    Antigravity:  Downloads/signups, DAU, agents deployed, community activity
-    TwntyHoops:   Events held, attendance, social reach, sponsorship revenue
+  Per-product focus: the 3–4 KPIs for that product's business model (Step 9 below).
 
 Slide 11: STRATEGIC DECISIONS
   Frame 1-3 decisions the board needs to weigh in on.
@@ -87,8 +84,8 @@ Slide 11: STRATEGIC DECISIONS
 
   Example decisions:
     - Should we raise a bridge round or extend runway by cutting Product X?
-    - Should we pursue enterprise vs SMB for Autograph?
-    - Should we spin out Antigravity as a separate entity?
+    - Should we pursue enterprise vs SMB for [Product]?
+    - Should we spin out [Product] as a separate entity?
 
 Slide 12: NEXT QUARTER PRIORITIES
   Top 3 priorities for the studio. Tied to metrics.
@@ -128,7 +125,7 @@ Prepared: [Date]
 
 1. CONSOLIDATED P&L
 ┌──────────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
-│                      │ Vendly   │ Autograph│ Initiated│ Antigrav │ TwntyH   │ TOTAL    │
+│                      │ [Prod A] │ [Prod B] │ [Prod C] │ [Prod D] │ [Prod E] │ TOTAL    │
 ├──────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
 │ Revenue              │ $X,XXX   │ $X,XXX   │ $X,XXX   │ $X,XXX   │ $X,XXX   │ $XX,XXX  │
 │ COGS                 │ ($X,XXX) │ ($X,XXX) │ ($X,XXX) │ ($X,XXX) │ ($X,XXX) │ ($XX,XXX)│
@@ -154,12 +151,12 @@ Prepared: [Date]
         Every dollar must be attributed to a product or to "Studio Overhead."
 
 3. REVENUE DETAIL
-  Per-product MRR/ARR breakdown:
-    Vendly:       GMV $XXX,XXX × take rate X.X% = revenue $X,XXX
-    Autograph:    XX providers × $XXX/mo = MRR $X,XXX
-    The Initiated: XX subscriptions × $XX/mo + sponsorships = $X,XXX
-    Antigravity:  XX users × $XX/mo (freemium conversion X%) = $X,XXX
-    TwntyHoops:   Events $X,XXX + Sponsorships $X,XXX + Media $X,XXX = $X,XXX
+  Per-product revenue build, by business model:
+    Marketplace:   GMV $XXX,XXX × take rate X.X% = revenue $X,XXX
+    B2B SaaS:      XX seats/providers × $XXX/mo = MRR $X,XXX
+    Subscription:  XX subscriptions × $XX/mo + sponsorships = $X,XXX
+    Freemium tool: XX paid users × $XX/mo (conversion X%) = $X,XXX
+    Media/events:  events $X,XXX + sponsorships $X,XXX + media $X,XXX = $X,XXX
 
 4. CASH POSITION & RUNWAY
   Opening cash balance:     $XXX,XXX
@@ -169,12 +166,12 @@ Prepared: [Date]
   = Closing cash balance:   $XXX,XXX
 
   Monthly burn rate:        $XX,XXX
-  Runway at current burn:   XX months
-  Runway if revenue grows 10% MoM: XX months
+  Runway at current burn:   XX months (status per burn-rate-tracker thresholds)
+  Runway, conservative case: XX months
 
 5. UNIT ECONOMICS PER PRODUCT
 ┌─────────────┬─────────┬─────────┬─────────┬─────────┬──────────┐
-│ Metric      │ Vendly  │ Autograph│ Initiated│ Antigrav│ TwntyH  │
+│ Metric      │ [Prod A]│ [Prod B]│ [Prod C]│ [Prod D]│ [Prod E] │
 ├─────────────┼─────────┼─────────┼─────────┼─────────┼──────────┤
 │ CAC         │ $XXX    │ $X,XXX  │ $XX     │ $XX     │ N/A      │
 │ LTV         │ $X,XXX  │ $XX,XXX │ $XXX    │ $XXX    │ N/A      │
@@ -184,12 +181,12 @@ Prepared: [Date]
 │ Churn (mo)  │ X.X%    │ X.X%   │ X.X%    │ X.X%    │ N/A      │
 └─────────────┴─────────┴─────────┴─────────┴─────────┴──────────┘
 
-  TwntyHoops uses event-based economics, not SaaS metrics:
+  Event-based products use event economics, not SaaS metrics:
     Revenue per event, cost per event, margin per event, sponsorship yield
 
 6. INFRASTRUCTURE COSTS BY PRODUCT
 ┌─────────────────┬─────────┬─────────┬─────────┬─────────┬──────────┐
-│ Service         │ Vendly  │ Autograph│ Initiated│ Antigrav│ TwntyH  │
+│ Service         │ [Prod A]│ [Prod B]│ [Prod C]│ [Prod D]│ [Prod E] │
 ├─────────────────┼─────────┼─────────┼─────────┼─────────┼──────────┤
 │ Firebase/GCP    │ $XXX    │ $XXX    │ $XXX    │ $XXX    │ $XXX     │
 │ AI APIs         │ $XX     │ $X,XXX  │ $XX     │ $XXX    │ $XX      │
@@ -264,22 +261,22 @@ Model ownership, dilution, and exit scenarios. Get this wrong and founders, empl
   Recommended:  [Expand to XX% if raising, current is sufficient if not]
 
 4. SAFE/CONVERTIBLE NOTE CONVERSION
-  For each outstanding SAFE or note:
-┌────────────────────┬───────────┬────────────┬───────────┬───────────┐
-│ Instrument         │ Amount    │ Val Cap    │ Discount  │ Converts  │
-├────────────────────┼───────────┼────────────┼───────────┼───────────┤
-│ SAFE — Investor A  │ $XXX,XXX  │ $X.XM      │ —         │ At next   │
-│ SAFE — Investor B  │ $XXX,XXX  │ $X.XM      │ 20%       │ priced rnd│
-│ Conv Note — Inv C  │ $XXX,XXX  │ $X.XM      │ 20%       │ + interest│
-└────────────────────┴───────────┴────────────┴───────────┴───────────┘
+  For each outstanding SAFE or note: amount, cap, discount, form (post- or pre-money SAFE),
+  interest (notes). Confirm the form from the signed document before modeling.
 
-  Conversion math:
-    SAFE with cap:      shares = investment / (cap / fully diluted shares)
-    SAFE with discount: shares = investment / (price × (1 - discount))
-    Use whichever gives the investor MORE shares (investor-favorable)
+  Round price = pre-money valuation / pre-money fully diluted shares (never post-money).
+  A SAFE converts at the LOWER of the cap price and the discounted round price.
+  POST-MONEY SAFE (YC standard since 2018): SAFE ownership = investment / post-money cap,
+    measured on capitalization that INCLUDES the SAFE shares, before new money.
+  PRE-MONEY SAFE (older form): cap price = cap / capitalization EXCLUDING SAFE shares.
+  Convertible note: same mechanics; principal plus accrued interest
+    (principal × rate × days elapsed / 365) converts.
 
-    Convertible note:   same as SAFE, but add accrued interest to principal
-    Interest:           principal × rate × (days elapsed / 365)
+  Worked example (post-money SAFE, no discount; 10,000,000 founder + pool shares):
+    SAFE $500K at $8M post-money cap → 6.25% → 666,667 shares; cap price $0.75
+    Round: $2M at $12M pre → $12M / 10,666,667 = $1.125; cap applies ($0.75 is lower)
+    New investor 1,777,778 shares (14.29%); 12,444,444 × $1.125 = $14M post ✓; SAFE 5.36%
+    Same SAFE as a pre-money SAFE: $8M / 10,000,000 = $0.80 → 625,000 shares.
 
 5. DILUTION WATERFALL — PROPOSED ROUND
 ┌────────────────────┬───────────┬──────────┬───────────┬──────────┐
@@ -294,6 +291,9 @@ Model ownership, dilution, and exit scenarios. Get this wrong and founders, empl
 ├────────────────────┼───────────┼──────────┼───────────┼──────────┤
 │ TOTAL              │ X,XXX,XXX │ 100.0%   │ X,XXX,XXX │ 100.0%  │
 └────────────────────┴───────────┴──────────┴───────────┴──────────┘
+
+   Standard terms to hold: 1x non-participating liquidation preference; broad-based
+   weighted-average anti-dilution. Push back on >1x, participating preferred, or full ratchet.
 
 6. EXIT WATERFALL (WHO GETS WHAT)
   Model at 3 exit values: $5M, $20M, $50M (or use actual scenarios)
@@ -319,3 +319,76 @@ Model ownership, dilution, and exit scenarios. Get this wrong and founders, empl
     per entity. If Cure is a single entity with product lines, model once.
     This distinction matters enormously at exit. Decide the structure early.
 ```
+
+## Step 8: Data Room
+
+Numbered folders in a shared drive with view tracking (DocSend or equivalent). Budget 2–3 weeks
+to assemble from scratch and 2–3 days to refresh; every document dated and versioned; refresh
+weekly during an active raise.
+
+```
+01 — CORPORATE    Charter + amendments, bylaws/operating agreement, board minutes and consents,
+                  stockholder agreements, cap table (fully diluted, all SAFEs/notes), 409A,
+                  83(b) filings for founders, state registrations
+02 — FINANCIALS   Monthly P&L (trailing 12 or inception), balance sheet, cash flow, 6 months of
+                  bank statements, 12–24 month projection with assumptions, revenue and burn
+                  by product, AR/AP aging
+03 — FUNDRAISING  Current deck, one-pager, prior term sheets, SAFEs/notes, use of funds,
+                  prior investors with amounts and terms
+04 — PRODUCT      Demo video (2–3 min), architecture overview (1–2 pages), 6–12 month roadmap,
+                  case studies, store links
+05 — METRICS      Cohort retention by product, growth charts, unit economics, funnel,
+                  NPS, churn reasons, win/loss
+06 — TEAM         Org chart, bios, hiring plan, option plan + grant ledger (summary), advisors
+07 — LEGAL        IP assignments (all founders, employees, contractors), employee/contractor
+                  agreement templates, material contracts, litigation (or confirmation of
+                  none), insurance (D&O, E&O, GL, cyber), trademarks/patents
+08 — COMPLIANCE   Privacy policy and ToS per product; DPAs if EU data; SOC 2 status.
+                  Health: HIPAA documentation, BAA chain for every vendor touching PHI,
+                  clinical validation, FDA pathway if applicable.
+                  Fintech: money-transmission licenses or exemptions, PCI DSS status,
+                  AML/KYC policy, country filings.
+                  Minors' data: COPPA posture where any user may be under 13.
+09 — TECHNICAL    Security review summary, infra overview, uptime, open-source license audit,
+                  backup and DR plan
+```
+
+Readiness: documents current within 30 days; PII redacted where possible; no credentials
+anywhere in the room.
+
+## Step 9: KPI Definitions by Business Model
+
+Pick the set matching the product's model in PORTFOLIO.md. Targets are set per product; the
+defaults below are Cure starting points, not benchmarks.
+
+```
+MARKETPLACE / MERCHANT PLATFORM
+  GMV · take rate (revenue/GMV, 2–5%) · active merchants (1+ txn in 30d) · merchant retention
+  (> 85%/mo) · GMV growth (> 15% MoM early) · merchant CAC · median days signup→first txn (< 7)
+  · support tickets per merchant (< 1.0/mo)
+
+B2B / CLINICAL SAAS (per-provider or per-seat)
+  MRR · active seats (1+ core action this month) · core actions per seat · time saved per user
+  · accepted-without-major-edit rate for AI output (> 95%) · pilot→paid conversion (> 60%)
+  · monthly churn (< 3%) · NRR (> 110%) · security/privacy incidents (0) · AI cost per core
+  action
+
+TWO-SIDED COMMUNITY / RECRUITING PLATFORM
+  Verified accounts per side · profile completion (> 70%) · DAU/MAU (> 20%) · match or contact
+  rate · engagement per session · subscription revenue · outcomes attributed to the platform
+  · quarterly retention of the paying side (> 80%)
+
+DEVELOPER TOOL (freemium)
+  Signups · weekly active (3+ days in 7) · D7 (> 40%) and D30 (> 20%) retention · free→paid
+  conversion (> 5%) · MRR · core objects shipped (e.g. workflows deployed) · community
+  contributions · NPS (> 40)
+
+MEDIA / EVENTS
+  Events held · average attendance · revenue, cost, and margin per event (> 40%) · sponsorship
+  revenue and sponsor retention (> 70%) · audience reach · engagement rate (> 3%) · email list
+  and open rate (> 30%)
+```
+
+Dashboard rules: update weekly, report monthly; every KPI has a formula, target, and trailing
+3-month trend; red/yellow/green by % of target; red for 3 months → escalate or kill the
+initiative; one source of truth, not scattered spreadsheets.

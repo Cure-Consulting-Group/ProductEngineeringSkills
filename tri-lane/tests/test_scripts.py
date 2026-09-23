@@ -97,6 +97,35 @@ class Toolchains(unittest.TestCase):
             self.assertEqual(p, str(Path(p).resolve()), "writable roots must be physical paths")
         shutil.rmtree(d)
 
+    def test_agy_workspace_path_uses_the_trusted_symlink_form(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from lane_toolchains import agy_workspace_path
+        d = Path(tempfile.mkdtemp())
+        (d / "physical" / "repo" / "wt").mkdir(parents=True)
+        (d / "link").symlink_to(d / "physical")
+        trusted = str(d / "link")
+        self.assertEqual(agy_workspace_path(d / "physical" / "repo" / "wt", [trusted]), trusted + "/repo/wt")
+        self.assertEqual(agy_workspace_path(d / "link" / "repo", [trusted]), trusted + "/repo")
+        self.assertEqual(agy_workspace_path(d / "physical", []), os.path.abspath(d / "physical"))
+        shutil.rmtree(d)
+
+
+class AgyWorkspace(unittest.TestCase):
+    """Headless `agy -p <prompt>` has no workspace without --add-dir (agy 1.2.9: 17 skills listed without it,
+    120 with it), so every documented or scripted prompt invocation must pass one. Slash commands are exempt."""
+
+    def test_every_agy_prompt_invocation_passes_add_dir(self):
+        import re
+        sources = [ROOT / "skills" / "tri-lane" / "lanes.md", ROOT / "agents" / "antigravity-analyst.md",
+                   SCRIPTS / "lane-eval.py"]
+        seen = 0
+        for src in sources:
+            text = src.read_text()
+            for m in re.finditer(r'agy -p "\$\(cat(?:[^\n]*\\\n)*[^\n]*|\["agy", "-p", prompt[^\n]*', text):
+                seen += 1
+                self.assertIn("--add-dir", m.group(0), f"{src.name}: agy prompt without --add-dir: {m.group(0)[:80]}")
+        self.assertGreaterEqual(seen, 3)
+
 
 class Route(unittest.TestCase):
     def s(self, *args):

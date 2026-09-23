@@ -7,22 +7,18 @@
 > fields, and activation there can widen rather than narrow file access — so on
 > any runtime other than Claude Code this paragraph is the only guardrail.
 
-Read-only skill for auditing and designing how a codebase handles environment variables and secrets. This skill never writes to `.env` files directly — it produces schemas, audit reports, runbooks, and migration plans for the team to apply. The default operating assumption: every secret in a `.env` file is one careless commit away from being public.
+**Outcome:** a schema, audit report, leak runbook, rotation matrix, or migration plan — whichever
+Step 1 selects — for the team to apply. This skill never writes `.env` files or touches credentials.
+Done when every finding has severity, file:line (or commit), and a remediation. Working assumption:
+every secret in a `.env` file is one careless commit away from public. Match length to the need.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
-
-Additionally gather (domain-specific):
-- Glob for: `.env*`, `.envrc`, `*.env`, `secrets/**`, `**/serviceAccount*.json` to map current secret surface
-- Run: `git ls-files | grep -E '\.env($|\.[a-z]+$)' 2>/dev/null` to detect any committed env files (red flag)
+- Committed env files (red flag): !`git ls-files 2>/dev/null | grep -E '(^|/)\.env($|\.)' | grep -v '\.example$' | head -10 || echo "(none)"`
+- Secret surface: !`find . -maxdepth 4 \( -name ".env*" -o -name ".envrc" -o -name "*serviceAccount*.json" -o -path "*/secrets/*" \) -not -path "*/node_modules/*" 2>/dev/null | head -10`
+- Deploy target hints: !`ls vercel.json firebase.json app.yaml Dockerfile fly.toml 2>/dev/null | head -5`
 
 Never print actual secret values. If a secret value is detected during scanning, redact it as `[REDACTED:KEY_NAME]` in all output.
 
@@ -40,7 +36,7 @@ If the request is ambiguous, ask which scope before proceeding. Don't pretend to
 
 ## Step 2: Gather Context
 
-Ask (or infer from auto-context):
+Ask (or infer from the context above):
 
 1. **Environment count** — local, dev, staging, prod, preview-per-PR? Each is a separate config surface.
 2. **Team size and trust model** — solo, 2-5, 10+? Does every engineer need every secret, or are prod secrets restricted to ops?
@@ -58,9 +54,10 @@ The `.env.example` file is the contract. Every variable the app reads at boot mu
 - `UPPER_SNAKE_CASE` — no exceptions, no mixed case, no dots, no dashes.
 - Group by domain prefix:
   ```
-  DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+  DB_URL (or DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME — pick one form per service)
   AUTH_JWT_SECRET, AUTH_SESSION_TTL_SECONDS, AUTH_ALLOWED_ORIGINS
-  STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLIC_KEY
+  STRIPE_SECRET_KEY (holds a restricted rk_ key where possible), STRIPE_WEBHOOK_SECRET,
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   SENDGRID_API_KEY, SENDGRID_FROM_ADDRESS
   REDIS_URL
   SENTRY_DSN, SENTRY_ENVIRONMENT
@@ -82,8 +79,8 @@ SENDGRID_API_KEY=
 APP_LOG_LEVEL=info
 ```
 
-### Boot-Time Validation (Required Pattern)
-Every service must validate its env at startup and fail loud with a clear message. Recommend (do not write — recommend) one of:
+### Boot-Time Validation
+Every service validates its env at startup and fails loud with a clear message. Recommend one of:
 - TypeScript / Node: `zod` or `envalid` schema in `src/env.ts`, imported once at boot.
 - Python: `pydantic-settings` `BaseSettings` class.
 - Go: `kelseyhightower/envconfig` or `spf13/viper` with required tags.
@@ -97,14 +94,11 @@ Run these as a layered defense — pre-commit, CI, and history scan.
 
 ### History Scan (Run Once on Every New Engagement)
 ```bash
-# Trufflehog — broad detector, scans full git history
-trufflehog git file://. --only-verified
+# TruffleHog — verifies candidates against the issuer; full history
+trufflehog git file://. --results=verified,unknown
 
-# Gitleaks — fast, pattern-based, supports custom rules
-gitleaks detect --source . --redact --report-path gitleaks-report.json
-
-# git-secrets — AWS-focused, lighter weight
-git secrets --scan-history
+# Gitleaks (v8.19+: `git`/`dir`; `detect` is deprecated) — fast, pattern-based, custom rules
+gitleaks git . --redact --report-path gitleaks-report.json
 ```
 
 If any of these find a verified leak in history: do not just delete the file in HEAD. The secret is in the git objects forever. Treat as leak-response (Step 5).
@@ -135,6 +129,8 @@ When a secret has demonstrably leaked, follow this order. Speed matters more tha
 2. REVOKE — disable the credential at the issuing system FIRST
                 (Stripe dashboard, GCP IAM, AWS console, GitHub PAT settings)
                 Revoke before rotating — a rotated-but-not-revoked key is still live
+                (Stripe "Rotate key" keeps the old key working up to 7 days unless
+                expiration is set to "Now" — use "Now" for a leak)
 3. ROTATE — generate a replacement credential with new value
 4. DEPLOY — push new value to all environments that consume it
                 Use blue/green or rolling restart; never edit prod env in place
@@ -195,7 +191,7 @@ Anti-pattern: a Slack channel called `#dev-credentials` where people paste `.env
 | Platform | Native Secret Path (Use This) | Avoid |
 |----------|-------------------------------|-------|
 | Vercel | Project Environment Variables (UI or `vercel env`) | `.env` files in the deploy artifact |
-| Firebase Functions / Cloud Run | GCP Secret Manager + workload identity | `functions:config:set` (deprecated for secrets) |
+| Firebase Functions / Cloud Run | `defineSecret()` / GCP Secret Manager + workload identity | `functions.config()` — deprecated; deploys using it fail after March 2027 |
 | AWS Lambda / ECS | Secrets Manager / Parameter Store + IAM role | Secrets in task definition env block |
 | Kubernetes | External Secrets Operator pulling from a manager + IRSA / Workload Identity | Plain `Secret` objects (base64 ≠ encrypted) |
 | Bare VMs / Docker Compose | Manager fetched at boot via init script | `.env` baked into image |
@@ -247,7 +243,7 @@ ROTATION MATRIX
 │ Credential          │ Cadence      │ Method     │ Owner        │
 ├─────────────────────┼──────────────┼────────────┼──────────────┤
 │ DB password         │ 90 days      │ Automated  │ Platform     │
-│ Stripe secret key   │ On personnel │ Manual     │ Finance lead │
+│ Stripe rk_/sk_ key  │ On personnel │ Dashboard  │ Finance lead │
 │ JWT signing secret  │ 30 days      │ Automated  │ Backend      │
 │ Service account key │ 60 days      │ Workload ID│ Platform     │
 │ Third-party API     │ 180 days     │ Manual     │ Service owner│

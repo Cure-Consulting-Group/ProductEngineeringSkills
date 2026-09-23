@@ -146,8 +146,8 @@ Two guards, both load-bearing:
 
 **Stripe specifically:** customers are the resource that silently accumulates. Search by
 email and delete in test mode; live-mode customers must never be reachable from this script
-(separate keys, enforced by the env guard). Test clocks cap at 3 active per account — delete
-them in the same pass or subscription tests start failing on an unrelated PR.
+(separate keys, enforced by the env guard). Delete test clocks (max 3 customers
+each; auto-deleted after 30 days) in the same pass so stale clocks don't pollute later runs.
 
 **Invocation — no cron.** Cure org policy (2026-08-08) forbids scheduled jobs, so expose
 teardown as an explicit target and call it from the places that already run:

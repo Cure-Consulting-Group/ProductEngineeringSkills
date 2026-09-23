@@ -45,8 +45,10 @@ Dollar figures marked `[constants]` come from the `constants` binding.
 - Made permanent by OBBBA.
 
 ### §45F — Employer-provided child care
-- Percentage of qualified child care facility and resource/referral expenditures,
-  subject to an annual cap. Increased by OBBBA — `VERIFY` current rate and cap.
+- Percentage of qualified child care facility and resource/referral expenditures.
+  From 2026 the annual cap is $500,000 ($600,000 for an eligible small business),
+  indexed after 2026 (verified 2026-09-23, Rev. Proc. 2025-32 §2.06); confirm the
+  new credit rates before use.
 - 10-year recapture if the facility ceases to operate as such.
 
 ### §51 — Work opportunity credit
@@ -54,9 +56,9 @@ Dollar figures marked `[constants]` come from the `constants` binding.
   unemployed, SNAP recipients, ex-felons, designated community residents).
 - **Hard deadline**: Form 8850 must be filed with the state workforce agency
   **within 28 days of the employee's start date**. Miss it and the credit is gone.
-- **Status — confirm before use (unverified as of 2026-09-23).** §51 authorization
-  ended for individuals who begin work after **2025-12-31** (CRS R43729, May 2026);
-  reauthorization bills were pending. Do not count WOTC for a 2026 hire unless an
+- **Status — confirm before use.** §51 authorization ended for individuals who
+  begin work after **2025-12-31** (CRS R43729, May 2026) and no extension had
+  been enacted as of 2026-09-23. Do not count WOTC for a 2026 hire unless an
   extension has been enacted. Filing Form 8850 within 28 days still preserves the
   claim if Congress extends retroactively.
 
@@ -74,7 +76,8 @@ Dollar figures marked `[constants]` come from the `constants` binding.
 ## Individual credits
 
 ### §24 — Child tax credit
-- `[constants]` 2026: $2,200 per qualifying child, $1,700 refundable.
+- `[constants]` 2026: $2,200 per qualifying child, $1,700 refundable (verified
+  2026-09-23, Rev. Proc. 2025-32 §4.05).
 - Phase-out $50 per $1,000 of MAGI over $200,000 / $400,000 MFJ.
 - Child must be under 17 at year end and have an **SSN valid for employment**.
 - $500 nonrefundable credit for other dependents (§24(h)(4)).
@@ -86,22 +89,20 @@ Dollar figures marked `[constants]` come from the `constants` binding.
 - **Lifetime Learning**: 20% of up to $10,000 = **$2,000 max**, per return,
   unlimited years, non-refundable, covers job-skill courses.
 - Cannot claim both for the same student in the same year.
-- Requires Form 1098-T. Phase-outs apply — `VERIFY` current ranges.
+- Requires Form 1098-T. Phase-out $80k–$90k MAGI ($160k–$180k MFJ), statutory and
+  not indexed since 2021 — confirm before use.
 
 ### §21 — Child and dependent care credit
 - Expense base $3,000 (one qualifying person) / $6,000 (two or more).
-- Rate: 20–35% through 2025. **From 2026 (OBBBA) the maximum rate rises to 50%**,
-  phasing down with AGI to 35% and then to a 20% floor — confirm the exact AGI
-  breakpoints before use (unverified as of 2026-09-23).
+- Rate: 20–35% through 2025. **From 2026 (OBBBA): 50%**, less 1 point per $2,000
+  of AGI over $15,000 (floor 35%), then less 1 point per $2,000 ($4,000 MFJ)
+  over $75,000 ($150,000 MFJ), floor 20%. Statutory, not indexed (verified
+  2026-09-23, 26 U.S.C. §21(a)(2)).
 - Requires **earned income by both spouses** (or student/disabled status).
 - Provider TIN required on Form 2441 — a common failure point.
 - Coordinates with §129 dependent care FSA (same $ can't be used twice). The §129
   exclusion rises from $5,000 to **$7,500** ($3,750 MFS) for 2026+, not indexed
   (verified 2026-09-23, IRS OBBB family-provisions guidance).
-
-### §25B — Saver's credit
-- 10/20/50% of up to $2,000 contributed to a retirement plan, by AGI tier.
-- Low AGI only — usually irrelevant here, but screen it in loss years.
 
 ### §25D — Residential clean energy — TERMINATED after 2025
 - **Not available for expenditures made after 2025-12-31** (OBBBA; verified
@@ -132,7 +133,8 @@ Dollar figures marked `[constants]` come from the `constants` binding.
 - **Investment income limit** disqualifies at a low threshold — screen this first
   for anyone with a brokerage account.
 - Due-diligence requirements under §6695(g) apply to the preparer: Form 8867,
-  $600+ penalty per failure.
+  $665 per failure for returns filed in 2027 (verified 2026-09-23, Rev. Proc.
+  2025-32 §4.54).
 
 ### §901 — Foreign tax credit
 - Relevant if any app revenue has foreign withholding (App Store / Stripe payouts

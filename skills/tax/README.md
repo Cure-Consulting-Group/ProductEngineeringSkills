@@ -8,29 +8,16 @@ Code and pinned to **tax year 2026**.
 This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`).
 
 These skills carry doctrine, not clients. Everything taxpayer-specific lives in
-the consuming project's `.claude/tax-profile.md` — see `TAX-PROFILE-TEMPLATE.md`
+the consuming project's tax profile (`.claude/tax-profile.md` in Claude Code
+projects; any agreed path elsewhere) — see `TAX-PROFILE-TEMPLATE.md`
 in this directory. Skills refer to a project's tax tooling by **binding name**
 (`constants`, `calculator`, `validator`, …) so they work unchanged in a project
 that has no tax engine at all.
 
-## The skills
-
-| Skill | Use it when |
-|---|---|
-| **irc-lookup** | A position needs a statutory basis. Authority hierarchy, citation format, and the OBBBA change log. Foundation for everything else. |
-| **deductions-and-credits** | "What can I deduct / what credits apply." The benefit catalog with tests, limits, and substantiation. |
-| **tax-strategies** | "How do I pay less." Planning moves, screened through the anti-abuse doctrines. Includes the method for building a per-entity playbook. |
-| **software-dev-tax** | §174A and §41 treatment of platform development — QREs, the internal-use software rules, the pre-release boundary, per-repo allocation. |
-| **tax-preparation** | Building an actual return and the accountant handoff package. |
-| **return-review** | A return is computed and needs checking before it goes out. Mandatory pass. |
-| **audit-risk-substantiation** | How risky is this, what defends it, and what happens if it loses. |
-| **tax-recommendations** | Turning analysis into a ranked, dated, quantified action list. |
-| **estimated-tax-compliance** | Quarterly payments, safe harbors, withholding, and the recurring calendar. |
-| **nonprofit-dissolution** | Winding down a New York not-for-profit and closing out its exempt-organization filings. |
-| **cpa-standards** | Professional standards — Circular 230, SSTS, §7216, workpapers. Applies to every work product. |
-| **cpa-benchmark** | Measuring whether any of this is actually right. Runnable scored question bank. |
-
 ## How they fit together
+
+Each skill's `description` says when to use it and its `when_to_use` names the
+sibling to use instead; the map below shows how they hand off.
 
 ```
 irc-lookup ──────────── authority for everything below
@@ -74,7 +61,7 @@ comments and datastore keys.
 ## Start here
 
 ```bash
-cd skills/tax/cpa-benchmark/benchmark
+cd <plugin>/skills/tax/cpa-benchmark/benchmark   # Node 18+
 node run.mjs stats     # what the bank covers
 node run.mjs sources   # bundled sets plus any project overlay
 ```
@@ -87,9 +74,10 @@ merged. Those stay in the project; they never come back here.
 
 ## Known limitations
 
-- **OBBBA items marked `VERIFY`** — notably the §1202 tiering, §168(n), §461(l)
-  thresholds, and the 1099 threshold change — need confirmation against primary
-  text before filing use. See `irc-lookup/reference/obbba-changes.md`.
+- **OBBBA items marked `VERIFY`** — notably §168(n), §163(j), §45F rates, and
+  the non-itemizer charitable deduction — need confirmation against primary text
+  before filing use. See `irc-lookup/reference/obbba-changes.md` (§1202, §461(l),
+  §21, and the 1099 threshold were confirmed on 2026-09-23).
 - **State coverage is thin.** New York and Delaware appear as worked examples of
   patterns every state has; no state's rules are modelled comprehensively.
 - **Benchmark coverage gaps** are listed honestly in

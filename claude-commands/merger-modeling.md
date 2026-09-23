@@ -1,66 +1,49 @@
 # Merger Modeling (Accretion/Dilution)
 
-This skill provides a structured workflow for analyzing the financial impact of an acquisition on the acquirer's Earnings Per Share (EPS).
+**Outcome:** year-1 and year-2 pro-forma EPS vs. standalone, % accretion/(dilution), breakeven
+synergies, and a synergy-realization sensitivity, with deal assumptions listed. **Done when** the
+pro-forma share count and interest lines reconcile and every assumption has a source or is
+marked as an assumption. Not investment advice. Match length to the need; no filler sections or
+restated summaries.
 
-## Workflow
+In Claude Code the `investment-banker` agent runs this alongside the valuation skills.
 
-### 1. Acquisition Assumptions
-Define the deal terms:
-- **Purchase Price**: Per share and total transaction value.
-- **Mix of Consideration**: % Cash, % Stock, % Debt.
-- **Interest Rates**: On new debt and foregone interest on cash.
-- **Stock Price**: Acquirer's current price (for share issuance).
+## Step 1: Classify
 
-### 2. Pro-forma Income Statement
-Combine the financials:
-- **Revenue**: Sum of Acquirer + Target (+ Revenue Synergies).
-- **EBITDA**: Sum of Acquirer + Target (+ Cost Synergies).
-- **Interest Expense**: Existing + New Debt Interest - Foregone Interest on Cash.
-- **Depreciation & Amortization**: Including incremental D&A from asset write-ups.
+- **Public acquirer, EPS-driven:** full accretion/dilution.
+- **Private or small-company deal** (the likelier Cure case — e.g. acquiring or selling a studio
+  product): EPS is not the test. Model ownership dilution, cash-flow payback, and post-deal
+  runway (hand runway to `burn-rate-tracker`) instead.
 
-### 3. Purchase Price Allocation (PPA)
-Account for the premium paid:
-- **Identified Intangibles**: Estimate value of brands, customer lists, technology.
-- **Goodwill**: Excess of purchase price over fair value of net assets.
-- **Deferred Tax Liability (DTL)**: Created from asset write-ups.
+## Step 2: Gather
 
-### 4. Accretion / Dilution Calculation
-- **Pro-forma Net Income**: Consolidated income after tax and interest.
-- **New Share Count**: Acquirer shares + New shares issued.
-- **Pro-forma EPS**: Pro-forma Net Income / New Share Count.
-- **% Accretion / (Dilution)**: (Pro-forma EPS / Standalone EPS) - 1.
+Offer price and premium; consideration mix (cash / stock / new debt); acquirer share price
+(dated) and diluted shares; rate on new debt and yield on cash used; tax rate; both companies'
+projected net income; fair-value write-ups and identified intangibles with useful lives;
+transaction and financing fees; synergy estimates with source.
 
-### 5. Synergy Analysis
-Calculate the "Breakeven Synergies": The amount of cost savings required to make the deal non-dilutive.
+## Step 3: Gotchas that change the answer
 
-## Standard Output Format
+- **Interest lines after tax:** new-debt interest and foregone interest on cash both flow
+  through at (1 − tax rate).
+- **New shares** = stock consideration ÷ acquirer price; use diluted shares (treasury stock
+  method) on both sides.
+- **PPA:** amortization of identified intangibles and D&A on write-ups reduce pro-forma income;
+  write-ups create a deferred tax liability. Goodwill is not amortized under US GAAP for public companies (private companies may elect to) but is tested
+  for impairment.
+- **Fees:** financing fees amortize; advisory fees hit at close — keep them out of run-rate EPS
+  and say so.
+- **Synergies phase in** (Cure default: 25% year 1, 75% year 2, 100% year 3) net of cost to
+  achieve; revenue synergies shown separately and haircut.
+- Report "cash EPS" (excluding deal amortization) only alongside GAAP EPS, labeled.
+
+## Output
 
 ```markdown
-## M&A Analysis: [Acquirer] / [Target]
-
-### Transaction Overview
-- **Purchase Price**: $[X] ([X]x EBITDA)
-- **Mix**: [X]% Cash / [X]% Stock / [X]% Debt
-- **Synergies Identified**: $[X]
-
-### Accretion / (Dilution) Results
-| Metric | Standalone (Acquirer) | Pro-forma | % Change |
-|--------|-----------------------|-----------|----------|
-| EPS (Year 1) | $[X] | $[X] | [X]% |
-| EPS (Year 2) | $[X] | $[X] | [X]% |
-
-### Synergy Sensitivity
-| Synergy Realization | 0% | 50% | 100% |
-|---------------------|----|-----|------|
-| Accretion / (Dilution) | [X]% | [X]% | [X]% |
-
-### Strategic Commentary
-- [Analysis of pro-forma leverage]
-- [Risk assessment of synergy capture]
-- [Impact on cost of capital]
+## M&A Analysis: [Acquirer] / [Target] — as of [date]
+Price $[X] ([X]x EBITDA, [X]% premium) | Mix [X]% cash / [X]% stock / [X]% debt
+| Metric | Standalone | Pro-forma | Δ% |  (EPS Y1, Y2; share count; net debt/EBITDA)
+Breakeven synergies: $[X] pre-tax
+Sensitivity: synergy realization 0 / 50 / 100% × premium ±10%
+Commentary: leverage, synergy risk, what would make it dilutive
 ```
-
-## Quality Standards
-- **Conservatism**: Model synergies on a "phased-in" basis (e.g., 25% Yr 1, 75% Yr 2).
-- **Fully Diluted**: Use treasury stock method for share counts.
-- **Detail**: Break out "Cash EPS" (excluding non-cash amortization) if appropriate.

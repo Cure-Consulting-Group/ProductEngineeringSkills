@@ -1,12 +1,13 @@
 # IRC Lookup & Authority
 
-Every number, position, and recommendation this project produces must trace to a
-statutory source. This skill is the retrieval and citation layer the other tax
-skills depend on.
+The retrieval and citation layer the other tax skills depend on. **Done when**
+the answer has the output shape below with a verification status on every
+figure.
 
 ## Core rule
 
-**No tax conclusion without a cite, and no cite without a read.**
+**No tax conclusion without a cite, and no cite without a read** — a recalled
+figure that reaches a return is §6694 preparer-penalty exposure.
 
 Do not cite a section from memory when the text is reachable. Model recall of the
 Code is directionally useful and numerically unreliable — it drifts on dollar
@@ -17,8 +18,9 @@ hypothesis to verify.
 ## Where authority lives in the project
 
 Tax tooling differs per project, so this skill addresses it by **binding name**.
-A project records what it actually has in `.claude/tax-profile.md` under *Engine
-bindings* (template: `TAX-PROFILE-TEMPLATE.md` in this domain). Where a binding
+A project records what it actually has in its tax profile under *Engine
+bindings* — `.claude/tax-profile.md` in Claude Code projects, otherwise wherever
+the project keeps it (template: `TAX-PROFILE-TEMPLATE.md` in this domain). Where a binding
 is absent, fall back to the reference files here plus external verification.
 
 | Binding | What it is good for |
@@ -44,17 +46,19 @@ is absent, fall back to the reference files here plus external verification.
 1. **Frame the question as a legal issue.** Not "can I deduct my car" but "is
    mileage on a vehicle used in a trade or business deductible under §162, and
    what substantiation does §274(d) require."
-2. **Find the section.** Check `reference/section-map.md` in this skill first —
-   it maps ~120 topics to controlling sections. Then the catalog. Then search.
+2. **Find the section.** Check `reference/section-map.md` first (~120 topics
+   mapped to controlling sections), then the catalog, then search.
 3. **Read the operative text**, not a summary. Identify: the general rule, the
    exceptions, the definitions subsection, the limitation subsections, and the
    effective-date / sunset language.
-4. **Descend the authority ladder** (see `reference/authority-hierarchy.md`).
-   Statute → regulations → IRS guidance → case law. A section read without its
-   regulations is usually a wrong answer.
+4. **Descend the authority ladder**: statute → regulations → IRS guidance →
+   case law. A section read without its regulations is usually a wrong answer.
+   Read `reference/authority-hierarchy.md` when weighing conflicting or
+   non-precedential authority.
 5. **Check for amendment.** OBBBA (P.L. 119-21, enacted 2025-07-04) rewrote large
-   parts of the Code effective 2025 and 2026. Pre-2025 knowledge of §§174, 168(k),
-   179, 199A, 1202, 461(l), 63, 164 is stale. See `reference/obbba-changes.md`.
+   parts of the Code effective 2025 and 2026; pre-2025 knowledge of §§174, 168(k),
+   179, 199A, 1202, 461(l), 63, 164 is stale. Read `reference/obbba-changes.md`
+   whenever the topic touches a 2025 or later tax year.
 6. **Get the year's numbers from the `constants` binding**, not from the statute —
    most dollar amounts are inflation-adjusted annually by revenue procedure.
 7. **Record the cite** in the form below.
@@ -93,16 +97,6 @@ When answering a lookup, return:
 
 Never omit the verification status. A `RECALL` figure that reaches a return is a
 preparer penalty risk under §6694.
-
-## Reference files
-
-- `reference/authority-hierarchy.md` — what counts as authority, precedential
-  weight, the substantial-authority / reasonable-basis / more-likely-than-not
-  standards, and when disclosure on Form 8275 is required.
-- `reference/section-map.md` — topic → controlling section index covering income,
-  deductions, credits, entities, timing, procedure, and penalties.
-- `reference/obbba-changes.md` — what P.L. 119-21 changed, with effective dates,
-  so pre-2025 assumptions get caught.
 
 ## Related skills
 

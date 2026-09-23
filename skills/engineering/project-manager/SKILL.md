@@ -1,168 +1,94 @@
 ---
 name: project-manager
-description: "Sprint execution and delivery management — sprint planning, RACI matrices, risk registers, retrospectives, and velocity tracking for engineering teams"
-when_to_use: "Use when asked to 'plan a sprint', 'create a RACI', 'run a retro', or 'track velocity'. NOT for product strategy or OKRs (use product-manager). NOT for engineering specs (use sdlc)."
+description: "Sprint and delivery management for engineering teams. Use when planning a sprint, sizing capacity, building a RACI, risk register, dependency map, timeline, or running a retro."
+when_to_use: "NOT for OKRs or roadmaps (use product-manager), PRDs/stories (use sdlc), client status emails (use client-communication), or post-mortems (use incident-response)."
 argument-hint: "[project-name]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Project Manager
 
-## Pre-Processing (Auto-Context)
+Senior TPM operating model: ceremonies that serve the team, plans built on measured capacity, risks
+with owners. Output is the one artifact the request asks for, filled with the user's real data;
+done when every row has an owner or a number and open assumptions are listed.
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
-
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
-
-Senior TPM / Scrum Master operating model. Ceremonies that serve the team. Integrates with sdlc backlog (Epics, Stories, Tasks).
-
-## Core Ceremonies & Cadence
-
-```
-Daily Standup       → 15 min | Yesterday, Today, Blockers — no status theater
-Sprint Planning     → 2hr/2wk sprint | Pull from prioritized backlog
-Sprint Review       → Demo working software, not slide decks
-Retrospective       → 1hr | What worked, what didn't, one experiment next sprint
-Backlog Refinement  → 1hr mid-sprint | Groom next sprint's stories
-Milestone Check-in  → Weekly | Status vs. plan, risk review
-```
+Match length to the need; no filler sections or restated summaries.
 
 ## Step 1: Classify the Request
 
 | Request | Output |
-|---------|--------|
-| Sprint planning | Sprint plan + capacity |
-| Project timeline | Phased timeline + Gantt |
-| Status report | Stakeholder status update |
-| Risk management | Risk register |
-| Retrospective | Retro facilitation + output |
-| Kickoff | Project kickoff plan |
-| Launch readiness | Launch checklist + go/no-go |
-| Post-mortem | Blameless post-mortem doc |
-| Dependency map | Dependency matrix |
+|---|---|
+| Sprint planning | Sprint plan: goal, capacity, committed stories, buffer |
+| Timeline | Phased plan with dependencies (Mermaid `gantt` when dates matter) |
+| Risk management | Scored risk register |
+| Retrospective | Retro agenda + outcomes (one experiment for next sprint) |
 | RACI | Responsibility matrix |
+| Dependency map | Dependency matrix with escalation paths |
+| Project health | Four-dimension health score (below) |
 
-## Step 2: Context Gathering
+Route elsewhere: client-facing status updates → `client-communication`; launch go/no-go → `uat`
+or `release-management`; post-mortems → `incident-response`; PRDs, epics, stories → `sdlc`.
 
-**Sprint planning:** Team size, velocity (if known), sprint length, backlog items to consider
-**Timeline:** Feature list, team size, hard deadline, known dependencies
-**Status report:** Audience (exec / engineering / client), current milestone, blockers
-**Risk register:** Project scope, team, known constraints, deadline pressure
-**Retrospective:** Sprint number, sprint goal, general mood of team
+## Step 2: Gather Context
 
-## Project Health Dashboard
+Ask only for what the chosen output needs:
 
-Every project gets a weekly health score across 4 dimensions:
+- **Sprint planning:** team size, sprint length, PTO/on-call, last 3 sprints' completed points, candidate backlog
+- **Timeline:** feature list, team size, hard deadline, known dependencies
+- **Risk register:** scope, team, constraints, deadline pressure
+- **Retrospective:** sprint number, goal, what shipped vs planned
+- **RACI / dependencies:** roles on the initiative, external parties
 
+Velocity comes from the tracker (Linear, Jira, GitHub Projects): points or issues completed per
+sprint. Commit counts and `feat:` greps are not velocity — they measure commit style, not delivered
+scope. With no tracker history, plan from capacity and say the estimate is uncalibrated.
+
+## Step 3: Cure Planning Rules
+
+**Capacity**
 ```
-SCOPE     🟢 On track | 🟡 At risk | 🔴 Scope creep detected
-SCHEDULE  🟢 On track | 🟡 1-2 sprints behind | 🔴 3+ sprints behind
-QUALITY   🟢 <0.5% crash | 🟡 0.5-2% crash | 🔴 >2% or P0 open
-TEAM      🟢 Full capacity | 🟡 1 person out | 🔴 Blocking dependency
+Capacity = devs × available days × focus factor (0.7 with on-call, 0.8 dedicated)
+Velocity = 3-sprint rolling average of completed points
+Adjust:  on-call week −20% · new engineer 50% for first 2 sprints · review overhead 10%
+Commit 85% of velocity; 15% buffer for bugs/incidents. >100% committed = flag as delivery risk.
 ```
 
-## RACI Matrix Template
+**Definition of Ready** (story may enter a sprint): Given/When/Then acceptance criteria; design
+linked (or N/A); API spec linked (or N/A); dependencies unblocked; pointed by the team; no open
+blocking questions; test spec outlined.
 
-```markdown
-## RACI — [Project/Feature Name]
+**Project health** (weekly):
+```
+SCOPE     🟢 on track | 🟡 at risk | 🔴 scope creep
+SCHEDULE  🟢 on track | 🟡 1–2 sprints behind | 🔴 3+ behind
+QUALITY   🟢 <0.5% crash | 🟡 0.5–2% | 🔴 >2% or P0 open
+TEAM      🟢 full | 🟡 1 person out | 🔴 blocking dependency
+```
 
-| Activity | [PM] | [Tech Lead] | [Eng] | [Design] | [QA] | [Stakeholder] |
-|----------|------|------------|-------|----------|------|--------------|
+**Cadence** (2-week sprint): planning 2h, standup 15m daily, review 1h, retro 1h, refinement 1h weekly.
+
+## Step 4: Templates
+
+**Risk register** — score = probability × impact (H=3, M=2, L=1); anything ≥6 needs a named owner and a dated mitigation.
+
+| Risk ID | Description | P | I | Score | Mitigation | Owner | Status |
+|---|---|---|---|---|---|---|---|
+
+**RACI** — exactly one A per row; R does the work, C is consulted before, I informed after.
+
+| Activity | PM | Tech Lead | Eng | Design | QA | Stakeholder |
+|---|---|---|---|---|---|---|
 | PRD approval | A | C | I | C | I | R |
-| Architecture decision | I | R | C | I | I | I |
-| Sprint planning | R | C | C | I | I | I |
-| Design review | C | I | I | R | I | A |
+| Architecture decision | I | A/R | C | I | I | I |
 | Code review | I | A | R | I | I | I |
-| QA sign-off | I | I | I | I | R | I |
 | Release approval | A | C | I | I | C | R |
 
-R = Responsible (does the work)
-A = Accountable (owns the outcome, one per row)
-C = Consulted (input before decision)
-I = Informed (notified after decision)
-```
+**Dependency map** — `Story | Depends on | Hard/Soft/External | Status | Risk`, plus an escalation
+line (owner, contact) for every external dependency.
 
-## Dependency Matrix Template
+## Artifact Generation
 
-```markdown
-## Dependency Map — [Project]
-
-| Story | Depends On | Type | Status | Risk |
-|-------|-----------|------|--------|------|
-| STORY-005 | STORY-002 (API contract) | Hard | In progress | Med |
-| STORY-006 | External: Stripe Connect | External | Unconfirmed | High |
-| EPIC-003 | EPIC-001 complete | Hard | Not started | Low |
-
-**External dependencies requiring escalation:**
-- [Dependency] — Owner: [Name] — Escalation path: [Who to contact]
-```
-
-## Velocity & Capacity Rules
-
-```
-Sprint velocity = average story points completed per sprint (last 3 sprints)
-Capacity adjustment factors:
-  - PTO: -[N] pts per day per engineer
-  - On-call week: -20% total capacity
-  - Ramp-up (new eng): 50% capacity for first 2 sprints
-  - Code review overhead: budget 10% of velocity
-
-Healthy sprint: 85% of velocity committed, 15% buffer for bugs/incidents
-Overcommitted sprint: >100% velocity committed = delivery risk, flag immediately
-```
-
-## Definition of Ready (Before Story Enters Sprint)
-
-- [ ] Acceptance criteria written in Given/When/Then
-- [ ] Design ticket linked and approved (DESIGN-NNN)
-- [ ] API spec linked or confirmed N/A
-- [ ] Dependencies identified and unblocked
-- [ ] Story pointed by the team
-- [ ] No open blocking questions
-- [ ] Test spec outlined (TEST-UNIT-NNN)
-
-## Sprint Planning Framework
-
-### Capacity Calculation
-```
-Team capacity = (Number of devs × Available days × Focus factor)
-Focus factor: 0.7 for teams with on-call, 0.8 for dedicated teams
-Story points per sprint = Historical velocity (3-sprint average)
-```
-
-### Sprint Ceremony Schedule
-| Ceremony | Duration | Frequency | Output |
-|----------|----------|-----------|--------|
-| Sprint Planning | 2h | Biweekly | Sprint backlog |
-| Daily Standup | 15m | Daily | Blockers identified |
-| Sprint Review | 1h | Biweekly | Demo + stakeholder feedback |
-| Retrospective | 1h | Biweekly | Action items |
-| Backlog Refinement | 1h | Weekly | Estimated stories |
-
-## Risk Register Template
-
-| Risk ID | Description | Probability | Impact | Score | Mitigation | Owner | Status |
-|---------|-------------|-------------|--------|-------|------------|-------|--------|
-| R001 | [risk] | H/M/L | H/M/L | [P×I] | [strategy] | [name] | Open |
-
-## Velocity Tracking
-
-Use git history to estimate velocity:
-- Run: `git log --oneline --since="14 days ago" | wc -l` for commit frequency
-- Run: `git log --oneline --since="14 days ago" --format="%s" | grep -c "feat:"` for feature commits
-- Compare across sprints to identify trends
-
-## Artifact Generation (Required)
-
-Generate using Write:
-1. **Sprint plan**: `docs/sprints/sprint-{N}.md` with goals, capacity, committed stories
-2. **Risk register**: `docs/risk-register.md` with scored risks and mitigations
-3. **RACI matrix**: `docs/raci.md` for current initiative
-4. **Retrospective template**: `docs/retro-template.md`
-5. **Burndown chart**: ASCII/Mermaid burndown showing ideal vs actual
-
-Use Grep on git log to analyze velocity trends: `git log --format="%ai" --since="90 days ago"` grouped by week.
+Applies when the user wants a file rather than an inline answer. Write only the artifact classified
+in Step 1, at a path that matches existing repo conventions (default `docs/sprints/sprint-{N}.md`,
+`docs/risk-register.md`, `docs/raci.md`). Don't generate the other templates unasked.

@@ -1,237 +1,153 @@
 ---
 name: security-review
-description: "OWASP Top 10 security audit for codebases — scans auth flows, API endpoints, data storage, secrets handling, and dependency supply chain across .kt, .swift, .ts, .py, .go, .rs, and infrastructure files"
-when_to_use: "Use before launch, after adding auth/payment/PII features, or when asked to 'check security', 'find vulnerabilities', or 'run a security audit'. NOT for compliance frameworks (use compliance-architect). NOT for WCAG (use accessibility-audit)."
+description: "Security audit of code, APIs, mobile apps, LLM features, and Firebase/cloud config, mapped to OWASP. Use when asked to check security, find vulnerabilities, or review before launch or after adding auth, payments, or PII."
+when_to_use: "NOT for compliance frameworks (use compliance-architect) or WCAG (use accessibility-audit)."
 argument-hint: "[target-system]"
 allowed-tools: ["Read", "Grep", "Glob"]
 context: fork
 disallowed-tools: Write Edit
 effort: high
+metadata:
+  verified: 2026-09-23
 ---
 
 # Security Review
 
 > **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
 > mutating commands, and do not create or delete resources. Under Claude Code
-> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> the `disallowed-tools` frontmatter above blocks Write/Edit (`allowed-tools`
+> only pre-approves tools; it restricts nothing).
+> Bash stays available for read-only inspection (grep, git log, scanners), so even
+> under Claude Code "no mutating commands" is advisory, not enforced.
 > **Other runtimes do not enforce it** — Codex and Antigravity ignore those
 > fields, and activation there can widen rather than narrow file access — so on
 > any runtime other than Claude Code this paragraph is the only guardrail.
 
-Structured security review for mobile apps, web apps, APIs, and cloud infrastructure. Run before every launch, after major features, and quarterly on production systems.
+**Outcome:** a findings report for the scoped system — every finding with file:line, OWASP category,
+severity, confidence, exploit sketch, and fix. **Done when** each area selected in Step 1 has been scanned
+and reasoned through, and anything not reviewed is listed as out of scope. Report **every** finding you
+find, including low-severity and low-confidence ones; ranking happens in the report, never by omission.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
 - Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Security-relevant files: !`ls firestore.rules storage.rules firebase.json .env.example proxy.ts middleware.ts next.config.* 2>/dev/null | head -12 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
-
-## Automated Vulnerability Scan (Before Manual Review)
-
-Before applying the security framework, scan the codebase with Grep:
-
-1. **Secrets Detection**:
-   - Grep for: `sk-[a-zA-Z0-9]`, `pk_[a-zA-Z0-9]`, `ghp_`, `AIza`, `AKIA`, `password\s*=\s*["']`
-   - Grep for: hardcoded URLs with credentials (`://.*:.*@`)
-2. **Input Validation**:
-   - Grep for: `req.body\.` or `request\.` without adjacent validation (`zod|joi|yup|validate`)
-   - Grep for: `innerHTML|dangerouslySetInnerHTML` (XSS vectors)
-   - Grep for: raw SQL concatenation (`\+ .*query|` + `.*sql`)
-3. **Auth Gaps**:
-   - Grep for: API routes without auth middleware (`app.get|app.post` without `auth|protect|verify`)
-   - Grep for: Firestore rules with `allow read: if true` or `allow write: if true`
-4. **Dependency Check**:
-   - Run: `npm audit --json 2>/dev/null | head -50` to check for known vulnerabilities
-5. **Sensitive Files**:
-   - Glob for: `**/.env`, `**/credentials*`, `**/serviceAccount*`, `**/*.pem` that might be committed
-
-Report all findings with file:line references before proceeding to the manual framework.
-
-## Step 1: Classify the Review Type
+## Step 1: Classify the Review
 
 | Trigger | Scope |
-|---------|-------|
-| Pre-launch | Full review — all categories below |
-| New feature with auth/payments | Auth + data + API sections |
-| Dependency update | Supply chain section |
-| Quarterly review | Full review + dependency audit |
-| Incident response | Targeted review of affected area |
+|---|---|
+| Pre-launch | All areas in Step 3 |
+| New auth / payments / PII feature | Auth, data, API, and the feature's rules |
+| LLM feature | LLM section + API + data |
+| Dependency update | Supply chain |
+| PR (routine) | The diff and anything it calls |
+| Post-incident | Affected area, then the same bug class repo-wide |
 
 ## Step 2: Gather Context
 
-1. **What's being reviewed** — app, API, infrastructure, or specific feature?
-2. **Data handled** — PII, financial, health, children's data?
-3. **Auth mechanism** — Firebase Auth, OAuth, JWT, API keys?
-4. **Deployment** — Firebase, Vercel, AWS, GCP?
-5. **Third-party services** — Stripe, analytics, LLM APIs?
-6. **Compliance requirements** — SOC 2, HIPAA, GDPR, CCPA, COPPA?
+What is in scope (app, API, infra, feature); data handled (PII, financial, health, children's data —
+children's or health data also triggers the `compliance-architect` skill); auth mechanism (Firebase Auth,
+OAuth, JWT, API keys); hosting (Firebase, Vercel, GCP); third parties (Stripe, analytics, LLM providers).
 
-## Step 3: Authentication & Authorization
+## Step 3: Scan and Review
 
-### Checklist
-- [ ] Passwords hashed with bcrypt/scrypt/argon2 (never MD5/SHA1)
-- [ ] Session tokens are cryptographically random, sufficient length (>=128 bits)
-- [ ] Tokens expire (access: 15min-1hr, refresh: 7-30 days)
-- [ ] Failed login rate limiting (5 attempts → lockout or CAPTCHA)
-- [ ] MFA available for sensitive operations (payments, account deletion)
-- [ ] OAuth state parameter validated (prevents CSRF on OAuth flow)
-- [ ] Firebase Auth: email enumeration protection enabled
-- [ ] Authorization checked on EVERY server endpoint (not just client-side)
-- [ ] Role-based access: users cannot escalate their own permissions
-- [ ] API keys scoped to minimum required permissions
+Start with these searches and record every hit as a candidate; then read each in context to confirm or
+dismiss. Grep hits are leads, not findings.
 
-### Common Vulnerabilities
-```
-IDOR (Insecure Direct Object Reference):
-  BAD:  /api/users/123/profile  (any user can access any profile)
-  GOOD: /api/users/me/profile   (server resolves from auth token)
+| Area | Search |
+|---|---|
+| Secrets | `sk-[A-Za-z0-9_-]{20,}`, `sk_live_`, `rk_live_`, `ghp_`, `github_pat_`, `AKIA[0-9A-Z]{16}`, `-----BEGIN (RSA \|EC )?PRIVATE KEY`, `password\s*[:=]\s*["']`, `://[^/\s:]+:[^@\s]+@`; committed `.env`, `*serviceAccount*.json`, `*.pem`. (`AIza…` Firebase web keys are public identifiers — flag only if the key is unrestricted or used for a server API.) |
+| Injection | SQL built by concatenation or template strings: `(query\|execute\|raw)\s*\(\s*[`"'].*(\$\{\|\+)`; `innerHTML\|dangerouslySetInnerHTML\|v-html`; `eval(`, `new Function(`, `child_process`, `subprocess.*shell=True` |
+| Input validation | handlers reading `req.body`/`request.json()`/`request.data` with no `zod\|valibot\|joi\|yup\|pydantic` parse nearby |
+| Authz | route handlers, Server Actions (`"use server"`), and callable functions with no auth/ownership check; IDs taken from the request instead of the token |
+| Firebase rules | `allow read, write: if true`, `if request.auth != null` as the only condition on user-owned data, rules missing on subcollections |
+| Dependencies | `npm audit --omit=dev --json \| head -60`, `pip-audit`, `./gradlew dependencyCheckAnalyze` if configured (read-only commands) |
 
-Broken Access Control:
-  BAD:  Client hides admin button → user modifies request → accesses admin
-  GOOD: Server validates role on every admin endpoint
-```
+Then reason through each in-scope area. Spend attention on Cure's recurring failure modes, not the
+generic checklist:
 
-## Step 4: Data Protection
+**Auth and access (OWASP A01/A07:2025; API1/API3/API5:2023).** Object-level checks on every read and
+write (BOLA/IDOR is the most common real bug); Server Actions are public POST endpoints and need their own
+auth check; Firebase custom claims are only as good as the code that sets them; `request.auth != null`
+lets any signed-in user read any user's document. SSRF now sits under A01:2025 — check server-side
+`fetch(userUrl)` (webhooks, link previews, image proxies).
 
-### In Transit
-- [ ] HTTPS everywhere (no mixed content)
-- [ ] HSTS header set with includeSubdomains and preload
-- [ ] TLS 1.2 minimum (prefer 1.3)
-- [ ] Certificate pinning on mobile (for sensitive apps)
-- [ ] API responses don't leak data in error messages
+**Data protection (A04:2025; M9/M10:2024).** Android: `androidx.security:security-crypto`
+(EncryptedSharedPreferences/EncryptedFile) is deprecated as of 1.1.0 (2025) — flag new uses; recommend
+Android Keystore keys with Tink AEAD over DataStore. iOS: Keychain with an appropriate
+`kSecAttrAccessible` class, never UserDefaults for tokens. PII must not reach logs, Crashlytics custom
+keys, or analytics event params.
 
-### At Rest
-- [ ] Database encryption enabled (Firestore: automatic, SQL: TDE)
-- [ ] Backups encrypted
-- [ ] Sensitive fields encrypted at application level (SSN, card numbers)
-- [ ] File uploads scanned for malware before storage
-- [ ] PII access logged for audit trail
+**Web (A02:2025 misconfiguration, A05 injection).** CSP for Next.js: a static `script-src 'self'` breaks
+Next's inline bootstrap scripts, so teams disable CSP. Recommend a per-request nonce set in `proxy.ts`
+(Next 16; `middleware.ts` on ≤15) with `script-src 'nonce-…' 'strict-dynamic'`, plus
+`frame-ancestors 'none'`, HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy`. `X-XSS-Protection`
+should be absent or `0`.
 
-### Secrets Management
-```
-NEVER in code:
-  - API keys, tokens, passwords
-  - Service account JSON files
-  - Stripe secret keys
-  - Database connection strings
-  - JWT signing secrets
+**Mobile (Mobile Top 10 2024).** Exported components without permissions (`android:exported="true"`),
+WebView `setJavaScriptEnabled(true)` + `addJavascriptInterface` on untrusted content, cleartext traffic
+flags, ATS exceptions, secrets in `BuildConfig`/Info.plist (extractable — M1 improper credential usage),
+release builds without R8.
 
-WHERE secrets live:
-  - Firebase/GCP: Secret Manager
-  - GitHub: Repository Secrets (CI/CD)
-  - Local dev: .env files (in .gitignore)
-  - Mobile: BuildConfig / Info.plist (non-sensitive only)
-```
+**Supply chain (A03:2025 Software Supply Chain Failures; A08 integrity).** Lockfiles committed; no
+`*`/`latest` ranges; GitHub Actions pinned by SHA; `postinstall` scripts from new dependencies reviewed;
+Renovate/Dependabot on.
 
-## Step 5: API Security
+**Errors (A10:2025 Mishandling of Exceptional Conditions).** Fail-open catch blocks around auth or payment
+checks; stack traces or Firestore paths returned to clients; webhook handlers that return 200 before
+verifying the signature.
 
-- [ ] Input validation on ALL endpoints (type, length, format)
-- [ ] Rate limiting per user/IP (prevent abuse)
-- [ ] Request size limits (prevent payload bombs)
-- [ ] SQL injection prevention (parameterized queries, ORMs)
-- [ ] NoSQL injection prevention (validate Firestore query inputs)
-- [ ] File upload: validate type, size, scan content
-- [ ] CORS configured to allow only known origins
-- [ ] CSRF protection on state-changing endpoints
-- [ ] API versioning (don't break existing clients)
-- [ ] Error responses don't leak stack traces, file paths, or DB schemas
+**LLM features (OWASP Top 10 for LLM Applications, 2026 edition; Agentic Top 10 for tool-using agents).**
+Cure ships LLM products, so review every model call site for: prompt injection from any untrusted text
+reaching the prompt (user input, retrieved documents, tool output, web pages); sensitive data disclosure
+(PII or other tenants' data in context or RAG indexes without per-tenant filtering); excessive agency
+(tools with write/delete/pay permissions callable without user confirmation or allow-lists); secrets or
+authorization logic placed in the system prompt (hidden context is not a security boundary); model output
+rendered as HTML/Markdown or passed to SQL/shell/`eval` without validation; unbounded consumption (no
+per-user rate or token caps, no max_tokens). Cite 2026 IDs only after checking the published list — confirm
+before use; name the risk in words.
 
-## Step 6: Mobile-Specific
+**Firebase specifics.** Rules tested in the emulator (`@firebase/rules-unit-testing`); Storage rules
+validate `contentType` and `size`; callable/HTTP functions validate input and check `context.auth`/
+`request.auth`; App Check enforced on Firestore, Storage, Functions, and Vertex AI in Firebase; email
+enumeration protection on; no service-account JSON in client bundles or repos.
 
-### Android
-- [ ] ProGuard/R8 enabled for release builds (code obfuscation)
-- [ ] No sensitive data in SharedPreferences (use EncryptedSharedPreferences)
-- [ ] Certificate pinning configured
-- [ ] Exported activities/services/receivers intentionally exported
-- [ ] No logging of sensitive data in release builds
-- [ ] WebView: JavaScript disabled unless required, no file:// access
+## Step 4: Severity and Report
 
-### iOS
-- [ ] ATS (App Transport Security) enabled, no exceptions without justification
-- [ ] Keychain used for sensitive data (not UserDefaults)
-- [ ] No sensitive data in app screenshots (implement blur on background)
-- [ ] Jailbreak detection for high-security apps
-- [ ] No sensitive data logged with os_log in release
+| Severity | Meaning | Release |
+|---|---|---|
+| Critical | Exploitable now with no/low privilege; data exposure, account takeover, payment bypass, RCE | Block |
+| High | Exploitable with conditions, or high-impact misconfiguration | Fix within 1 sprint |
+| Medium | Defence-in-depth gap, limited impact | Schedule |
+| Low / Info | Hardening, hygiene | Backlog |
 
-## Step 7: Web-Specific
-
-### Headers (verify all present)
-```
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 0  (deprecated — use CSP instead)
-Content-Security-Policy: default-src 'self'; script-src 'self'
-Referrer-Policy: strict-origin-when-cross-origin
-Permissions-Policy: camera=(), microphone=(), geolocation=()
-Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
-```
-
-### XSS Prevention
-- [ ] All user input escaped before rendering (React does this by default)
-- [ ] No `dangerouslySetInnerHTML` with user-supplied content
-- [ ] CSP header blocks inline scripts
-- [ ] Sanitize HTML if rich text is required (DOMPurify)
-
-## Step 8: Supply Chain Security
-
-- [ ] `npm audit` / `gradle dependencyCheckAnalyze` run in CI
-- [ ] No dependencies with known critical CVEs
-- [ ] Lock files committed (package-lock.json, Podfile.lock, gradle.lockfile)
-- [ ] Dependabot or Renovate configured for automatic updates
-- [ ] Review new dependencies before adding (check maintainership, download count, last update)
-- [ ] No `*` version ranges in dependencies
-
-## Step 9: Firebase-Specific
-
-- [ ] Firestore security rules: no open reads/writes (test with emulator)
-- [ ] Storage security rules: file type and size validation
-- [ ] Cloud Functions: validate callable function inputs
-- [ ] Auth: email enumeration protection enabled
-- [ ] No service account keys in client code
-- [ ] Firebase App Check enabled (prevents API abuse)
-
-## Step 10: Audit Report Output
+Confidence: **High** (traced end to end), **Medium** (strong code evidence, runtime not confirmed), **Low**
+(pattern match only). Include every finding with its confidence; do not drop low-confidence ones.
 
 ```
-SECURITY REVIEW REPORT
-Application: [NAME]
-Date: [TODAY]
-Reviewer: [NAME]
+SECURITY REVIEW — [system] — [date]
+Scope reviewed: [..] | Not reviewed: [..]
 
-RISK SUMMARY
-┌─────────────────────┬────────┬────────┐
-│ Category            │ Status │ Issues │
-├─────────────────────┼────────┼────────┤
-│ Auth & Authorization│ 🟢🟡🔴 │   X    │
-│ Data Protection     │ 🟢🟡🔴 │   X    │
-│ API Security        │ 🟢🟡🔴 │   X    │
-│ Mobile Security     │ 🟢🟡🔴 │   X    │
-│ Web Security        │ 🟢🟡🔴 │   X    │
-│ Supply Chain        │ 🟢🟡🔴 │   X    │
-│ Firebase Config     │ 🟢🟡🔴 │   X    │
-└─────────────────────┴────────┴────────┘
+| # | Sev | Conf | OWASP ref | File:line | Finding | Exploit sketch | Fix |
 
-CRITICAL (fix before ship):
-1. [Issue] — [Risk] — [Fix]
-
-HIGH (fix within 1 sprint):
-1. [Issue] — [Risk] — [Fix]
-
-MEDIUM (schedule for next quarter):
-1. [Issue] — [Risk] — [Fix]
+SUMMARY BY AREA: Auth · Data · API · Web · Mobile · LLM · Supply chain · Firebase — [count per severity]
 ```
+
+Match length to the need; no filler sections or restated summaries.
 
 ## Recurring Mode
 
-This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+This is a recurring goal, not a one-shot (mechanism trade-offs: the `engagement-automation` skill).
 
-- **Cadence:** weekly, plus on every PR via GitHub-triggered routine
-- **Session loop:** session loops expire after 7 days, so a weekly cadence never fires in-session; it belongs in the cloud routine below. In-session alternative, during an active hardening sprint: `/loop 1d /cure-product-engineering:security-review`.
-- **Unattended:** cloud routine — Weekly repo sweep + PR-triggered review. The PR routine reads the diff only. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Cadence:** weekly, plus on every PR via a GitHub-triggered routine.
+- **Session loop:** session loops expire after 7 days, so the weekly sweep belongs in a `/schedule` cloud
+  routine. In-session alternative during an active hardening sprint: `/loop 1d /cure-product-engineering:security-review`.
+- **Unattended:** cloud routine — weekly repo sweep plus PR-triggered review of the diff only. Recipes:
+  docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~150k tokens/run; cap at one run per weekly period.
-- **Guardrails:** read-only run; deliver findings as PR comments (PR trigger) or issues (weekly sweep); report on failure rather than retrying.
+- **Guardrails:** this skill stays read-only and returns the report. The routine that invoked it — not the
+  skill — posts PR comments (PR trigger) or files issues (weekly sweep). Report on failure rather than
+  retrying.

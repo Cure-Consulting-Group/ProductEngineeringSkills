@@ -1,494 +1,236 @@
 ---
 name: compliance-architect
-description: "Architect compliance frameworks for HIPAA, COPPA, GDPR, CCPA, and PCI — consent flows, audit trails, data classification, and privacy-by-design"
-when_to_use: "Use for HIPAA, COPPA, GDPR, CCPA, or PCI compliance frameworks. NOT for QSBS (use qsbs-compliance). NOT for FERPA or NCAA ECAG (use the legal-compliance agent). NOT for OWASP security (use security-review)."
+description: "Designs HIPAA, COPPA, GDPR, CCPA, and PCI compliance: consent, audit trails, data classification. Use when an app handles health, kids', EU, California, or card data, or needs a BAA/DPA check."
+when_to_use: "NOT for QSBS (use qsbs-compliance), FERPA (use legal-compliance agent), OWASP (use security-review), or policy text (use legal-doc-scaffold)."
 argument-hint: "[regulation-or-project]"
 context: fork
+metadata:
+  verified: 2026-09-23
 ---
 
 # Compliance Architect
 
-Designs production-grade compliance architectures for regulated applications. Covers HIPAA, COPPA, GDPR, CCPA, PCI DSS, and SOC 2 — from data classification through consent management, audit trails, and vendor assessment. Every recommendation targets Cure Consulting Group's Firebase-first stack with Android, iOS, and web clients.
+**Outcome:** a compliance architecture for the named app on Cure's Firebase-first stack (Android, iOS,
+web): which regulations apply and why, field-level data classification, consent and age-gate design,
+audit-trail design, vendor BAA/DPA status, and the tests that prove the controls work. **Done when** every
+regulated field has a classification, every third party that receives regulated data has a BAA/DPA status,
+and each control has a test. A question ("does COPPA apply?") gets an answer, not the full package.
+Match length to the need; no filler sections or restated summaries.
 
-**Hard rules:**
-- Privacy by design — compliance is an architecture concern, not an afterthought
-- Data minimization — never collect what you don't need, never retain what you no longer use
-- Consent must be granular, revocable, and provably recorded
-- PHI, PCI data, and children's data require encryption at rest AND in transit with key separation
-- All compliance controls must be testable and auditable — no "trust me" security
+This is architecture guidance, not legal advice; regulated launches need counsel sign-off because penalty
+exposure is per violation and per user.
+
+Principles Cure applies on every engagement: collect only what a named feature needs; consent is granular,
+revocable, and recorded server-side; PHI, card data, and children's data are encrypted in transit and at
+rest with separated keys; every control has an automated test.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
 - Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
+- Rules and config: !`ls firestore.rules storage.rules database.rules.json firebase.json 2>/dev/null || echo "(no Firebase rules files)"`
 
 ## Automated Compliance Scan
 
-Scan codebase for compliance signals before framework application:
+Search the codebase and report posture before designing:
 
-1. **PII Detection**: Grep for fields likely containing PII:
-   - `email|phone|ssn|social_security|date_of_birth|address|name` in data models
-2. **Consent Tracking**: Grep for consent mechanisms:
-   - `consent|gdpr|opt_in|opt_out|cookie` — flag if absent in user-facing code
-3. **Data Retention**: Grep for deletion/retention logic:
-   - `delete|remove|purge|retain|expire|ttl` in data layer code
-4. **Audit Trail**: Grep for logging of data access:
-   - `audit|log.*access|track.*change` — flag if absent in data layer
-5. **Encryption**: Grep for encryption usage:
-   - `encrypt|decrypt|AES|RSA|bcrypt|argon2|hash` — flag if absent for sensitive data
-
-Report compliance posture before detailed framework analysis.
+1. **PII fields**: `email|phone|ssn|social_security|date_?of_?birth|dob|address|diagnos|medication` in models and schemas.
+2. **Third-party SDKs receiving data**: `firebase/analytics|crashlytics|mixpanel|segment|amplitude|sentry|openai|anthropic|@google/genai` — each is a potential BAA/DPA or COPPA disclosure.
+3. **Consent**: `consent|opt_?in|opt_?out|gpc|Sec-GPC` — absence in user-facing code is a finding.
+4. **Retention/deletion**: `delete|purge|retain|expire|ttl` in the data layer; Firestore TTL policies in `firestore.indexes.json` or console notes.
+5. **Audit logging**: `audit|access_log` in server code; client-side writes to an audit collection are a finding.
 
 ## Step 1: Classify the Regulation
 
-| Regulation | Trigger | Key Requirements | Penalty Range |
-|-----------|---------|-----------------|---------------|
-| HIPAA | Health data (PHI) for US persons | BAA chain, access controls, encryption, audit logs, breach notification within 60 days | Inflation-adjusted yearly: ~\$145 to ~\$2.19M per violation, calendar-year cap ~\$2.19M per identical provision (2025 adjustment — confirm before use) |
-| COPPA | Users under 13 (US) | Verifiable parental consent, separate consent for third-party disclosure, written data-retention policy and information-security program (2025 Rule amendments: effective 2025-06-23, compliance date 2026-04-22), data minimization, deletion on request | ~\$53,088 per violation (FTC 2025 figure, adjusted every January — confirm before use) |
-| GDPR | EU/EEA residents' personal data | Lawful basis, DPO, DPIA, 72-hour breach notification, right to erasure, data portability | Up to 4% of global annual revenue or 20M EUR |
-| CCPA/CPRA | California residents' personal information | Right to know, delete, opt-out of sale, no discrimination, 45-day response window | ~\$2,663 per violation, ~\$7,988 per intentional violation (2025 CPI adjustment — confirm before use) |
-| PCI DSS | Credit card processing/storage | PCI DSS v4.0.1 (current; v4.0 retired 2024-12-31; future-dated requirements mandatory since 2025-03-31): network segmentation, encryption, access control, vulnerability management, quarterly scans | \$5,000–\$100,000/month from payment brands |
-| SOC 2 | B2B SaaS / enterprise customers | Trust Service Criteria (security, availability, confidentiality, processing integrity, privacy) | No direct penalty — loss of enterprise deals |
-| Multi-Regulation | Multiple of above | Union of all applicable requirements; strictest standard wins on conflicts | Compounding risk |
+| Regulation | Applies when | Architecture consequences |
+|---|---|---|
+| HIPAA | Covered entity or business associate handling PHI | BAA chain, access controls, audit logs, encryption, breach notice ≤60 days |
+| COPPA | Service directed to under-13s, or actual knowledge of under-13 users (US) | See the COPPA rule below |
+| GDPR | EU/EEA data subjects | Lawful basis per purpose, DPIA for high-risk processing, 72-hour breach notice to the authority, erasure and portability |
+| CCPA/CPRA | California consumers, business over thresholds | Know/delete/correct, opt-out of sale/share, honor GPC, 45-day response; 2026 regulations below |
+| PCI DSS v4.0.1 | Card data stored, processed, or transmitted | Keep out of scope with hosted fields/tokenization (Stripe Elements/Checkout → SAQ A) |
+| SOC 2 | B2B/enterprise buyers ask for it | Trust Services Criteria evidence; no statutory penalty |
 
-If the project handles **health data for users under 13**, both HIPAA and COPPA apply — COPPA's consent requirements are stricter and take precedence for consent flows.
+Several can apply at once; the union of requirements applies and the stricter rule wins on each control.
+Health data from under-13 users triggers both HIPAA and COPPA; design consent to COPPA.
+
+**COPPA, stated once for the library** (legal-doc-scaffold defers here): COPPA does not ban collecting data
+from children under 13; it requires verifiable parental consent before collection (plus, under the 2025
+amendments, separate consent before disclosing to third parties), a written data-retention policy, and a
+written security program. compliance-architect owns the consent-flow design. The amended rule was
+published 2025-04-22, effective 2025-06-23, with compliance required by 2026-04-22. There is no annual
+re-consent requirement.
+
+**California 2026 regulations** (CPPA, approved 2025-09-23; in effect from 2026-01-01): risk assessments
+for significant-risk processing (existing processing assessed by 2027-12-31; submissions due 2028-04-01);
+ADMT notice/opt-out/access for significant decisions from 2027-01-01; annual cybersecurity audits phased
+in from 2028-04-01 by revenue. If a Cure product uses a model to make significant decisions about
+Californians (lending, housing, employment, education, health care), flag ADMT scope.
+
+### Penalty reference (verified 2026-09-23; re-check before quoting to a client)
+
+| Regime | Current figure | Source |
+|---|---|---|
+| HIPAA CMP | \$145–\$73,011 per violation (Tier 4 min \$73,011); calendar-year cap \$2,190,294 per identical provision; OCR's 2019 enforcement discretion applies lower caps to Tiers 1–3 | HHS 2026 adjustment, 91 FR (2026-01-28) |
+| COPPA (FTC Act §5(m)) | \$53,088 per violation; FTC made no 2026 adjustment (OMB M-26-11 cancelled 2026 inflation adjustments) | FTC 2025 adjustment; Federal Register 2026-07-07 notice |
+| CCPA/CPRA | \$2,663 per violation; \$7,988 intentional or involving minors under 16; next CPI adjustment January 2027 | CPPA announcement 2024-12-17 |
+| GDPR | Up to €20M or 4% of worldwide annual turnover, whichever is higher | Art. 83(5) |
+| PCI DSS | Contractual fines set by card brands/acquirers — not public; confirm with the acquirer | — |
+
+PCI DSS v4.0 was retired 2024-12-31; v4.0.1's future-dated requirements became mandatory 2025-03-31
+(e.g. 6.4.3 payment-page script inventory and 11.6.1 change detection — relevant even for SAQ A pages
+that embed hosted fields).
 
 ## Step 2: Gather Context
 
-Before generating compliance architecture, confirm:
+Confirm: data types (PII, PHI, card, behavioral, location, children's); user ages and geographies (US
+states, EU, California); data flow (collection point → storage → processors, including LLM APIs); third
+parties and what each receives; existing auth, encryption, and logging; greenfield vs retrofit.
 
-1. **Data types collected** — PII (name, email, phone), PHI (diagnoses, medications, vitals), financial (card numbers, bank accounts), behavioral (usage patterns, location), children's data?
-2. **User demographics** — age ranges, geographic distribution (US, EU, California specifically), known vulnerable populations?
-3. **Data flow** — where is data collected (mobile, web, API), where is it stored (Firestore, Cloud SQL, local device), where does it transit (Cloud Functions, third-party APIs)?
-4. **Third-party services** — analytics providers, payment processors, LLM APIs, email services, crash reporting — do they receive regulated data?
-5. **Existing controls** — current auth mechanism, encryption state, logging, access controls?
-6. **Business requirements** — do you need to process payments directly (PCI scope), store health records (HIPAA scope), serve children (COPPA scope)?
-7. **Timeline** — greenfield (design from scratch) or retrofitting compliance onto existing system?
+## Step 3: Data Classification
 
-## Step 3: Data Classification Matrix
-
-Every field in your system must be classified. No exceptions.
-
-### Classification Levels
-
-```
-┌────────────┬────────────────────────────────────────────────────────────────┐
-│ Level      │ Description                                                    │
-├────────────┼────────────────────────────────────────────────────────────────┤
-│ PUBLIC     │ Intended for public access. No controls required.              │
-│            │ Examples: app name, public profile display names, marketing    │
-│            │ content, published blog posts                                  │
-├────────────┼────────────────────────────────────────────────────────────────┤
-│ INTERNAL   │ Not public but low sensitivity. Standard access controls.      │
-│            │ Examples: internal user IDs, non-PII analytics events,         │
-│            │ feature flag states, app configuration                         │
-├────────────┼────────────────────────────────────────────────────────────────┤
-│ CONFIDENTIAL│ PII and business-sensitive data. Encrypted, access-logged.    │
-│            │ Examples: email, phone number, mailing address, date of birth, │
-│            │ usage history, IP addresses, device identifiers                │
-├────────────┼────────────────────────────────────────────────────────────────┤
-│ RESTRICTED │ Highest sensitivity. Encrypted, access-logged, key-separated.  │
-│            │ Examples: PHI (diagnoses, medications, vitals), PCI data       │
-│            │ (card numbers, CVV — never store CVV), SSN, children's PII,   │
-│            │ biometric data, passwords/secrets, authentication tokens       │
-└────────────┴────────────────────────────────────────────────────────────────┘
-```
-
-### Classification Actions by Level
-
-```
-┌──────────────────────┬────────┬──────────┬──────────────┬────────────┐
-│ Control              │ PUBLIC │ INTERNAL │ CONFIDENTIAL │ RESTRICTED │
-├──────────────────────┼────────┼──────────┼──────────────┼────────────┤
-│ Encryption at rest   │ No     │ Default  │ Required     │ Required + │
-│                      │        │          │              │ key sep.   │
-│ Encryption in transit│ TLS    │ TLS      │ TLS 1.2+    │ TLS 1.3    │
-│ Access logging       │ No     │ No       │ Yes          │ Yes + alert│
-│ Retention policy     │ None   │ 1 year   │ Per reg.     │ Per reg.   │
-│ Backup encryption    │ No     │ Default  │ Required     │ Required   │
-│ Access control       │ None   │ Role     │ Role + MFA   │ Role + MFA │
-│                      │        │          │              │ + approval │
-│ Data masking in logs │ No     │ No       │ Yes          │ Yes        │
-│ Right to erasure     │ N/A    │ N/A      │ Required     │ Required   │
-│ Cross-border transfer│ Free   │ Free     │ Restricted   │ Restricted │
-│ Breach notification  │ N/A    │ Internal │ Regulatory   │ Regulatory │
-│                      │        │          │              │ + users    │
-└──────────────────────┴────────┴──────────┴──────────────┴────────────┘
-```
-
-### Field-Level Classification Template
-
-```
-Collection: users
-┌─────────────────────┬──────────────┬─────────────┬───────────────────┐
-│ Field               │ Classification│ Regulation  │ Retention         │
-├─────────────────────┼──────────────┼─────────────┼───────────────────┤
-│ uid                 │ INTERNAL     │ —           │ Account lifetime  │
-│ email               │ CONFIDENTIAL │ GDPR/CCPA   │ Account + 30 days│
-│ displayName         │ CONFIDENTIAL │ GDPR/CCPA   │ Account + 30 days│
-│ dateOfBirth         │ CONFIDENTIAL │ COPPA/GDPR  │ Account + 30 days│
-│ healthRecords       │ RESTRICTED   │ HIPAA       │ State law*       │
-│ paymentMethodToken  │ RESTRICTED   │ PCI DSS     │ Active sub only  │
-│ parentConsentRecord │ RESTRICTED   │ COPPA       │ Account + 3 years│
-└─────────────────────┴──────────────┴─────────────┴───────────────────┘
-```
-
-\* HIPAA does not set a medical-record retention period (its 6-year rule covers compliance documentation); state law does — commonly 6–10 years for adults and longer for minors. Confirm per state before use.
-
-## Step 4: Consent Management Architecture
-
-### Consent Record Schema (Firestore)
-
-```
-Collection: consent_records
-Document ID: {userId}_{consentType}_{timestamp}
-
-{
-  userId: string,              // Firebase Auth UID
-  consentType: string,         // "marketing", "analytics", "data_processing", "parental"
-  granted: boolean,            // true = opted in, false = opted out / withdrawn
-  version: string,             // "privacy-policy-v2.1" — ties to specific policy text
-  method: string,              // "in_app_toggle", "signup_checkbox", "parental_email_verification"
-  ipAddress: string,           // captured at time of consent (encrypted)
-  userAgent: string,           // browser/device info at time of consent
-  timestamp: Timestamp,        // server timestamp — never client-provided
-  expiresAt: Timestamp | null, // null = until withdrawn (COPPA has no annual re-consent rule)
-  parentEmail: string | null,  // COPPA: parent/guardian email for verification
-  withdrawnAt: Timestamp | null
-}
-```
-
-**Immutability rule:** consent records are append-only. Never update or delete a consent record. Withdrawal creates a new record with `granted: false`.
-
-### Opt-In Flow Requirements
-
-```
-GDPR:
-  - Consent must be freely given, specific, informed, and unambiguous
-  - Pre-checked boxes are NOT valid consent
-  - Separate consent for each processing purpose (marketing, analytics, etc.)
-  - Clear explanation of what data is collected and why
-  - Link to full privacy policy before consent action
-
-COPPA (users under 13):
-  - Verifiable parental consent BEFORE collecting any data
-  - Methods: signed consent form, credit card verification, video call,
-    government ID check, knowledge-based authentication
-  - Separate verifiable consent before disclosing a child's data to third parties
-    (2025 amendments; compliance date 2026-04-22), unless integral to the service
-  - Written children's data-retention policy (keep only as long as reasonably
-    necessary; no indefinite retention) and a written information-security program
-  - Parent can review, delete, and refuse further collection at any time
-
-CCPA/CPRA:
-  - "Do Not Sell or Share My Personal Information" link on homepage
-  - Opt-out must be as easy as opt-in (no dark patterns)
-  - Financial incentive programs require separate opt-in
-  - Global Privacy Control (GPC) browser signal must be honored
-
-HIPAA:
-  - Authorization form for uses beyond treatment/payment/operations
-  - Must specify: what PHI, who receives it, purpose, expiration
-  - Patient can revoke authorization at any time
-```
-
-### Age Gate Implementation
-
-```
-COPPA age gate flow:
-  1. Ask date of birth during onboarding (DO NOT store if under 13 and no consent)
-  2. If age < 13:
-     a. Block account creation
-     b. Collect parent/guardian email only
-     c. Send verifiable parental consent request
-     d. Wait for consent verification (24-72 hour window)
-     e. If consent received → create restricted child account
-     f. If no consent → delete parent email, show rejection screen
-  3. If age >= 13 but < 18:
-     a. Create account with age-appropriate content restrictions
-     b. No behavioral advertising, no data sale
-  4. If age >= 18:
-     a. Standard consent flow
-
-Platform implementation:
-  Android: age gate screen before any data collection; store consent state
-           in EncryptedSharedPreferences
-  iOS:     age gate screen before any data collection; store consent state
-           in Keychain
-  Web:     age gate modal before any cookies/tracking; respect GPC signal
-```
-
-## Step 5: Audit Trail Implementation
-
-### Immutable Audit Log Schema
-
-```
-Collection: audit_logs
-Document ID: auto-generated
-
-{
-  eventId: string,          // UUID v4
-  timestamp: Timestamp,     // server timestamp
-  actorId: string,          // Firebase Auth UID or "system"
-  actorRole: string,        // "user", "admin", "system", "support"
-  action: string,           // "read", "create", "update", "delete", "export", "consent_granted"
-  resource: string,         // "users/{uid}", "health_records/{id}"
-  resourceClassification: string, // "CONFIDENTIAL", "RESTRICTED"
-  fieldsAccessed: string[], // ["email", "dateOfBirth"] — for read events
-  fieldsModified: string[], // ["email"] — for update events, with before/after hashes
-  ipAddress: string,        // encrypted
-  userAgent: string,
-  result: string,           // "success", "denied", "error"
-  reason: string | null,    // required for RESTRICTED data access: "patient_requested_export"
-  metadata: object          // additional context as needed
-}
-```
-
-### Access Tracking Rules
-
-```
-Log EVERY access to CONFIDENTIAL and RESTRICTED data:
-  - User views their own profile → log (HIPAA requires it)
-  - Admin views user record → log with reason
-  - System process reads PHI → log with process identifier
-  - Export or download → log with destination
-  - Failed access attempt → log with denial reason
-
-Retention:
-  - HIPAA: required documentation (policies, procedures, risk analyses, and the
-    activity/audit-review records they call for) — 6 years from creation or last
-    effective date (45 CFR 164.316(b)(2)); keep audit logs on the same clock
-  - GDPR audit logs: duration of processing + 1 year
-  - PCI DSS 4.0.1 (Req. 10.5.1): at least 12 months, most recent 3 months immediately available
-  - SOC 2 audit logs: 1 year minimum
-
-Storage:
-  - Primary: Firestore collection with security rules preventing deletion
-  - Archive: Cloud Storage (coldline) for logs older than 90 days
-  - Never store audit logs in the same database as the data they protect
-```
-
-### Data Lineage Tracking
-
-```
-For RESTRICTED data, track:
-  1. Origin: where was this data first collected (signup form, API import, manual entry)?
-  2. Transformations: was it anonymized, aggregated, derived?
-  3. Copies: where does this data exist (Firestore, Cloud SQL, analytics, backups)?
-  4. Sharing: was it sent to third parties (analytics, LLM APIs, support tools)?
-  5. Retention: when is it scheduled for deletion?
-
-Implement as a data_lineage subcollection on RESTRICTED documents:
-  {
-    origin: { source: "signup_form", timestamp: Timestamp, consentId: string },
-    copies: [{ location: "bigquery.analytics.users", syncedAt: Timestamp }],
-    shares: [{ recipient: "stripe", purpose: "payment_processing", dpaId: string }],
-    scheduledDeletion: Timestamp
-  }
-```
-
-## Step 6: Platform-Specific Compliance Patterns
-
-See [reference/details.md](reference/details.md) (section “Step 6: Platform-Specific Compliance Patterns”) for full detail.
-
-## Step 7: BAA/DPA Requirements and Vendor Assessment
-
-### Business Associate Agreement (HIPAA)
-
-Required BAA chain for HIPAA (vendor terms change — re-verify at engagement start):
-
-| Vendor | BAA | Notes |
+| Level | Examples | Controls |
 |---|---|---|
-| Google Cloud / Firebase | Available | Covers only products on Google's HIPAA Covered Products list (e.g. Firestore, Cloud Storage for Firebase); Firebase Analytics, Crashlytics, etc. are NOT covered |
-| Google Analytics / GA4 | **Not offered** | Google offers no BAA for GA — never send PHI to GA4 |
-| Stripe | Not offered | Relies on HIPAA's payment-processing exemption — keep PHI out of descriptors, metadata, invoices |
-| Twilio (SMS/Voice) | Available | Security or Enterprise Edition only |
-| SendGrid | **Not offered** | Not a HIPAA-eligible service — use a BAA-covered email provider for PHI |
-| Vercel | Available | Pro add-on or Enterprise |
-| OpenAI / Sentry / Mixpanel | Plan-dependent | Confirm before use |
+| Public | app name, published content | none |
+| Internal | internal IDs, non-PII events, flag states | role-based access |
+| Confidential | email, phone, address, DOB, IP, device IDs, usage history | encrypted at rest (Firestore default), access-logged, masked in logs, erasable, transfer-restricted |
+| Restricted | PHI, card data (never store CVV), SSN, children's PII, biometrics, secrets | above + application-level encryption with a separate key (Cloud KMS), MFA + approval for human access, alert on access, regulatory breach notice |
+
+Deliver a field-level table per collection:
+
+| Collection.field | Level | Regulation | Retention |
+|---|---|---|---|
+| users.email | Confidential | GDPR/CCPA | account lifetime + 30 days |
+| users.dateOfBirth | Confidential | COPPA/GDPR | account lifetime + 30 days |
+| health_records.* | Restricted | HIPAA | state law* |
+| users.paymentMethodToken | Restricted | PCI (token only) | active subscription |
+| consent_records.* | Restricted | COPPA/GDPR | per the written retention policy; long enough to prove consent |
+
+\* HIPAA does not set a medical-record retention period (its 6-year rule in 45 CFR 164.316(b)(2) covers
+compliance documentation); state law does — commonly 6–10 years for adults, longer for minors. Confirm
+per state before use.
+
+## Step 4: Consent and Age Gate
+
+**Consent record** (`consent_records`, written only by a Cloud Function with a server timestamp; clients
+never write it directly): `userId`, `consentType` (marketing, analytics, data_processing, parental,
+third_party_disclosure), `granted`, `policyVersion`, `method`, `timestamp`, `parentContact` (COPPA),
+`ipHash`, `userAgent`. Append-only: withdrawal is a new record with `granted: false`.
+
+Regime-specific rules the flow must meet:
+
+- **GDPR**: separate consent per purpose; no pre-ticked boxes; withdrawal as easy as giving; consent is
+  only one lawful basis — use contract or legitimate interest where they fit instead of forcing consent.
+- **COPPA**: verifiable parental consent before any collection beyond the narrow exceptions (e.g. the
+  parent's contact to request consent); FTC-recognized methods include signed form, payment-card
+  transaction, video call, government ID check, knowledge-based questions, and face match to ID; separate
+  consent for third-party disclosure unless integral to the service; parent can review, delete, and refuse
+  further collection; no behavioral advertising or analytics identifiers for child accounts without
+  consent.
+- **CCPA/CPRA**: "Do Not Sell or Share" (or an alternative opt-out link), honor the GPC signal as an
+  opt-out, opt-in required before selling/sharing data of consumers under 16.
+- **HIPAA**: authorization for uses beyond treatment, payment, and operations, naming the PHI, recipient,
+  purpose, and expiry; revocable.
+
+**Age gate:** neutral date-of-birth prompt (no default age, no hint that 13 is the cut-off). Under 13:
+collect only the parent's contact, send the consent request, and delete the contact if consent does not
+arrive within the stated window; on consent, create a child account with analytics and ad identifiers off
+(`setAnalyticsCollectionEnabled(false)`, Crashlytics collection off unless covered by consent). 13–15:
+no sale/share without opt-in (CCPA). Store the age-gate result server-side; on device use Keystore- or
+Keychain-backed storage (not the deprecated EncryptedSharedPreferences).
+
+## Step 5: Audit Trail
+
+**Event schema:** `eventId`, server `timestamp`, `actorId`, `actorRole`, `action` (read, create, update,
+delete, export, consent_granted, consent_withdrawn), `resource`, `classification`, `fieldsAccessed`,
+`fieldsModified` (hashes, not values), `result` (success/denied/error), `reason` (required for
+Restricted access), `ipHash`.
+
+**What to log:** every read and write of Restricted data (including the user viewing their own PHI),
+admin access to Confidential data with a reason, system processes touching PHI, exports, and denied
+attempts.
+
+**Where to store it** — the system of record must be outside the reach of the people and code that
+administer the protected data: write events server-side to Cloud Logging (a dedicated log bucket with
+locked retention) routed to BigQuery for queries, or to a Cloud Storage bucket with Bucket Lock, ideally in
+a separate project. A Firestore `audit_logs` collection is acceptable only as a convenience copy, with
+`allow create, update, delete: if false` so clients cannot forge or erase entries (Admin SDK writes bypass
+rules).
+
+**Retention:** HIPAA documentation and the audit-review records it calls for — 6 years (45 CFR
+164.316(b)(2)); PCI DSS 4.0.1 Req. 10.5.1 — 12 months, last 3 immediately available; GDPR — as long as
+needed to demonstrate compliance, stated in the record of processing; SOC 2 — per the auditor's period
+(typically 12 months).
+
+**Lineage for Restricted data:** record origin (source, consentId), copies (BigQuery, backups), shares
+(recipient, purpose, BAA/DPA id), and scheduled deletion.
+
+## Step 6: Platform Patterns
+
+Read [reference/details.md](reference/details.md) when writing client-side storage code (Android Keystore
++ Tink, iOS Keychain), Firestore rules for PHI/consent/audit collections, or the role-claim Cloud Function.
+
+## Step 7: BAA, DPA, and Vendors
+
+HIPAA BAA chain (vendor terms change — re-verify at engagement start; Google list checked 2026-09-23 at
+cloud.google.com/security/compliance/hipaa):
+
+| Vendor / product | BAA | Notes |
+|---|---|---|
+| Google Cloud: Firestore, Cloud Storage, Cloud Functions, Cloud Run, Identity Platform, Cloud KMS, BigQuery, Cloud Logging | Available under the Google Cloud BAA | Only products on Google's HIPAA covered-products list |
+| Firebase Authentication, Hosting, App Hosting, Realtime Database, Cloud Messaging, Crashlytics, Analytics | Not covered | Keep PHI out; use Identity Platform instead of Firebase Auth for PHI apps. Vertex AI / Gemini coverage — confirm before use |
+| Google Analytics / GA4 | Not offered | Never send PHI (including PHI-revealing page paths or event names) |
+| Stripe | Not offered | Relies on HIPAA's payment-processing exemption; keep PHI out of descriptors, metadata, invoices |
+| Twilio | Available on eligible editions | Confirm before use |
+| SendGrid | Not HIPAA-eligible | Use a BAA-covered email provider for PHI |
+| Vercel | Available (Pro add-on / Enterprise) | Confirm before use |
+| OpenAI, Anthropic, Sentry, Mixpanel | Plan-dependent | Confirm before use; strip PHI before any LLM call without a BAA |
+
+GDPR DPA (Art. 28) must cover: subject matter, duration, purpose, data categories, data subjects,
+sub-processor approval and list, transfer mechanism (SCCs, adequacy, or EU-US Data Privacy Framework
+certification), assistance with data-subject rights and breaches, deletion/return at termination, audit
+rights.
+
+Vendor scorecard (score each 0–10; ≥90 approve, 70–89 approve with conditions, <70 reject): current SOC 2
+Type II; encryption at rest; TLS config; RBAC + MFA + audit logging; BAA/DPA signed; breach-notice SLA;
+data residency; published IR process; sub-processor list and change notice; deletion API.
+
+## Step 8: Tests and Erasure
+
+Controls ship with tests in CI:
+
+- Rules (Firebase emulator, `@firebase/rules-unit-testing`): a non-owner cannot read `health_records`;
+  nobody can update or delete `consent_records` or `audit_logs` from a client.
+- Data flow: no Restricted fields in analytics events or logs (pattern scan of emitted events); no PII
+  in child-account analytics; LLM calls strip Restricted fields when the provider has no BAA.
+- Consent: processing is gated on a consent record; withdrawal stops processing (target ≤24 h); the age
+  gate blocks under-13 collection without consent.
+- Retention: scheduled deletions run; backups age out per policy.
+
+**Erasure (GDPR Art. 17 / CCPA delete):** verify identity (re-auth), then complete deletion without undue
+delay and within one month under GDPR (extendable by two months for complex requests, with notice) and 45
+days under CCPA. Do not add a grace period that consumes the deadline; an optional short undo window
+must end well inside it. Delete Firestore/Cloud SQL records, Storage files, the Firebase Auth/Identity
+Platform account, analytics user data (GA4 user deletion API), and third-party copies (Stripe customer,
+email lists); keep a PII-free deletion record; confirm to the user.
+
+## Code/Artifact Generation
+
+Applies only when Step 1 classifies the request as designing or retrofitting a system. Produce the
+classification table, consent and audit schemas, Firestore rules, vendor table, and test list for the
+regulations in scope. For a question or a review, answer or report findings; don't generate the package.
+
+## Compliance Report
 
 ```
-BAA checklist:
-  - [ ] BAA signed with every vendor that touches PHI
-  - [ ] BAA specifies permitted uses and disclosures
-  - [ ] BAA requires breach notification within contractual timeframe
-  - [ ] BAA requires vendor to implement safeguards
-  - [ ] BAA inventory maintained and reviewed annually
-  - [ ] No PHI sent to vendors without BAA (including LLM APIs)
+COMPLIANCE ARCHITECTURE — [app] — [date]
+Regulations in scope: [regime — why it applies]
+Classification: Public [n] · Internal [n] · Confidential [n] · Restricted [n]
+Gaps: | # | Regime | Control | Finding | Severity | Fix |
+Vendors: | Vendor | Data received | BAA/DPA | Action |
+Open questions for counsel: [..]
 ```
 
-### Data Processing Agreement (GDPR)
-
-```
-Required DPA elements:
-  - [ ] Processing purposes clearly defined
-  - [ ] Categories of personal data specified
-  - [ ] Data subjects identified (users, employees, etc.)
-  - [ ] Sub-processor list provided and updated
-  - [ ] Data transfer mechanisms for non-EU transfers (SCCs, adequacy decision)
-  - [ ] Data deletion/return obligations on contract termination
-  - [ ] Audit rights for the data controller
-  - [ ] Breach notification obligations (without undue delay)
-```
-
-### Vendor Compliance Assessment Scorecard
-
-```
-For each vendor processing regulated data, score:
-
-┌──────────────────────────┬────────────────────────────────────┬───────┐
-│ Criterion                │ Evidence Required                  │ Score │
-├──────────────────────────┼────────────────────────────────────┼───────┤
-│ SOC 2 Type II report     │ Current report (within 12 months)  │ /10   │
-│ Encryption at rest       │ Documentation of encryption method │ /10   │
-│ Encryption in transit    │ TLS version and configuration      │ /10   │
-│ Access controls          │ RBAC, MFA, audit logging           │ /10   │
-│ BAA/DPA availability     │ Signed agreement                   │ /10   │
-│ Breach notification SLA  │ Contractual commitment             │ /10   │
-│ Data residency options   │ Region selection available          │ /10   │
-│ Incident response plan   │ Published IR process               │ /10   │
-│ Sub-processor management │ List available, notification of changes │ /10   │
-│ Data deletion capability │ API or process for data removal    │ /10   │
-├──────────────────────────┼────────────────────────────────────┼───────┤
-│ TOTAL                    │                                    │ /100  │
-└──────────────────────────┴────────────────────────────────────┴───────┘
-
-Scoring:  90-100 = Approved  |  70-89 = Approved with conditions  |  <70 = Rejected
-```
-
-## Step 8: Compliance Testing and Verification
-
-### Automated Compliance Tests
-
-```
-Test categories (run in CI):
-
-1. Data classification enforcement:
-   - Verify no RESTRICTED fields in analytics events
-   - Verify no PII in log output (scan for email/phone/SSN patterns)
-   - Verify encryption is applied to CONFIDENTIAL/RESTRICTED fields
-
-2. Consent verification:
-   - Verify data processing is gated on consent records
-   - Verify age gate blocks under-13 users without parental consent
-   - Verify consent withdrawal stops data processing within 24 hours
-
-3. Access control:
-   - Verify Firestore security rules deny unauthorized access
-   - Verify API endpoints require authentication
-   - Verify role-based access restrictions (use Firebase Emulator)
-
-4. Audit trail:
-   - Verify audit logs are created for CONFIDENTIAL/RESTRICTED data access
-   - Verify audit logs cannot be modified or deleted via client
-   - Verify audit log retention meets regulatory requirements
-
-5. Data retention:
-   - Verify scheduled deletion jobs run and complete
-   - Verify right-to-erasure requests are fulfilled within SLA
-   - Verify backups containing deleted data are purged per policy
-
-6. Third-party data flow:
-   - Verify no PHI sent to vendors without BAA
-   - Verify analytics events contain no PII for child accounts
-   - Verify LLM API calls strip RESTRICTED data before sending
-```
-
-### Compliance Verification Scripts
-
-```typescript
-// Firebase Emulator test: verify security rules block unauthorized PHI access
-describe('Health Records Security Rules', () => {
-  it('denies read access to non-patient, non-provider users', async () => {
-    const db = testEnv.authenticatedContext('random-user').firestore();
-    const docRef = db.collection('health_records').doc('record-1');
-    await assertFails(docRef.get());
-  });
-
-  it('allows patient to read their own records', async () => {
-    const db = testEnv.authenticatedContext('patient-uid').firestore();
-    const docRef = db.collection('health_records').doc('record-1');
-    await assertSucceeds(docRef.get());
-  });
-
-  it('prevents deletion of audit logs', async () => {
-    const db = testEnv.authenticatedContext('admin-uid', { role: 'admin' }).firestore();
-    const docRef = db.collection('audit_logs').doc('log-1');
-    await assertFails(docRef.delete());
-  });
-
-  it('prevents update of consent records', async () => {
-    const db = testEnv.authenticatedContext('user-uid').firestore();
-    const docRef = db.collection('consent_records').doc('consent-1');
-    await assertFails(docRef.update({ granted: false }));
-  });
-});
-```
-
-### Right to Erasure Verification
-
-```
-GDPR/CCPA deletion request workflow:
-  1. User submits deletion request (in-app or email)
-  2. Verify identity (re-authentication required)
-  3. Create deletion job record with 30-day grace period (GDPR allows up to 30 days)
-  4. After grace period:
-     a. Delete user profile from Firestore
-     b. Delete user data from Cloud SQL
-     c. Delete uploaded files from Cloud Storage
-     d. Remove from analytics (anonymize historical data)
-     e. Remove from third-party systems (Stripe customer, email lists)
-     f. Delete Firebase Auth account
-     g. Create audit log of deletion (retain: deletion record only, no PII)
-  5. Confirm deletion to user via email (last communication)
-  6. Verify deletion in next compliance audit
-```
-
-## Compliance Report Output
-
-```
-COMPLIANCE ARCHITECTURE REPORT
-Application: [NAME]
-Date: [TODAY]
-Architect: [NAME]
-
-REGULATION COVERAGE
-┌────────────────────┬──────────┬────────────────────────────────────┐
-│ Regulation         │ Status   │ Notes                              │
-├────────────────────┼──────────┼────────────────────────────────────┤
-│ HIPAA              │ [Y/N/NA] │ [BAA status, PHI handling]         │
-│ COPPA              │ [Y/N/NA] │ [Age gate, parental consent]       │
-│ GDPR               │ [Y/N/NA] │ [DPA status, lawful basis]         │
-│ CCPA/CPRA          │ [Y/N/NA] │ [Opt-out mechanism, GPC support]   │
-│ PCI DSS            │ [Y/N/NA] │ [Scope reduction via tokenization] │
-│ SOC 2              │ [Y/N/NA] │ [Trust criteria coverage]          │
-└────────────────────┴──────────┴────────────────────────────────────┘
-
-DATA CLASSIFICATION SUMMARY
-  Public fields:       [count]
-  Internal fields:     [count]
-  Confidential fields: [count]
-  Restricted fields:   [count]
-
-DELIVERABLES GENERATED:
-  - [ ] Data classification matrix (all collections/tables)
-  - [ ] Consent management architecture (schema, flows, age gate)
-  - [ ] Audit trail implementation (schema, retention, access rules)
-  - [ ] Platform-specific encryption patterns (Android, iOS, Firestore)
-  - [ ] BAA/DPA inventory with vendor assessment scores
-  - [ ] Compliance test suite (security rules, consent, retention)
-  - [ ] Right-to-erasure workflow and verification
-  - [ ] Firestore security rules for regulated data
-
-CROSS-REFERENCES:
-  - /security-review — for OWASP checklist and penetration testing
-  - /legal-doc-scaffold — for privacy policy and terms of service generation
-  - /firebase-architect — for Firestore schema and security rules design
-  - /test-accounts — for compliance-safe test data management
-```
+Related: the `security-review` skill (OWASP code review), `legal-doc-scaffold` (privacy policy text),
+`firebase-architect` (schema and rules), `test-accounts` (compliance-safe test data).

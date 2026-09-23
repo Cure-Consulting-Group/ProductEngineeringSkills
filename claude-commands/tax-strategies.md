@@ -1,8 +1,10 @@
 # Tax Strategy & Planning
 
 Where `deductions-and-credits` claims what already happened, this skill changes
-what happens. Planning means arranging facts *before* they occur so a better
-Code provision applies.
+what happens: arranging facts *before* they occur so a better Code provision
+applies. **Done when** each surviving strategy is quantified against a baseline,
+has passed the doctrine gate, and sits on a dated action list; hand ranking and
+presentation to `tax-recommendations`.
 
 ## Disclaimer
 This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`).
@@ -20,14 +22,17 @@ This skill produces draft analysis and workpapers, not tax, legal, or accounting
 If a proposed "strategy" is none of these, it is probably either an ordinary
 deduction (use the other skill) or not real.
 
-## Non-negotiable gate
+## Doctrine gate (invariant)
 
-**No strategy is recommended until it passes all five doctrines** in
-`reference/anti-abuse-doctrines.md`:
+**No strategy is recommended until it passes all five doctrines** — a strategy
+that fails one converts tax savings into penalties plus interest. Read
+`reference/anti-abuse-doctrines.md` when a candidate involves related parties,
+circular cash, or a transaction with little pre-tax profit.
 
 1. **Economic substance** (§7701(o)) — meaningful non-tax change in economic
-   position *and* a substantial non-tax purpose. Codified, **strict-liability
-   40% penalty** if it fails. No opinion letter saves it.
+   position *and* a substantial non-tax purpose. Failure draws a
+   **strict-liability** §6662(b)(6) penalty: 20% if disclosed, 40% if not, with
+   no reasonable-cause defense and no opinion letter that saves it.
 2. **Business purpose** — a real reason besides taxes.
 3. **Substance over form** — what happened, not what was papered.
 4. **Step transaction** — the pieces get collapsed into the end result.
@@ -37,9 +42,6 @@ deduction (use the other skill) or not real.
 Plus the arm's-length requirement of §482 for anything between related entities —
 in play the moment one entity in a group performs services for another.
 
-A strategy that saves tax and fails a doctrine is not a strategy; it is a penalty
-with a delay.
-
 ## Workflow
 
 1. **Model the baseline.** Compute current-year tax as-is before proposing
@@ -48,7 +50,8 @@ with a delay.
 2. **Identify the binding constraint** — what is actually driving the tax? SE
    tax? A rate cliff? A phase-out? Double taxation? AMT? Strategies that don't
    touch the binding constraint produce noise.
-3. **Screen the playbook** (`reference/strategy-playbook.md`) against the facts.
+3. **Screen the playbook** (`reference/strategy-playbook.md`, read in full at
+   this step) against the facts.
 4. **Quantify each candidate**: federal + state + SE/payroll + NIIT delta, net of
    implementation cost, over the **full multi-year horizon** — many strategies
    borrow from a later year rather than creating savings.
@@ -61,28 +64,26 @@ with a delay.
    a menu.
 8. **Hand to `tax-recommendations`** for ranking and presentation.
 
-## Deadline discipline — the failure mode that matters most
+## Deadline discipline
 
-The most common way a real strategy is lost is a missed election, not a bad idea.
-These are unforgiving:
+A real strategy is lost to a missed election far more often than to a bad idea:
 
 | Election | Deadline | Consequence of missing |
 |---|---|---|
 | **§83(b)** | **30 days from transfer**, no extensions | Ordinary income on every vesting tranche at then-FMV; QSBS clock delayed. Form 15620 may be used. |
 | **S corporation election (Form 2553)** | 2 months 15 days into the year | Taxed as C-corp for the year (late relief under Rev. Proc. 2013-30 may apply) |
 | **§41(h) payroll offset** | On the **timely filed original return** | Credit becomes a carryforward instead of cash |
-| **Retirement plan adoption** | 401(k): may be adopted after year end, by the employer's return due date, for employer contributions (SECURE Act §201); a sole proprietor/single-member LLC in the plan's **first year** may also make employee deferrals up to the return due date (SECURE 2.0 §317 — confirm whether extensions count). Otherwise, deferrals need a plan in place by year end. SEP by the return due date incl. extensions | Deduction lost for the year |
-| **NY PTET election** | **March 15** of the tax year | Entire SALT workaround unavailable for that year |
+| **Retirement plan adoption** | 401(k): may be adopted after year end, by the employer's return due date, for employer contributions (SECURE Act §201). A sole proprietor/single-member LLC in the plan's **first year** may also make employee deferrals up to the return due date **without extensions** (SECURE 2.0 §317; verified 2026-09-23, Senate HELP section-by-section). Otherwise deferral elections need a plan in place by year end. SEP: return due date incl. extensions | Deduction lost for the year |
+| **NY PTET election** | **March 15** of the tax year | SALT workaround unavailable that year. Several states drafted PTETs around the pre-OBBBA SALT-cap sunset — confirm the state's PTET is in force for the year before use |
 | **§1045 QSBS rollover** | 60 days from sale | Gain fully recognized |
 | **§1031 exchange** | 45-day ID / 180-day close | Full gain recognition |
 | **Form 8850 (WOTC)** | 28 days from hire | Credit lost. §51 lapsed for hires after 2025-12-31 — confirm reauthorization before use (unverified as of 2026-09-23) |
 | **§475(f) mark-to-market** | Due date of the *prior* year's return | Wait a full year |
 
-`reference/strategy-playbook.md` carries the deadline for every strategy listed.
-
 ## Output shape
 
-For each recommended strategy:
+For each recommended strategy (match length to the need; no filler sections or
+restated summaries):
 
 - **Name and IRC basis** — with confidence per `irc-lookup`
 - **Mechanism** — which of the five levers, and how it works in two sentences
@@ -98,20 +99,18 @@ _Draft for professional review — not tax advice. A licensed CPA, EA, or tax at
 
 ## Framing rule
 
-Do not use the word "loophole" in a work product. Every position here is either
-supported by authority or it is not taken. Use "strategy," "election,"
-"structure," or "planning opportunity," and state the authority tier plainly. If
-a client-facing document would embarrass the taxpayer at audit, rewrite it.
+No "loophole" in a work product: client documents are read at audit, so every
+position is described as a strategy, election, or structure with its authority
+tier stated plainly.
 
 ## Reference files
 
-- `reference/strategy-playbook.md` — the catalog: ~40 strategies with mechanism,
-  requirements, quantification, deadline, and risk rating.
-- `reference/anti-abuse-doctrines.md` — the five doctrines, the §7701(o) test,
-  reportable transactions, and the kill list of strategies that do not work.
-- `reference/entity-playbook.md` — how to build the per-entity playbook for a
-  specific group: the questions to answer per entity type, hub-and-spoke and
-  spinout sequencing, and QSBS placement.
+- `reference/strategy-playbook.md` — read at workflow step 3; ~40 strategies
+  with mechanism, requirements, quantification, deadline, and risk rating.
+- `reference/anti-abuse-doctrines.md` — read at step 5; the five doctrines, the
+  §7701(o) test, reportable transactions, and the kill list.
+- `reference/entity-playbook.md` — read when planning for a multi-entity group:
+  per-entity questions, hub-and-spoke and spinout sequencing, QSBS placement.
 
 ## Related skills
 

@@ -1,492 +1,172 @@
 # Edge Computing
 
-Edge architecture framework for low-latency, globally distributed applications. Use when optimizing TTFB, implementing edge middleware, designing caching strategies, or distributing compute closer to users. Covers Vercel Edge Functions, Cloudflare Workers, Next.js middleware, and Firebase Hosting.
+Caching and request-time logic in front of Cure's origins (Next.js on Vercel or Firebase App
+Hosting, Firebase Hosting + Cloud Run/Functions). **Done when** each route has a caching decision
+(static / ISR / stale-while-revalidate / no-store) with a named invalidation path, request-time logic
+lives in `proxy.ts` only where it must run before render, and TTFB and cache-hit targets are stated.
+Deliver the requested pieces; don't refactor unrelated routes.
+
+When the Vercel plugin skills are installed, defer to them for platform detail: routing-middleware
+for Routing Middleware, cdn-caching for cache debugging, vercel-firewall for WAF and rate-limit rules.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Next.js version: !`(grep -E '"next"|"@vercel/functions"|"@upstash/' package.json 2>/dev/null || echo "(no Next.js)") | head -5`
+- Proxy/middleware file: !`(ls proxy.ts src/proxy.ts middleware.ts src/middleware.ts 2>/dev/null || echo "(none)") | head -4`
+- Hosting config: !`(ls vercel.json vercel.ts firebase.json apphosting.yaml 2>/dev/null || echo "(none)") | head -4`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Step 1: Classify the Edge Need
-
-| Type | When to Use | Output |
-|------|------------|--------|
-| Edge Rendering | SSR at the edge for global low-latency pages | Edge function config, ISR/streaming setup |
-| API Edge Proxy | Auth, rate limiting, routing before hitting origin | Edge middleware with request transformation |
-| Edge Caching | Static and dynamic content caching strategy | Cache rules, invalidation strategy, hit ratio targets |
-| Edge Auth | Token verification at edge to avoid origin round-trips | JWT validation middleware, session handling |
-| Global Distribution | Multi-region deployment for latency-sensitive apps | Region selection, data replication, routing config |
+| Type | Output |
+|---|---|
+| Caching strategy | Per-route cache table, headers, invalidation path |
+| Request-time routing (geo, A/B, rewrites) | `proxy.ts` logic + matcher |
+| Edge auth / rate limiting | Optimistic auth check in proxy, rate-limit rule |
+| Global distribution / data residency | Region choice for functions and data, routing config |
+| Review of an existing setup | Findings with severity (stale APIs, uncacheable routes, low hit ratio) — no new files |
 
 ## Step 2: Gather Context
 
-1. **Framework** -- Next.js (App Router or Pages), Remix, Astro, plain functions?
-2. **CDN/Edge provider** -- Vercel, Cloudflare, Firebase Hosting, AWS CloudFront?
-3. **Latency requirements** -- what is the TTFB target? (< 100ms global? < 50ms for primary region?)
-4. **Geographic distribution** -- where are your users? Single region, multi-region, or truly global?
-5. **Data residency** -- GDPR, data sovereignty, or compliance requirements for where data is processed?
-6. **Dynamic vs. static ratio** -- what percentage of your content is personalized vs. cacheable?
+Ask only what the repo doesn't show: TTFB target and where users are, data-residency constraints
+(GDPR, client contracts), share of personalized vs cacheable content, CMS or webhook that changes
+content.
 
-## Step 3: Edge Function Patterns
+## Step 3: Current Platform Facts (verified 2026-09-23)
 
-### Vercel Edge Functions
+- **Next.js 16 renamed `middleware.ts` → `proxy.ts`** (export `proxy`); proxy runs on the Node.js
+  runtime and `runtime` config is not allowed there. Migrate with
+  `npx @next/codemod@canary middleware-to-proxy .`. Next 16.3 no longer supports
+  `runtime = 'edge'` on routes or pages.
+- **Vercel recommends Node.js over the Edge runtime**; both run on Fluid compute. Don't design new
+  work around edge isolates — "edge" now means *the CDN and request-time logic*, not a runtime.
+- **Geo and IP**: `request.geo` / `request.ip` were removed in Next 15. On Vercel use
+  `geolocation(request)` and `ipAddress(request)` from `@vercel/functions`; elsewhere read the
+  provider's headers.
+- **Vercel KV is retired** — use Upstash Redis (or another store) from the Vercel Marketplace.
+  **Edge Config** remains for low-latency, read-mostly flags and redirects.
+- **`revalidateTag(tag, profile)`** — the one-argument form is deprecated. Use `'max'`
+  (stale-while-revalidate) by default, `updateTag(tag)` inside Server Actions for read-your-writes,
+  and `{ expire: 0 }` from webhooks that need data gone immediately.
+- **Firebase Hosting** rewrites to Cloud Run with `"run": { "serviceId": …, "region": … }` (v2
+  functions are Cloud Run services). Firebase Dynamic Links shut down in August 2025 — remove any
+  `dynamicLinks` keys.
+
+## Step 4: Caching (the main lever)
+
+| Content | Cache-Control | Invalidation |
+|---|---|---|
+| Hashed JS/CSS/fonts/images | `public, max-age=31536000, immutable` | New filename per build |
+| Unhashed images | `public, max-age=86400, stale-while-revalidate=3600` | TTL |
+| Marketing / blog / docs pages | ISR or `'use cache'` + `cacheTag` | `revalidateTag(tag, 'max')` from the CMS webhook |
+| Listings, feeds, search | `public, s-maxage=60, stale-while-revalidate=300` | TTL |
+| HTML shell (non-ISR) | `public, max-age=0, must-revalidate` | Deploy |
+| Personalized or authenticated responses | `private, no-store` | — |
+
+Gotchas that cost hit ratio: a `Set-Cookie` on a cacheable response, `Vary` on high-cardinality
+headers, unnormalized query strings, and per-user data rendered into shared pages. Never cache
+anything with money, inventory, or permissions in it at the CDN.
+
+Revalidation webhook (Route Handler): verify a shared secret with a constant-time compare, then
+`revalidateTag(tag, 'max')` or `revalidatePath(path)`.
+
+## Step 5: Request-Time Logic (`proxy.ts`)
+
+Keep proxy thin: redirects, rewrites, headers, cookie-based routing. Always set a `matcher` that
+excludes `_next/static`, `_next/image`, and public assets. Proxy is an optimistic gate, not the
+authorization layer — verify auth again in every Server Function and Route Handler (a matcher change
+can silently drop coverage).
+
 ```typescript
-// app/api/edge-example/route.ts
-// Runs on Vercel's Edge Network — V8 isolates, not Node.js
-export const runtime = "edge";
-export const preferredRegion = ["iad1", "cdg1", "hnd1"]; // US, EU, Asia
-
-export async function GET(request: Request) {
-  const country = request.headers.get("x-vercel-ip-country") || "US";
-  const city = request.headers.get("x-vercel-ip-city") || "Unknown";
-
-  // Edge functions are limited: no Node.js APIs, no fs, limited npm packages
-  // Use for: routing, auth, personalization, A/B testing
-  // Do NOT use for: heavy computation, database writes, file processing
-
-  return new Response(JSON.stringify({ country, city }), {
-    headers: { "Content-Type": "application/json" },
-  });
-}
-```
-
-### Cloudflare Workers
-```typescript
-// worker.ts — runs on Cloudflare's global network (300+ locations)
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-
-    // Route to different origins based on path
-    if (url.pathname.startsWith("/api")) {
-      return fetch(`${env.API_ORIGIN}${url.pathname}`, request);
-    }
-
-    // Serve static assets from R2
-    if (url.pathname.startsWith("/assets")) {
-      const object = await env.ASSETS_BUCKET.get(url.pathname.slice(8));
-      if (!object) return new Response("Not found", { status: 404 });
-      return new Response(object.body, {
-        headers: { "Cache-Control": "public, max-age=31536000, immutable" },
-      });
-    }
-
-    // Default: proxy to origin
-    return fetch(request);
-  },
-};
-```
-
-### Next.js Middleware (Edge Runtime)
-```typescript
-// middleware.ts — runs before every matched request
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-// Next 15+ removed request.geo/.ip — Vercel: @vercel/functions; other hosts: provider headers
-import { geolocation, ipAddress } from "@vercel/functions";
+// proxy.ts — geo header + stable A/B bucket (Vercel)
+import { NextResponse, type NextRequest } from "next/server";
+import { geolocation } from "@vercel/functions";
 
 export const config = {
-  matcher: [
-    // Match all paths except static files and _next
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|webp)$).*)"],
 };
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-
-  // Geolocation routing
-  const country = geolocation(request).country ?? "US";
-  response.headers.set("x-user-country", country);
-
-  // Security headers (applied at edge, before origin)
-  response.headers.set("X-Frame-Options", "DENY");
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-
-  return response;
+async function bucket(id: string): Promise<"control" | "variant-a"> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`checkout:${id}`));
+  return new Uint8Array(digest)[0] < 128 ? "control" : "variant-a"; // deterministic 50/50
 }
-```
 
-### Firebase Hosting Rewrites (Edge-Level Routing)
-```json
-{
-  "hosting": {
-    "rewrites": [
-      { "source": "/api/**", "function": "api" },
-      { "source": "/app/**", "destination": "/app/index.html" },
-      {
-        "source": "/blog/**",
-        "dynamicLinks": false,
-        "function": { "functionId": "blogSSR", "region": "us-central1" }
-      }
-    ],
-    "headers": [
-      {
-        "source": "**/*.@(js|css)",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-      },
-      {
-        "source": "/api/**",
-        "headers": [{ "key": "Cache-Control", "value": "no-store" }]
-      }
-    ]
+export async function proxy(request: NextRequest) {
+  const visitorId = request.cookies.get("vid")?.value ?? crypto.randomUUID();
+  const variant = await bucket(visitorId);
+  const res =
+    request.nextUrl.pathname === "/checkout" && variant === "variant-a"
+      ? NextResponse.rewrite(new URL("/checkout-v2", request.url))
+      : NextResponse.next();
+  res.headers.set("x-user-country", geolocation(request).country ?? "US");
+  if (!request.cookies.has("vid")) {
+    res.cookies.set("vid", visitorId, { path: "/", maxAge: 60 * 60 * 24 * 30, httpOnly: true, sameSite: "lax" });
   }
+  return res;
 }
 ```
 
-## Step 4: Caching Strategy
+For experiments with analysis, route assignment through the `feature-flags` skill (Flags SDK or
+Remote Config) rather than hand-rolled buckets; this snippet is for simple rewrites.
 
-### Cache Hierarchy
-```
-Request → Edge Cache (CDN PoP) → Origin Shield → Origin Server → Database
+**Rate limiting.** On Vercel, prefer Firewall rate-limit rules (no code, enforced before your
+function). For per-user or per-key limits in code, use `@upstash/ratelimit`:
 
-Layer             TTL              Use For
-──────────────────────────────────────────────────────────────
-Browser cache     varies           Static assets, user-specific data
-Edge cache        60s - 1 year     Pages, API responses, images
-Origin shield     same as edge     Single origin cache before server
-Application       varies           In-memory, Redis, KV store
-Database          N/A              Source of truth
-```
-
-### Static Asset Caching
-```
-Asset Type          Cache-Control Header                        Rationale
-──────────────────────────────────────────────────────────────────────────────
-JS/CSS (hashed)     public, max-age=31536000, immutable         Content-hash in filename = safe to cache forever
-Images (hashed)     public, max-age=31536000, immutable         Same — fingerprinted filenames
-Images (unhashed)   public, max-age=86400, stale-while-revalidate=3600   May change, 1 day cache
-Fonts               public, max-age=31536000, immutable         Fonts never change per version
-HTML pages          public, max-age=0, must-revalidate          Always check for fresh version
-API responses       no-store                                     Dynamic, personalized — do not cache
-```
-
-### ISR (Incremental Static Regeneration)
 ```typescript
-// app/blog/[slug]/page.tsx — Next.js ISR
-export const revalidate = 3600; // Revalidate every hour
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { ipAddress } from "@vercel/functions";
 
-export async function generateStaticParams() {
-  const posts = await getPosts();
-  return posts.map((post) => ({ slug: post.slug }));
-}
-
-// How ISR works at the edge:
-// 1. First request: serve static page from edge cache
-// 2. After revalidate period: serve stale, trigger background regeneration
-// 3. Next request: serve freshly regenerated page
-// 4. Result: always fast (cached), eventually fresh
-
-// Use for: blog posts, product pages, marketing pages, docs
-// Do NOT use for: dashboards, real-time data, user-specific content
+const limiter = new Ratelimit({ redis: Redis.fromEnv(), limiter: Ratelimit.slidingWindow(100, "60 s") });
+// inside proxy, for /api paths:
+const { success } = await limiter.limit(ipAddress(request) ?? "anonymous");
+if (!success) return new Response("Too Many Requests", { status: 429, headers: { "Retry-After": "60" } });
 ```
 
-### Stale-While-Revalidate Pattern
-```
-Cache-Control: public, s-maxage=60, stale-while-revalidate=300
+**Geo / residency.** Geo-routing is fine for localization; it does not satisfy data residency.
+Residency is decided by where functions run (Vercel function region, Cloud Run region) and where
+data lives (Firestore location is fixed at creation).
 
-Behavior:
-  0-60s:    Serve from cache (fresh)
-  60-360s:  Serve stale from cache, revalidate in background
-  >360s:    Cache expired, fetch from origin (slow for this one request)
+## Step 6: Data Near Users
 
-This is the single most impactful caching pattern for dynamic content.
-Use it for: product listings, search results, feeds, dashboards with acceptable staleness.
-```
+| Store | Consistency | Use for | Never for |
+|---|---|---|---|
+| Vercel Edge Config | Read-mostly, fast global reads | Flags, redirects, allowlists | Frequent writes |
+| Upstash Redis (Marketplace) | Eventual across regions | Rate limits, sessions, counters | Data of record |
+| Firestore / Cloud SQL | Strong | Everything of record | Per-request hot counters (contention) |
 
-### Cache Invalidation Strategies
-```
-Strategy              When to Use                     How
-──────────────────────────────────────────────────────────────────
-Time-based (TTL)      Predictable freshness needs     Cache-Control max-age
-On-demand purge       Content updates (CMS publish)   Purge API call from webhook
-Tag-based             Related content groups           Cache tags + purge by tag
-Path-based            Specific URL updates             Purge by URL pattern
-Stale-while-reval.    Acceptable staleness             s-maxage + stale-while-revalidate
+Always code a fallback for a KV outage (fail open for flags, fail closed for rate limits on auth
+endpoints).
 
-// Next.js on-demand revalidation
-// app/api/revalidate/route.ts
-import { revalidatePath, revalidateTag } from "next/cache";
+## Step 7: Targets and Measurement
 
-export async function POST(request: Request) {
-  const { path, tag, secret } = await request.json();
-  if (secret !== process.env.REVALIDATION_SECRET) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-  if (tag) revalidateTag(tag);
-  if (path) revalidatePath(path);
-  return new Response("Revalidated");
-}
+Cure defaults: TTFB p75 < 100 ms same-continent, < 200 ms cross-continent; cache hit ratio > 90%
+for static assets, > 60% for cacheable dynamic routes. Measure with Vercel Speed Insights /
+Observability (`x-vercel-cache`: HIT, MISS, STALE, REVALIDATED), Cloud CDN logs for Firebase, and a
+multi-region synthetic check (Checkly or WebPageTest). If TTFB misses: check cache status first,
+then cache keys (Vary, cookies, query), then function region vs data region.
 
-// Call from CMS webhook:
-// POST /api/revalidate { "tag": "blog-posts", "secret": "xxx" }
-```
+## Output
 
-## Step 5: Edge Middleware Patterns
+Per-route cache table, proxy logic (if any), invalidation paths, region choices, targets, and
+findings with severity for anything stale or uncacheable. Match length to the need; no filler.
 
-### Auth Verification at Edge
-```typescript
-// middleware.ts — verify JWT at edge, avoid origin round-trip for unauthorized requests
-import { jwtVerify } from "jose";
+## Code/Artifact Generation
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/api/auth"];
+Applies only when Step 1 classified the request as a build (not a review or question):
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+| Classification | Write |
+|---|---|
+| Caching strategy | Headers in `next.config.ts` / `vercel.json` / `firebase.json`; revalidation Route Handler |
+| Request-time routing, edge auth | `proxy.ts` (migrate an existing `middleware.ts` with the codemod first) |
+| Rate limiting | Firewall rule description, or the `@upstash/ratelimit` block in `proxy.ts` |
+| Global distribution | Region config (function regions, Firestore location decision record) |
 
-  // Skip auth for public paths
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
+## Cross-References
 
-  const token = request.cookies.get("session")?.value;
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  try {
-    // Verify JWT at edge — no origin round-trip needed
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-    const response = NextResponse.next();
-    response.headers.set("x-user-id", payload.sub as string);
-    return response;
-  } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-}
-```
-
-### Geolocation Routing
-```typescript
-// Route users to region-appropriate content or services
-export function middleware(request: NextRequest) {
-  const country = geolocation(request).country ?? "US";
-  const url = request.nextUrl.clone();
-
-  // Compliance: redirect EU users to EU-hosted version
-  const EU_COUNTRIES = ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "SE", "PL"];
-  if (EU_COUNTRIES.includes(country) && !url.pathname.startsWith("/eu")) {
-    url.pathname = `/eu${url.pathname}`;
-    return NextResponse.rewrite(url);
-  }
-
-  // Localization: set default language based on region
-  const response = NextResponse.next();
-  response.cookies.set("preferred-region", country, { path: "/" });
-  return response;
-}
-```
-
-### A/B Testing at Edge
-```typescript
-// Assign experiment variants at edge — zero client-side flicker
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-
-  // Check for existing assignment
-  let variant = request.cookies.get("experiment-checkout")?.value;
-
-  if (!variant) {
-    // Assign variant based on hash of user identifier
-    variant = Math.random() < 0.5 ? "control" : "variant-a";
-    response.cookies.set("experiment-checkout", variant, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
-  }
-
-  // Rewrite to variant-specific page
-  if (request.nextUrl.pathname === "/checkout" && variant === "variant-a") {
-    return NextResponse.rewrite(new URL("/checkout-v2", request.url), {
-      headers: response.headers,
-    });
-  }
-
-  return response;
-}
-```
-
-### Rate Limiting at Edge
-```typescript
-// Basic edge rate limiting using Upstash Redis (Vercel KV was retired → Upstash via Marketplace)
-import { Redis } from "@upstash/redis"; // + ipAddress import from the block above
-const kv = Redis.fromEnv();
-
-export async function middleware(request: NextRequest) {
-  if (!request.nextUrl.pathname.startsWith("/api")) {
-    return NextResponse.next();
-  }
-
-  const ip = ipAddress(request) ?? request.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const key = `rate-limit:${ip}`;
-
-  // Edge-compatible KV stores only (Upstash, Cloudflare KV) — no Node.js Redis clients
-  const current = await kv.incr(key);
-  if (current === 1) await kv.expire(key, 60); // 60-second window
-
-  if (current > 100) { // 100 requests per minute
-    return new Response("Too Many Requests", {
-      status: 429,
-      headers: { "Retry-After": "60" },
-    });
-  }
-
-  return NextResponse.next();
-}
-```
-
-## Step 6: Data at the Edge
-
-### Edge KV Stores
-```
-Store                 Provider      Consistency    Use For
-──────────────────────────────────────────────────────────────────
-Upstash Redis         Vercel Mkt    Eventual       Session data, rate limits, feature flags
-Cloudflare KV         Cloudflare    Eventual       Config, A/B assignments, cached responses
-Upstash Redis         Multi-CDN     Eventual       Rate limiting, session, real-time counters
-Vercel Edge Config    Vercel        Strong-ish     Feature flags, redirects (< 1s propagation)
-Cloudflare D1         Cloudflare    Strong         SQLite at edge — small datasets, read-heavy
-
-Rules:
-  - Edge KV is eventually consistent — do NOT use for financial transactions
-  - Use for: sessions, feature flags, cached queries, rate limits
-  - Do NOT use for: user data of record, payment state, inventory counts
-  - Always have a fallback for KV unavailability
-```
-
-### Cache Warming
-```
-Problem: first user in each region gets a cold cache (slow).
-Solution: warm caches proactively after deploys or content updates.
-
-# Warm cache for critical pages after deploy
-curl -s https://example.com/ > /dev/null &
-curl -s https://example.com/pricing > /dev/null &
-curl -s https://example.com/blog > /dev/null &
-wait
-
-# Warm from multiple regions using synthetic monitoring
-# Use: Checkly, Datadog Synthetics, or custom GitHub Action
-# Hit critical pages from each target region post-deploy
-```
-
-### Consistency Tradeoffs
-```
-Requirement                    Edge Strategy
-──────────────────────────────────────────────────────────────────
-Strong consistency needed      Do NOT use edge caching — hit origin
-Read-heavy, stale OK           Edge cache with stale-while-revalidate
-Write-after-read               Bypass edge cache for authenticated writes
-Real-time collaboration        WebSocket to origin, not edge
-User-specific data             No edge cache, or cache per-user with Vary header
-Public content                 Aggressive edge caching, on-demand purge
-```
-
-## Step 7: Performance Measurement
-
-### TTFB by Region
-```
-Target TTFB (Time to First Byte):
-  Primary region:   < 50ms
-  Same continent:   < 100ms
-  Cross-continent:  < 200ms
-  Global worst:     < 500ms
-
-Measure with:
-  - Vercel Analytics (built-in, per-route, per-region)
-  - Cloudflare Analytics (per-PoP performance)
-  - WebPageTest (multi-region, waterfall analysis)
-  - Checkly / Datadog Synthetics (continuous monitoring from global locations)
-
-If TTFB > target:
-  1. Check if response is cached at edge (x-vercel-cache: HIT vs MISS)
-  2. If MISS: check cache rules, TTL, Vary headers
-  3. If HIT but slow: check edge function execution time
-  4. If no edge: consider adding edge caching or moving compute to edge
-```
-
-### Cache Hit Ratio
-```
-Target: > 90% cache hit ratio for static assets, > 60% for dynamic content
-
-Measure:
-  - x-vercel-cache header: HIT, MISS, STALE, REVALIDATED
-  - Cloudflare Analytics → Caching tab → cache hit ratio
-  - Custom logging: log cache status on every response
-
-If hit ratio is low:
-  1. Check Vary headers (too many = low cache hits)
-  2. Check TTLs (too short = frequent misses)
-  3. Check query parameters (each unique URL = separate cache entry)
-  4. Consider normalizing URLs before caching
-  5. Remove unnecessary cookies from cached responses
-```
-
-### Edge vs. Origin Comparison
-```
-Metric              Edge        Origin      Impact
-──────────────────────────────────────────────────────────────
-TTFB (same region)  20-50ms     100-300ms   2-6x faster
-TTFB (cross-cont.)  50-100ms    300-800ms   3-8x faster
-Throughput           CDN limit   Server cap  10-100x higher
-Cost per request     ~\$0.00001  ~\$0.0001    10x cheaper
-Cold start           < 5ms      50-500ms    10-100x faster
-Max execution        30s        300s        Origin for long tasks
-Node.js APIs         No         Yes         Origin for fs, streams
-Database access      KV only    Full        Origin for writes
-```
-
-## Step 8: Output
-
-```
-EDGE COMPUTING ARCHITECTURE
-System: [NAME]
-Date: [TODAY]
-Prepared by: [NAME]
-
-EDGE SUMMARY
-┌──────────────────────────┬────────────────────────────────────┐
-│ Field                    │ Value                              │
-├──────────────────────────┼────────────────────────────────────┤
-│ Edge Provider            │ [Vercel / Cloudflare / Firebase]   │
-│ Edge Functions           │ [Count, purpose]                   │
-│ Cache Strategy           │ [ISR / SWR / static / none]        │
-│ Target TTFB              │ [Xms per region]                   │
-│ Cache Hit Ratio Target   │ [X%]                               │
-│ Data at Edge             │ [KV store, purpose]                │
-│ Regions                  │ [Primary + replicas]               │
-└──────────────────────────┴────────────────────────────────────┘
-
-DELIVERABLES GENERATED:
-  - [ ] Edge function configurations per route
-  - [ ] Caching strategy with TTL and invalidation rules
-  - [ ] Edge middleware (auth, geo-routing, A/B, rate limiting)
-  - [ ] Cache-Control headers for all asset types
-  - [ ] Cache invalidation webhook integration
-  - [ ] Data-at-edge strategy (KV store selection, consistency model)
-  - [ ] Performance targets (TTFB by region, cache hit ratio)
-  - [ ] Cache warming automation post-deploy
-  - [ ] Monitoring and alerting for edge performance
-
-RELATED SKILLS:
-  - /infrastructure-scaffold — origin infrastructure configs
-  - /performance-review — full performance audit including edge
-  - /nextjs-feature-scaffold — Next.js-specific edge patterns
-  - /security-review — edge security (auth, rate limiting, WAF)
-```
-
-## Code Generation (Required)
-
-Generate edge infrastructure using Write:
-
-1. **Edge middleware**: `src/middleware.ts` — Next.js middleware for geo-routing, A/B testing, auth
-2. **Edge function**: `functions/edge/handler.ts` — Cloudflare Worker or Vercel Edge Function template
-3. **Cache config**: `vercel.json` or `_headers` — CDN cache rules with stale-while-revalidate
-4. **Cache invalidation**: `scripts/purge-cache.sh` — CDN cache purge script
+- `performance-review` — full performance audit, Core Web Vitals
+- `nextjs-feature-scaffold` — building the routes themselves
+- `infrastructure-scaffold` — origin configs
+- `security-review` — WAF, auth, headers
+- `feature-flags` — experiment assignment and analysis

@@ -54,6 +54,13 @@ jobs:
       - name: Doc claims (no dead references in prose docs)
         run: python3 scripts/check-doc-claims.py
 
+      - name: plugin-evals suite is well-formed (zero cost — no model calls)
+        # Every case under the manifest's experimental.evals dir has prompt.md or
+        # case.yaml, >=1 grader of a known type, only CLI-accepted prompt.md keys,
+        # skill-name tags that exist, and its scaffold_script. The real run
+        # (claude plugin eval) is local-only: release.sh Ring 0 + quarterly sweep.
+        run: python3 scripts/check-plugin-evals.py
+
       - name: Eval harness self-test (mock backend — no tokens spent)
         # CI has no authenticated agent CLI, so the REAL Ring-0 gate
         # (run-evals.py --changed origin/main) runs locally via release.sh.
@@ -155,6 +162,32 @@ jobs:
       - name: Bundled skill scripts smoke-test (--help)
         run: bash scripts/verify-skill-scripts.sh
 
+      - name: Codex install smoke (zero model calls)
+        # `codex debug prompt-input` needs no auth. CLI pinned so a Codex release can't
+        # silently change what CI measures; without codex on PATH the script SKIPs (exit 0).
+        run: |
+          npm install -g @openai/codex@0.155.0 >/dev/null 2>&1 || echo "codex install failed; smoke will SKIP"
+          python3 scripts/codex-smoke.py
+
+      - name: Antigravity export (flat agy plugin, built and discarded, never committed)
+        run: |
+          python3 scripts/export-antigravity.py --help > /dev/null
+          python3 scripts/antigravity-smoke.py --help > /dev/null
+          python3 scripts/export-antigravity.py --json --out "$RUNNER_TEMP/agy/cure" > "$RUNNER_TEMP/agy-export.json"
+          python3 - "$RUNNER_TEMP/agy-export.json" <<'EOF'
+          import glob, json, sys
+          d = json.load(open(sys.argv[1]))
+          want_skills = len(glob.glob("skills/*/*/SKILL.md"))
+          want_agents = len(glob.glob("personas/*.md"))
+          assert d["skills"] == want_skills, f"exported {d['skills']} of {want_skills} skills"
+          assert d["agents"] == want_agents, f"exported {d['agents']} of {want_agents} personas"
+          assert d["injections_remaining"] == 0, "inline !`cmd` survived the export"
+          print(f"agy export ok: {d['skills']} skills, {d['agents']} agents, {d['rules']} rules, "
+                f"{d['injections_rewritten']} injections rewritten, {d['repo_refs_rewritten']} repo refs -> GitHub")
+          EOF
+      - name: Antigravity listing smoke (zero model turns; skips when agy is absent or not signed in)
+        run: python3 scripts/antigravity-smoke.py --plugin-dir "$RUNNER_TEMP/agy/cure" --json
+
       - name: Validate plugin + marketplace manifest schema
         run: |
           for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .codex-plugin/plugin.json .agents/plugins/marketplace.json .mcp.json.example .lsp.json settings.json; do
@@ -193,6 +226,16 @@ jobs:
               if f_ not in am: errs.append(f".agents/plugins/marketplace.json: missing required `{f_}`")
           for entry in am.get("plugins", []):
               for f_ in ("name", "source", "version"):
+                  if f_ not in entry:
+                      errs.append(f".agents/plugins/marketplace.json: entry {entry.get('name','?')} missing `{f_}`")
+          # Codex auto-loads <plugin>/hooks/hooks.json (Claude-only hooks) unless the
+          # manifest defines `hooks`. `[]` is treated as undefined (MEASURED 0.155.0), so
+          # require a fencing value: the inline object {"hooks": {}} fences (Wave 5 T55).
+          hk = c.get("hooks")
+          if hk is None or hk == [] or hk == "":
+              errs.append(".codex-plugin/plugin.json: `hooks` must fence hooks/hooks.json, e.g. {\"hooks\": {}}")
+          for entry in am.get("plugins", []):
+              for f_ in ("policy", "category"):
                   if f_ not in entry:
                       errs.append(f".agents/plugins/marketplace.json: entry {entry.get('name','?')} missing `{f_}`")
           m = json.load(open(".claude-plugin/marketplace.json"))

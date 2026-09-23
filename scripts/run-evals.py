@@ -2,7 +2,17 @@
 """run-evals.py — Golden-task eval harness for the Cure skill library (T30).
 
 Runs the tasks in evals/tasks/ against headless agent CLIs and scores each run
-with the task's deterministic score.sh gate. Two modes:
+with the task's deterministic score.sh gate.
+
+SCOPE (T60, 2026-09-23): the Claude path moved to `claude plugin eval` over
+plugin-evals/ (native with/without arms, Δ, tool_used: Skill routing graders);
+see evals/README.md. Release Ring 0 no longer calls this script. Keep
+using it only for the non-Claude runtimes: `--mode model --backends
+codex,gemini` (Antigravity/agy lane: gemini backend). The claude backend,
+`--mode skill` and `--changed` still work but are superseded — prefer the
+plugin-eval suite for any Claude measurement.
+
+Two modes:
 
   --mode skill   Skill on/off A-B on the same backend: the "on" arm gets the
                  relevant skill(s) copied into the workdir's .claude/skills/;

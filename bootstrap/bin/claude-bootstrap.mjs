@@ -92,7 +92,7 @@ async function cmdInit(flags) {
     fail(`${MANIFEST_FILENAME} already exists at ${cwd}. Use 'apply' to re-render, or pass --force to recreate.`);
   }
   if (!flags["skills-version"]) {
-    fail("--skills-version is required for init (e.g., --skills-version 5.0.0)");
+    fail("--skills-version is required for init (use the library version in .claude-plugin/plugin.json)");
   }
 
   const detected = detectStack(cwd);

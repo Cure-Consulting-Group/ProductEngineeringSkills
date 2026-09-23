@@ -1,63 +1,44 @@
 # Equity Research Analysis
 
-This skill provides a structured workflow for analyzing public companies, interpreting market sentiment, and developing investment recommendations.
+**Outcome:** a thesis note — recommendation, target price with method, 3–5 evidence-backed
+pillars, a bull and bear case, catalyst calendar, and risks. **Done when** every claim cites a
+filing section and page or a transcript timestamp, the price is dated, and the target price
+traces to a valuation from `dcf-modeling` or `comps-analysis`. Not investment advice. Match length
+to the need; no filler sections or restated summaries.
 
-## Workflow
+In Claude Code the `equity-analyst` agent runs this workflow end to end.
 
-### 1. Document Parsing & Signal Extraction
-- **SEC Filings**: Identify key risks in Item 1A, read MD&A for segment performance, and check footnotes for contingent liabilities.
-- **Earnings Transcripts**: Extract guidance, management tone, and key Q&A themes (e.g., pricing power, supply chain).
-- **Press Releases**: Analyze headline metrics vs. underlying performance (organic vs. inorganic).
+## Step 1: Classify
 
-### 2. Catalyst Tracking
-Map upcoming events that could move the stock:
-- Earnings release dates
-- Product launches
-- Regulatory decisions (e.g., FDA, FTC)
-- Investor days / Conferences
-- Macroeconomic prints (CPI, Jobs)
+Earnings digest (one quarter) · initiation (full thesis) · thesis update (what changed) ·
+catalyst check (upcoming events only).
 
-### 3. Consensus Comparison
-- Compare management guidance with sell-side analyst expectations.
-- Identify "whisper numbers" or areas of potential surprise/disappointment.
+## Step 2: Gather
 
-### 4. Investment Thesis Development
-Synthesize findings into a "Buy/Hold/Sell" framework:
-- **Core Thesis**: Why should someone own this stock?
-- **Key Pillars**: 3-5 drivers (e.g., market leadership, margin expansion).
-- **Risks**: What could break the thesis?
-- **Valuation**: Is the stock "cheap" or "expensive" relative to the quality of the business?
+Latest 10-K and 10-Q from SEC EDGAR (Item 1A risk factors, MD&A, segment note, contingencies);
+the latest earnings release and call transcript; guidance history; consensus from a named source
+with date; current price with timestamp. Search the web for current documents; don't summarize
+from memory.
 
-## Standard Output Format
+## Step 3: Conventions and gotchas
+
+- **Public information only.** If the user supplies anything that may be material non-public
+  information, stop and say so — acting on it is illegal.
+- Reconcile non-GAAP to GAAP before using it; say which one each number is.
+- Separate organic from acquired growth and FX effects.
+- Compare guidance to consensus and to management's own prior guidance (track record).
+- Management tone is evidence only when tied to a number or a changed commitment.
+- Present bull and bear cases with explicit assumptions; the recommendation follows from
+  the probability-weighted view, not from tone.
+
+## Output
 
 ```markdown
-## Equity Research: [Company Ticker]
-
-### Quick Take: [Recommendation]
-**Target Price**: $[X] | **Current Price**: $[X] | **Upside**: [X]%
-
-### Thesis Pillars
-1. **[Pillar 1]**: [Evidence from filings/transcripts]
-2. **[Pillar 2]**: [Evidence from filings/transcripts]
-3. **[Pillar 3]**: [Evidence from filings/transcripts]
-
-### Earnings Digest ([Quarter])
-- **Revenue**: $[X] (Beat/Miss by [X]%)
-- **EPS**: $[X] (Beat/Miss by [X]%)
-- **Guidance**: [Revised Up/Down/Maintained]
-- **Key Quote**: "[Management quote from transcript]"
-
-### Catalyst Calendar
-| Date | Event | Expected Impact |
-|------|-------|-----------------|
-| [Date] | [Event] | [High/Med/Low] |
-
-### Risks to Thesis
-- [Risk 1]
-- [Risk 2]
+## Equity Research: [Ticker] — [Recommendation] — as of [date]
+Target $[X] ([method, horizon]) | Price $[X] | Upside [X]%
+Pillars: 1. [claim] — [evidence: filing §/page or transcript timestamp] …
+Earnings digest: revenue / EPS vs consensus [source], guidance [up/down/maintained], key quote [timestamp]
+Bull / Bear: [assumptions → value each]
+Catalysts: | Date | Event | Impact |
+Risks to thesis: [what would make us wrong, and the signal to watch]
 ```
-
-## Quality Standards
-- **Objectivity**: Present balanced "Bull Case" and "Bear Case".
-- **Source Integrity**: Always cite specific page numbers or transcript timestamps.
-- **Data over Sentiment**: Prioritize hard metrics (margins, cash flow) over qualitative management statements.

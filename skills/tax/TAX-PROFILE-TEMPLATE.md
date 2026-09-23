@@ -1,6 +1,7 @@
 # Tax profile — template
 
-Copy to `.claude/tax-profile.md` in the consuming project and fill it in. The tax
+Copy to `.claude/tax-profile.md` in the consuming project (Claude Code; any
+agreed path in other runtimes) and fill it in. The tax
 skills read this file for everything specific to the taxpayer: which entities
 exist, what they file, and where the project's tax tooling lives.
 

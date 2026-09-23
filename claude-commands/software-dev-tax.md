@@ -3,7 +3,13 @@
 For a company that builds software, this is usually the largest and least
 documented item on the return. A year of platform engineering is worth a
 substantial deduction and credit — but only to the extent it was **compensated**,
-**domestic**, **pre-release**, and **documented at the time**.
+**domestic**, **pre-release**, and **documented at the time**. **Done when**
+every repo has a tax character, spend is split §174A / §162 / §195 / foreign,
+QREs are sized by category with the founder-wage gap stated, and the evidence
+gaps are listed.
+
+## Disclaimer
+This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Model output is not authority and does not establish reasonable cause (see `cpa-standards`).
 
 ## The three questions, in order
 
@@ -21,11 +27,11 @@ Question 3 is where claims die.
 
 ## 1. Characterization — §174A is mandatory, not elective
 
-**Software development is statutorily treated as research or experimental
-expenditure.** §174(c)(3) provides that any amount paid or incurred in connection
-with the development of software is treated as an R&E expenditure. This is a
-characterization rule, not an election — you do not get to call it §162 because
-that is simpler.
+**Software development is statutorily R&E.** §174A(d)(3) (domestic; §174(c)(3)
+is the foreign-R&E counterpart) treats any amount paid or incurred in connection
+with developing software as an R&E expenditure (verified 2026-09-23, 26 U.S.C.
+§174A). It is a characterization rule, not an election, so it cannot be moved to
+§162 for simplicity.
 
 | Cost | Treatment (TY2025 onward) |
 |---|---|
@@ -38,7 +44,7 @@ that is simpler.
 ### §174A vs §195 — the distinction that decides the year
 
 §195(c)(1) excludes from startup expenditures any amount deductible under §174
-[VERIFY: confirm the OBBBA conforming amendment extends this to §174A], and *Snow
+or §174A (OBBBA conforming amendment; verified 2026-09-23), and *Snow
 v. Commissioner*, 416 U.S. 500 (1974), holds that §174 reaches research connected
 with a trade or business the taxpayer *intends* to carry on. So the test is not
 whether revenue has started. Qualifying software R&E is §174A — currently
@@ -113,35 +119,22 @@ the dual-function subset's QREs may be included.
 
 ### Statutory exclusions — §41(d)(4)
 
-These do **not** qualify no matter how much work they took:
+The ones that bite software shops: research **after commercial production
+begins** (below), **adaptation** to one customer's requirements, **foreign**
+research, and **funded** research — another party bears the economic risk or the
+taxpayer keeps no substantial rights, which is typical of client work.
 
-```
-✗ Research conducted AFTER commercial production begins
-✗ Adaptation of an existing product to a particular customer's requirement
-✗ Duplication of an existing product from a physical examination or plans
-✗ Surveys, studies, market/consumer research, management function
-✗ Routine data collection, routine quality control / routine testing
-✗ Reverse engineering
-✗ Style, taste, cosmetic, or seasonal design changes
-✗ FOREIGN research — anything performed outside the United States
-✗ FUNDED research — where another party bears the economic risk
-                    or the taxpayer does not retain substantial rights
-```
-
-### The pre-release boundary — time-critical for 2026
+### The pre-release boundary
 
 "Research after commercial production begins" is the exclusion that governs this
 year. Once a product is **functionally ready for its intended commercial use**,
 subsequent work is generally maintenance, not research — unless it is a genuinely
 new component with its own uncertainty.
 
-If the year's work is pre-release development, it is in the most favorable posture
-available. That window closes as each product becomes functionally ready for its
-intended commercial use.
-
-**Act on this now:** fix the release date per product, and separate pre- from
-post-release effort in the records. Reconstructing that boundary after launch is
-far weaker evidence than recording it as it happens.
+Pre-release development is the most favorable posture available, and the window
+closes product by product. Fix the release date per product and separate pre-
+from post-release effort in the records as it happens; a boundary reconstructed
+after launch is far weaker evidence.
 
 ## 3. QRE categories — what actually counts
 
@@ -202,32 +195,35 @@ M-1 adjustment with a deferred tax consequence. Reconcile it deliberately rather
 than letting the two systems silently disagree.
 
 ### Basis consequence when IP moves to a new entity
-Expensing development costs under §174A means the resulting IP has **little or no
-tax basis**. On a §351 contribution to a new corporation, basis carries over — so
-the contributed IP arrives with near-zero basis. That makes the §1202 **10×-basis**
-cap worthless and leaves the **\$15M floor** (indexed annually — confirm for the
-tax year via the `constants` binding) as the governing cap. Not a problem,
-but know it before anyone models a 10×-basis exclusion.
+Expensing development under §174A leaves the IP with **little or no tax basis**,
+and a §351 contribution carries that basis over for general purposes. For §1202
+only, stock received for property takes a basis of **no less than the property's
+FMV** and a holding period starting at the exchange (§1202(i); verified
+2026-09-23, 26 U.S.C. §1202). So the 10×-basis cap is measured off FMV at
+contribution, but pre-contribution appreciation is never excludable. Get a
+contemporaneous valuation of the IP at contribution; without one, the \$15M cap
+(post-2025-07-04 stock; indexed after 2026) governs by default.
 
 ## Reference files
 
-- `reference/qre-qualification.md` — the four-part test worked through software
-  scenarios, the IUS analysis, exclusions, and the pre/post-release boundary.
-- `reference/cost-taxonomy.md` — the account structure and allocation methodology
-  for capturing development spend by product and entity.
-- `reference/repo-inventory-template.md` — per-repo intake sheet mapping code to
-  product, entity, tax character, and evidence.
+- `reference/qre-qualification.md` — read when a specific activity's
+  qualification is in doubt; worked software scenarios, IUS, exclusions.
+- `reference/cost-taxonomy.md` — read when setting up or auditing the books;
+  account structure and allocation by product and entity.
+- `reference/repo-inventory-template.md` — read when classifying repos; the
+  per-repo intake sheet (product, entity, tax character, evidence).
 
 ## Scripts
 
-- `cure-repo-activity` — extracts per-repo, per-author, per-month commit activity
-  as corroboration for time allocation; dates are set by the committer, and weight
-  rises with remote logs, protected branches, or signed commits. It does not
-  replace a time study because it shows *that* work happened, not that it met the
-  four-part test.
+`cure-repo-activity` (on PATH while the plugin is enabled; otherwise
+`python3 <plugin>/skills/tax/software-dev-tax/scripts/repo_activity.py`) extracts
+per-repo, per-author, per-month commit activity as corroboration for time
+allocation. Commit dates are set by the committer, so weight rises with remote
+logs, protected branches, or signed commits. It shows *that* work happened, not
+that it met the four-part test, so it does not replace a time study.
 
 ```bash
-cure-repo-activity ~/code --year 2026 --json
+cure-repo-activity ~/code --year <tax-year> --json
 ```
 
 ## Related skills

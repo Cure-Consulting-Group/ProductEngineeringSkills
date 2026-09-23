@@ -1,211 +1,92 @@
 # SEO & Content Engine
 
-Technical SEO, content strategy, and search optimization for web apps, marketing sites, and blogs. Organic traffic is the cheapest acquisition channel — engineer it.
+**Outcome:** search-ready pages and a content plan — every finding or recommendation tied to a page,
+a target keyword with search intent, and a concrete fix. Done when the Step 3 critical items pass (or
+each failure has a fix) and every planned piece has a keyword and intent. Match length to the need;
+no filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Framework: !`grep -m2 -oE '"(next|astro|gatsby|nuxt|@remix-run/react)": *"[^"]+"' package.json 2>/dev/null | grep . || echo "(no web framework in package.json)"`
+- SEO files: !`ls app/sitemap.ts app/robots.ts src/app/sitemap.ts next-sitemap.config.js public/robots.txt 2>/dev/null | head -5 | grep . || echo "(none found)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Step 1: Classify the SEO Need
-
-| Need | Output |
-|------|--------|
-| Technical SEO audit | Checklist of issues + fixes |
-| Page optimization | Meta tags, structured data, performance |
+| Need | Deliver |
+|---|---|
+| Technical audit | Every issue found, with severity (critical / important / minor), page, and fix |
+| Page optimization | Metadata, JSON-LD, internal links for the named pages |
 | Content strategy | Topic clusters, keyword map, calendar |
-| Blog optimization | Per-post SEO checklist |
-| Local SEO | Google Business Profile, local schema |
-| Site architecture | URL structure, internal linking, sitemap |
+| Blog post optimization | Per-post checklist result |
+| Local SEO | Business Profile, NAP, LocalBusiness schema |
+| Site architecture | URL scheme, internal linking, sitemap |
 
 ## Step 2: Gather Context
 
-1. **Site URL** — what domain are we optimizing?
-2. **Business type** — SaaS, agency, e-commerce, local business?
-3. **Target audience** — who are we trying to reach?
-4. **Current traffic** — starting from zero or improving existing?
-5. **Competitors** — who ranks for our target terms?
-6. **Content capacity** — how many pieces per month?
+Ask only for what is missing: domain, business type, audience, current traffic (Search Console
+access?), competitors that rank for the target terms, and content capacity per month.
 
-## Live Keyword Research
+**Keyword research.** Search the web if a tool is available, with dated sources: "[keyword] search
+volume [current year]", "[competitor domain] top pages", "[industry] trends [current year]" — "current
+year" meaning the actual year at run time. Volumes from web search are rough; mark them as estimates
+unless they come from Search Console, Ahrefs, or Semrush data the user provides. Classify every
+keyword's intent (informational, commercial, transactional, navigational) and assign one primary
+keyword per page to avoid cannibalization.
 
-Use WebSearch to validate keyword strategy:
-- Search: "[primary keyword] search volume 2025"
-- Search: "[competitor domain] top ranking pages"
-- Search: "[industry] trending topics"
+## Step 3: Technical Checklist (verified 2026-09-23)
 
-Every content recommendation must include keyword target and search intent classification.
+**Critical**
+- Unique `<title>` (~50–60 chars) and meta description (~120–155 chars) per page; one `<h1>` matching intent.
+- Canonical on every indexable page; `robots.txt` doesn't block important paths; `sitemap.xml` lists public pages and is submitted in Search Console.
+- HTTPS, no mixed content, no broken internal links, 301s without chains.
+- Mobile usability via Lighthouse and Search Console — Google retired the Mobile-Friendly Test and its report in December 2023.
+- **Core Web Vitals at p75 of real users:** LCP ≤2.5s, **INP ≤200ms**, CLS ≤0.1. INP replaced FID as a Core Web Vital on 2024-03-12; don't report FID. Use field data (Search Console / CrUX) over lab scores; deep fixes go to performance-review.
 
-## Code Generation (Required)
+**Important**
+- `hreflang` for multi-language sites (Vendly's es-DO / es-MX / pt-BR variants each need reciprocal tags).
+- JSON-LD on applicable pages; descriptive image `alt`; clean indexable URLs without query params.
+- 3+ contextual internal links per page; Open Graph + Twitter card tags with a 1200×630 image; favicon and apple-touch-icon.
 
-Generate SEO infrastructure using Write:
-1. **Structured data**: `src/components/JsonLd.tsx` — reusable JSON-LD component for articles, products, FAQ
-2. **Sitemap config**: `next-sitemap.config.js` — sitemap generation config
-3. **Meta component**: `src/components/SEOHead.tsx` — reusable meta tags with OpenGraph
-4. **Content brief**: `docs/content-briefs/{topic}.md` — SEO-optimized content outline with keyword targets
+## Step 4: Structured Data
 
-## Step 3: Technical SEO Checklist
+Use JSON-LD. Cure defaults: `Organization` (homepage, with `logo` and `sameAs`), `Service` (service
+pages), `BlogPosting` (posts, with `datePublished`, `author`, `image`), `BreadcrumbList` (deep pages),
+`Product` + `Offer` (priced products), `LocalBusiness` (local SEO). Validate with Google's Rich Results
+Test. Google trims supported rich-result types every year — check the Search Central structured-data
+gallery before promising one.
 
-### Critical (Fix Immediately)
-- [ ] Every page has unique `<title>` (50-60 chars) and `<meta description>` (120-155 chars)
-- [ ] One `<h1>` per page, matches search intent
-- [ ] Canonical URLs set on all pages (`<link rel="canonical">`)
-- [ ] `robots.txt` allows crawling of important pages
-- [ ] `sitemap.xml` exists, includes all public pages, submitted to Search Console
-- [ ] HTTPS everywhere, no mixed content
-- [ ] No broken links (404s) — check with crawler
-- [ ] Mobile-friendly (passes Google Mobile-Friendly Test)
-- [ ] Page speed: LCP < 2.5s, FID < 100ms, CLS < 0.1
+Don't add `FAQPage` or `HowTo` markup for rich results: HowTo rich results were removed in 2023, and
+Google stopped showing FAQ rich results for all sites on 2026-05-07 (they had been limited to
+government and health sites since August 2023). Existing markup is harmless; keep genuine FAQ content
+for readers.
 
-### Important
-- [ ] `hreflang` tags for multi-language sites
-- [ ] Structured data (JSON-LD) on all applicable pages
-- [ ] Image `alt` text on every image (descriptive, not keyword-stuffed)
-- [ ] Clean URL structure (no query params for indexable pages)
-- [ ] Internal linking between related pages (3+ internal links per page)
-- [ ] 301 redirects for moved/deleted pages (no redirect chains)
-- [ ] favicon and apple-touch-icon present
-- [ ] Open Graph and Twitter Card meta tags
+## Step 5: Content Strategy
 
-### Performance (Core Web Vitals)
-```
-LCP (Largest Contentful Paint):  < 2.5s
-  Fix: optimize images, preload hero image, reduce server response time
+- **Topic clusters:** one pillar page on the broad commercial term, 4–8 cluster posts on long-tail questions; every cluster post links to the pillar and the pillar links to all of them.
+- **Keyword process:** seed 10–20 ICP terms → expand with autocomplete, People Also Ask, related searches → validate volume and difficulty → start with low-difficulty, high-intent terms → map one primary keyword per page.
+- **Calendar:** 2–4 posts a month (consistency beats volume); mix ~40% how-to, 30% point of view, 20% case studies, 10% news. Case studies need real client numbers and permission.
+- **Per-post check:** primary keyword in title, H1, first 100 words, and slug; title under 60 chars; meta description under 155; 3+ internal and 1–2 authoritative external links; alt text; H2/H3 structure; a CTA; OG image set. Length follows intent — answer the query fully, don't pad to a word count.
 
-FID (First Input Delay):  < 100ms
-  Fix: reduce JavaScript bundle, defer non-critical scripts
+## Step 6: Code/Artifact Generation
 
-CLS (Cumulative Layout Shift):  < 0.1
-  Fix: set explicit dimensions on images/video, avoid dynamic content injection
+Applies when Step 1 calls for implementation or briefs. For Next.js App Router (Cure default), use the
+built-ins rather than packages:
 
-INP (Interaction to Next Paint):  < 200ms
-  Fix: break up long tasks, reduce DOM size
-```
+1. Metadata via the `metadata` export or `generateMetadata` in each route (including `openGraph`, `alternates.canonical`, `alternates.languages`).
+2. `app/sitemap.ts` and `app/robots.ts` (no `next-sitemap` needed on the App Router).
+3. A small JSON-LD component rendering `<script type="application/ld+json">` from a typed object.
+4. `docs/content-briefs/{topic}.md` — keyword, intent, outline, internal links, CTA.
 
-## Step 4: Structured Data (JSON-LD)
-
-### Organization (homepage)
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Company Name",
-  "url": "https://example.com",
-  "logo": "https://example.com/logo.png",
-  "sameAs": ["https://linkedin.com/company/...", "https://twitter.com/..."]
-}
-```
-
-### Service (service pages)
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "Service",
-  "name": "Custom App Development",
-  "provider": { "@type": "Organization", "name": "Company" },
-  "description": "...",
-  "areaServed": "US"
-}
-```
-
-### BlogPosting (blog posts)
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "BlogPosting",
-  "headline": "Post Title",
-  "datePublished": "2026-01-15",
-  "author": { "@type": "Organization", "name": "Company" },
-  "image": "https://example.com/post-image.png"
-}
-```
-
-### FAQ (FAQ sections)
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "How long does it take to build an app?",
-      "acceptedAnswer": { "@type": "Answer", "text": "..." }
-    }
-  ]
-}
-```
-
-## Step 5: Content Strategy Framework
-
-### Topic Clusters
-```
-Pillar Page (broad, high-volume keyword):
-  "Custom App Development for Small Businesses"
-    └── Cluster posts (long-tail, specific):
-        ├── "How Much Does It Cost to Build a Mobile App in 2026?"
-        ├── "Native vs Cross-Platform: Which Is Right for Your Business?"
-        ├── "5 Signs Your Business Needs a Custom App"
-        ├── "How to Choose an App Development Agency"
-        └── "What to Expect in Your First App Development Sprint"
-
-Each cluster post links back to pillar page.
-Pillar page links to all cluster posts.
-```
-
-### Keyword Research Process
-```
-1. Seed terms: brainstorm 10-20 terms your ICP would search
-2. Expand: use Google autocomplete, People Also Ask, related searches
-3. Validate: check search volume + difficulty (Ahrefs, SEMrush, Ubersuggest)
-4. Prioritize: target low-difficulty, high-intent keywords first
-5. Map: assign one primary keyword per page (no cannibalization)
-```
-
-### Content Calendar
-```
-Frequency: 2-4 posts per month (consistency > volume)
-Mix:
-  40% — Educational (how-to, guides, explainers)
-  30% — Thought leadership (opinions, trends, predictions)
-  20% — Case studies (real projects, real results)
-  10% — News/updates (product launches, company milestones)
-```
-
-## Step 6: Blog Post SEO Checklist
-
-Before publishing every post:
-- [ ] Primary keyword in title, H1, first 100 words, URL slug
-- [ ] Title under 60 chars, compelling (not keyword-stuffed)
-- [ ] Meta description under 155 chars with primary keyword
-- [ ] URL slug: short, keyword-rich, hyphen-separated
-- [ ] 3+ internal links to other site pages
-- [ ] 1-2 external links to authoritative sources
-- [ ] Images with descriptive alt text
-- [ ] Minimum 800 words (1500+ for pillar content)
-- [ ] Subheadings (H2, H3) break up content logically
-- [ ] Conclusion with CTA (contact, related post, newsletter)
-- [ ] Open Graph image set (1200x630px)
-
-## Step 7: Local SEO (for agency/consulting)
-
-- [ ] Google Business Profile claimed and complete
-- [ ] NAP (Name, Address, Phone) consistent across all listings
-- [ ] LocalBusiness JSON-LD on website
-- [ ] Reviews strategy (ask satisfied clients)
-- [ ] Location pages if serving multiple cities
+Pages Router projects: `next/head` plus `next-sitemap`. Write only what the classification needs.
 
 ## Recurring Mode
 
-This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+This is a recurring goal, not a one-shot (mechanism trade-offs: the `engagement-automation` skill).
 
 - **Cadence:** weekly
 - **Session loop:** none — session loops expire after 7 days, so a weekly cadence never fires in-session; it belongs in the cloud routine below.
-- **Unattended:** cloud routine — Weekly ranking check and brief generation for the active keyword set. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Unattended:** cloud routine — weekly ranking check and brief generation for the active keyword set. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~80k tokens/run; cap at one run per weekly period.
-- **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver content briefs + ranking deltas as a report file; report on failure rather than retrying.
+- **Guardrails:** writes only the report file (ranking deltas + new content briefs under `docs/content-briefs/`); no code or page changes; report on failure rather than retrying.

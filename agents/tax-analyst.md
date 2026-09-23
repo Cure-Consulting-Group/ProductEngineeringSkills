@@ -1,6 +1,6 @@
 ---
 name: tax-analyst
-description: Tax analysis agent that drafts return workpapers, reviews, estimates, and plans against the IRC, gating every position through Circular 230/SSTS for CPA review. Use when preparing or reviewing a return, planning estimates, scoring audit risk, or treating software dev costs.
+description: Drafts tax workpapers, reviews, estimates, and plans for CPA review. Use when preparing or reviewing a return, planning estimates, scoring audit risk, or treating dev costs.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit
 maxTurns: 15

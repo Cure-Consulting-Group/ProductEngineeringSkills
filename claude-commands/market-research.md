@@ -1,118 +1,75 @@
 # Market Research
 
-> **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
-> mutating commands, and do not create or delete resources. Under Claude Code
-> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
-> **Other runtimes do not enforce it** — Codex and Antigravity ignore those
-> fields, and activation there can widen rather than narrow file access — so on
-> any runtime other than Claude Code this paragraph is the only guardrail.
+> **RESEARCH-ONLY SKILL.** The only files this skill writes are its own report
+> files under `docs/` (Step 5), and only when a written report is requested. It
+> does not edit code, run mutating commands, or create or delete resources.
+> Nothing in the frontmatter enforces this in any runtime (`allowed-tools` only
+> pre-approves tools), so this paragraph is the guardrail.
+
+**Outcome:** a sourced, founder-level research report that supports one named decision and ends in
+Enter / Enter with conditions / Do not enter. Done when every number has a source and date (or is
+labeled an assumption) and each section states its "so what". Match length to the decision; no filler
+sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Portfolio products: !`grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
 
-Use this context to tailor all output to the actual project.
+Read the matching PORTFOLIO.md section when the research is for an existing portfolio product.
 
-Structured market analysis optimized for fast, founder-level decisions. Signal-dense, no padding. Every section has a "so what" implication.
+## Step 1: Classify
 
-## Research Process
+| Request | Deliver |
+|---|---|
+| Market entry / new venture | Full report (all Step 4 sections) |
+| Sizing only | Sections 1, 3, 10 |
+| Competitive scan | Sections 1, 4, 8 |
+| ICP / pricing | Sections 1, 5, 6, 10 |
+| Quick question | A sourced answer in chat, no document |
 
-1. **Clarify** — confirm market, product, and decision being made
-2. **Search** — use web search for current market data, funding rounds, competitor pricing
-3. **Size** — TAM / SAM / SOM with sources
-4. **Map competitors** — direct, indirect, and adjacent
-5. **Define ICP** — who buys, why, willingness to pay
-6. **Analyze pricing** — existing price points, model types, upgrade triggers
-7. **Assess** — moats, risks, go/no-go signal
+## Step 2: Gather Context
 
-**Always web search** for: competitor pricing pages, recent funding rounds, market reports, company headcounts (LinkedIn), app store reviews (competitor pain points), job postings (proxy for investment areas), and recent news.
+Confirm the market, the product or venture, the decision being made, and the geography. Ask only if
+the decision is unclear — everything else can be stated as an assumption.
 
-## Output Template
+## Step 3: Research
 
-Generate a document with these sections:
+Search the web for current sources and date every one; if no web tool is available, say so and label
+figures as recalled and unverified. Queries, with "current year" meaning the actual year at run time:
 
-### Header
+1. Size: "[industry] market size [current year]", "[industry] CAGR forecast"
+2. Competitors: "[competitor] pricing", "[competitor] funding", "[competitor] reviews" (app stores, G2)
+3. Trends: "[industry] trends [current year]"
+4. ICP: "[role] budget for [category]", job postings as an investment signal
+5. Regulation: "[industry] regulation [country]"
+
+Rules: prefer bottom-up sizing (customers × ARPU) and show both when they disagree by >2×; cite
+analyst-report TAMs as ranges, not point estimates; verify competitor pricing on the pricing page
+itself; no generic claims ("the market is large" → "\$4.2B in 2024, 18% CAGR (source, date)").
+
+## Step 4: Report Sections
+
 ```
-MARKET-[NNN]: [Market / Opportunity Name] — Research Report
-Date: [YYYY-MM-DD]
-Prepared for: [Product/Venture Name]
-Decision: [What decision does this research support?]
-Confidence: High / Medium / Low
-Recommendation: Enter | Enter with conditions | Do not enter
+MARKET-[NNN]: [Market] — Research Report
+Date · Prepared for · Decision · Confidence (H/M/L) · Recommendation
 ```
 
-### 1. Executive Summary
-3-5 sentences: market size, key dynamic, our angle, recommendation. Lead with the "so what."
+1. **Executive summary** — size, key dynamic, our angle, recommendation (3–5 sentences).
+2. **Market definition** — stage, geography, tailwinds, headwinds.
+3. **Sizing** — TAM / SAM / SOM table with method and source; Year-1 revenue target = N customers × ARPU.
+4. **Competitors** — direct table (funding, users/ARR, pricing, strength, weakness), substitutes, feature grid, our differentiation in one sentence.
+5. **ICP** — segment, pain, current solution, trigger event, willingness to pay, where they gather, decision maker.
+6. **Pricing** — market price points, models in use, our recommendation.
+7. **Channels** — channel fit with CAC estimates (hand launch detail to go-to-market).
+8. **Moats** — network effects, switching costs, proprietary data, regulatory barrier, tech lead.
+9. **Risks** — likelihood, impact, mitigation.
+10. **Assumptions to validate** — how and by when.
+11. **Go / No-Go** — recommendation, conditions, next steps.
 
-### 2. Market Definition
-Market, Stage (Emerging/Growing/Mature/Declining), Geography, Tailwinds, Headwinds.
+## Step 5: Artifact Generation
 
-### 3. Market Sizing
-| Segment | Size | Methodology | Source |
-|---------|------|-------------|--------|
-| TAM | $XB | Top-down or Bottom-up | source + year |
-| SAM | $XM | Geo + segment filter | derived |
-| SOM | $XM | Realistic 3-yr capture | assumption |
-
-Year 1 Revenue Target: $[X] — requires [N] customers at $[ARPU]
-
-### 4. Competitive Landscape
-- Direct competitors table (Company, Funding, Users/ARR, Pricing, Strength, Weakness)
-- Indirect competitors / substitutes
-- Competitive matrix (feature comparison grid)
-- Our differentiation statement
-
-### 5. Ideal Customer Profile (ICP)
-Table: Segment, Who they are, Pain point, Current solution, Trigger event, Willingness to pay, Where they are, Decision maker?
-
-### 6. Pricing Analysis
-- Market price points table
-- Pricing model types in market
-- Our pricing recommendation with rationale
-
-### 7. Go-to-Market Channels
-Channel fit table with CAC estimates.
-
-### 8. Moats & Defensibility
-Evaluate: data network effects, switching costs, brand/trust, proprietary data, regulatory barrier, tech lead.
-
-### 9. Risk Assessment
-Risk table: Risk, Likelihood, Impact, Mitigation.
-
-### 10. Key Assumptions to Validate
-Assumption, How to Validate, Timeline.
-
-### 11. Go / No-Go Signal
-Recommendation with rationale, conditions (if conditional), and next steps.
-
-## Structured Research Queries
-
-When using WebSearch, run these specific queries in order:
-
-1. **Market Size**: "[industry] market size 2025 2026 TAM" + "[industry] growth rate CAGR"
-2. **Competitors**: "[competitor name] pricing" + "[competitor name] funding round" + "[competitor name] features"
-3. **Trends**: "[industry] trends 2025 2026" + "[industry] disruption technology"
-4. **ICP Data**: "[target role] salary survey" + "[target company size] spending on [category]"
-5. **Regulatory**: "[industry] regulation [country]" + "[industry] compliance requirements"
-
-Every claim in the output MUST include "(Source: [url/publication], [date])" citation.
-
-## Artifact Generation (Required)
-
-Generate using Write:
-1. **Market brief**: `docs/market-research.md` — TAM/SAM/SOM with sources
-2. **Competitive matrix**: `docs/competitive-analysis.md` — feature/pricing comparison table
-3. **ICP profile**: `docs/icp.md` — detailed ideal customer profile
-
-## Research Quality Standards
-
-- Every market size number needs a source and year
-- Every competitor pricing claim should be verified
-- ICP willingness-to-pay grounded in evidence
-- If data is unavailable, state the assumption explicitly and flag for validation
-- No generic claims: "the market is large" → "\$4.2B in 2024, growing at 18% CAGR (source)"
+Applies when the user wants a written report (Step 1 not "quick question"). Write only the files the
+classification needs: `docs/market-research.md` (the report), `docs/competitive-analysis.md` (the
+grid, for competitive scans), `docs/icp.md` (for ICP work).

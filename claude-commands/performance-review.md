@@ -1,37 +1,22 @@
 # Performance Review
 
-Define performance budgets, build load testing plans, identify optimization opportunities, and set up monitoring. Every target uses concrete numbers — no vague "make it faster."
+**Outcome:** measured current numbers against explicit budgets, a ranked fix list with expected gain and effort, and (when asked) a load-test plan. Done when every budget that matters for the platform has a current value or a stated way to measure it, and every recommendation names the metric it moves. Every target is a number, never "make it faster." Match length to the need; no filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Stack: !`ls package.json next.config.* build.gradle.kts Package.swift Podfile firebase.json 2>/dev/null | head -6 || echo "(none detected)"`
+- Existing perf configs: !`ls lighthouserc* .lighthouserc* k6* artillery* 2>/dev/null | head -5 || echo "(none)"`
+- Existing build stats: !`ls .next/analyze .next/build-manifest.json 2>/dev/null | head -3 || echo "(no build output)"`
 
-Use this context to tailor all output to the actual project.
+## Baseline (read-only)
 
-## Automated Performance Baseline
-
-Gather performance context before review:
-
-1. **Bundle Analysis**:
-   - Run: `npx next build 2>/dev/null | tail -20` or check for existing build stats
-   - Glob for: `**/webpack-stats.json`, `**/bundle-analyzer*`
-2. **Existing Configs**:
-   - Glob for: `**/lighthouse*`, `**/k6*`, `**/artillery*`, `**/.lighthouserc*`
-   - Read any found configs to understand current budgets
-3. **Image Optimization**:
-   - Glob for: `**/*.png` `**/*.jpg` `**/*.gif` larger than 500KB
-   - Grep for: `<img` without `next/image` or lazy loading in web projects
-4. **Database Queries**:
-   - Grep for: `SELECT *` (unbounded queries)
-   - Grep for: N+1 patterns (queries inside loops)
-5. **Web Search**: Search for current Core Web Vitals benchmarks for the project's industry
-
-Use findings to populate the performance baseline before applying the review framework.
+Measure from what exists; don't run builds or deploys unless the user asks (a build writes `.next/`, takes minutes, and the Recurring Mode run is read-only).
+- Bundle: existing build output or analyzer report; otherwise ask the user to run `next build` (Turbopack prints per-route sizes) or open the analyzer.
+- Field data beats lab data: CrUX/Search Console, Vercel Speed Insights or other RUM, Play Console Android vitals, Xcode Organizer/MetricKit.
+- Code smells worth grepping: images >500 KB in the repo, raw `<img>` in Next.js pages, `SELECT *`, queries inside loops, unbounded list endpoints, Firestore list queries without `.limit()`.
+- For industry benchmarks, search the web for current sources and date them.
 
 ## Step 1: Classify the Performance Review Type
 
@@ -40,7 +25,7 @@ Use findings to populate the performance baseline before applying the review fra
 | Initial Audit | New project or first performance pass | Baseline metrics + budget definition |
 | Optimization | Known performance issues or budget violations | Prioritized fix list with expected impact |
 | Load Testing Plan | Pre-launch, scaling event, or new infrastructure | Test scenarios, scripts, success criteria |
-| Monitoring Setup | Post-launch or missing observability | Dashboards, alerts, SLO/SLI definitions |
+| Regression guards | Post-launch, no perf checks in CI | Step 6 CI guards (dashboards/SLOs → `observability`) |
 | Regression Check | After major release or dependency update | Before/after comparison, regression report |
 
 ## Step 2: Gather Context
@@ -62,16 +47,17 @@ Before any analysis, collect:
 ### Web (Next.js / React)
 
 ```
-Core Web Vitals (must meet "Good" threshold):
-  LCP  (Largest Contentful Paint):   < 2.5s  (target < 1.8s)
-  FID  (First Input Delay):          < 100ms (target < 50ms)
-  INP  (Interaction to Next Paint):  < 200ms (target < 150ms)
-  CLS  (Cumulative Layout Shift):    < 0.1   (target < 0.05)
+Core Web Vitals, p75 of field data (web.dev "Good" / Cure target):
+  LCP  (Largest Contentful Paint):   ≤ 2.5s  / < 1.8s
+  INP  (Interaction to Next Paint):  ≤ 200ms / < 150ms
+  CLS  (Cumulative Layout Shift):    ≤ 0.1   / < 0.05
+  (INP replaced FID as a Core Web Vital in March 2024 — don't report FID.)
 
-Loading:
-  TTI  (Time to Interactive):        < 3.5s on 4G
-  TTFB (Time to First Byte):        < 600ms (target < 200ms)
-  First Contentful Paint:            < 1.8s
+Loading diagnostics:
+  TTFB:                              ≤ 800ms good / Cure < 600ms (target < 200ms at the edge)
+  First Contentful Paint:            ≤ 1.8s
+  Total Blocking Time (lab proxy for INP): < 200ms
+  (TTI was removed in Lighthouse 10 — don't budget it.)
 
 Bundle size:
   Initial JS bundle:                 < 150 KB gzipped
@@ -123,7 +109,8 @@ Network:
 Startup:
   Launch time (cold):                < 1s to first frame (< 400ms pre-main)
   Launch time (warm):                < 500ms
-  dylib loading:                     < 6 frameworks recommended
+  Pre-main:                          prefer static linking / mergeable libraries over many
+                                     dynamic frameworks; measure with the App Launch template
 
 Rendering:
   Scrolling:                         60fps (120fps on ProMotion devices)
@@ -176,16 +163,7 @@ Database:
 
 ## Step 4: Load Testing Plan
 
-### Tool Selection
-
-```
-Tool        | Best For                      | Language
-------------|-------------------------------|----------
-k6          | Developer-friendly, CI/CD     | JavaScript
-Artillery   | Quick YAML-based tests        | YAML/JS
-Locust      | Python teams, distributed     | Python
-Gatling     | JVM teams, detailed reports   | Scala/Java
-```
+Default tool: **k6** (JS, CI-native thresholds). Locust for Python teams, Gatling for JVM teams. Never load-test production or third-party APIs (Stripe, Firebase Auth) without their permission — use test mode or stubs.
 
 ### Test Scenarios
 
@@ -266,164 +244,41 @@ Pass if ALL of:
   - Autoscaling triggered within 60s of threshold breach
 ```
 
-## Step 5: Optimization Strategies
+## Step 5: Optimization
 
-See [reference/details.md](reference/details.md) (section “Step 5: Optimization Strategies”) for full detail.
+Rank candidates by (expected metric gain × user reach) / effort, and tie each to the budget it fixes. Read `reference/details.md` when choosing fixes — it holds the Cure playbook of non-obvious, stack-specific levers and gotchas (Next.js caching, mobile startup, Firestore reads, serverless cold starts). Don't pad the list with generic advice the team already follows.
 
-## Step 6: Monitoring & Alerting
+## Step 6: Regression Guards
 
-### Monitoring Stack
+- Lighthouse CI on PRs for key routes: assert LCP ≤2500ms, CLS ≤0.1, TBT ≤300ms (warn), 3 runs, median.
+- Bundle-size check per route in CI; alert when the initial JS grows >10 KB or a route chunk >50 KB.
+- Mobile: size check on the release artifact (APK/AAB, IPA) — alert on >1 MB growth; startup benchmark (Macrobenchmark on Android, XCTest launch metric on iOS) on release branches.
+- Backend: k6 smoke test on every deploy with the Step 3 p95 threshold.
 
-```
-Platform         | Tool                          | Purpose
------------------|-------------------------------|---------------------------
-Web              | Lighthouse CI                 | CWV tracking per deploy
-Web              | Vercel Analytics / SpeedCurve | Real User Monitoring (RUM)
-Android          | Firebase Performance          | Trace durations, network
-iOS              | Firebase Performance          | Trace durations, network
-Android          | Android Vitals (Play Console) | ANR, crash rate, startup
-iOS              | Xcode Metrics / MetricKit     | Launch, hang rate, disk
-Backend          | Datadog / Grafana / Cloud Mon | Latency, errors, throughput
-All              | Sentry                        | Error tracking, tracing
-All              | PagerDuty / Opsgenie          | Incident alerting
-```
+SLOs, error budgets, dashboards, and alert routing are owned by the `observability` skill — feed these budgets into it rather than defining a second alert set here.
 
-### Alert Thresholds
-
-```
-Severity: CRITICAL (page on-call immediately)
-  - Error rate > 1% for 5 minutes
-  - p99 latency > 5s for 5 minutes
-  - Service availability < 99% for 5 minutes
-  - Database connection pool > 95%
-  - Memory usage > 90%
-
-Severity: WARNING (Slack alert, fix within 4 hours)
-  - Error rate > 0.5% for 10 minutes
-  - p95 latency > 2x budget for 10 minutes
-  - CPU > 80% sustained for 15 minutes
-  - Cache hit rate < 70%
-  - Cold start rate > 20% of invocations
-
-Severity: INFO (dashboard review, weekly triage)
-  - p50 latency trending up > 10% week-over-week
-  - Bundle size increased > 10 KB from last deploy
-  - LCP regression > 200ms from baseline
-  - APK/IPA size increased > 1 MB
-```
-
-### SLO / SLI Definitions
-
-```
-SLI (Service Level Indicator):
-  - Availability:  successful requests / total requests
-  - Latency:       % of requests < threshold (e.g., p95 < 500ms)
-  - Throughput:     requests per second at steady state
-  - Error rate:     5xx responses / total responses
-
-SLO (Service Level Objective):
-  - Availability:  99.9% monthly (43.8 min downtime/month allowed)
-  - Latency:       95% of requests < 500ms
-  - Error rate:    < 0.1% monthly
-
-Error Budget:
-  - Monthly budget: 100% - SLO = allowed failures
-  - 99.9% SLO → 0.1% error budget → ~43 minutes/month
-  - Track burn rate: if budget consumed > 50% in first week, freeze deploys
-  - Reset monthly, review in retrospective
-```
-
-### Lighthouse CI Configuration
-
-```json
-// lighthouserc.json
-{
-  "ci": {
-    "collect": {
-      "numberOfRuns": 3,
-      "url": ["https://example.com/", "https://example.com/dashboard"]
-    },
-    "assert": {
-      "assertions": {
-        "categories:performance": ["error", { "minScore": 0.9 }],
-        "first-contentful-paint": ["warn", { "maxNumericValue": 1800 }],
-        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
-        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
-        "total-blocking-time": ["warn", { "maxNumericValue": 300 }]
-      }
-    },
-    "upload": {
-      "target": "lhci",
-      "serverBaseUrl": "https://lhci.example.com"
-    }
-  }
-}
-```
-
-## Step 7: Performance Report Template
+## Step 7: Report
 
 ```markdown
-# Performance Review Report
+# Performance Review — [app/feature], [platforms], [YYYY-MM-DD]
+Type: [Initial audit / Optimization / Load plan / Regression check]
 
-## Overview
-- App/Feature:       [name]
-- Platform(s):       [Web / Android / iOS / Backend]
-- Review type:       [Initial Audit / Optimization / Regression Check]
-- Date:              [YYYY-MM-DD]
-- Reviewed by:       [name]
+## Metrics vs budgets
+| Metric | Current (source: field/lab) | Budget | Status | Priority |
+|---|---|---|---|---|
+| LCP p75 | 3.2s (CrUX) | ≤2.5s | OVER | P0 |
 
-## Current Metrics vs. Targets
+## Gaps and root causes
+1. LCP 3.2s — 1.2 MB PNG hero, render-blocking CSS → est. impact on bounce
 
-| Metric              | Current    | Target     | Status   | Priority |
-|---------------------|-----------|------------|----------|----------|
-| LCP                 | 3.2s      | < 2.5s     | OVER     | P0       |
-| CLS                 | 0.08      | < 0.1      | OK       | -        |
-| Bundle size (init)  | 220 KB    | < 150 KB   | OVER     | P1       |
-| API p95 latency     | 380ms     | < 500ms    | OK       | -        |
-| Cold start          | 1.8s      | < 1s       | OVER     | P0       |
-| Error rate          | 0.08%     | < 0.1%     | OK       | -        |
+## Ranked recommendations
+| # | Action | Metric moved | Expected gain | Effort |
+|---|---|---|---|---|
 
-## Gaps & Root Causes
+## Load test results (if run)
+| Scenario | VUs | Duration | p50 | p95 | p99 | Error % | Pass/Fail |
 
-1. **LCP 3.2s (target < 2.5s)**
-   - Root cause: Unoptimized hero image (1.2 MB PNG), render-blocking CSS
-   - Impact: 15% bounce rate increase on slow connections
-
-2. **Bundle size 220 KB (target < 150 KB)**
-   - Root cause: Full lodash import, unshaken date-fns
-   - Impact: 400ms additional parse time on mid-tier mobile
-
-3. **Cold start 1.8s (target < 1s)**
-   - Root cause: Heavy dependency initialization, no minimum instances
-   - Impact: First request after idle fails SLO
-
-## Prioritized Recommendations
-
-| # | Action                                    | Impact  | Effort | Expected Gain     |
-|---|------------------------------------------|---------|--------|-------------------|
-| 1 | Convert hero image to AVIF + resize      | High    | Low    | LCP -1.0s         |
-| 2 | Tree-shake lodash → lodash-es            | Medium  | Low    | Bundle -40 KB     |
-| 3 | Set minimum instances = 1                | High    | Low    | Cold start < 500ms|
-| 4 | Add route-based code splitting           | Medium  | Medium | Bundle -50 KB     |
-| 5 | Implement Redis cache for hot queries    | High    | Medium | p95 latency -30%  |
-| 6 | Enable ISR for product pages             | Medium  | Medium | LCP -500ms        |
-
-## Load Test Results (if applicable)
-
-| Scenario    | VUs  | Duration | p50    | p95    | p99    | Error % | Result |
-|-------------|------|----------|--------|--------|--------|---------|--------|
-| Smoke       | 10   | 2m       | 85ms   | 180ms  | 350ms  | 0%      | PASS   |
-| Load        | 500  | 15m      | 120ms  | 420ms  | 890ms  | 0.02%   | PASS   |
-| Stress      | 1500 | 10m      | 450ms  | 1.8s   | 4.2s   | 1.2%    | FAIL   |
-| Soak        | 350  | 4h       | 130ms  | 480ms  | 920ms  | 0.04%   | PASS   |
-
-## Next Steps
-
-- [ ] Implement P0 fixes before next release
-- [ ] Schedule follow-up review after P0/P1 fixes
-- [ ] Set up missing monitoring dashboards
-- [ ] Add Lighthouse CI to PR pipeline
-- [ ] Run load test after optimization round
+## Next steps (owner, date)
 ```
 
 ## Recurring Mode
@@ -432,6 +287,6 @@ This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-aut
 
 - **Cadence:** monthly
 - **Session loop:** session loops expire after 7 days, so a monthly cadence never fires in-session; it belongs in the cloud routine below. In-session alternative, during an active optimization push: `/loop 1d /cure-product-engineering:performance-review`.
-- **Unattended:** cloud routine — Monthly performance pass over hot paths; compare against the previous run's baselines. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Unattended:** scheduled cloud agent or CI cron — monthly performance pass over hot paths; compare against the previous run's baselines (recipes: `docs/AUTOMATION.md` in the cure-product-engineering plugin repo).
 - **Budget:** ~150k tokens/run; cap at one run per monthly period.
-- **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver performance findings as an issue per regression; report on failure rather than retrying.
+- **Guardrails:** read-only run (advisory, not harness-enforced): no builds, deploys, or load tests against production; deliver findings as one issue per regression; report on failure rather than retrying.

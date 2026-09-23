@@ -1,35 +1,16 @@
 # ios-design-expert: detailed reference
 
-> Reference material for the `ios-design-expert` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
-
-## Contents
-- Step 3: HIG Design Principles (Always Apply)
-
-## Step 3: HIG Design Principles (Always Apply)
-
-### 3.1 Platform Fundamentals
-
-Apple design is built on six pillars. Every design decision must align:
-
-```
-Aesthetic Integrity — Visual design matches the app's purpose and personality
-Consistency        — Follows platform conventions so users transfer existing knowledge
-Direct Manipulation — Users feel they are directly interacting with on-screen content
-Feedback           — Every action produces a perceivable response (visual, haptic, audio)
-Metaphors          — Virtual objects and actions mirror familiar physical-world experiences
-User Control       — The user initiates and controls actions; the app confirms destructive ones
-```
+Exact values for `ios-design-expert`. The rules that always apply (Liquid Glass, navigation, Cure defaults) are in SKILL.md; read this file when a spec needs a number or an API name. Values checked against Apple HIG/developer docs 2026-09-23.
 
 ### 3.2 Layout System
 
 #### Safe Areas and Margins
 ```
-Status bar:          Dynamic height (54pt on Dynamic Island devices, 44pt on notch, 20pt legacy)
-Navigation bar:      44pt standard height (large title: 96pt expanded → 44pt collapsed)
-Tab bar:             49pt standard (83pt on devices without home button due to home indicator)
-Home indicator:      34pt bottom inset on Face ID devices
-Layout margins:      16pt (compact width), 20pt (regular width)
-Readable content:    System-managed readable width guide — max ~672pt on iPad
+Bars:                Don't hard-code heights. iOS 26 bars float on Liquid Glass and the tab bar
+                     can minimize on scroll — lay out against safeAreaInsets, let content
+                     scroll under bars (scroll-edge effect handles legibility)
+Layout margins:      16pt (compact width), 20pt (regular width) — use system layout margins
+Readable content:    readableContentGuide / .containerRelativeFrame for text-heavy iPad layouts
 ```
 
 #### Size Classes and Adaptivity
@@ -46,11 +27,8 @@ Readable content:    System-managed readable width guide — max ~672pt on iPad
 │ iPad Split (2/3)    │ regular W × regular H │ regular W × regular H │
 └─────────────────────┴───────────────────┴──────────────────────────┘
 
-Design rules:
-- ALWAYS design for compact width first, then adapt for regular width
-- Use ViewThatFits or AnyLayout for adaptive layouts
-- Use NavigationSplitView for sidebar patterns on iPad
-- Never assume a fixed screen size — always use geometry-relative layouts
+Design compact width first, then adapt (ViewThatFits / AnyLayout); iPad windows are
+freely resizable in iPadOS 26, so never assume a fixed size.
 ```
 
 #### Grid and Spacing
@@ -59,8 +37,8 @@ Base unit:           4pt (iOS uses a 4pt sub-grid within the 8pt macro grid)
 Spacing scale:       4, 8, 12, 16, 20, 24, 32, 40, 48, 64
 Component padding:   Standard system spacing — 16pt horizontal, 12pt vertical (cells)
 Section spacing:     35pt between grouped sections in List/Form
-Corner radius:       10pt (cards), 12pt (sheets), continuous corner curve (squircle, not circular)
-                     Use .cornerRadius with .continuous style, not .circular
+Corner radius:       continuous curve (RoundedRectangle(cornerRadius:style: .continuous));
+                     nested shapes concentric with their container (ConcentricRectangle, iOS 26)
 ```
 
 ### 3.3 Typography — Dynamic Type
@@ -90,13 +68,8 @@ iOS uses the SF Pro type system with mandatory Dynamic Type support.
 │                  │       │          │ AX5: ~2.35x                         │
 └──────────────────┴───────┴──────────┴─────────────────────────────────────┘
 
-Rules:
-- ALWAYS use system text styles (.font(.body), .font(.headline)) — never hardcoded sizes
-- Custom fonts MUST scale with Dynamic Type via UIFontMetrics or @ScaledMetric
-- Test at EVERY Dynamic Type size, including AX5 (largest accessibility size)
-- Line height is automatic with system styles — do not override unless brand-critical
-- Truncation strategy: .lineLimit(nil) for primary content, truncate secondary content
-- Use .minimumScaleFactor(0.75) sparingly and only for fixed-width containers
+Truncation: .lineLimit(nil) for primary content, truncate only secondary content;
+.minimumScaleFactor only in fixed-width containers. Test at AX5.
 ```
 
 #### Custom Font Scaling
@@ -141,17 +114,8 @@ System tint colors:
   .systemYellow, .systemBrown, .systemCyan, .systemMint
 ```
 
-#### Color Rules
-```
-- ALWAYS use semantic colors (.label, .systemBackground) — never hardcode hex values for system UI
-- App accent color: defined in Asset Catalog, used via .tint() or .accentColor()
-- Dark mode: MANDATORY — every custom color must have light and dark variants in Asset Catalog
-- High contrast: provide increased contrast variants (Accessibility → Increase Contrast)
-- Elevated appearances: on iPad sheets/popovers, backgrounds auto-elevate — account for this
-- Never rely on color alone to convey meaning — pair with icons, text, or shape
-- Transparency and materials: use .ultraThinMaterial, .thinMaterial, .regularMaterial, .thickMaterial
-  for background blur effects (system bars, overlays, cards over content)
-```
+Materials (content layer): .ultraThinMaterial … .thickMaterial. Liquid Glass (functional
+layer): Glass.regular / Glass.clear via .glassEffect — see SKILL.md 3.1.
 
 ### 3.5 SF Symbols
 
@@ -200,11 +164,8 @@ Single-level content list?
 Multi-level content hierarchy?
   → NavigationStack with path-based navigation (NavigationPath)
 
-Two primary sections?
-  → TabView with 2 tabs
-
-3-5 primary sections?
-  → TabView with 3-5 tabs (5 maximum visible, more go to "More" tab)
+2-5 primary sections?
+  → TabView (avoid overflow into "More"); iPad: .tabViewStyle(.sidebarAdaptable)
 
 Content browsing + detail (iPad/Mac)?
   → NavigationSplitView (two-column or three-column)
@@ -223,20 +184,6 @@ Contextual actions on an item?
 
 Inspector / supplementary info (iPad)?
   → .inspector()
-```
-
-#### Navigation Rules
-```
-- NEVER hide the back button — users must always be able to go back
-- Large titles: use for top-level tabs (scrolls to inline). Use .navigationBarTitleDisplayMode(.large)
-- Inline titles: use for pushed detail views. Use .navigationBarTitleDisplayMode(.inline)
-- Tab bar: ALWAYS visible except during full-screen media or onboarding
-- Tab bar icons: use SF Symbols. Selected state uses .fill variant automatically
-- Toolbar items: use .toolbar {} with .topBarTrailing, .bottomBar, .keyboard placements
-- Search: use .searchable() — placed in navigation bar automatically
-- Pull-to-refresh: use .refreshable {} — system-standard pull-to-refresh
-- Sheets: default detent is .large. Use .presentationDetents([.medium, .large]) for half-sheets
-- Dismiss affordance: sheets always have a drag indicator or explicit close button
 ```
 
 ### 3.7 Component Patterns
@@ -282,12 +229,9 @@ Button sizes:
   .controlSize(.large)       — Primary CTA, bottom-anchored
   .controlSize(.extraLarge)  — Full-width prominent actions (iOS 17+)
 
-Rules:
-  - Primary action button: ONE per screen, .borderedProminent, placed at bottom or top-trailing
-  - Destructive actions: .red tint, require confirmation (.confirmationDialog)
-  - Minimum touch target: 44x44pt — always, even if visual size is smaller
-  - Button labels: use verbs ("Save", "Send", "Delete") — never "OK" for actions with consequences
-  - Loading state: replace label with ProgressView, disable button, keep same frame size
+  .glass / .glassProminent — Liquid Glass styles (iOS 26) for controls in the functional layer
+
+Loading state: replace label with ProgressView, disable, keep the same frame size.
 ```
 
 #### Forms and Input
@@ -314,29 +258,6 @@ Validation:
 
 ### 3.8 Motion and Haptics
 
-#### Animation Principles
-```
-HIG animation rules:
-  - Animations serve function — never purely decorative
-  - Standard duration: 0.25-0.35s for most transitions
-  - Spring animations preferred: .spring(response: 0.3, dampingFraction: 0.7)
-  - System transitions: .default uses platform-standard timing
-  - Navigation push/pop: system-managed, never custom
-  - Sheet presentation: system-managed spring animation
-  - State changes: .animation(.default, value: stateProperty)
-  - List insertions/deletions: .animation(.default) with .transition(.slide/.opacity)
-  - Respect Reduce Motion: check accessibilityReduceMotion, use crossfade instead of movement
-
-Transition types:
-  .opacity          — Fade in/out (safest for reduce motion)
-  .slide            — Slide from edge
-  .scale            — Scale up/down
-  .push(from:)      — Push from direction (iOS 16+)
-  .move(edge:)      — Move from specific edge
-  .asymmetric       — Different insertion/removal transitions
-  Combined: .opacity.combined(with: .scale(scale: 0.8))
-```
-
 #### Haptic Feedback
 ```
 UIImpactFeedbackGenerator:
@@ -354,18 +275,15 @@ UINotificationFeedbackGenerator:
   .warning   — Attention needed (destructive action confirmation)
   .error     — Action failed (form validation error)
 
-Rules:
-  - Haptics MUST correspond to visual feedback — never haptic alone
-  - Do not over-use — haptic fatigue reduces effectiveness
-  - Prepare generators before use: generator.prepare()
-  - Match intensity to action significance
+SwiftUI: .sensoryFeedback(.success | .impact(weight:) | .selection, trigger:)
+Haptics always pair with visible feedback.
 ```
 
 ### 3.9 Widgets, Live Activities, and StandBy
 
 #### Widget Design
 ```
-Widget families:
+Widget families (point sizes vary by device — take exact sizes from the HIG widget size table):
   .systemSmall      — 169×169pt (2×2 grid) — single tap target, no scrolling
   .systemMedium     — 360×169pt (4×2) — small amount of info, 2-3 tap targets
   .systemLarge      — 360×379pt (4×4) — more detail, multiple tap targets
@@ -375,7 +293,7 @@ Widget families:
   .accessoryInline  — Lock Screen single line of text
 
 Widget rules:
-  - Widgets are NOT mini apps — show glanceable information, not interactive controls
+  - Glanceable first; interactive controls only as Button/Toggle backed by App Intents (iOS 17+)
   - Tap target = deep link into the app at the relevant screen
   - Use .widgetURL() for single target, Link() for multiple tap targets
   - Timeline: provide entries for known future states (calendar events, weather forecasts)
@@ -392,29 +310,12 @@ Expanded:          Dynamic Island expanded — leading, trailing, center, bottom
 
 Rules:
   - Update frequency: system-limited — push notifications for real-time
-  - Duration: 8 hours max active, then moves to Lock Screen as static
+  - Duration: up to 8 hours active, then the system ends it (stays on Lock Screen up to 4 more hours — confirm before use)
   - Content: time-sensitive, actively progressing (deliveries, sports, timers)
   - Deep link: every tap target links to relevant in-app screen
   - StandBy: Live Activities appear in StandBy mode — ensure readability at distance
 ```
 
-### 3.10 Dark Mode and Appearances
+### 3.10 Dark mode elevation
 
-```
-Design rules:
-  - Dark mode is NOT an inversion — it uses elevated surfaces with depth
-  - Light mode: flat hierarchy, shadows for depth
-  - Dark mode: elevated surfaces (lighter grays) for depth, no shadows
-  - System colors auto-adapt — use them exclusively for standard UI
-  - Custom colors: MUST provide both light and dark variants in Asset Catalog
-  - Images: provide separate assets if needed, or use .renderingMode(.template) for tintable icons
-  - Test in BOTH appearances — never ship without dark mode verification
-
-Background elevation (Dark Mode):
-  Base:      #000000 (pure black on OLED)
-  Elevated:  #1C1C1E (system gray 6)
-  Higher:    #2C2C2E (system gray 5)
-  Highest:   #3A3A3C (system gray 4)
-
-  Sheets/modals auto-elevate one level from their parent
-```
+Base #000000 (OLED) → elevated #1C1C1E (systemGray6) → #2C2C2E (systemGray5) → #3A3A3C (systemGray4); sheets auto-elevate one level. Use semantic background colors rather than these hex values.

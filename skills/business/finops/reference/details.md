@@ -1,6 +1,8 @@
 # finops: detailed reference
 
-> Reference material for the `finops` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Reference for the `finops` skill. Read when Firestore, Cloud Functions, Cloud Storage, or Auth is a top cost driver.
+> Unit prices change; take current ones from firebase.google.com/pricing and date them in the report.
+> No-cost quotas below verified 2026-09-23 against that page.
 
 ## Contents
 - Step 4: Firebase-Specific Optimization
@@ -9,8 +11,8 @@
 
 ### Firestore Read/Write Reduction
 ```
-Firestore costs $0.06/100K reads and $0.18/100K writes.
-At scale, reads are the dominant cost. Reduce them aggressively.
+Firestore bills per document read, write, and delete (no-cost: 50K reads, 20K writes,
+20K deletes per day; Standard edition). At scale, reads dominate. Reduce them first.
 
 Optimization                          Estimated Savings
 ──────────────────────────────────────────────────────────────────
@@ -32,13 +34,14 @@ Anti-patterns to eliminate:
 
 ### Cloud Functions Optimization
 ```
-Cloud Functions cost: invocations ($0.40/M) + compute (CPU-seconds + memory-seconds)
+Cloud Functions cost: invocations + compute (CPU-seconds + memory-seconds); 2nd gen bills as Cloud Run.
+No-cost: 2M invocations and 400K GB-seconds per month (Blaze plan required).
 
 Optimization                          Estimated Savings
 ──────────────────────────────────────────────────────────────────
 Right-size memory (don't use 1GB       Up to 75% compute cost reduction
   when 256MB suffices)
-Increase concurrency (80 req/inst)     Fewer instances = less compute
+Increase concurrency (2nd gen; default 80 req/inst)     Fewer instances = less compute
 Set maxInstances cap                   Prevents runaway costs from traffic spikes
 Reduce cold starts (minInstances=0     Pay nothing when idle
   for low-traffic, =1 for critical)
@@ -79,18 +82,16 @@ Memory right-sizing guide:
   }
 }
 
-// Apply: gsutil lifecycle set lifecycle.json gs://BUCKET_NAME
+// Apply: gcloud storage buckets update gs://BUCKET_NAME --lifecycle-file=lifecycle.json
 // Estimated savings: 40-60% on storage costs for mature projects
 ```
 
 ### Auth Cost Awareness
 ```
-Firebase Auth pricing:
-  Phone auth:              $0.01-0.06 per SMS verification
-  Email/password:          Free (unlimited)
-  Google/Apple/GitHub:     Free (unlimited)
-  Anonymous auth:          Free (unlimited)
-  SAML/OIDC (enterprise): $0.015 per MAU above 50 free
+Firebase Auth pricing (check current rates before quoting):
+  Phone auth:              billed per SMS sent; rate varies by destination country
+  Email, social, anonymous: no-cost up to 50K MAU, then per-MAU pricing
+  SAML/OIDC (enterprise):  per-MAU pricing with a small no-cost allowance
 
 Cost traps:
   ❌ SMS verification for every login (use phone auth only for registration)

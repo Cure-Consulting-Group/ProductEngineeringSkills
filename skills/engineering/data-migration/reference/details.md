@@ -1,114 +1,80 @@
-# data-migration: detailed reference
+# data-migration: Firestore script reference
 
-> Reference material for the `data-migration` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+Read this when adapting a Firestore backfill or restructuring script. Rules and gotchas live in SKILL.md Step 4; these are starting points in the modular Admin SDK (`firebase-admin/firestore`), TypeScript.
 
-## Contents
-- Step 8: Firestore-Specific Migrations
+## Backfill a field (paginate by document ID, BulkWriter, resumable)
 
-## Step 8: Firestore-Specific Migrations
+```ts
+import { getFirestore, FieldPath, FieldValue, Timestamp } from 'firebase-admin/firestore';
 
-### Collection Restructuring
+const db = getFirestore();
 
-```
-Scenario: flattening nested subcollections into top-level collections
+export async function backfillCreatedAtTs(collection: string, opts: { dryRun: boolean; resumeFrom?: string }) {
+  const writer = db.bulkWriter();
+  writer.onWriteError((err) => err.failedAttempts < 5); // retry transient errors, then surface
+  let lastId = opts.resumeFrom;
+  let scanned = 0, changed = 0;
 
-Before:
-  users/{userId}/orders/{orderId}  (subcollection)
+  while (true) {
+    let q = db.collection(collection).orderBy(FieldPath.documentId()).limit(500);
+    if (lastId) q = q.startAfter(lastId);
+    const snap = await q.get();
+    if (snap.empty) break;
 
-After:
-  orders/{orderId}  (top-level, with userId field)
-
-Migration script (Cloud Function):
-  const BATCH_SIZE = 500;
-
-  async function migrateOrders() {
-    const usersSnap = await db.collection('users').get();
-
-    for (const userDoc of usersSnap.docs) {
-      const ordersSnap = await db
-        .collection('users').doc(userDoc.id)
-        .collection('orders').get();
-
-      let batch = db.batch();
-      let count = 0;
-
-      for (const orderDoc of ordersSnap.docs) {
-        const newRef = db.collection('orders').doc(orderDoc.id);
-        batch.set(newRef, {
-          ...orderDoc.data(),
-          userId: userDoc.id,
-          migratedAt: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true }); // merge for idempotency
-
-        count++;
-        if (count % BATCH_SIZE === 0) {
-          await batch.commit();
-          batch = db.batch();
-        }
-      }
-
-      if (count % BATCH_SIZE !== 0) {
-        await batch.commit();
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      // Check in code: where('createdAtTs','==',null) would miss docs where the field is absent.
+      if (data.createdAtTs instanceof Timestamp || typeof data.createdAt !== 'string') continue;
+      changed++;
+      if (!opts.dryRun) {
+        writer.update(doc.ref, {
+          createdAtTs: Timestamp.fromDate(new Date(data.createdAt)),
+          migratedAt: FieldValue.serverTimestamp(),
+          migrationId: '2026-09-createdAtTs',
+        });
       }
     }
+    scanned += snap.size;
+    lastId = snap.docs[snap.docs.length - 1].id;
+    console.log(JSON.stringify({ scanned, changed, checkpoint: lastId })); // persist checkpoint
   }
+  await writer.close();
+}
 ```
 
-### Field Type Changes
+## Flatten a subcollection into a top-level collection
 
-```
-Scenario: converting string timestamps to Firestore Timestamps
+`users/{uid}/orders/{orderId}` → `orders/{orderId}` with a `userId` field. Use a collection-group query so you don't load every user first; keep the source order ID as the target ID so re-runs upsert.
 
-Migration approach (expand-contract):
-  Phase 1: Add new field (createdAtTs: Timestamp) alongside old field (createdAt: string)
-  Phase 2: Backfill new field from old field
-  Phase 3: Update application to write both, read new
-  Phase 4: Drop old field in cleanup migration
-
-Backfill script:
-  async function backfillTimestamps(collectionName: string) {
-    let lastDoc = null;
-    let processed = 0;
-
-    while (true) {
-      let query = db.collection(collectionName)
-        .where('createdAtTs', '==', null)
-        .limit(500);
-
-      if (lastDoc) {
-        query = query.startAfter(lastDoc);
-      }
-
-      const snap = await query.get();
-      if (snap.empty) break;
-
-      const batch = db.batch();
-      for (const doc of snap.docs) {
-        const dateStr = doc.data().createdAt;
-        const timestamp = admin.firestore.Timestamp.fromDate(new Date(dateStr));
-        batch.update(doc.ref, { createdAtTs: timestamp });
-      }
-      await batch.commit();
-
-      lastDoc = snap.docs[snap.docs.length - 1];
-      processed += snap.size;
-      console.log(`Processed ${processed} documents`);
-    }
+```ts
+const writer = db.bulkWriter();
+let last: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+while (true) {
+  let q = db.collectionGroup('orders').orderBy(FieldPath.documentId()).limit(500);
+  if (last) q = q.startAfter(last); // collection-group documentId ordering needs the snapshot or full path
+  const snap = await q.get();
+  if (snap.empty) break;
+  for (const doc of snap.docs) {
+    const userId = doc.ref.parent.parent?.id;
+    if (!userId) continue; // a top-level 'orders' doc from an earlier run
+    writer.set(db.collection('orders').doc(doc.id), { ...doc.data(), userId, migratedAt: FieldValue.serverTimestamp() }, { merge: true });
   }
+  last = snap.docs[snap.docs.length - 1];
+}
+await writer.close();
 ```
 
-### Backfill Scripts Best Practices
+Order-ID collisions across users are possible only if IDs were not auto-generated; check for them in the pre-migration gate before running.
 
-```
-Rules for Firestore backfill scripts:
-  1. Always paginate with startAfter — never load entire collection
-  2. Use batched writes (max 500 operations per batch)
-  3. Add a migratedAt timestamp to every modified document
-  4. Support resumption: log last processed document ID
-  5. Rate limit: add delays between batches if hitting Firestore write limits
-  6. Dry run mode: first run should log what would change without writing
-  7. Validation: count documents before and after, verify sample
-  8. Idempotent: use set with merge or check-before-write patterns
-  9. Run during low-traffic windows (check Firebase console for traffic patterns)
-  10. Monitor Firestore usage dashboard during execution
+## CDC to a target (Functions v2)
+
+```ts
+import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+
+export const syncOrder = onDocumentWritten('orders/{orderId}', async (event) => {
+  const after = event.data?.after;
+  const updateTime = after?.updateTime?.toMillis() ?? Date.now();
+  // Idempotent + ordered: skip if the target already holds a newer version.
+  await upsertTarget(event.params.orderId, after?.exists ? after.data() : null, updateTime);
+});
 ```

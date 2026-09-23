@@ -5,3 +5,9 @@ __pycache__/
 # OS cruft
 .DS_Store
 evals/results/workdirs/
+
+# Generated Antigravity plugin export (scripts/export-antigravity.py) — built in CI, never committed
+dist/
+
+# claude plugin eval results (plugin-evals/, T60) — local run artifacts, never committed
+plugin-evals/results/

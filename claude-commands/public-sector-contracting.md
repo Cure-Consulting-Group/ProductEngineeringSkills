@@ -8,6 +8,8 @@ The governing asymmetry: **government standard forms are drafted entirely for th
 
 ## Pre-Processing (Auto-Context)
 
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
+
 - Contract documents: !`ls 00-source/*ontract* 00-source/*orm* 2>/dev/null || ls *.pdf 2>/dev/null | head`
 - Extracted text: !`ls 00-source/extracted/*.txt 2>/dev/null | head`
 - Insurance schedule present: !`grep -l -i "insurance" 00-source/extracted/*.txt 2>/dev/null | head`
@@ -177,5 +179,5 @@ Open with the disclaimer that it is not legal advice and mark what needs counsel
 
 - Requirement extraction and compliance → `rfp-evaluation`
 - Whether the risk profile justifies the pursuit → `bid-decision`
-- Commercial contract review → `contract-reviewer` agent
+- Commercial contract review → the `contract-reviewer` agent (Claude Code), or a general contract review elsewhere
 - Compliance program design → `compliance-architect`

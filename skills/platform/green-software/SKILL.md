@@ -1,277 +1,132 @@
 ---
 name: green-software
-description: "Apply sustainable software practices — carbon-aware computing, energy-efficient architecture, resource optimization, and sustainability reporting"
-when_to_use: "Use when applying sustainable software practices — carbon-aware computing, energy-efficient architecture, or sustainability reporting."
+description: "Measures and cuts software carbon (SCI score, carbon-aware regions, ESG reports). Use when asked for a carbon footprint, sustainability audit, green architecture, or an SCI score."
+when_to_use: "NOT for cloud cost cutting (use finops) or latency/perf tuning (use performance-review)."
 argument-hint: "[project-or-infrastructure]"
 ---
 
 # Green Software
 
-Build software that minimizes environmental impact. Sustainability is not a nice-to-have — it reduces costs, satisfies ESG requirements, and future-proofs against carbon regulation.
+Outcome: an SCI score (or estimate with stated uncertainty) for the system, the few changes that
+move it most, and — when asked — a stakeholder-ready sustainability report. Done when every number
+names its source (provider tool, estimate formula, or grid-intensity API) and each recommendation
+has an expected carbon and cost effect. Match length to the need; no filler sections.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
-
-Use this context to tailor all output to the actual project.
+- Deploy config: !`ls firebase.json vercel.json app.yaml Dockerfile *.tf 2>/dev/null | head -10 || echo "(none)"`
+- Regions in config: !`grep -rhoE '"?region"?\s*[:=]\s*"?[a-z]+-[a-z]+[0-9]' --include=*.json --include=*.tf --include=*.yaml --include=*.ts . 2>/dev/null | sort -u | head -8 || echo "(none found)"`
 
 ## Step 1: Classify the Sustainability Need
 
 | Need | Output |
 |------|--------|
-| Sustainability audit | Carbon footprint assessment of existing system |
-| Green architecture design | Low-carbon architecture from the start |
-| Carbon measurement | SCI scoring + monitoring dashboard |
-| Resource optimization | Right-sizing infrastructure to eliminate waste |
-| ESG reporting | Sustainability metrics for stakeholder reporting |
-| Mobile efficiency | Battery and network optimization for mobile apps |
+| Sustainability audit | SCI estimate + ranked reduction levers for the existing system |
+| Green architecture design | Region, compute, and scheduling choices for a new system |
+| Carbon measurement | SCI method + monitoring (and the tooling in Code/Artifact Generation) |
+| ESG reporting | Quarterly report from the template below |
+| Mobile efficiency | Battery/network findings for the app |
 
 ## Step 2: Gather Context
 
-1. **Infrastructure** — cloud provider (GCP, AWS, Azure), on-prem, hybrid?
-2. **Cloud regions** — which regions are workloads deployed to? Can they move?
-3. **Workload profile** — real-time vs batch? Steady vs bursty? CPU-bound vs I/O-bound?
-4. **Current resource usage** — monthly compute hours, storage TB, network egress GB?
-5. **Client ESG requirements** — any sustainability commitments, reporting obligations, or certifications?
-6. **Energy sources** — does cloud provider publish carbon intensity per region?
+Ask only for what is missing: cloud provider and regions (and whether they can move), workload
+profile (batch vs real-time, steady vs bursty), monthly usage (vCPU-hours, storage TB, egress),
+and any client ESG commitment or reporting obligation (CSRD, customer questionnaires).
 
-## Step 3: Carbon-Aware Architecture
+## Step 3: The Three Levers (in order of typical impact)
 
-```
-Three levers to reduce software carbon emissions:
+1. **Carbon intensity — where and when.** Region choice dominates everything else for cloud
+   workloads. Use the provider's published per-region data, not memory: GCP publishes grid carbon
+   intensity and carbon-free-energy % per region (cloud.google.com/sustainability/region-carbon);
+   AWS and Azure publish less granular data. Time-shift deferrable batch work to low-intensity
+   windows with the Green Software Foundation Carbon Aware SDK or a forecast from Electricity Maps
+   / WattTime. Latency, data-residency, and compliance constraints override carbon — say so when
+   a move is blocked.
+2. **Energy proportionality — scale to demand.** Idle capacity still draws substantial power.
+   Scale to zero (Cloud Run, Functions) for non-latency-critical services; schedule dev/staging
+   shutdown out of hours; right-size instances from utilization data, not guesses.
+3. **Embodied carbon — hardware.** Prefer shared/managed services over dedicated capacity. Arm
+   instances are usually the most efficient per unit of work: Google claims up to 60% better
+   energy efficiency for Axion C4A vs comparable x86 (vendor figure; cite it as such); AWS Graviton
+   makes similar claims.
 
-1. CARBON INTENSITY — run workloads where/when electricity is cleanest
+Cure gotcha: carbon and cost usually move together, so hand the cost side to `finops` and keep
+this skill to the carbon accounting and the cases where they diverge (e.g. a cheaper region with a
+dirtier grid).
 
-   Region selection:
-     GCP:  us-west1 (Oregon, low carbon), europe-north1 (Finland, wind/nuclear)
-     AWS:  us-west-2 (Oregon), eu-north-1 (Stockholm)
-     Azure: westus (Washington), swedencentral (wind power)
-     Avoid: asia-south1, us-east4 (coal-heavy grids)
+## Step 4: Mobile Efficiency (only for the mobile-efficiency classification)
 
-   Check live carbon intensity: https://app.electricitymaps.com
-   GCP publishes per-region carbon data: cloud.google.com/sustainability/region-carbon
+Findings that matter beyond generic performance hygiene:
+- Background work through WorkManager (Android) / BGTaskScheduler (iOS), batched so the radio
+  wakes rarely; defer large transfers to unmetered networks; respect Low Power / Battery Saver.
+- App size: Android App Bundles; iOS app thinning and on-demand resources. (Bitcode is deprecated
+  since Xcode 14 — do not recommend it.)
+- Dark theme saves display power only on OLED screens, and the saving depends on content and
+  brightness. Offer it and follow the system setting; don't claim a fixed percentage.
+- Profile with Android Studio Energy Profiler / Battery Historian and Xcode Organizer energy reports.
 
-   Time-shifting batch jobs:
-     - Schedule non-urgent workloads for low-carbon windows
-     - Most grids are cleanest 10am-4pm (solar peak) and overnight (low demand)
-     - Use carbon-aware schedulers: Green Software Foundation's carbon-aware-sdk
-     - Cloud Functions / Cloud Run: schedule batch jobs with Cloud Scheduler
+## Step 5: Measurement — Software Carbon Intensity (SCI)
 
-2. ENERGY PROPORTIONALITY — match resources to actual demand
-
-   Idle servers consume 40-60% of peak power but do 0% useful work.
-   Autoscale to zero whenever possible (Cloud Run, Lambda, App Engine).
-   Never run 24/7 infrastructure for workloads that run 8 hours/day.
-
-3. EMBODIED CARBON — reduce hardware manufacturing impact
-
-   Use shared infrastructure (cloud) over dedicated servers
-   Extend hardware lifecycle (don't over-provision just to replace sooner)
-   Prefer ARM-based instances (Graviton, Tau T2A) — 60% less energy per compute unit
-```
-
-## Step 4: Energy-Efficient Patterns
+SCI is ISO/IEC 21031:2024 (the Green Software Foundation spec, standardized):
 
 ```
-Every watt saved = cost saved = carbon saved. Optimize ruthlessly.
-
-Minimize data transfer:
-  - Compress responses (gzip/brotli — 70-90% reduction)
-  - Use binary protocols (protobuf, MessagePack) over JSON where volume is high
-  - Paginate everything — never return unbounded lists
-  - GraphQL: require query complexity limits, ban open-ended resolvers
-  - Cache aggressively: CDN for static, Redis for dynamic, HTTP cache headers
-
-Efficient algorithms:
-  - Profile before optimizing — measure, don't guess
-  - O(n) vs O(n^2) matters at scale — review hot paths for algorithmic waste
-  - Batch database queries (N+1 is an energy problem, not just a performance one)
-  - Debounce/throttle expensive operations (search-as-you-type, scroll handlers)
-
-Reduce compute waste:
-  - Eliminate dead code paths (unused features still get deployed and loaded)
-  - Remove redundant processing (don't re-parse, re-validate, or re-fetch)
-  - Use streaming over buffering for large payloads
-  - Prefer push (webhooks, SSE) over poll (repeated empty requests waste energy)
-
-Right-size infrastructure:
-  - Audit instance sizes quarterly — most are 2-4x over-provisioned
-  - Use committed use discounts (GCP CUDs, AWS Savings Plans) for steady-state
-  - Dev/staging environments: schedule shutdown outside business hours
-  - Database: right-size instance, enable autoscaling, review query plans
+SCI = ((E × I) + M) per R
+  E = energy (kWh)            I = grid carbon intensity (gCO2e/kWh)
+  M = embodied emissions (amortized share)   R = functional unit (per user, per request, per job)
 ```
 
-## Step 5: Mobile Efficiency
+- **E:** prefer the provider's carbon tool (GCP Carbon Footprint, AWS Customer Carbon Footprint
+  Tool, Azure Emissions Impact Dashboard) — note they report monthly with a lag and use
+  market- or location-based methods; state which. Otherwise estimate from vCPU-hours × per-vCPU
+  power coefficients (Cloud Carbon Footprint's published coefficients) and label it an estimate.
+- **I:** Electricity Maps or WattTime APIs for real-time/forecast (both need an API key; confirm
+  the current Electricity Maps API host and version in its docs before use), provider annual
+  averages as fallback.
+- **M:** GSF Impact Framework or Cloud Carbon Footprint embodied-emissions coefficients.
+- Report SCI per feature by tagging resources per service and allocating proportionally.
 
-```
-Mobile devices are battery-powered. Wasted energy = bad UX + environmental cost.
+When a live number is needed, search the web (current sources, dated) for the region's current
+carbon intensity and the latest SCI guidance.
 
-Battery optimization:
-  - Batch network requests (don't wake the radio for every small call)
-  - Use WorkManager (Android) / BGTaskScheduler (iOS) for background work
-  - Respect low-power mode: reduce animations, polling frequency, background sync
-  - Profile with Android Battery Historian / Xcode Energy Organizer
-
-Efficient networking:
-  - Use HTTP/2 or HTTP/3 (multiplexing reduces connections)
-  - Implement delta sync (send changes, not full state)
-  - Compress images before upload (client-side, not server-side)
-  - Respect metered connections: defer large downloads to WiFi
-
-Reduce app size:
-  - Android: use App Bundles (only ship code for user's device)
-  - iOS: enable bitcode, app thinning, on-demand resources
-  - Both: tree-shake unused libraries, compress assets, use WebP/AVIF
-  - Target: <30MB initial download (smaller = more installs, less energy to download)
-
-UI efficiency:
-  - Lazy load off-screen content (RecyclerView/LazyColumn, UICollectionView)
-  - Reduce overdraw: profile with GPU overdraw visualization
-  - Limit animations: 60fps when needed, skip animations in low-power mode
-  - Dark mode: saves 30-60% display power on OLED (offer as default)
-```
-
-## Step 6: Cloud Optimization for Sustainability
-
-```
-Serverless over always-on:
-  Cloud Run / Lambda / Cloud Functions:
-    - Scale to zero when idle (zero energy consumed)
-    - Pay per invocation (aligns cost with carbon)
-    - Cold start tradeoff: acceptable for most workloads (<1s)
-    - Use min-instances=0 for non-latency-critical services
-
-  When serverless doesn't fit:
-    - Persistent connections (WebSockets): use managed services (Firestore, Pub/Sub)
-    - High-throughput steady load: use autoscaled GKE/ECS with aggressive scale-down
-
-Autoscaling to zero:
-  - Cloud Run: default behavior, ensure min-instances=0
-  - GKE: use Knative or KEDA for event-driven scaling
-  - Databases: Firestore (serverless), Cloud SQL with autoscale, or Neon (Postgres serverless)
-  - Redis: use Memorystore with automatic scaling, or eliminate caching tier entirely
-
-Storage lifecycle policies:
-  - Hot → Nearline (30 days) → Coldline (90 days) → Archive (365 days)
-  - Auto-delete logs after retention period (don't store forever by default)
-  - Compress stored data (parquet over CSV = 75% less storage)
-  - Deduplicate: don't store the same file twice (content-addressable storage)
-
-CDN to reduce origin load:
-  - Cache static assets at edge (images, JS, CSS, fonts)
-  - Cache API responses where possible (public data, per-user with Vary header)
-  - Use stale-while-revalidate for non-critical freshness
-  - Edge compute (Cloudflare Workers, Vercel Edge) for transformations
-```
-
-## Step 7: Measurement — Software Carbon Intensity (SCI)
-
-```
-SCI = ((E x I) + M) per R
-
-  E = Energy consumed (kWh)
-  I = Carbon intensity of electricity (gCO2/kWh)
-  M = Embodied carbon of hardware (amortized)
-  R = Functional unit (per user, per API call, per transaction)
-
-How to measure E (energy):
-  Cloud provider tools:
-    GCP: Carbon Footprint dashboard (console.cloud.google.com/carbon)
-    AWS: Customer Carbon Footprint Tool
-    Azure: Emissions Impact Dashboard
-
-  Estimate from compute:
-    kWh = (vCPU hours x TDP watts) / 1000
-    Typical: 1 vCPU-hour ≈ 0.005-0.01 kWh
-
-  Application-level:
-    Use Scaphandre (Linux power measurement) or PowerMetrics (macOS)
-    Cloud Carbon Footprint (open source): cloudcarbonfootprint.org
-
-How to measure I (carbon intensity):
-  Real-time APIs:
-    Electricity Maps API: api.electricitymap.org
-    WattTime API: watttime.org
-  Static averages:
-    GCP publishes per-region annual averages
-    Use as fallback when real-time data unavailable
-
-Green Software Foundation tools:
-  - Impact Framework (IF): standardized measurement pipeline
-  - Carbon Aware SDK: query carbon intensity, shift workloads
-  - SCI Guidance: methodology for calculating SCI score
-
-Per-feature carbon cost:
-  - Tag cloud resources by feature/service
-  - Allocate energy proportionally
-  - Track SCI per feature over time
-  - Include in feature cost analysis alongside infrastructure cost
-```
-
-## Step 8: Sustainability Reporting Template
+## Step 6: Sustainability Report Template (ESG reporting)
 
 ```markdown
-## Sustainability Report — [Project Name] — [Quarter]
+## Sustainability Report — [Project] — [Quarter]
 
-### Energy Usage
-| Metric | This Quarter | Last Quarter | Change |
-|--------|-------------|-------------|--------|
-| Total compute (vCPU-hours) | | | |
-| Total storage (TB-months) | | | |
-| Total network egress (TB) | | | |
+| Metric | This quarter | Last quarter | Change |
+|---|---|---|---|
+| Compute (vCPU-hours) / storage (TB-months) / egress (TB) | | | |
 | Estimated energy (kWh) | | | |
+| Operational / embodied / total (kgCO2e) | | | |
+| SCI (gCO2e per [unit]) | | | |
 
-### Carbon Emissions
-| Metric | This Quarter | Last Quarter | Change |
-|--------|-------------|-------------|--------|
-| Operational carbon (kgCO2e) | | | |
-| Embodied carbon (kgCO2e) | | | |
-| Total carbon (kgCO2e) | | | |
-| SCI score (gCO2e per [unit]) | | | |
+### Initiatives
+| Initiative | Carbon saved (kgCO2e) | Cost saved |
+|---|---|---|
 
-### Efficiency Improvements
-| Initiative | Carbon Saved (kgCO2e) | Cost Saved |
-|-----------|----------------------|------------|
-| Region migration to low-carbon | | |
-| Right-sizing instances | | |
-| Storage lifecycle policies | | |
-| Serverless migration | | |
-| Image optimization | | |
-
-### Goals for Next Quarter
-- [ ] Reduce SCI score by [X]%
-- [ ] Migrate [service] to low-carbon region
-- [ ] Implement autoscale-to-zero for [service]
-- [ ] Add carbon monitoring to CI/CD pipeline
+### Next quarter goals
+- [ ] ...
 
 ### Methodology
-SCI calculated per Green Software Foundation specification v1.0.
-Energy estimated via [cloud provider tool / Scaphandre / Cloud Carbon Footprint].
-Carbon intensity sourced from [Electricity Maps / provider averages].
+SCI per ISO/IEC 21031:2024. Energy from [tool / estimate]. Intensity from [source], [location- or
+market-based].
 ```
 
-## Live Carbon Data
+## Code/Artifact Generation
 
-Use WebFetch or WebSearch to gather:
-- Current carbon intensity for user's cloud region from Electricity Maps API
-- Latest Green Software Foundation SCI guidance
+Applies only when Step 1 classified the request as carbon measurement (tooling) or ESG reporting
+(report). Audits and architecture questions get findings, not files.
 
-## Code Generation (Required)
-
-Generate sustainability tooling using Write:
-1. **SCI calculator**: `scripts/calculate-sci.ts` — Software Carbon Intensity score from cloud billing
-2. **Carbon-aware scheduler**: `src/scheduler/carbon-aware.ts` — delays non-urgent jobs to low-carbon periods
-3. **Sustainability report**: `docs/sustainability-report.md` — SCI score, trends, optimization plan
+| Classification | Write |
+|---|---|
+| Carbon measurement | `scripts/calculate-sci.ts` — SCI from billing/usage export; `src/scheduler/carbon-aware.ts` — defers flagged jobs to low-intensity windows |
+| ESG reporting | `docs/sustainability-report.md` from the Step 6 template |
 
 ## Cross-References
 
-- `/infrastructure-scaffold` — cloud infrastructure where green decisions are made
-- `/finops` — cost optimization aligns directly with carbon optimization
-- `/performance-review` — performance improvements reduce energy waste
-- `/observability` — monitoring infrastructure for carbon metrics
-- `/ci-cd-pipeline` — add carbon measurement to deployment pipelines
+- `finops` — cost side of the same levers
+- `performance-review` — performance work that also cuts energy
+- `infrastructure-scaffold` — where region and scaling decisions land
+- `observability` — exporting carbon metrics to dashboards

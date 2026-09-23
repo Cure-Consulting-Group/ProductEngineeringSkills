@@ -1,119 +1,110 @@
 ---
 name: firebase-architect
-description: "Design Firestore schemas, security rules, Cloud Functions, and data layer architecture"
-when_to_use: "Use when designing Firestore schemas, security rules, Cloud Functions v2, or Firebase data layer architecture. NOT for Firebase security auditing (use firebase-security-auditor agent)."
+description: "Designs Firestore data models, security rules, Cloud Functions v2, and App Check. Use when building a Firebase feature, writing rules or triggers, or wiring a Firestore data layer."
+when_to_use: "NOT for auditing existing rules (firebase-security-auditor agent), engine choice or SQL (use database-architect), or backfills (use data-migration)."
 argument-hint: "[feature-or-collection]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Firebase Architect
 
-Generates production-grade Firebase architecture. Every output is security-first, offline-aware, and Clean Architecture compliant (Firebase never leaks into domain layer).
+**Outcome:** a Firebase feature design that is secure by default and keeps Firebase out of the domain layer — collection tree, document shapes, access-pattern → index table, security rules with emulator tests, and any server logic as Functions v2. Done when every collection the clients touch has a rule and a rules test, every query has an index, and no domain or presentation code imports a Firebase type. Path rules in `rules/firebase.md` (Claude Code) carry the same standards for code edits.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Firebase files: !`ls firebase.json firestore.rules storage.rules firestore.indexes.json 2>/dev/null || echo "(none)"`
+- Databases and functions config: !`grep -nE '"(database|source|runtime)"' firebase.json 2>/dev/null | head -8 || echo "(no firebase.json)"`
+- Functions runtime: !`grep -nE '"(node|firebase-functions|firebase-admin)"' functions/package.json 2>/dev/null | head -4 || echo "(no functions/)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Core Principle: Firebase in Clean Architecture
-
-```
-Presentation Layer  →  ViewModel / StateFlow
-Domain Layer        →  UseCases + Repository INTERFACES only (no Firebase imports)
-Data Layer          →  FirestoreDataSource, FirebaseAuthDataSource, DTO models
-                        ↓
-                    Firebase SDK (Firestore, Auth, Functions, Storage)
-```
-
-**Hard rules:**
-- No `FirebaseFirestore` or `DocumentReference` in domain or presentation layers
-- DTOs live in data layer; map to/from domain models at the repository boundary
-- All Firestore listeners converted to `Flow` via `callbackFlow`
-- All writes use structured error handling (`Result<T>` / `sealed class`)
-
-## Step 1: Classify the Request
-
-| Request | Primary Output | Action |
-|---------|---------------|--------|
-| Data modeling / schema | Collection design + security rules | Design schema |
-| Security rules | Rules file + test spec | Write rules |
-| Cloud Function | TypeScript function scaffold | Scaffold function |
-| Auth flow | Auth architecture + rules | Design auth |
-| Android integration | Repository + DataSource + DTO scaffold | Scaffold data layer |
-| Full feature | All of the above | Generate everything |
+| Request | Output |
+|---|---|
+| Data model | Collection tree + document shapes + access-pattern/index table + rules |
+| Security rules | `firestore.rules` changes + rules unit tests |
+| Server logic | Functions v2 trigger or callable + idempotency plan |
+| Client data layer | DTO + data source + repository impl (Android/iOS/web) |
+| Full feature | All of the above, scoped to the feature |
+| Review or question | Findings with severity, or an answer; no files |
 
 ## Step 2: Gather Context
 
-Before generating, confirm:
-1. **Feature name** — e.g., "Subscription Management"
-2. **Collections involved** — new or existing?
-3. **Auth model** — Firebase Auth UID as primary key? (default: yes)
-4. **Access patterns** — who reads what? (user reads own data, admin reads all, etc.)
-5. **Offline requirement** — does this feature need to work offline?
-6. **Scale expectation** — hundreds / thousands / millions of documents?
+Confirm: feature and collections (new or existing), who reads/writes what (owner, org member, admin, public), offline needs (then pair with `offline-first`), scale, and whether a named database is in use.
 
-## Step 3: Firestore Design Principles (Always Apply)
+## Step 3: Data Model Rules
 
-### Collection Structure Rules
-- **Root collection** for entities queried across users (admin dashboards, analytics)
-- **Subcollection** for entities owned by a single parent document (user's orders, posts)
-- **Denormalize aggressively** — Firestore is not relational; duplicate data to avoid joins
-- **Max document size**: 1MB. Arrays > 10k items → subcollection
-- **Avoid deeply nested subcollections** (max 2 levels deep in practice)
+- **Clean Architecture boundary:** no `FirebaseFirestore`, `DocumentReference`, `Timestamp`, or `DocumentSnapshot` above the data layer. DTOs map to domain models in the repository; listeners become `Flow` via `callbackFlow` (Android) or `AsyncStream` (iOS); writes return `Result`.
+- **IDs:** `users/{uid}` uses the Auth UID; entities use auto-IDs; slugs only for known-key lookups. No sequential or date-prefixed IDs on high-write collections (index hotspots) — store the time in a field.
+- **Shape:** subcollection for unbounded or separately secured children; arrays only for small bounded sets; 1 MiB doc cap; ~1 sustained write/sec per document, so shard counters.
+- **Timestamps:** `createdAt`/`updatedAt` set with `FieldValue.serverTimestamp()` (`import { FieldValue } from 'firebase-admin/firestore'` on the server; `serverTimestamp()` from `firebase/firestore` on web). Rules enforce `request.resource.data.updatedAt == request.time`.
+- **Denormalized copies** are listed in the design with the Function that maintains each one.
+- **Named databases** (up to 100 per project) for residency or hard tenant isolation only; each has its own rules, indexes, and `firebase.json` entry, and triggers must pass `database: '<id>'`.
 
-### Document ID Rules
+## Step 4: Security Rules Patterns
+
+Deny by default; every `match` is explicit. Patterns Cure uses:
+
 ```
-users/{uid}                    ← Firebase Auth UID always
-users/{uid}/subscriptions/{id} ← Auto-generated Firestore ID
-products/{slug}                ← Human-readable slug when queried by known key
-events/{YYYY-MM-DD}_{id}      ← Date-prefixed for time-series queries
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function hasRole(role) { return signedIn() && request.auth.token.role == role; } // custom claim, set server-side
+    function onlyChanges(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || hasRole('admin');
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'createdAt', 'updatedAt'])
+        && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(uid) && onlyChanges(['displayName', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false; // deletion goes through a Function that cleans up subcollections
+    }
+  }
+}
 ```
 
-### Timestamp Rules
-- All documents include `createdAt: Timestamp` and `updatedAt: Timestamp`
-- Use `FieldValue.serverTimestamp()` on write — never client-side Date
-- Index `createdAt` and `updatedAt` on any collection with list/sort queries
+- Privileged fields (`role`, `plan`, `credits`, `status`) are never client-writable; they change only via Admin SDK in Functions. Use custom claims for roles, not a client-readable `role` field.
+- `list` queries must be constrained by the rule (rules are not filters): a rule `resource.data.ownerId == request.auth.uid` requires the client query to include `where('ownerId', '==', uid)`.
+- Minimise `get()`/`exists()` lookups in hot rules — each is a billed read and adds latency.
+- Every rule change ships with `@firebase/rules-unit-testing` tests against the emulator (allowed and denied cases). Mirror the same discipline in `storage.rules` (content type + size limits per path).
 
-## Step 4: Output Format
+## Step 5: Cloud Functions v2
 
-For schema designs, always output:
-1. **Collection hierarchy diagram** (ASCII tree)
-2. **Document shape** (TypeScript interface + Kotlin data class)
-3. **Access patterns table** (query → index requirement)
-4. **Security rules** (scoped to this feature)
-5. **Android Data Layer scaffold** (DTO + Repository impl stub)
-6. **Cloud Functions** (if writes need server-side logic)
+- Triggers from `firebase-functions/v2/firestore`: `onDocumentCreated`, `onDocumentUpdated`, `onDocumentDeleted`, `onDocumentWritten` (not the v1 `onCreate`/`onWrite`). HTTPS/callables from `firebase-functions/v2/https`.
+- Delivery is at-least-once: make handlers idempotent (use `event.id` or a deterministic target ID) and guard against self-triggering loops when a trigger writes to the document it watches.
+- Admin SDK is modular: `initializeApp()` from `firebase-admin/app`, `getFirestore()` from `firebase-admin/firestore`, `getAuth()` from `firebase-admin/auth`.
+- Callables that clients invoke set `enforceAppCheck: true`; set `region` and `minInstances` explicitly for latency-sensitive paths; secrets via `defineSecret`, never plain env vars.
 
-## Code Generation (Required)
+## Step 6: App Check
 
-You MUST generate actual Firebase files using Write:
+Enable App Check for Firestore, Storage, Functions, and any AI/Vertex endpoints before launch: Play Integrity (Android), App Attest with DeviceCheck fallback (iOS), reCAPTCHA Enterprise (web). Roll out in monitor mode, watch the verified-request ratio in the console, then enforce. Debug providers only in debug builds; register CI debug tokens as secrets. App Check reduces abuse; it does not replace rules.
 
-1. **Security Rules**: `firestore.rules` — deny-by-default with per-collection rules, field validation, auth checks
-2. **Indexes**: `firestore.indexes.json` — composite indexes for all planned queries
-3. **Data Models** (TypeScript): `functions/src/models/{collection}.ts` — typed interfaces matching schema
-4. **Data Models** (Kotlin): `data/model/{Collection}.kt` — Firestore-compatible data classes
-5. **Data Models** (Swift): `Models/{Collection}.swift` — Codable structs
-6. **Cloud Function triggers**: `functions/src/triggers/{collection}.ts` — onCreate/onUpdate/onDelete handlers
-7. **Storage Rules**: `storage.rules` — file type and size validation
-8. **Firebase config**: `firebase.json` — hosting, functions, firestore, storage config
+## Code/Artifact Generation
 
-Before generating, Read existing `firestore.rules` and `firebase.json` if they exist. Extend rather than replace.
+Applies only when Step 1 calls for building (not reviews or questions). Read existing `firestore.rules`, `firestore.indexes.json`, and `firebase.json` first and extend them; never overwrite.
 
-Use Grep to find all Firestore references in client code: `collection(|doc(|getFirestore` to ensure all collections have rules.
+Produce the files the classification needs, from this set: rules + rules tests, index entries, TypeScript document types for Functions, platform DTOs (Kotlin data class / Swift `Codable`) for the platforms the repo has, and v2 triggers or callables. Deliver the requested feature; don't restructure unrelated collections or rules.
 
-## Tech Stack Defaults
+## Current Defaults (verified 2026-09-23)
 
-```yaml
-firebase_sdk_android: firebase-bom:33.x
-firestore_android: ktx, offline persistence enabled
-auth: Firebase Auth (email, Google Sign-In)
-functions: TypeScript, Node 20, Cloud Functions v2
-emulator: firestore:8080, auth:9099, functions:5001, storage:9199
-rules_testing: @firebase/rules-unit-testing + Jest
-android_coroutines: kotlinx-coroutines-play-services for Task → suspend
-```
+| Component | Default | Source |
+|---|---|---|
+| Android SDK | Firebase BoM 34.x (34.19.0 on 2026-09-09); main modules only — KTX artifacts were removed from BoM 34.0.0, and their Kotlin APIs now live in the main modules | firebase.google.com/support/release-notes/android |
+| Functions runtime | Node.js 22 (`"engines": {"node": "22"}`); Node 20 is deprecated on Cloud Run functions (2026-04-30) and decommissioned 2026-10-30. Node 24 is GA on Cloud Run functions but not yet listed by the Firebase docs — confirm Firebase CLI support before use | firebase.google.com/docs/functions/manage-functions; docs.cloud.google.com/functions/docs/runtime-support |
+| Functions API | 2nd gen (`firebase-functions/v2/*`), TypeScript | firebase.google.com/docs/functions/firestore-events |
+| Emulators | firestore 8080, auth 9099, functions 5001, storage 9199 | — |
+| Rules tests | `@firebase/rules-unit-testing` + the project's test runner | — |
+
+## Related skills
+
+- `firebase-security-auditor` agent — audit of existing rules.
+- `database-architect` — engine choice, indexes, SQL.
+- `data-migration` — reshaping or backfilling existing Firestore data.
+- `offline-first` — local cache, sync, conflicts.
+- `security-review` — broader threat model.

@@ -1,7 +1,7 @@
 ---
 name: public-sector-contracting
-description: "Navigate government contract terms — liability, IP, termination for convenience, non-appropriation, insurance, exceptions strategy"
-when_to_use: "Use when reviewing a municipal/state/federal contract form or deciding what exceptions to take. NOT for commercial MSAs (use contract-reviewer agent)."
+description: "Reviews government contract terms: liability, IP, termination, non-appropriation, insurance. Use when reading a municipal, state, or federal contract form or choosing exceptions."
+when_to_use: "NOT for commercial MSAs or NDAs (the contract-reviewer agent under Claude Code, or a general contract review)."
 argument-hint: "[solicitation-or-contract-name]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
 ---
@@ -15,6 +15,8 @@ Review government contract forms for the risks that matter, and decide what to p
 The governing asymmetry: **government standard forms are drafted entirely for the buyer, and are usually presented as non-negotiable.** Some of that is real (statutory requirements cannot be waived). Some is convention that yields to a well-framed exception. Knowing the difference is the skill.
 
 ## Pre-Processing (Auto-Context)
+
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
 - Contract documents: !`ls 00-source/*ontract* 00-source/*orm* 2>/dev/null || ls *.pdf 2>/dev/null | head`
 - Extracted text: !`ls 00-source/extracted/*.txt 2>/dev/null | head`
@@ -185,5 +187,5 @@ Open with the disclaimer that it is not legal advice and mark what needs counsel
 
 - Requirement extraction and compliance → `rfp-evaluation`
 - Whether the risk profile justifies the pursuit → `bid-decision`
-- Commercial contract review → `contract-reviewer` agent
+- Commercial contract review → the `contract-reviewer` agent (Claude Code), or a general contract review elsewhere
 - Compliance program design → `compliance-architect`

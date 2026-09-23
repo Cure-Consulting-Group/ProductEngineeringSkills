@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: t04-ci-workflow
+context:
+  scaffold_script: fixture.sh

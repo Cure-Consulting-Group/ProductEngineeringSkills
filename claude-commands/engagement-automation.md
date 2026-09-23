@@ -2,7 +2,11 @@
 
 Pick the right recurring-execution mechanism before wiring anything. Claude Code has five, and most automation failures come from using the wrong one: a session loop for work that must survive laptop sleep, a cloud routine for something CI already does deterministically, or unattended write-access nobody scoped.
 
-This skill covers **harness-level** automation — Claude Code running Cure's skills on a schedule or trigger. For designing the AI workflow *inside* a product, use `/agent-workflow-designer`.
+This skill covers **harness-level** automation — Claude Code running Cure's skills on a schedule or trigger. For designing the AI workflow *inside* a product, use the `agent-workflow-designer` skill.
+
+**Done** when each task has one Automation Plan (Step 5) with an exact invocation, a budget cap, a durable delivery target, and a liveness owner.
+
+**Other runtimes.** `/loop`, `/schedule` routines, and `.claude/loop.md` are Claude Code features. Codex CLI and Antigravity (agy) have no session loop or cloud routine: run them headless (`codex exec …`, `agy -p …`) from CI cron or a system scheduler instead. Both can load plugin hooks, but Cure's `hooks/hooks.json` assumes Claude Code's environment — don't reuse it there. These runtimes change monthly; confirm before use against `docs/evaluations/2026-09-23/platform-facts.md` in the plugin repo.
 
 ## Step 1: Classify the Mechanism
 
@@ -63,13 +67,13 @@ Is it deterministic (no LLM judgment needed)?
 
 - Triggers: cron schedule, authenticated API POST, or GitHub webhook (PR opened, release published).
 - Runs on Anthropic infrastructure with **no local permission prompts** — treat every routine as unattended (Step 4 applies in full).
-- Always set the per-routine token limit and daily run cap. No exceptions.
+- Always set the per-routine token limit and daily run cap — an uncapped routine that retries is an open-ended bill.
 - Interactively-authenticated MCP servers are absent in headless runs — don't build a routine around one.
 - See `docs/AUTOMATION.md` in the plugin repo for copy-paste recipes.
 
 ### CI cron
 
-If the check is expressible as a shell command with a pass/fail exit code, it belongs in `.github/workflows/`, not in an LLM loop. Use `/ci-cd-pipeline` to scaffold it.
+If the check is expressible as a shell command with a pass/fail exit code, it belongs in `.github/workflows/`, not in an LLM loop. Use the `ci-cd-pipeline` skill to scaffold it.
 
 ### Hook
 
@@ -79,12 +83,12 @@ If the real requirement is "every time X happens, do Y", that's a hook, not a sc
 
 Anything that runs without a human watching:
 
-1. **Read-only by default.** Unattended runs report; humans apply. The never-unattended list — production deploys, database migrations, dependency upgrades that auto-merge, anything touching secrets or billing — is absolute.
+1. **Read-only by default.** Unattended runs report; humans apply. The never-unattended list — production deploys, database migrations, dependency upgrades that auto-merge, anything touching secrets or billing — stays human-run, because a wrong unattended change there is irreversible or costly before anyone sees it.
 2. **Budget caps are mandatory.** Per-run token limit + daily run cap on every routine. A silently-degraded routine that retries hourly is a four-figure surprise.
 3. **Deliver somewhere durable.** Every run ends by writing its result to an issue, PR comment, or report file. A routine whose output only lives in a session transcript doesn't exist.
 4. **Stop conditions, not vibes.** Self-paced loops state the goal AND the give-up condition ("stop when tests pass or after 5 attempts; report either way").
-5. **Non-blocking iterations, always.** Every loop iteration terminates: non-interactive commands only, no watch mode or dev servers, no prompts, hard timeouts on anything slow. One blocked iteration silently kills the whole automation — this has bitten before.
-5. **Verify liveness monthly.** Loops expire in 7 days; routines fail silently when auth or webhooks rot. Put a "check the automations" line in the engagement's recurring ops.
+5. **Non-blocking iterations, always.** Every loop iteration terminates: non-interactive commands only, no watch mode or dev servers, no prompts, hard timeouts on anything slow. One blocked iteration silently kills the whole automation.
+6. **Verify liveness monthly.** Loops expire in 7 days; routines fail silently when auth or webhooks rot. Put a "check the automations" line in the engagement's recurring ops.
 
 ## Step 5: Output
 
@@ -102,4 +106,4 @@ Stop/expiry:  [goal + give-up condition, or expiry re-arm plan]
 Owner:        [who checks liveness, cadence]
 ```
 
-Cross-references: `/agent-workflow-designer` for product-AI workflow patterns, `/ci-cd-pipeline` for CI cron scaffolds, `/incident-response` for what to do when an automation pages you. Skills with a documented recurring shape carry a "Recurring Mode" section (finops, burn-rate-tracker, investor-reporting, security-review, and others).
+Cross-references: `agent-workflow-designer` for product-AI workflow patterns, `ci-cd-pipeline` for CI cron scaffolds, `incident-response` for what to do when an automation pages you. Skills with a documented recurring shape carry a "Recurring Mode" section (finops, burn-rate-tracker, investor-reporting, security-review, and others).

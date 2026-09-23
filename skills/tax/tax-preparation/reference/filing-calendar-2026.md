@@ -31,7 +31,7 @@ substitute the real states of formation and nexus.
 | **Sep 15** | **Q3 2026 estimated payment** | Individual, corps |
 | **Sep 15** | Extended Form 1065 / 1120-S | If extended |
 | **Oct 15** | Extended Form 1120 / 1040 | If extended |
-| **Dec 31** | **401(k) deferral elections in place for 2026** (existing plans / employees). Exception: a sole prop or single-member LLC adopting its **first** plan may make 2026 deferrals up to the 2026 return due date (SECURE 2.0 §317) | any sponsoring entity |
+| **Dec 31** | **401(k) deferral elections in place for 2026** (existing plans / employees). Exception: a sole prop or single-member LLC adopting its **first** plan may make 2026 deferrals up to the unextended 2026 return due date (SECURE 2.0 §317) | any sponsoring entity |
 | **Dec 31** | Last day for most 2026 tax-year actions: asset placed in service, charitable gifts, Roth conversions, loss harvesting | all |
 
 ## The following filing season

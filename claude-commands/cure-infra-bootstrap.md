@@ -7,7 +7,9 @@
 > they confirm. No runtime enforces this for you (`allowed-tools` grants, it does
 > not restrict), so the confirm step is the guardrail.
 
-Provisions and maintains the `.claude/` development surface area in any project.
+**Outcome:** the target project's managed files match its `claude.manifest.json` and the pinned
+library version; done when `doctor` prints `no drift detected.` (or, for `doctor`/`inventory`, when
+the report is delivered). Don't hand-edit managed files or touch unrelated project files.
 
 The actual engine is the npm package `@cure-consulting-group/claude-bootstrap`
 (in `bootstrap/` of this repo). This skill is the conversational front door —
@@ -37,11 +39,11 @@ Before running the CLI, collect (silently):
 1. Run `pwd && ls -la && cat claude.manifest.json 2>/dev/null` to see the
    current state.
 2. If `init`: detect the stack via `cat package.json build.gradle.kts Podfile go.mod 2>/dev/null` to know what to suggest.
-3. Find the skills repo source. Priority order:
-   - Look for `$CLAUDE_SKILLS_DIR` in env.
-   - Look at `~/dev/ProductEngineeringSkills`, `~/Documents/ProductEngineeringSkills`, `/usr/local/lib/cure-skills`.
-   - Try `npm root -g` and check for `@cure-consulting-group/product-engineering-skills`.
-   - If none found, ask the user to point at the skills repo with `--skills-source`.
+3. Find the skills repo source (the CLI resolves `--skills-source`, then `$CLAUDE_SKILLS_DIR`,
+   then the installed npm package). If neither flag nor env var is set, look for a checkout of
+   `ProductEngineeringSkills` in the user's usual project root (e.g. `~/dev/`, or an external
+   volume such as `/Volumes/<drive>/projects/`) and `npm root -g`; if still not found, ask the
+   user for the path. Confirm it contains `.claude-plugin/plugin.json`.
 
 ## Step 3: Confirm choices with the user (init only)
 
@@ -88,8 +90,11 @@ node <path-to-bootstrap>/bin/claude-bootstrap.mjs inventory \
   ../project-a ../project-b ../project-c
 ```
 
-Once `@cure-consulting-group/claude-bootstrap` is published to GitHub Packages,
-substitute `npx @cure-consulting-group/claude-bootstrap` for the `node …` form.
+`@cure-consulting-group/claude-bootstrap` is published to GitHub Packages (0.3.1 as of
+2026-09-23; check with `npm view @cure-consulting-group/claude-bootstrap version
+--registry=https://npm.pkg.github.com`). `npx @cure-consulting-group/claude-bootstrap …` works in
+place of the `node …` form once the machine's `.npmrc` maps `@cure-consulting-group` to
+`https://npm.pkg.github.com` with a token that has `read:packages`; otherwise use the checkout.
 
 ## Step 5: Interpret the output
 
@@ -106,15 +111,10 @@ If exit code 2: open the `.claude/upgrades/*.conflict` files alongside the
 preserved files, merge by hand, then re-run `apply` (the next run will
 recompute hashes against the merged content).
 
-## Step 6: Verify
+## Step 6: Acceptance
 
-After any successful `init` or `apply`:
-
-```bash
-node <path-to-bootstrap>/bin/claude-bootstrap.mjs doctor --skills-source ...
-```
-
-Should print `no drift detected.`
+After `init` or `apply`, `doctor` against the same `--skills-source` must print
+`no drift detected.` Report the per-file plan and the doctor result to the user.
 
 ## Constraints
 

@@ -1,168 +1,82 @@
 # SDLC Artifact Generator
 
+Turns a feature description into traceable engineering documents: PRD → RFC/ADR → Epics → Stories →
+Tasks and test specs. Done when the requested artifact exists, every story has Given/When/Then
+criteria and points, and IDs link each artifact to its parent.
+
+Match length to the need; no filler sections or restated summaries.
+
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Existing specs (numbering and format to follow): !`{ ls docs/adr docs/rfcs docs/prd docs/epics 2>/dev/null || echo "(none)"; } | head -20`
+- Issue templates in force: !`ls .github/ISSUE_TEMPLATE 2>/dev/null || echo "(none)"`
+- Stack manifests: !`ls package.json build.gradle.kts Podfile pyproject.toml go.mod 2>/dev/null || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-Additionally gather (domain-specific):
-- `ls docs/adr docs/rfc docs/prd 2>/dev/null` — existing SDLC artifacts to stay consistent with (numbering, format)
-- `find docs -name "*.md" -newer .git/HEAD 2>/dev/null | head -5` — recently touched docs (active spec work)
-- `ls .github/ISSUE_TEMPLATE 2>/dev/null` — issue/story conventions already in force
-
-Full-cycle software development lifecycle artifact generation for technical product teams. Generates production-grade, opinionated SDLC artifacts aligned with Clean Architecture, SOLID principles, and modern mobile/backend engineering standards.
-
-## Core Principle: Artifact Traceability Chain
-
-```
-Vision / Initiative
-    └── PRD (Product Requirements Document)
-          ├── RFC (Request for Comments) — for non-trivial architectural choices
-          ├── ADR (Architecture Decision Record) — one per key decision made
-          └── Epics (major phases of work)
-                └── Stories (user-facing units of work, with points)
-                      ├── Tasks / Subtasks (engineering breakdown)
-                      ├── Design Ticket (linked to story)
-                      ├── API Spec (if applicable)
-                      ├── Unit Test Spec
-                      └── E2E / Integration Test Spec (if applicable)
-```
-
-## Step 1: Determine What the User Needs
-
-| Request type | Primary artifact | Secondary artifacts |
+| Request | Primary artifact | Offer next |
 |---|---|---|
-| New feature/product | PRD → Epics → Stories | ADR, RFC, API Spec, Test Specs |
-| Architectural decision | ADR | RFC (if pre-decision), Story to implement |
-| Backlog generation | Epics + Stories | Test Specs, Design Tickets |
-| Single story/ticket | Story + Tasks | Unit Test Spec, Design Ticket |
-| RFC for proposal | RFC | ADR (after decision), Stories |
-| API definition | API Spec (OpenAPI 3.1) | Stories, Test Spec |
+| New feature/product | PRD → Epics → Stories | ADR, RFC, API spec, test specs |
+| Architectural decision | ADR | RFC (if still undecided), implementing story |
+| Proposal needing input | RFC | ADR after the decision |
+| Backlog generation | Epics + Stories | Test specs, design tickets |
+| Single story/ticket | Story + Tasks | Unit test spec |
+| API definition | API spec (OpenAPI — version and conventions owned by `api-architect`) | Stories, contract test spec |
 
-If the user's request is ambiguous, ask: "What's the scope? New feature, architecture decision, or full backlog?"
+Ambiguous scope → ask once: "New feature, architecture decision, or full backlog?"
 
-## Step 2: Gather Context (Required Inputs)
+## Step 2: Gather Context
 
-1. **Feature/system name** — e.g., "Stripe Subscription Flow"
-2. **Platform** — Android / Backend / Full-stack / Web
-3. **Tech stack** — default: Kotlin + Jetpack Compose + Hilt + Firebase + GCP + Stripe
-4. **Scope level** — Single story | Feature | Epic | Full product
-5. **Any existing constraints** — existing ADRs, API contracts, design system
+Feature/system name, platform, stack (defaults below), scope level, and constraints already in force
+(existing ADRs, API contracts, design system). Infer what you can; ask at most one question.
 
-If missing, infer from context or ask one clarifying question max.
+## Step 3: Artifact Contracts
 
-## Step 3: Generate Artifacts
+Write the sections listed; omit any that genuinely don't apply rather than padding.
 
-Generate the appropriate artifact type(s) based on the request classification.
+- **PRD** — Problem (who, evidence), Goals and non-goals, Success metrics (baseline → target),
+  Scope (Must/Should/Could/Won't), User flows, Requirements (functional, non-functional), Risks and
+  open questions, Rollout (flag, phases), Epic list.
+- **RFC** — Context, Proposal, Alternatives considered (each with why-not), Trade-offs, Rollout and
+  migration, Open questions, Decision deadline and deciders.
+- **ADR** — Status, Context, Decision, Consequences (positive, negative, follow-ups), Alternatives.
+  One decision per ADR; never edit an accepted ADR — supersede it.
+- **Epic** — Goal, stories list, dependencies, exit criteria.
+- **Story** — "As a … I want … so that …", Given/When/Then criteria, points, linked design/API/test IDs.
+- **Task / test spec** — implementation steps with files touched; test cases as input → expected result, including failure paths.
 
-## Step 4: Output Format Rules
+## Step 4: Conventions
 
-### Numbering Convention
-```
-PRD-001          → Product Requirements Document
-RFC-001          → Request for Comments
-ADR-001          → Architecture Decision Record
-EPIC-001         → Epic
-STORY-001        → Story (child of an Epic)
-TASK-001         → Task (child of a Story)
-DESIGN-001       → Design ticket (child of a Story)
-TEST-UNIT-001    → Unit test spec
-TEST-E2E-001     → E2E/integration test spec
-API-001          → API specification
-```
+**IDs:** `PRD-001`, `RFC-001`, `ADR-001`, `EPIC-001`, `STORY-001`, `TASK-001`, `DESIGN-001`,
+`TEST-UNIT-001`, `TEST-E2E-001`, `API-001`. Continue existing numbering.
 
-### Story Points (Fibonacci)
-- 1 pt: Trivial change, config, copy
-- 2 pt: Simple, well-understood, <4hrs
-- 3 pt: Clear scope, minor unknowns, ~1 day
-- 5 pt: Moderate complexity, some unknowns, 1-2 days
-- 8 pt: Complex, multiple components, 2-3 days
-- 13 pt: Large, should consider splitting
-- 21 pt: Must be split before sprint
+**Points (Fibonacci):** 1 trivial · 2 <4h · 3 ~1 day · 5 1–2 days · 8 2–3 days · 13 split
+recommended · 21 must split before sprint.
 
-### Acceptance Criteria Format
-Use Given/When/Then (Gherkin-style) for every story:
-```
-Given [precondition]
-When [action]
-Then [expected outcome]
-And [additional outcome]
-```
+**Acceptance criteria:** Given/When/Then for every story.
 
-### Definition of Done (applied to every story)
-- [ ] Code reviewed and approved (min. 1 reviewer)
-- [ ] Unit tests written and passing (coverage >= 80%)
-- [ ] Integration/E2E test written (if applicable)
-- [ ] API spec updated (if contract changed)
-- [ ] ADR written for any architectural decision made during implementation
-- [ ] Feature documentation updated
-- [ ] Design QA sign-off (if UI changes)
-- [ ] No new lint warnings / detekt violations
-- [ ] Feature flag in place (if applicable)
+**Definition of Done (every story):** reviewed by ≥1 engineer; unit tests pass and coverage meets
+the `testing-strategy` threshold (that skill owns the number); integration/E2E test if the story
+crosses a boundary; API spec updated if the contract changed; ADR for any architectural decision
+made during implementation; design QA for UI changes; no new lint violations; feature flag if the
+rollout is staged.
 
-## Step 5: Backlog Ordering Rules
+**Ordering:** MoSCoW inside each epic; sequence Infrastructure → Data → Business logic → UI →
+Integration → Polish/QA.
 
-Prioritize using MoSCoW within each Epic:
-- **M** (Must Have) — core path, no launch without
-- **S** (Should Have) — high value, workaround exists
-- **C** (Could Have) — nice-to-have, cut if needed
-- **W** (Won't Have this cycle) — explicitly deferred
+## Step 5: Deliver
 
-Sprint sequencing: Infrastructure → Core Data Layer → Business Logic → UI → Integration → Polish/QA
+- 1–3 stories, or one ADR the user will paste elsewhere: answer inline.
+- Anything larger, or when the repo already keeps specs in `docs/`: write files at the existing
+  paths (defaults `docs/prd/{name}.md`, `docs/adr/{NNN}-{title}.md`, `docs/rfcs/{name}.md`,
+  `docs/epics/{name}.md`, `docs/tasks/{id}.md`); multi-epic output gets a table of contents.
+- Then offer the next artifact from the Step 1 table.
 
-## Output Delivery
+## Cure Stack Defaults (override when the user or repo says otherwise)
 
-- For small requests (1-3 stories): Output inline as structured Markdown
-- For medium requests (1 epic, 5-15 stories): Generate a `.md` file
-- For large requests (full product, multiple epics): Generate a `.md` file with table of contents and cross-linked references
-- Always offer: "Want me to also generate the [ADR / RFC / API spec / test specs] for this?"
-
-## Artifact Generation (Required)
-
-You MUST generate actual documents using Write, not just describe formats:
-
-Based on the classified request type, generate:
-- **PRD**: `docs/prd/{name}.md` with full sections (Problem, Solution, Scope, Metrics, Timeline)
-- **ADR**: `docs/adr/{NNN}-{title}.md` using architecture-decision output style
-- **Epic**: `docs/epics/{name}.md` with user stories and acceptance criteria
-- **Task spec**: `docs/tasks/{ticket-id}.md` with implementation plan and test cases
-- **RFC**: `docs/rfcs/{name}.md` with context, proposal, alternatives, rollout plan
-
-Before generating, Glob for existing docs (`docs/**/*.md`) to understand numbering and format conventions.
-
-Cross-reference `/project-bootstrap` for new projects — use it first to scaffold directory structure.
-
-## Tech Stack Defaults (override if user specifies otherwise)
-
-```yaml
-mobile:
-  language: Kotlin
-  ui: Jetpack Compose
-  architecture: MVI + Clean Architecture (domain/data/presentation layers)
-  di: Hilt
-  async: Coroutines + StateFlow
-  testing: JUnit5 + MockK + Turbine + Robolectric + Espresso / Maestro
-
-backend:
-  runtime: Node.js / Python (Cloud Functions) or Kotlin (Ktor)
-  infra: GCP (Cloud Run, Pub/Sub, Firestore, BigQuery)
-  auth: Firebase Auth
-  payments: Stripe API
-  testing: JUnit5 / Pytest + Testcontainers
-
-api:
-  spec_format: OpenAPI 3.1 (YAML)
-  auth: Bearer JWT (Firebase token)
-  versioning: /v1/ path prefix
-
-design:
-  system: Material Design 3
-  handoff: Figma
-  tokens: Yes (color, spacing, typography)
-```
+- Mobile: Kotlin, Jetpack Compose, MVI + Clean Architecture, Hilt, Coroutines/StateFlow; JUnit5, MockK, Turbine
+- Backend: Cloud Functions (TypeScript/Python) or Ktor; GCP (Cloud Run, Pub/Sub, Firestore, BigQuery); Firebase Auth; Stripe
+- API: `/v1/` path versioning, Firebase ID token as Bearer
+- Design: Material 3, Figma handoff, tokens for color/spacing/type

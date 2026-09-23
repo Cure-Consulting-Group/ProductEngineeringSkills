@@ -1,7 +1,7 @@
 ---
 name: capture-management
-description: "Build and qualify a public-sector pipeline — opportunity sourcing, target profile, pre-RFP positioning, teaming, past performance"
-when_to_use: "Use when entering a new market or deciding which solicitations to chase. NOT for screening a specific solicitation (use solicitation-triage). NOT for evaluating a qualified RFP (use rfp-evaluation). NOT for the go/no-go call (use bid-decision)."
+description: "Builds a public-sector pipeline: target profile, sourcing, pre-RFP positioning, teaming. Use when entering a government market, choosing which bids to chase, or building past performance."
+when_to_use: "NOT for screening one specific solicitation (use solicitation-triage) or the go/no-go on it (use bid-decision)."
 argument-hint: "[market-or-agency]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch", "WebFetch"]
 ---
@@ -15,6 +15,8 @@ The central fact of government business development: **most public solicitations
 Capture is the work of being early. Bidding is what happens after capture succeeds or fails.
 
 ## Pre-Processing (Auto-Context)
+
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
 - Current pipeline: !`sed -n '1,40p' PIPELINE.md ../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
 - Past pursuits: !`ls -d archive/*/ ../archive/*/ 2>/dev/null | head -20 || echo "(no archive)"`
@@ -58,10 +60,14 @@ The most common error entering public-sector work is chasing contracts far too l
 | Individual agency sites | Small local | Often the least-competitive work; frequently not aggregated |
 | GSA Schedules / state master contracts | Pre-qualified pools | Long lead time, high leverage once on |
 | Cooperative purchasing (NASPO, Sourcewell, OMNIA) | Multi-agency | One award, many buyers |
-| Board and council agendas | **Pre-solicitation** | Where budget approvals appear before RFPs — the highest-leverage source |
-| Grant awards to agencies | **Pre-solicitation** | Funded programs must be spent; RFPs follow |
+| Board and council agendas and minutes | **Pre-solicitation** (weekly) | Where budget approvals and contract awards appear before RFPs — the highest-leverage source |
+| Grant awards to agencies | **Pre-solicitation** (monthly) | Funded programs must be spent; RFPs follow |
+| Adopted budgets, capital plans, agency IT roadmaps | **Pre-solicitation** (annual) | Funded line items by department, before any RFP |
+| Audit reports (comptroller, internal audit, IG) | As issued | Name failing systems and vendors on the record |
+| Portal award-notice feeds | Weekly | Incumbent and budget data across every buyer — log it via `buyer-intelligence` |
 
-**The last two matter most.** A council agenda approving a program budget, or a state/federal grant award to an agency, tells you an RFP is coming months before it publishes. That window is when capture is possible.
+This table is the library's single source list; `buyer-intelligence` links here. **The
+pre-solicitation rows matter most.** A council agenda approving a program budget, or a state/federal grant award to an agency, tells you an RFP is coming months before it publishes. That window is when capture is possible.
 
 Set portal alerts by commodity/NAICS code and review weekly. Record everything qualifying in the pipeline, including opportunities you decline — the pattern of what you decline tells you whether the target profile is right.
 
@@ -93,7 +99,7 @@ New entrants face a circular barrier: you need public-sector references to win p
 |---|---|---|
 | **Subcontract to a prime** | Immediate | Fastest route to citable past performance. Actively pursue primes bidding work you can support |
 | **Small/simple contracts first** | 3–9 mo | Micro-purchases, small local agencies, single-department work |
-| **Set-aside certifications** | 3–12 mo | MBE/WBE/SDVOB/8(a)/HUBZone where eligible — materially narrows the field |
+| **Set-aside certifications** | 3–12 mo | State/local MBE/WBE/SDVOB; federal 8(a)/HUBZone/WOSB are SBA-run and their rules have changed recently — confirm current program status before relying on one |
 | **Teaming or joint venture** | Per pursuit | Combine your technical depth with a partner's qualifications. Must be arranged before submission |
 | **Adjacent-sector references** | Immediate | Nonprofit, healthcare, education work sometimes accepted where "public sector" is defined loosely |
 | **Cooperative/master contract vehicles** | 6–18 mo | High effort, high leverage — you compete in a smaller pool afterward |

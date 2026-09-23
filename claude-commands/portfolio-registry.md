@@ -1,464 +1,104 @@
 # Portfolio Registry
 
-The highest-leverage artifact in the skill library. A portfolio registry gives every AI assistant (Claude, Gemini, Cursor, Copilot) and every human full context on what exists, who owns it, how it connects, and where resources are allocated. Without this file, every session starts blind. With it, every skill in this library becomes dramatically smarter.
+**Outcome:** a current `PORTFOLIO.md` — company overview, one section per product, shared
+infrastructure, team allocation, health scorecard, cross-product dependencies, and a ≤500-token AI
+session context block — with `[TBD]` for anything unknown and no secrets. Done when the validation
+checklist (Step 7) passes. Other skills (sdlc, security-review, engineering-cost-model,
+saas-financial-model, incident-response, go-to-market, …) read this file for portfolio context.
 
-This skill generates and maintains `PORTFOLIO.md` -- the single source of truth for Cure Consulting Group's venture studio. It lives at `~/.claude/PORTFOLIO.md` (global) or at the project root (per-project subset). Every AI session should read this file before starting work.
+**Location.** The canonical file is `PORTFOLIO.md` at the project root (the path every skill's
+context block reads). For a cross-project copy, keep one master in a shared repo and import it: add
+`@PORTFOLIO.md` to CLAUDE.md, and reference it from AGENTS.md (Codex) or GEMINI.md / Antigravity rules
+so every runtime loads it.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Existing registry: !`grep -m1 -i "last updated" PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md here)"`
+- Registered products: !`grep -E '^### ' PORTFOLIO.md 2>/dev/null | head -8 || true`
 
-Use this context to tailor all output to the actual project.
+Read the whole existing PORTFOLIO.md before any update.
 
-## Why This Matters
+## Step 1: Classify
 
-```
-Without PORTFOLIO.md:
-  - AI suggests Firebase Auth setup when you already have shared auth across 4 products
-  - Engineer builds a payment flow without knowing Vendly already solved it
-  - New hire spends 2 weeks mapping what exists before contributing
-  - Cost model ignores shared infrastructure savings
-  - Security review misses cross-product data flows
-
-With PORTFOLIO.md:
-  - AI knows every product, stack, constraint, and dependency from token 1
-  - Engineers reuse existing solutions across products
-  - New hires onboard in hours, not weeks
-  - Cost models account for shared infrastructure
-  - Security reviews trace data flows across the full portfolio
-  - Every other skill (/sdlc, /security-review, /engineering-cost-model) auto-inherits context
-```
-
-## Core Principle: Context Is the Multiplier
-
-```
-PORTFOLIO.md is read by:
-  ├── /sdlc           → knows which products exist, their stacks, and constraints
-  ├── /security-review → traces cross-product auth, data flows, compliance
-  ├── /engineering-cost-model → accounts for shared infra, team allocation
-  ├── /saas-financial-model   → knows revenue per product, burn rate, runway
-  ├── /incident-response      → knows escalation paths per product
-  ├── /project-bootstrap      → avoids duplicating existing infrastructure
-  ├── /firebase-architect     → knows all Firebase project IDs and shared rules
-  ├── /api-architect          → knows existing API contracts across products
-  └── Every other skill       → has full portfolio awareness
-```
-
-## Step 1: Classify the Request
-
-| Request Type | What to Do | Output |
+| Request | Do | Output |
 |---|---|---|
-| Full portfolio registry | Interview user about all products, generate complete PORTFOLIO.md | `~/.claude/PORTFOLIO.md` |
-| Single product registration | Add one new product to existing registry | Append to PORTFOLIO.md |
-| Product update | Update stage, priority, team, stack, or other fields for one product | Edit PORTFOLIO.md section |
-| Product decommission | Move product to sunset stage, document migration/shutdown plan | Edit PORTFOLIO.md + archive note |
-| Portfolio health check | Audit the registry for staleness, missing fields, risk flags | Health report + update recommendations |
-| Auto-detect from machine | Scan local repos, package.json, build.gradle, Podfile to infer portfolio | Draft PORTFOLIO.md from detected projects |
+| Full registry | Interview, generate every section | New PORTFOLIO.md |
+| Register one product | Ask about that product only | Updated PORTFOLIO.md |
+| Update a product (stage, priority, team, stack) | Edit that section + scorecard + context block | Updated PORTFOLIO.md |
+| Decommission | Stage → sunset, record shutdown/migration plan | Updated PORTFOLIO.md |
+| Health check | Staleness + consistency audit (Step 7) | Findings + proposed edits |
+| Auto-detect | Scan repos the user names (Step 2) | Draft for confirmation |
 
-If the user says "set up portfolio" or "register everything" -- do a full portfolio registry.
-If the user names a specific product -- do single product registration or update.
-If ambiguous, ask: "Full portfolio setup, or registering/updating a single product?"
+"Set up the portfolio" / "register everything" → full registry. A named product → register or update.
+Otherwise ask once which.
 
 ## Step 2: Gather Context
 
-### For Full Portfolio Registry
-
-Interview the user. Ask these questions in order, but accept partial answers and infer the rest:
-
-```
-1. Company basics
-   - Company name (default: Cure Consulting Group)
-   - Operating model: venture studio / consultancy / hybrid
-   - Total headcount (full-time + contractors)
-   - Monthly burn rate and runway
-
-2. For EACH product:
-   - Product name and one-line description
-   - Stage: idea / MVP / beta / growth / mature / sunset
-   - Priority: P0 (existential) / P1 (strategic) / P2 (opportunistic) / P3 (maintenance)
-   - Revenue model and current MRR/ARR
-   - Team members and roles
-   - Tech stack (platforms, languages, frameworks, infra)
-   - GitHub repo URLs
-   - Environment details (Firebase project IDs, domains)
-   - Compliance requirements (HIPAA, NCAA, COPPA, GDPR, PCI, SOC2)
-   - Supported languages/locales
-   - Current sprint goal
-   - Top 2-3 risks
-   - Dependencies on other products or shared infra
-
-3. Shared infrastructure
-   - Shared auth provider and whether products share identity
-   - Design token source and sharing model
-   - Analytics platform and cross-product tracking
-   - CI/CD provider and shared workflows
-   - AI models in use and cost tracking approach
-```
-
-## Auto-Detection Mode
-
-When invoked, actively scan for products:
-1. Use Glob to find all repos in common project directories
-2. For each found repo, Read package.json/build.gradle/Podfile to detect stack
-3. Run `git remote -v` to get repo URLs
-4. Run `git log --oneline -1` to get last activity date
-5. Pre-populate PORTFOLIO.md entries with discovered data, mark unknowns as [TBD]
-
-### For Auto-Detect Mode
-
-Scan the local machine for project signals:
-
-```
-Detection strategy:
-  1. Check ~/Documents, ~/Projects, ~/Code, ~/dev for git repos
-  2. For each repo, read:
-     - package.json (name, dependencies → detect Next.js, React, Firebase, Stripe)
-     - build.gradle / build.gradle.kts (detect Android, Kotlin, Hilt, Compose)
-     - Podfile / Package.swift (detect iOS, SwiftUI, dependencies)
-     - .firebaserc (Firebase project IDs and aliases)
-     - .env* files (environment names, API endpoints — DO NOT store secrets)
-     - docker-compose.yml (infrastructure shape)
-     - .github/workflows/*.yml (CI/CD configuration)
-     - README.md (project description)
-  3. Cross-reference GitHub org repos if gh CLI is authenticated
-  4. Present findings to user for confirmation before generating registry
-```
-
-### For Single Product Registration
-
-Ask only about the specific product. Pre-fill defaults from existing PORTFOLIO.md if it exists.
-
-## Step 3: Portfolio Registry Template
-
-Generate `PORTFOLIO.md` with this exact structure. Every section is required. Use `[TBD]` for unknown fields -- never omit a section.
-
-```markdown
-# Portfolio Registry -- [Company Name]
-
-> Last updated: [YYYY-MM-DD]. This file is the single source of truth for the
-> product portfolio. Every AI session should read this file before starting work.
-> Update at least monthly or when any product changes stage, priority, or team.
-
----
-
-## Company Overview
-
-| Field | Value |
-|-------|-------|
-| Company | [Name] |
-| Model | [Venture studio / Consultancy / Hybrid] |
-| Headcount | [X full-time, Y contractors] |
-| Monthly burn | [$X/mo] |
-| Runway | [X months at current burn] |
-| Primary domain | [company.com] |
-| GitHub org | [github.com/org-name] |
-| Shared Slack | [workspace URL or name] |
-| Fiscal year | [start month] |
-
----
-
-## Products
-
-### [Product Name]
-
-| Field | Value |
-|-------|-------|
-| One-liner | [What it does in one sentence] |
-| Stage | [idea / MVP / beta / growth / mature / sunset] |
-| Priority | [P0 / P1 / P2 / P3] |
-| Revenue model | [SaaS / marketplace / platform / media / consulting / pre-revenue] |
-| MRR | [$X] |
-| ARR | [$X] |
-| Team | [Name (Role), Name (Role), ...] |
-| Platforms | [Android / iOS / Web / API / CLI] |
-| Languages | [Kotlin, Swift, TypeScript, Python, etc.] |
-| Frameworks | [Compose, SwiftUI, Next.js, etc.] |
-| Infrastructure | [Firebase, GCP, Vercel, AWS, etc.] |
-| Database | [Firestore, PostgreSQL, SQLite, etc.] |
-| Auth | [Firebase Auth, Auth0, custom, etc.] |
-| Payments | [Stripe, local processor, N/A] |
-| AI/ML | [Models used: GPT-4, Claude, Gemini, custom, N/A] |
-| Repos | [github.com/org/repo-1, github.com/org/repo-2] |
-| Environments | dev: [project-id-dev], staging: [project-id-staging], prod: [project-id-prod] |
-| Domains | [app.product.com, api.product.com] |
-| Compliance | [HIPAA / NCAA / COPPA / GDPR / PCI / SOC2 / none] |
-| Locales | [en, es-DO, es-MX, pt-BR, etc.] |
-| Active sprint goal | [One sentence describing current focus] |
-| Key risks | 1. [Risk] 2. [Risk] 3. [Risk] |
-| Dependencies | [Shared Firebase Auth, shared design tokens, etc.] |
-| Key metrics | [DAU, conversion rate, churn, etc.] |
-| Last deploy | [YYYY-MM-DD or "continuous"] |
-
-#### Architecture Notes
-[2-5 sentences on the architecture: layers, patterns, key technical decisions.
-Reference ADRs if they exist.]
-
-#### Known Tech Debt
-- [ ] [Debt item 1 — severity: high/medium/low]
-- [ ] [Debt item 2]
-- [ ] [Debt item 3]
-
----
-
-[REPEAT for each product]
-```
-
-### Cure Consulting Group Default Products
-
-When generating for Cure Consulting Group, pre-populate these products and ask the user to confirm/update:
-
-```
-Products to register:
-  1. Vendly         — LATAM merchant OS (Android/iOS, Firebase, Stripe, multi-language)
-  2. Autograph      — AI medical scribe (HIPAA, LLM, clinical workflow)
-  3. The Initiated  — Women's basketball recruiting (NCAA, B2B+B2C, events)
-  4. Antigravity    — AI agent orchestration IDE (VS Code fork, open source)
-  5. TwntyHoops     — Basketball media/events (content, community)
-  6. Cure Consulting Group — The consultancy itself (client work, this skill library)
-```
-
-## Step 4: Shared Infrastructure Map
-
-Read [reference/details.md](reference/details.md) (section "Shared Infrastructure") when writing this section — it holds the full template (auth, data, hosting, CI/CD, secrets).
-
-## Step 5: Technology Radar Summary
-
-Brief overview linking to full `/technology-radar` output if available.
-
-```markdown
----
-
-## Technology Radar (Summary)
-
-> Full analysis available via `/technology-radar`. This is a snapshot.
-
-### Adopt (use in all new projects)
-| Technology | Rationale |
-|-----------|-----------|
-| [e.g., Kotlin + Compose] | [Standard Android stack, team expertise, ecosystem maturity] |
-| [e.g., Firebase Auth] | [Cross-product identity, free tier covers needs, good SDK support] |
-| [e.g., GitHub Actions] | [All repos on GitHub, reusable workflows, good Firebase integration] |
-
-### Trial (using in one product, evaluating)
-| Technology | Product | Rationale |
-|-----------|---------|-----------|
-| [e.g., Claude API] | [Autograph] | [Medical scribe accuracy, evaluating vs GPT-4] |
-
-### Assess (researching, not in production)
-| Technology | Interest | Rationale |
-|-----------|----------|-----------|
-| [e.g., Supabase] | [Alternative to Firebase for products needing PostgreSQL] | [Evaluating for The Initiated] |
-
-### Hold (stop adopting, plan migration)
-| Technology | Reason | Migration Plan |
-|-----------|--------|----------------|
-| [e.g., Firebase Realtime DB] | [Firestore is superior for our use cases] | [Migrate remaining reads by Q3] |
-```
-
-## Step 6: Team Roster and Allocation
-
-```markdown
----
-
-## Team Roster & Allocation
-
-| Person | Role | Products | Allocation | Utilization | Key Person Risk | Notes |
-|--------|------|----------|------------|-------------|-----------------|-------|
-| [Name] | [Engineering Lead] | [Vendly (60%), Autograph (40%)] | [100%] | [Overloaded] | [HIGH — sole Android expert] | [Needs hire to derisk] |
-| [Name] | [Designer] | [All products (20% each)] | [100%] | [Spread thin] | [MEDIUM] | [Design system would reduce load] |
-| [Name] | [Founder/CEO] | [All] | [N/A] | [N/A] | [N/A] | [Product vision, fundraising, client work] |
-
-### Allocation Rules
-- No engineer should be split across more than 2 products in a sprint
-- P0 products get first claim on shared resources
-- Key person risk HIGH means: if this person leaves, the product stalls for >2 weeks
-- Utilization above 85% is a red flag — no slack for incidents or innovation
-- Contractors should not own critical path items without knowledge transfer plan
-
-### Hiring Priorities (derived from allocation gaps)
-1. [Role] for [Product] — [why this is urgent]
-2. [Role] for [Product] — [why this matters]
-3. [Role] for [Product] — [nice to have]
-```
-
-## Step 7: Portfolio Health Scorecard
-
-````markdown
----
-
-## Portfolio Health Scorecard
-
-> Scoring: G (Green) = healthy, Y (Yellow) = needs attention, R (Red) = at risk
-> Review monthly. Trend arrows: [^] improving, [v] declining, [=] stable
-
-| Product | Stage | Priority | MRR | Burn | Runway | Team | Tech Debt | Security | Compliance | Overall |
-|---------|-------|----------|-----|------|--------|------|-----------|----------|------------|---------|
-| Vendly | [stage] | P0 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
-| Autograph | [stage] | P1 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
-| The Initiated | [stage] | P1 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
-| Antigravity | [stage] | P2 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
-| TwntyHoops | [stage] | P2 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
-| Cure Consulting | [stage] | P1 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
-
-### Scoring Criteria
-
-```
-Team Health:
-  G: Fully staffed, no key person risk, <85% utilization
-  Y: Minor gaps, one key person risk, 85-95% utilization
-  R: Understaffed, critical key person risk, >95% utilization
-
-Tech Debt:
-  G: Manageable, addressed in sprint, no blockers
-  Y: Accumulating, 1-2 items blocking new features
-  R: Severe, blocking releases, requires dedicated sprint to address
-
-Security:
-  G: Last audit <3 months ago, no open critical/high findings
-  Y: Audit >3 months ago OR 1-2 open high findings
-  R: No audit in 6+ months OR open critical findings OR compliance gap
-
-Compliance:
-  G: All requirements met, documentation current
-  Y: Minor gaps, documentation stale, audit due soon
-  R: Compliance violation risk, missing required controls, audit overdue
-```
-````
-
-## Step 8: Cross-Product Dependencies
-
-Read [reference/details.md](reference/details.md) (section "Cross-Product Dependencies") when writing this section — dependency matrix template, dependency rules, and the circular-dependency check.
-
-## Step 9: AI Session Context Block
-
-The most-used section. This is the copy-paste block that gives any AI assistant instant portfolio awareness.
-
-````markdown
----
-
-## AI Session Context
-
-> Copy this block into any AI session (Claude, Gemini, Cursor, Copilot) for instant
-> portfolio awareness. Keep it under 500 tokens for efficient context usage.
-
-```
-PORTFOLIO CONTEXT — Cure Consulting Group
-==========================================
-Type: Venture studio + consultancy (hybrid)
-Products (6):
-  - Vendly (P0, growth) — LATAM merchant OS. Android/iOS, Firebase, Stripe.
-    Compliance: LATAM fintech. Locales: en, es-DO, es-MX, pt-BR.
-  - Autograph (P1, beta) — AI medical scribe. Web, HIPAA-compliant.
-    LLM: GPT-4 + Claude. Clinical workflow.
-  - The Initiated (P1, MVP) — Women's basketball recruiting. Web, B2B+B2C.
-    NCAA compliance. Events platform.
-  - Antigravity (P2, alpha) — AI agent orchestration IDE. VS Code fork.
-    Open source. TypeScript + Electron.
-  - TwntyHoops (P2, growth) — Basketball media/events. Web, content + community.
-  - Cure Consulting (P1, mature) — Consultancy. Client work + this skill library.
-
-Shared infra: Firebase Auth (shared identity), GitHub Actions, shared design tokens.
-Total burn: $[X]/mo | Runway: [X] months
-Active priorities: [top 3 this month]
-Hard constraints: HIPAA (Autograph), NCAA (The Initiated), LATAM fintech (Vendly)
-Skill library: github.com/Cure-Consulting-Group/ProductEngineeringSkills (100+ skills)
-```
-````
-
-## Step 10: Maintenance Rules and Lifecycle
-
-````markdown
----
-
-## Maintenance Schedule
-
-### Update Triggers (update PORTFOLIO.md immediately when any of these occur)
-- Product changes stage (e.g., MVP → beta)
-- Product changes priority (e.g., P2 → P1)
-- Team member joins, leaves, or changes allocation
-- New product added or product sunset
-- Fundraise closes (runway changes)
-- Compliance requirement changes
-- Shared infrastructure changes
-- New repo created or repo archived
-
-### Scheduled Reviews
-| Cadence | What to Review | Who |
-|---------|---------------|-----|
-| Weekly | Active sprint goals, key risks | Product leads |
-| Monthly | Full health scorecard, team allocation, tech debt status | Engineering lead |
-| Quarterly | Technology radar, dependency audit, compliance status | CTO / Technical advisor |
-| Annually | Full portfolio strategy, product lifecycle decisions | Leadership team |
-
-### Versioning
-- Keep a changelog at the bottom of PORTFOLIO.md
-- Archive previous versions: `PORTFOLIO-[YYYY-MM-DD].md`
-- Git-track the file if possible (it contains no secrets)
-- Diff previous versions to spot trends
-
-### Staleness Detection
-```
-A PORTFOLIO.md is STALE if:
-  - Last updated date is >30 days ago
-  - Any product's "active sprint goal" references a completed sprint
-  - Team roster doesn't match current GitHub org members
-  - MRR/ARR numbers are from >1 quarter ago
-  - Any field still says [TBD] after 2 weeks
-
-When stale: run /portfolio-registry with "health check" mode to refresh.
-```
-````
-
-## Output Delivery
-
-### File Placement
-```
-Full portfolio:        ~/.claude/PORTFOLIO.md (global — all sessions read this)
-Per-project subset:    ./PORTFOLIO.md (project root — product-specific context)
-Archive:               ~/.claude/portfolio-archive/PORTFOLIO-[YYYY-MM-DD].md
-```
-
-### Output Rules
-- Always generate the complete file, even if only updating one product
-- Use `[TBD]` for unknown fields -- never omit sections or leave them blank without marking
-- Include the AI Session Context block at the end -- this is the most frequently used section
-- After generating, remind the user: "Add `@PORTFOLIO.md` to your CLAUDE.md so every session reads it automatically"
-- Offer to also run: `/engineering-cost-model`, `/security-review`, `/saas-financial-model` using the new portfolio context
-
-### Validation Checklist
-After generating PORTFOLIO.md, verify:
-- [ ] Every product has all required fields filled or marked [TBD]
-- [ ] Stage and priority are consistent (no P0 product at "idea" stage)
-- [ ] Team allocation sums to ~100% per person (not >120%)
-- [ ] Shared infrastructure section matches what products reference
-- [ ] Cross-product dependencies are bidirectional (if A depends on B, B lists A as dependent)
-- [ ] AI Session Context block is under 500 tokens
-- [ ] No secrets, API keys, or passwords in the file
-- [ ] Compliance fields are filled for regulated products (HIPAA, NCAA, PCI)
-
-## Cross-References
-
-This skill connects to every other skill in the library. Key relationships:
-
-| Skill | How It Uses PORTFOLIO.md |
-|-------|-------------------------|
-| `/sdlc` | Knows product stack, constraints, and existing architecture |
-| `/project-bootstrap` | Avoids recreating existing shared infra |
-| `/security-review` | Traces cross-product data flows, compliance requirements |
-| `/engineering-cost-model` | Uses team allocation, shared infra, burn rate |
-| `/saas-financial-model` | Uses MRR/ARR, revenue models, unit economics per product |
-| `/incident-response` | Knows escalation paths, system owners, dependencies |
-| `/firebase-architect` | Knows all Firebase project IDs and shared configurations |
-| `/api-architect` | Knows existing API contracts across products |
-| `/testing-strategy` | Knows platform-specific test tooling per product |
-| `/ci-cd-pipeline` | Knows shared workflows and deployment strategies |
-| `/feature-audit` | Audits against product-specific constraints and compliance |
-| `/accessibility-audit` | Knows locale and platform requirements per product |
-| `/performance-review` | Knows infrastructure and scale requirements per product |
-| `/database-architect` | Knows database choices and shared data models |
-| `/go-to-market` | Knows market, revenue model, and competitive position per product |
+**Interview (full registry).** Accept partial answers; infer and mark `[TBD]` for the rest.
+- Company: name (default Cure Consulting Group), model (studio / consultancy / hybrid), headcount, burn, runway.
+- Per product: one-liner, stage (idea / MVP / beta / growth / mature / sunset), priority (P0 existential / P1 strategic / P2 opportunistic / P3 maintenance), revenue model and MRR, team and roles, stack, repos, environments (Firebase project IDs, domains), compliance (HIPAA, NCAA, COPPA, GDPR, PCI, SOC 2), locales, sprint goal, top risks, dependencies.
+- Shared infra: auth and shared identity, design tokens, analytics, CI/CD, AI models and cost tracking.
+
+**Auto-detect.** Scan only directories the user names (never sweep home directories). Per repo read
+`package.json`, `build.gradle(.kts)`, `Podfile`/`Package.swift`, `.firebaserc`, `.github/workflows/`,
+README, `git remote -v`, and `git log -1`. Read `.env.example` for environment names; never open
+`.env` or other secret files — the registry must stay free of secrets. Present findings for
+confirmation before writing.
+
+**Cure defaults** (pre-populate for Cure Consulting Group, then confirm with the user):
+
+1. Vendly — LATAM merchant OS (Android/iOS, Firebase, Stripe, multi-language)
+2. Autograph — AI medical scribe (HIPAA, LLM, clinical workflow)
+3. The Initiated — women's basketball recruiting (NCAA, B2B+B2C, events)
+4. Antigravity — AI agent orchestration IDE (VS Code fork, open source). This is Cure's product, not Google Antigravity, the agent runtime this library also targets; write "Antigravity (Cure IDE)" wherever the two could be confused.
+5. TwntyHoops — basketball media/events (content, community)
+6. Cure Consulting Group — the consultancy (client work, this skill library)
+
+## Step 3: Write the Registry
+
+Read `reference/templates.md` when writing or regenerating sections — it holds the company and
+per-product tables, radar summary, team roster, health scorecard with scoring criteria, AI session
+context block, and maintenance schedule. Read `reference/details.md` when writing the shared
+infrastructure and cross-product dependency sections.
+
+Section order: Company Overview → Products → Shared Infrastructure → Technology Radar summary (a
+snapshot; the technology-radar skill owns the full radar) → Team Roster & Allocation → Health Scorecard
+→ Cross-Product Dependencies → AI Session Context → Maintenance + changelog.
+
+Rules:
+- Every section present; `[TBD]` for unknowns rather than omission.
+- Model fields name exact model IDs in use, not model families from memory.
+- For a single-product update, edit that product's section and every section that summarizes it (scorecard, dependencies, context block); leave the rest unchanged.
+
+## Step 4: Allocation Rules (Cure positions)
+
+- No engineer split across more than two products in a sprint; P0 gets first claim on shared people.
+- Key-person risk HIGH = the product stalls >2 weeks if that person leaves.
+- Utilization >85% is a red flag (no slack for incidents); contractors don't own critical-path work without a knowledge-transfer plan.
+- Hiring priorities fall out of allocation gaps, highest-priority product first.
+
+## Step 5: Health Scorecard
+
+G/Y/R per product for team, tech debt, security, compliance, plus stage, priority, MRR, burn, runway.
+Security is R with no audit in 6+ months or any open critical finding. A P0 product at "idea" stage
+is an inconsistency to flag.
+
+## Step 6: Maintenance
+
+Update immediately on stage, priority, team, fundraise, compliance, shared-infra, or repo changes.
+Stale if last updated >30 days ago, a sprint goal is finished, the roster disagrees with the GitHub
+org, MRR is >1 quarter old, or a `[TBD]` is >2 weeks old. Keep a changelog at the bottom; git-track
+the file (it contains no secrets).
+
+## Step 7: Validate and Deliver
+
+- [ ] Every product has all fields filled or `[TBD]`; stage and priority are consistent
+- [ ] Allocation per person sums to ~100% (flag >120%)
+- [ ] Shared infra matches what products reference; dependencies listed on both sides
+- [ ] AI Session Context block ≤500 tokens
+- [ ] No secrets, keys, or passwords; compliance filled for regulated products
+
+Report what changed and which fields remain `[TBD]`. Suggest engineering-cost-model, security-review,
+or saas-financial-model only if the user's next decision needs them.

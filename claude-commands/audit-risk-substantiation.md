@@ -1,7 +1,12 @@
 # Audit Risk & Substantiation
 
 Two jobs: **assess** exposure honestly, and **build the file** that answers it
-before anyone asks.
+before anyone asks. **Done when** every position assessed has a rating with its
+named weakness, a disclosure decision, and a defense-file checklist showing what
+exists and what is missing; for a notice, a dated response plan.
+
+## Disclaimer
+This skill produces draft analysis and workpapers, not tax, legal, or accounting advice. Nothing it produces is filing-ready until a licensed CPA, enrolled agent, or tax attorney has reviewed it. Draft notice responses only; the taxpayer or their representative sends them.
 
 The controlling insight: audits are won or lost on documentation that existed
 **before** the notice arrived. A position created at examination is worth a
@@ -46,21 +51,23 @@ Substantial authority (~40%)?    → file, no disclosure needed
 Reasonable basis only (~20%)?    → file ONLY with Form 8275 / 8275-R
 Neither?                         → do not take it; advise in writing
 Tax shelter / reportable?        → MLTN required + Form 8886
-Economic substance failure?      → do not take it. 40% strict liability,
-                                   no reasonable cause, no opinion helps
+Economic substance failure?      → do not take it. Strict liability: 20% if
+                                   disclosed, 40% if not; no reasonable cause,
+                                   no opinion helps
 ```
 
-Disclosure defeats the substantial-understatement penalty but does **not** help
-for negligence, listed transactions, or §7701(o) failures — and it advertises the
-issue. Weigh both.
+Disclosure defeats the substantial-understatement penalty and halves the
+§7701(o) penalty (40% → 20%, §6662(i)), but does **not** help for negligence or
+listed transactions — and it advertises the issue. Weigh both; rates and
+defenses per penalty are in `reference/penalty-map.md`.
 
 ## Engine support
 
-Where the project has an `audit-risk` binding, it produces a scored risk profile
-from a taxpayer profile. Treat the score as a **prompt for judgment**, not a
-verdict — no scorer can see whether the documentation actually exists. Where
-there is no such binding, score by hand against `reference/audit-triggers.md`;
-the triggers are the substance and the code is only a convenience.
+An `audit-risk` binding, where the project has one, scores a taxpayer profile.
+Treat the score as a prompt for judgment: no scorer can see whether the
+documentation exists. Without the binding, score by hand against
+`reference/audit-triggers.md` (read it when building a group's exposure
+profile).
 
 ## Building the defense file
 
@@ -98,13 +105,6 @@ when both say the same thing.
    question, or a material position where the taxpayer is also the preparer.
 7. Preserve appeal rights — 30-day letter → Appeals; 90-day statutory notice →
    Tax Court petition (**the 90 days is jurisdictional and cannot be extended**).
-
-## Reference files
-
-- `reference/penalty-map.md` — every relevant penalty with rate, trigger,
-  defense, and whether disclosure helps.
-- `reference/audit-triggers.md` — what statistically and structurally draws
-  examination, and how to build the group's exposure profile.
 
 ## Related skills
 

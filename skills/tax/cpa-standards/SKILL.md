@@ -1,18 +1,20 @@
 ---
 name: cpa-standards
-description: Apply the professional standards a return preparer is held to — Circular 230, the AICPA Statements on Standards for Tax Services, due diligence, workpaper standards, conflicts of interest, and §7216 confidentiality. Use when preparing or reviewing any return or tax advice, or deciding whether a position may be taken or must be disclosed.
+description: "Applies Circular 230, AICPA SSTS, and §7216 to tax work. Use when deciding if a position can be taken or must be disclosed, or on preparer duties, workpapers, conflicts, or confidentiality."
+when_to_use: "NOT for audit likelihood or defense files (audit-risk-substantiation) or finding the authority itself (irc-lookup)."
 argument-hint: "[position-or-work-product]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # CPA Professional Standards
 
-The other tax skills answer *what the law is*. This one governs *how the work is
-performed and documented* — the difference between a defensible practice and a
-correct answer nobody can rely on.
-
-Apply this skill to every work product that a return or advice depends on, even
-when the taxpayer and the preparer are the same person. **Especially** then: the
-self-prepared return has no second reviewer, so the standard has to be internal.
+The other tax skills answer *what the law is*; this one governs *how the work is
+performed and documented*. It applies to every work product a return or advice
+depends on, and most of all when taxpayer and preparer are the same person,
+because that return has no second reviewer. **Done when** each position has a
+standard (and disclosure decision), and the work product meets the workpaper and
+§7216 rules below, or the gaps are listed.
 
 ## The three governing regimes
 
@@ -35,13 +37,12 @@ Neither?                                   → Do not take the position. Advise 
 Tax shelter or reportable transaction?     → More likely than not (>50%) required, plus Form 8886.
 ```
 
-Details and the full authority ladder are in the `irc-lookup` skill's
-`tax/irc-lookup/reference/authority-hierarchy.md`. Penalty consequences are in
-`audit-risk-substantiation`.
+The authority ladder is in `irc-lookup/reference/authority-hierarchy.md`;
+penalty consequences in `audit-risk-substantiation`.
 
-**Never** let audit probability enter the analysis. "They won't catch it" is not a
-standard, is not authority, and its appearance in a workpaper is itself evidence
-of an unreasonable position.
+Audit probability never enters the analysis (Circular 230 §10.37, SSTS 1.1):
+"they won't catch it" is not authority, and its appearance in a workpaper is
+itself evidence of an unreasonable position.
 
 ## Due diligence — Circular 230 §10.22 and §10.34
 
@@ -165,17 +166,12 @@ in the file.
 
 ## Signing and e-filing
 
-- **PTIN** required for anyone who prepares for compensation (§6109(a)(4)).
-- The preparer who signs is the one with **primary responsibility** for the
-  substantive accuracy.
-- §6695 penalties: failure to sign, failure to furnish a copy to the taxpayer,
-  failure to retain, failure to furnish the PTIN, negotiating a client's refund
-  check — each is separately penalized.
-- **Self-prepared returns**: no PTIN or signature obligation applies, but §6662
-  taxpayer accuracy penalties do, and the §6664(c) reasonable-cause defense is
-  much weaker when the taxpayer prepared their own return and cannot point to
-  advisor reliance. This is the argument for the accountant-of-record model this
-  practice uses — prepare in-house, accountant reviews and transmits.
+A PTIN is required to prepare for compensation (§6109(a)(4)); the signer bears
+primary responsibility, and each §6695 failure (sign, copy, retain, PTIN, refund
+check) is separately penalized. A **self-prepared return** has no signature duty
+but a much weaker §6664(c) reasonable-cause defense, since there is no advisor to
+have relied on. That is why Cure prepares in-house and the accountant of record
+reviews and transmits.
 
 ## Applying this to an AI-assisted workflow
 
@@ -192,9 +188,10 @@ requires review:
 
 ## Reference files
 
-- `reference/circular-230-checklist.md` — engagement-level compliance checklist.
-- `reference/workpaper-standards.md` — file index, lead schedule format, review
-  sign-off, and the carryforward schedule template.
+- `reference/circular-230-checklist.md` — read at engagement start and before
+  sign-off; the engagement-level compliance checklist.
+- `reference/workpaper-standards.md` — read when assembling or reviewing a
+  workpaper file; index, lead schedule format, sign-off, carryforward template.
 
 ## Related skills
 

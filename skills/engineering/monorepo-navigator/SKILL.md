@@ -1,15 +1,19 @@
 ---
 name: monorepo-navigator
-description: "Navigate, work in, and improve monorepos — pnpm workspaces, Turborepo, Nx, Lerna, Yarn workspaces, Bazel, or untangling a folder that thinks it's a monorepo"
-when_to_use: "Use when joining a client codebase that's a monorepo (or claims to be), introducing one, fixing slow CI, deduplicating shared deps, or extracting a package. NOT for single-package repos — those don't need this skill."
+description: "Diagnoses and speeds up JS/TS and polyglot monorepos (pnpm, Turborepo, Nx, Bazel). Use when joining, creating, or fixing a monorepo: slow CI, cache misses, dependency drift, package boundaries, or extracting a package."
+when_to_use: "NOT for runtime composition of independently deployed frontends (use micro-frontends) or single-package repos."
 argument-hint: "[repo-path-or-task]"
+metadata:
+  verified: 2026-09-23
 ---
 
 # Monorepo Navigator
 
 Most clients show up with a monorepo. Half of them are real monorepos. The other half are a folder of folders that someone called a monorepo and never wired up. Your job is to tell which is which, then either make it faster or make it actually one.
 
-Cure default: pnpm workspaces + Turborepo for JS/TS. Nx if the team is already on it. Bazel only if the team has a dedicated build engineer. Lerna is legacy — migrate off.
+**Done when:** the diagnosis names the type and the loudest pain, and each recommended change comes with a concrete diff and a command that shows it worked (cache hit, affected graph, CI time).
+
+Cure default: pnpm workspaces + Turborepo for JS/TS. Nx if the team is already on it. Bazel only if the team has a dedicated build engineer. Lerna is maintained by the Nx team (v9+/v10) and now delegates task running to Nx — keep it for publishing where it works; don't adopt it new.
 
 ## When NOT to use this skill
 
@@ -19,20 +23,13 @@ Cure default: pnpm workspaces + Turborepo for JS/TS. Nx if the team is already o
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Workspace markers: !`ls pnpm-workspace.yaml nx.json turbo.json lerna.json WORKSPACE MODULE.bazel 2>/dev/null || echo "(no workspace config)"`
+- Workspace/task config: !`cat pnpm-workspace.yaml turbo.json 2>/dev/null | head -40`
+- CI caching/affected logic: !`grep -lE "affected|--filter|turbo|nx " .github/workflows/*.yml 2>/dev/null | head -5 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
-
-Additionally gather (domain-specific):
-- `ls -la` for `pnpm-workspace.yaml`, `nx.json`, `turbo.json`, `lerna.json`, `WORKSPACE`, `MODULE.bazel`
-- `cat pnpm-workspace.yaml 2>/dev/null && cat turbo.json 2>/dev/null && cat nx.json 2>/dev/null`
-- Check CI duration: scan `.github/workflows/*.yml` for cache and affected logic
-- Use this to skip redundant questions in Step 2
+Use this to skip questions already answered in Step 2.
 
 ## Step 1: Classify the Monorepo Type
 
@@ -40,7 +37,7 @@ Additionally gather (domain-specific):
 |--------|------|--------------|
 | `pnpm-workspace.yaml` + `turbo.json` | pnpm + Turborepo | Default. Keep it. |
 | `nx.json` + `package.json` workspaces | Nx | Fine if team knows Nx. Don't migrate away unless broken. |
-| `lerna.json` (no Nx) | Lerna (legacy) | Migrate to pnpm + changesets. Lerna is on life support. |
+| `lerna.json` (no Nx) | Lerna | Keep for publishing if it works; for new work prefer pnpm + changesets. |
 | `package.json` with `workspaces` only | Yarn / npm workspaces, no task runner | Add Turbo or Nx. Workspaces alone don't give you caching. |
 | `WORKSPACE` / `MODULE.bazel` | Bazel | Heavy. Only justified at 50+ packages or polyglot. |
 | Multiple `package.json` files, no workspace config | "Folder that thinks it's a monorepo" | Either wire it up properly or split into polyrepo. |
@@ -93,7 +90,7 @@ packages/* → apps/*        NEVER. Libraries do not depend on applications.
 ```
 
 Tooling to enforce:
-- **Nx**: `nx.json` `enforceBuildableLibDependency` + module boundary lint rules
+- **Nx**: the `@nx/enforce-module-boundaries` ESLint rule with `depConstraints` on project tags (`enforceBuildableLibDependency` is an option of that rule, not an `nx.json` key)
 - **pnpm + Turbo**: `eslint-plugin-boundaries` or `dependency-cruiser` in CI
 - **Bazel**: `visibility` attribute on every target
 
@@ -101,7 +98,7 @@ Tooling to enforce:
 
 ```
 packages/config/
-  eslint-base.js       — extended by every package
+  eslint.config.js     — flat config, imported by every package (`.eslintrc*` is legacy since ESLint 9)
   tsconfig-base.json   — extends:[] in every package's tsconfig.json
   jest-preset.js       — every package's jest.config.js requires this
   prettier.config.js   — root only, not per-package
@@ -115,7 +112,7 @@ The point of a monorepo is shared cache. If you don't have remote cache, you hav
 
 | Stack | Local Cache | Remote Cache |
 |-------|-------------|--------------|
-| Turborepo | Free, default | Vercel Remote Cache (free for OSS, paid for teams) OR self-hosted via `turborepo-remote-cache` on S3/R2 |
+| Turborepo | Free, default | Vercel Remote Cache (free on all Vercel plans, fair use) OR self-hosted via `turborepo-remote-cache` on S3/R2 |
 | Nx | Free, default | Nx Cloud (free tier exists, paid for advanced features) OR self-hosted |
 | Bazel | Free, default | BuildBuddy, EngFlow, or self-hosted Bazel Remote Cache on S3/GCS |
 
@@ -138,7 +135,7 @@ Every task must declare its inputs and outputs. Otherwise cache is silently wron
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "inputs": ["src/**", ".eslintrc*", "package.json"],
+      "inputs": ["src/**", "eslint.config.*", "package.json"],
       "outputs": []
     }
   }
@@ -204,7 +201,7 @@ jobs:
     outputs:
       packages: ${{ steps.detect.outputs.packages }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - id: detect
         run: |
@@ -219,7 +216,7 @@ jobs:
         package: ${{ fromJSON(needs.affected.outputs.packages) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter ${{ matrix.package }} build
       - run: pnpm --filter ${{ matrix.package }} test
@@ -280,19 +277,21 @@ When packages disagree on a peer dep version:
 
 ## Cross-References
 
-- `/ci-cd-pipeline` — for the GitHub Actions affected-build matrix
-- `/project-bootstrap` — when standing up a new monorepo from scratch
-- `/release-management` — for changesets + semantic-release pipelines
-- `rules/cicd.md` — CI standards that monorepos must conform to
-- `rules/web.md` — TypeScript / Next.js rules that apply per package
+- `ci-cd-pipeline` skill — the GitHub Actions affected-build matrix and action pins
+- `project-bootstrap` skill — standing up a new monorepo from scratch
+- `release-management` skill — changesets and semantic-release pipelines
+- `micro-frontends` skill — when apps must deploy and compose independently at runtime
+- Plugin rules `rules/cicd.md` and `rules/web.md` (Claude Code) — CI and TypeScript standards per package
 
 ## Step 8: Output
 
 When invoked, produce in order:
 1. **Diagnosis** — current type, package count, current pain (one paragraph).
 2. **Recommended changes** — bulleted, ranked by impact-per-effort.
-3. **Concrete diffs** — `turbo.json`, `pnpm-workspace.yaml`, CI workflow snippets, `.changeset/config.json`. Use the Write/Edit tools to apply them when the user confirms.
-4. **Verification commands** — exact commands to run after, with expected output.
+3. **Concrete diffs** — `turbo.json`, `pnpm-workspace.yaml`, CI workflow snippets, `.changeset/config.json`. Apply them only after the user confirms.
+4. **Proof commands** — the command that shows each change worked, with expected output.
 5. **Follow-up** — what to revisit in 2 weeks (cache hit rate, CI p95, dep drift).
+
+Match length to the need; no filler sections.
 
 Never recommend a tool migration (Lerna → pnpm, Yarn → pnpm, Nx → Turbo) without first confirming the team's bandwidth. Migration mid-engagement is a project, not a chore.

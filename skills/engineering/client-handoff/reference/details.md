@@ -1,182 +1,71 @@
-# client-handoff: detailed reference
+# client-handoff: long-form templates
 
-> Reference material for the `client-handoff` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read when drafting the architecture document, the knowledge-transfer session plan, or the
+> maintenance SLA. The procedure, runbook format, credential protocol, and sign-off checklist live
+> in SKILL.md.
 
-## Contents
-- Step 4: Runbook Generation
-
-## Step 4: Runbook Generation
-
-### 4.1 Deployment Runbook
+## Architecture Document
 
 ```
-DEPLOYMENT RUNBOOK — [PROJECT_NAME]
+ARCHITECTURE — [Project] — v[X.Y.Z] — [Date] — [Author], Cure Consulting Group
 
-WEB DEPLOYMENT (Vercel / Firebase Hosting)
-  Prerequisites:
-    - GitHub access to repository
-    - Vercel account access (or Firebase CLI authenticated)
-    - Environment variables configured per environment
+SYSTEM OVERVIEW
+  [2–3 paragraphs: what it does, who uses it, the business problem it solves]
 
-  Standard deploy (staging → production):
-    1. Merge feature branch to main
-    2. GitHub Actions runs: lint → test → build → deploy to staging
-    3. Verify staging at https://staging.app.com
-    4. Create release branch: git checkout -b release/vX.Y.Z
-    5. Push and create PR to production branch
-    6. Approve GitHub Actions deploy workflow
-    7. Verify production at https://app.com
-    8. Tag release: git tag vX.Y.Z && git push --tags
+DIAGRAM (Mermaid)
+  flowchart LR
+    App[Mobile app] --> Auth[Firebase Auth]
+    App --> API[Cloud Functions]
+    API --> DB[(Firestore)]
+    API --> Pay[Stripe]
 
-  Rollback:
-    - Vercel: vercel rollback (reverts to previous deployment)
-    - Firebase: firebase hosting:clone project-prod:previous project-prod:live
+COMPONENT RESPONSIBILITIES
+  | Component | Responsibility | Owner after handoff |
 
-MOBILE DEPLOYMENT (iOS)
-  Prerequisites:
-    - Xcode with signing certificates
-    - App Store Connect access
-    - Fastlane configured
+DATA FLOWS
+  [Signup, core transaction, payment, notification delivery — one short paragraph each]
 
-  Steps:
-    1. Bump version in Xcode project
-    2. Run: fastlane ios release
-    3. Monitor TestFlight for beta feedback
-    4. Promote to App Store from App Store Connect
-    5. Monitor Crashlytics for 24 hours post-release
+STACK
+  | Layer | Technology | Version | Notes |
 
-MOBILE DEPLOYMENT (Android)
-  Prerequisites:
-    - Android Studio with signing keystore
-    - Google Play Console access
-    - Fastlane configured
-
-  Steps:
-    1. Bump versionCode and versionName
-    2. Run: fastlane android release
-    3. Upload to internal testing track
-    4. Promote to production (staged rollout: 10% → 50% → 100%)
-    5. Monitor Crashlytics and Play Console vitals for 48 hours
-
-CLOUD FUNCTIONS DEPLOYMENT
-  Steps:
-    1. Run tests: cd functions && npm test
-    2. Deploy: firebase deploy --only functions --project production
-    3. Verify: check Cloud Functions logs for errors
-    4. Rollback: redeploy previous version from git tag
+KEY DECISIONS
+  [Link each ADR; one line on the trade-off it made]
 ```
 
-### 4.2 Incident Response Runbook
+## Knowledge-Transfer Session Plan
 
-```
-INCIDENT RESPONSE — [PROJECT_NAME]
+| # | Session | Length | Audience | Content | Deliverable |
+|---|---------|--------|----------|---------|-------------|
+| 1 | Architecture | 2 h | Whole team | Walkthrough, decisions and trade-offs, core business logic | Recording |
+| 2 | Codebase tour | 3 h | Engineers | Repo layout, conventions, key modules, live "add a feature", tests, review process | Recording + annotated tour doc |
+| 3 | Deploy & operate | 2 h | Engineers + DevOps | CI/CD, live staging deploy (audience follows), dashboards, incident walkthrough, rollback demo | Recording + verified runbook |
+| 4 | Infra & cost | 1.5 h | Eng lead + finance | Cloud footprint, cost by service, scaling limits, budget alerts | Recording + cost model |
+| 5 | Q&A & shadowing kickoff | 1 h | Whole team | Open questions, shadowing expectations, transition channels | Shadowing schedule |
 
-First Responder Checklist:
-  1. Check status dashboards: [DASHBOARD_URL]
-  2. Check Crashlytics: [CRASHLYTICS_URL]
-  3. Check Sentry: [SENTRY_URL]
-  4. Check Firebase Console: [FIREBASE_URL]
-  5. Check Cloud Functions logs: [LOGS_URL]
+Recordings: name `KT-[#]-[topic]-[date]`, add timestamps, store with the project docs in client
+storage (not personal drives). Shadowing channel: `#project-handoff-[name]`, 4-business-hour
+response target, email escalation to the Cure lead after that.
 
-Common Issues and Fixes:
+## Maintenance SLA — default table (replace with SOW terms)
 
-  Issue: App crashes on startup
-  Likely cause: Firebase config mismatch or API key expired
-  Fix: Check google-services.json / GoogleService-Info.plist match current project
-  Escalate to: [NAME/TEAM]
+| Severity | Definition | Response | Resolution target |
+|----------|-----------|----------|-------------------|
+| P0 | Service down, data loss, security breach, payments broken | 1 h, 24/7 | 4 h |
+| P1 | Core feature broken, no workaround | 4 business hours | 1 business day |
+| P2 | Degraded, workaround exists | 1 business day | 3 business days |
+| P3 | Cosmetic, enhancement, non-urgent | 2 business days | Next sprint, best effort |
 
-  Issue: Payments failing
-  Likely cause: Stripe webhook secret rotated, or Stripe API key expired
-  Fix: Check Stripe Dashboard → Webhooks → verify endpoint status
-  Escalate to: [NAME/TEAM]
+In scope: bug fixes, security patches and dependency updates, infra upkeep (scaling, certificates),
+alert response, minor config changes, database maintenance. Out of scope: new features, redesigns,
+platform migrations, client-initiated third-party changes, optimisation beyond the current baseline.
 
-  Issue: Cloud Functions timing out
-  Likely cause: Cold start under load, or downstream service slow
-  Fix: Check function logs, increase timeout/memory if needed, check downstream
-  Escalate to: [NAME/TEAM]
+Change requests: client files in [tracker] → Cure triages within 1 business day → in scope goes to
+the next maintenance window; out of scope gets an estimate for a separate SOW → everything ships
+through the standard pipeline.
 
-  Issue: Authentication failures
-  Likely cause: Firebase Auth config change, OAuth provider issue
-  Fix: Check Firebase Console → Authentication → Settings
-  Escalate to: [NAME/TEAM]
-
-  Issue: Database slow / rate limited
-  Likely cause: Missing Firestore indexes, or hot partition
-  Fix: Check Firestore Console → Usage tab, add composite indexes
-  Escalate to: [NAME/TEAM]
-
-Escalation:
-  - Cure Consulting support (if under maintenance SLA): [CONTACT]
-  - Firebase support: https://firebase.google.com/support
-  - Stripe support: https://support.stripe.com
-```
-
-### 4.3 Common Troubleshooting Guide
-
-```
-TOP 10 TROUBLESHOOTING SCENARIOS
-
-1. "Build fails in CI"
-   → Check GitHub Actions logs → usually dependency version mismatch
-   → Fix: delete node_modules and package-lock.json, run npm install
-
-2. "Emulators won't start"
-   → Port conflict. Kill processes on ports 4000, 5001, 8080, 9099
-   → Fix: lsof -ti:8080 | xargs kill -9
-
-3. "Firestore security rules reject my request"
-   → Test in Firebase Console → Rules Playground
-   → Check authentication state and document path
-
-4. "Push notifications not delivered"
-   → Check APNs certificate expiry (iOS) or FCM server key (Android)
-   → Verify device token is registered and not stale
-
-5. "Stripe webhook returns 400"
-   → Webhook secret mismatch between Stripe Dashboard and env vars
-   → Use Stripe CLI to test locally: stripe listen --forward-to localhost:5001
-
-6. "Next.js build fails with type errors"
-   → Run: npx tsc --noEmit to see all type errors
-   → Common: missing type for new API response shape
-
-7. "Mobile app can't connect to staging/production"
-   → Check API base URL in build config
-   → Verify Firebase project ID matches environment
-
-8. "Deployment hangs or times out"
-   → Check GitHub Actions runner status
-   → If Firebase deploy: check firebase-debug.log for details
-
-9. "Images/files not loading"
-   → Check Cloud Storage CORS configuration
-   → Verify storage rules allow read access for the path
-
-10. "Analytics events not appearing"
-    → Firebase Analytics has 24-hour delay for non-real-time events
-    → Use DebugView in Firebase Console for immediate verification
-```
-
-### 4.4 Monitoring Runbook
-
-```
-MONITORING RUNBOOK
-
-Dashboards to Check Daily:
-  - Service health: [URL]
-  - Error tracking: [URL]
-  - Business metrics: [URL]
-
-What the Alerts Mean:
-┌─────────────────────────────┬──────────────────────────────────────────┐
-│ Alert Name                  │ What It Means / What to Do               │
-├─────────────────────────────┼──────────────────────────────────────────┤
-│ High Error Rate             │ >5% of requests failing. Check logs.     │
-│ Latency Spike               │ p95 >2s. Check DB queries, cold starts.  │
-│ Crash Rate Elevated         │ >1% crash rate. Check Crashlytics.       │
-│ Payment Failures            │ Stripe errors. Check webhook + API keys. │
-│ Budget Alert                │ Cloud spend approaching limit. Review.   │
-│ Certificate Expiring        │ SSL/APNs cert needs renewal.             │
-│ Function Timeout            │ Cloud Function hitting timeout limit.     │
-└─────────────────────────────┴──────────────────────────────────────────┘
-```
+Billing options:
+- **Retainer** — [X] h/month, no rollover, overage at the SOW rate; P0 outside retainer hours
+  covered; monthly usage report.
+- **Time & materials** — SOW hourly rate, 1-hour minimum per incident, out-of-hours P0 premium,
+  weekly timesheet, Net 30.
+- **Hybrid** — small retainer for routine upkeep plus T&M for incidents beyond it; review quarterly.

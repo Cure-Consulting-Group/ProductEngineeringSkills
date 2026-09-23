@@ -1,32 +1,38 @@
 ---
 name: proposal-generator
-description: "Generate consulting proposals and SOWs — project scoping, milestone-based pricing, deliverable definitions, and engagement structure"
-when_to_use: "Use when creating a client proposal, drafting a SOW, or scoping an engagement. NOT for internal cost estimation (use engineering-cost-model). NOT for public-sector solicitations (use rfp-evaluation, then bid-decision)."
+description: "Drafts consulting proposals and SOWs: scope, milestones, pricing, payment terms. Use when writing a client proposal, a statement of work, or a change order for Cure."
+when_to_use: "NOT for internal cost estimates (use engineering-cost-model) or screening public-sector solicitations (use solicitation-triage, then rfp-evaluation)."
 argument-hint: "[project-name]"
 disable-model-invocation: true
+metadata:
+  verified: 2026-09-23
 ---
 
 # Proposal Generator
 
-> **DESTRUCTIVE — confirm before each mutating step.** Ask the user explicitly
-> before every action that writes, overwrites, sends, or files anything on their
-> behalf, and never batch those actions behind a single approval. Under Claude
-> Code `disable-model-invocation` keeps this skill from auto-triggering; **other
-> runtimes ignore that field**, so on Codex and Antigravity this paragraph is the
-> only thing standing between a suggestion and an irreversible act.
+> **Confirm before anything leaves the draft folder.** Drafting into `docs/proposals/` is
+> safe. Sending, sharing, filing, or overwriting a signed or client-shared document needs the
+> user's explicit approval each time, because a sent price or term binds Cure commercially.
+> Under Claude Code `disable-model-invocation` keeps this skill from auto-triggering; Codex
+> ignores that field, so this paragraph is the guardrail there.
 
-Generate professional consulting proposals and Statements of Work. Every proposal should be clear enough that a non-technical decision-maker can say yes, and specific enough that scope creep has no room to hide.
+**Outcome:** a proposal and SOW a non-technical decision-maker can say yes to, specific enough
+that scope creep has nowhere to hide. **Done when** every deliverable has acceptance criteria,
+out-of-scope and assumptions are explicit, prices trace to a cost basis, and the payment schedule
+follows the Cure defaults below. Deliver the requested document only; match length to the need,
+no filler sections or restated summaries.
+
+This skill **owns Cure's commercial terms** — payment schedule, rate structure, warranty, IP,
+termination. engineering-cost-model and technical-estimation supply the cost basis and link here.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Portfolio (for relevant past work in "Why Cure"): !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Prior proposals: !`ls docs/proposals/ 2>/dev/null | head -10 || echo "(none)"`
 
-Use this context to tailor all output to the actual project.
+The current repository is usually not the client's; don't infer the client's stack from it.
 
 ## Step 1: Classify the Engagement Type
 
@@ -52,88 +58,33 @@ Use this context to tailor all output to the actual project.
 
 ## Scope Validation
 
-Before generating proposal:
-1. Glob for similar past projects in the workspace to benchmark estimates
-2. Reference `/engineering-cost-model` for accurate cost basis
-3. Use WebSearch to validate market rates for the proposed services
+Before pricing: benchmark against prior proposals and past projects; take hours and
+infrastructure from `engineering-cost-model` (or `technical-estimation` when the price will be
+held under contract); search the web, if available, for current market rates for the services.
 
-## Artifact Generation (Required)
+## Code/Artifact Generation
 
-Generate using Write:
-1. **Proposal document**: `docs/proposals/{client}-proposal.md` — complete proposal
-2. **SOW**: `docs/proposals/{client}-sow.md` — statement of work with milestones
-3. **Pricing breakdown**: `docs/proposals/{client}-pricing.md` — cost structure with assumptions
+Applies when the user asks for the documents (the usual case). A pricing question gets an answer.
+
+1. `docs/proposals/{client}-proposal.md` — the proposal
+2. `docs/proposals/{client}-sow.md` — SOW with milestones
+3. `docs/proposals/{client}-pricing.md` — cost basis and assumptions (internal; not sent)
 
 ## Step 3: Proposal Structure
 
-```markdown
-# Proposal: [Project Name]
-## Prepared for [Client Name] by Cure Consulting Group
-### [Date]
+Sections, in order, with the Cure rule for each:
 
----
-
-## 1. Executive Summary (one page max)
-
-[Client] needs [concise problem statement — 1-2 sentences].
-
-We propose [solution summary — 1-2 sentences] delivered over [timeline]
-for [price range or fixed price].
-
-Why Cure:
-- [Relevant experience — specific similar project or domain expertise]
-- [Technical differentiator — architecture approach, team composition]
-- [De-risk factor — methodology, guarantee, or IP advantage]
-
----
-
-## 2. Scope Definition
-
-### In Scope
-| # | Deliverable | Description |
-|---|------------|-------------|
-| 1 | [Feature/Module] | [What it includes, in plain language] |
-| 2 | [Feature/Module] | [What it includes] |
-| 3 | [Feature/Module] | [What it includes] |
-
-### Out of Scope
-- [Explicitly list things the client might assume are included]
-- [Common: ongoing maintenance, content creation, third-party integrations beyond X]
-- [Common: legacy system migration, training beyond initial handoff]
-
-### Assumptions
-- Client provides [access to systems, brand assets, content, API keys] by [date]
-- Client designates a single point of contact with authority to approve deliverables
-- Feedback turnaround: 2 business days per review cycle
-- Maximum [N] rounds of revision per deliverable
-
-### Dependencies
-- [Third-party API availability]
-- [Client infrastructure readiness]
-- [App store review timelines]
-
----
-
-## 3. Technical Approach
-
-### Architecture Overview
-[High-level architecture description — 3-5 sentences]
-[Include a text-based architecture diagram if helpful]
-
-### Platform & Technology Choices
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Frontend | [e.g., Next.js, SwiftUI] | [Why this choice] |
-| Backend | [e.g., Firebase, Node.js] | [Why this choice] |
-| Database | [e.g., Firestore, PostgreSQL] | [Why this choice] |
-| Hosting | [e.g., Vercel, Cloud Run] | [Why this choice] |
-
-### Methodology
-- Agile delivery in 2-week sprints
-- Weekly status meetings with stakeholder demo
-- Continuous deployment to staging environment
-- User acceptance testing before each milestone sign-off
-```
+1. **Executive summary** (one page): the client's problem in their words, the solution, timeline,
+   price. "Why Cure": one specific similar project, one technical differentiator, one de-risk
+   factor (methodology, warranty, IP position).
+2. **Scope**: in-scope deliverables table in plain language; an explicit **out-of-scope** list of
+   things the client might assume are included (maintenance, content, migrations, extra
+   integrations, training beyond handoff); assumptions (client access and assets by a date, one
+   approver, 2-business-day feedback, N revision rounds); dependencies (third-party APIs,
+   client infrastructure, app-store review).
+3. **Technical approach**: 3–5 sentence architecture, a layer/technology/rationale table, and the
+   delivery method (2-week sprints, weekly demo, continuous deploy to staging, UAT before each
+   milestone sign-off).
 
 ## Step 4: Pricing Models
 
@@ -147,10 +98,11 @@ FIXED-PRICE (best when scope is well-defined)
     Milestone 3: Integration & Testing    — $XX,XXX (due on approval of M2)
     Milestone 4: Launch & Handoff         — $XX,XXX (due on go-live)
 
-  Rules:
-    - Never 100% upfront — milestone payments protect both parties
-    - First milestone payment due on contract signing (covers discovery risk)
-    - Final 20% due on go-live (incentive to ship)
+  Cure default payment schedule (canonical — other skills link here):
+    - Never 100% upfront; milestone payments protect both parties
+    - M1 due on signing (covers discovery risk)
+    - Middle milestones due on acceptance of the prior milestone
+    - Final 20% due on go-live; the 30-day warranty that follows is included, not billed
     - Change requests: documented, priced, signed before work begins
     - Scope protection: out-of-scope requests go through change order process
 

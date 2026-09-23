@@ -115,7 +115,9 @@ end
 ### GitHub Actions Release Workflow
 
 ```yaml
-# .github/workflows/release.yml
+# .github/workflows/release.yml — majors current as of 2026-09-23; pin each action to a
+# commit SHA per rules/cicd.md. Production jobs run in the `production` environment so the
+# Cure manual-approval gate applies (see SKILL.md, Branch and release policy).
 name: Release
 
 on:
@@ -127,9 +129,9 @@ jobs:
   android-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
-        with: { ruby-version: '3.2' }
+        with: { ruby-version: '3.4' }
       - run: bundle install
       - name: Decode keystore
         run: echo ${{ secrets.KEYSTORE_BASE64 }} | base64 -d > app/keystore.jks
@@ -139,14 +141,14 @@ jobs:
           PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
 
   ios-release:
-    runs-on: macos-14
+    runs-on: macos-latest   # must carry the Xcode/SDK App Store Connect currently requires — confirm before use
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
-        with: { ruby-version: '3.2' }
+        with: { ruby-version: '3.4' }
       - run: bundle install
       - name: Install certificates
-        uses: apple-actions/import-codesign-certs@v2
+        uses: apple-actions/import-codesign-certs@v7
         with:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_PASSWORD }}
@@ -158,10 +160,11 @@ jobs:
 
   web-release:
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: '24' }
       - run: npm ci && npm run build
       - name: Deploy to Vercel
         run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}

@@ -1,6 +1,6 @@
 # feature-flags: detailed reference
 
-> Reference material for the `feature-flags` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read when writing the flag provider for a specific platform (Step 4 of the `feature-flags` skill).
 
 ## Contents
 - Step 4: Platform Implementation Patterns
@@ -122,22 +122,23 @@ struct OnboardingView: View {
 }
 ```
 
-### Web (Next.js + Edge Config or Firebase Remote Config)
+### Web (Next.js + Firebase Remote Config server templates or Vercel Edge Config)
 
 ```typescript
-// Server-side flag evaluation (Next.js middleware or server component)
-// Prefer server-side evaluation to avoid flash of content
+// Server-side flag evaluation (Server Component or route handler) avoids a flash of content.
 
-// Option 1: Firebase Remote Config (server-side)
-import { initializeServerApp } from 'firebase/app';
-import { getRemoteConfig, fetchAndActivate, getValue } from 'firebase/remote-config';
+// Option 1: Firebase Remote Config server templates (Admin SDK; the client
+// `firebase/remote-config` package is browser-only and does not run on the server)
+import { getRemoteConfig } from 'firebase-admin/remote-config';
 
-export async function getFlags(): Promise<Record<string, boolean>> {
-  const rc = getRemoteConfig(app);
-  await fetchAndActivate(rc);
+export async function getFlags(userId: string): Promise<Record<string, boolean>> {
+  const template = await getRemoteConfig().getServerTemplate({
+    defaultConfig: { release_new_onboarding_flow: false, ops_kill_switch_video_upload: false },
+  }); // cache the template (e.g. refresh every 60s) rather than fetching per request
+  const config = template.evaluate({ randomizationId: userId }); // stable % bucketing
   return {
-    newOnboarding: getValue(rc, 'release_new_onboarding_flow').asBoolean(),
-    killSwitchVideoUpload: getValue(rc, 'ops_kill_switch_video_upload').asBoolean(),
+    newOnboarding: config.getBoolean('release_new_onboarding_flow'),
+    killSwitchVideoUpload: config.getBoolean('ops_kill_switch_video_upload'),
   };
 }
 
@@ -151,7 +152,7 @@ export async function getFlag(flag: string): Promise<boolean> {
 // Client-side hydration — pass flags from server to client
 // In layout.tsx:
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const flags = await getFlags();
+  const flags = await getFlags(await currentUserId()); // your auth helper
   return (
     <html>
       <body>

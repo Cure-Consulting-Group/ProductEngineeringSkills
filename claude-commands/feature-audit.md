@@ -2,186 +2,107 @@
 
 > **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
 > mutating commands, and do not create or delete resources. Under Claude Code
-> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> the `disallowed-tools` frontmatter above blocks Write and Edit (`allowed-tools`
+> only pre-approves tools; it restricts nothing).
+> Bash stays available for read-only inspection (grep, git log, scanners), so even
+> under Claude Code "no mutating commands" is advisory, not enforced.
 > **Other runtimes do not enforce it** — Codex and Antigravity ignore those
 > fields, and activation there can widen rather than narrow file access — so on
 > any runtime other than Claude Code this paragraph is the only guardrail.
 
-Multi-phase audit that runs after every feature completion across Android, iOS, Firebase, and Web. Produces a scored gap report with actionable fixes and missing test scaffolds.
+**Outcome:** a scored gap report for one shipped feature, every finding with platform, file/layer,
+severity (Critical / High / Medium / Low), confidence, and a concrete fix; missing tests come with a
+minimal stub. Report everything you find — ranking happens in the report, not by omission. Done
+when every entry and exit point of the feature has been traced on each platform it ships on.
 
 ## Pre-Processing (Auto-Context)
 
-Project context, gathered before the skill runs. Values are injected inline below; in an environment that does not execute them (e.g. Gemini), run the shown commands instead.
+Context (pre-filled in Claude Code; in other runtimes run these commands first):
 
-- Portfolio: !`sed -n '1,40p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Recent commits: !`git log --oneline -5 2>/dev/null || echo "(not a git repo)"`
-- Layout: !`ls src/ app/ lib/ functions/ 2>/dev/null | head -25`
+- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift firebase.json 2>/dev/null | head -5 | grep . || echo "(none detected)"`
+- Recent commits: !`git log --oneline -8 2>/dev/null || echo "(not a git repo)"`
 
-Use this context to tailor all output to the actual project.
+## Step 1: Classify
 
-## Automated Scanning (Before Manual Review)
+Identify the feature and the platforms it ships on (from the context above and the user). Scale depth
+to size: a single-screen change gets the phases that apply to it, not a 120-point scorecard. If the
+feature name or scope is ambiguous, ask once; in an unattended run, state the assumed scope and proceed.
 
-Before applying the audit framework, scan the codebase:
+Detect the iOS architecture before judging it: TCA features get the TCA checks below; MVVM/Observation
+features get equivalent checks (async error paths, cancellation, state owned by the view model). Don't
+flag MVVM as a defect — technology-radar puts MVVM in Adopt and TCA in Trial.
 
-1. **File Discovery**: Use Glob to find all feature-related files:
-   - `**/{feature}/**/*.kt` `**/{feature}/**/*.swift` `**/{feature}/**/*.tsx`
-2. **Error Handling Check**: Use Grep to scan for patterns:
-   - Missing: `catch|throw|Result` in feature code (error handling gaps)
-   - Present: `try { } catch { }` with empty catch blocks (swallowed errors)
-   - Missing: `sealed class.*Error|enum.*Error` (no error type hierarchy)
-3. **Test Coverage Check**: Use Glob to compare:
-   - Source files: `**/{feature}/**/*.kt` count
-   - Test files: `**/{feature}/**/*Test.kt` count
-   - Flag if test count < source count
-4. **Security Scan**: Use Grep to find:
-   - Hardcoded strings matching API key patterns: `sk-|pk_|ghp_|AIza|AKIA`
-   - Raw SQL or unparameterized queries
-   - Missing input validation on public functions
+## Step 2: Gather Context and Scan
 
-Report findings before proceeding to the framework phases.
+Find the feature's files (search by feature name across `*.kt`, `*.swift`, `*.ts`/`*.tsx`,
+`functions/**`, `*.rules`) and run quick searches before the phases:
 
-## When to Run
+- Empty or swallowed `catch` blocks; async calls with no error path.
+- Test files vs source files per platform (flag layers with no tests at all).
+- Secret-looking literals (`sk_live_`, `pk_live_`, `ghp_`, `AIza`, `AKIA`), unparameterized queries, unvalidated public inputs.
+- Firestore collections the feature touches vs rules that cover them.
 
-1. **Post-Completion** — After any feature is marked done, merged, or declared "ready to ship"
-2. **Explicit Request** — When asked for a feature audit, code audit, gap analysis, or test coverage check
+## Step 3: Boundary Mapping
 
-Execute all 5 phases in order. Do not skip phases. Do not summarize — audit.
+Every entry point (UI trigger, deep link / Universal Link / App Link, push, background job), every exit
+(success, error, navigation, callback), the data flow (input → transform → persistence), and external
+dependencies (APIs, Firestore paths, Stripe, SDKs). A dependency with no failure handling is a finding.
+Trace the chain per platform: Android `UiEvent → ViewModel → Repository → DataSource`; iOS TCA
+`Action → Reducer → Effect` (or View → ViewModel → Client); Web route → Server Component/Action → data layer.
 
-## Required Inputs
+## Step 4: Logic and Wiring Gaps
 
-| Input | Required | Notes |
-|---|---|---|
-| Feature name | Yes | Short identifier |
-| Feature description | Yes | 1-2 sentences |
-| Android files/modules | Yes if Android | Screens, ViewModels, Repositories |
-| iOS files/modules | Yes if iOS | TCA Features, Views, Clients |
-| Firebase collections/functions | Yes if Firebase used | Firestore paths, callable names |
-| Known concerns | Optional | Any suspected gaps |
+- **All:** unvalidated state (null, empty, signed-out), business rules that differ between layers or platforms, magic values that belong in constants or Remote Config, missing debounce on user-triggered writes, races.
+- **Android:** error handling, loading state, and cancellation (`viewModelScope`) on every async call; Hilt graph complete; StateFlow collected lifecycle-aware; nav graph wired.
+- **iOS (TCA):** effects use `.run` with `do/catch` mapping failures to actions (`TaskResult` is deprecated in TCA 1.x); `.cancellable(id:)` on long effects; no state mutation outside reducers; no meaningful action returning `.none` silently; `testValue` for every live dependency.
+- **Web:** Server Actions validate input and check auth; error and loading boundaries exist for the route; no secrets in client bundles.
+- **Firebase/Stripe:** rules cover every collection touched; functions return typed errors; transactions where writes race; webhooks idempotent; Stripe and Firestore customer records agree.
 
-If any required input is missing, ask for it before proceeding.
+## Step 5: Tests, Security, Accessibility, Analytics, Docs
 
-## Phase 1: Feature Boundary Mapping
+Rate each ✅ covered / ⚠️ partial / ❌ missing:
 
-Map the complete surface area:
+- **Tests:** Android ViewModel + repository tests with fakes, Compose UI test for the main path; iOS `TestStore` exhaustive tests for every action and effect (or view-model tests); Web component + E2E for the critical path; Firestore rules tested in the Emulator Suite. Coverage thresholds come from testing-strategy — don't restate them.
+- **Security:** the Step 2 scan results plus auth checks on every new endpoint/callable. Escalate to security-review if anything is Critical.
+- **Accessibility:** labels on new interactive elements, touch targets, dynamic type/font scaling, contrast on new colors. Escalate to accessibility-audit for a full pass.
+- **Analytics:** the feature's key events fire with the names in the tracking plan (analytics-implementation).
+- **Docs:** README/changelog/API docs updated where the feature changes behavior.
 
-- Every **entry point**: UI trigger, deep link, push notification, Universal Link, background job
-- Every **exit point**: success state, error state, navigation destination, callback
-- Complete **data flow**: input → transform → output → persistence
-- All **external dependencies**: APIs, Firebase collections, Stripe endpoints, 3rd-party SDKs
-- Any dependency with **no fallback or error handling** → flag immediately
-- iOS TCA: map the full `Action → Reducer → Effect` chain
-- Android: map `UiEvent → ViewModel → Repository → DataSource` chain
-
-## Phase 2: Logic Gap Detection
-
-### Universal Checks
-- State assumed but never validated (null/nil checks, empty states, auth state)
-- Business rules implemented inconsistently across layers
-- Hardcoded values, magic numbers, strings that should be constants or remote config
-- Firebase reads/writes with no security rule coverage (note collection path)
-- Race conditions or missing debounce/throttle on user-triggered events
-
-### Android-Specific
-- Async operations missing:
-  - Error handling (`try/catch`, `.catch{}`, sealed `Result` wrapper)
-  - Loading/in-progress state management
-  - Cancellation handling (`viewModelScope`, `lifecycleScope`)
-
-### iOS TCA-Specific
-- Effects missing:
-  - Error mapping (`TaskResult`, `.run { }` failure path)
-  - Cancellation (`Effect.cancel(id:)`, `.cancellable(id:)`)
-- State mutation happening outside a Reducer
-- Effects fired outside a store
-- Actions dispatched but not handled (silent `.none` returns on meaningful actions)
-
-### Firebase/Backend
-- Security rules missing for any collection read/written by this feature
-- Cloud Functions with no error response handling
-- Firestore writes without optimistic locking or transaction where needed
-
-## Phase 3: Integration & Wiring Validation
-
-Validate end-to-end wiring across all layers:
-
-**Android**: Hilt chain complete, StateFlow → Composable connected, navigation graph wired, lifecycle-aware Firebase listeners
-
-**iOS TCA**: Store scoping correct, `DependencyValues` injection complete, all Actions handled, state-driven navigation, `testValue` defined for all live Dependencies
-
-**Firebase**: Firestore schema matches both clients, Functions deployed to correct env, Auth UID scoped correctly, security rules consistent
-
-**Stripe**: PaymentIntent lifecycle complete, webhooks idempotent, Customer/PaymentMethod associations correct in both Stripe and Firestore
-
-## Phase 4: Test Coverage Audit
-
-Rate each item: ✅ Covered | ⚠️ Partial | ❌ Missing
-
-**Android**: ViewModel with MockK/FakeRepository, Repository with fake data source, Hilt test modules, ComposeTestRule UI tests, navigation tests
-
-**iOS TCA**: `TestStore` for ALL Reducer tests, every `Action` asserts exact `State` mutation, every `Effect` awaited and resulting `Action` asserted, `withDependencies {}` overrides, exhaustivity mode, cancellation tested
-
-**Firebase/Backend**: Firestore rules via Emulator Suite, Firebase Functions unit tests, end-to-end happy path
-
-**Web**: Component unit tests, integration tests, E2E tests for critical paths
-
-## Phase 5: Audit Report Output
+## Step 6: Report
 
 ```
-═══════════════════════════════════════════════════════
-FEATURE AUDIT REPORT
-Feature: [NAME]
-Date: [TODAY]
-═══════════════════════════════════════════════════════
+FEATURE AUDIT — [feature] — [date]
+Platforms: [Android | iOS | Web | Backend]
 
-SUMMARY SCORECARD
-┌─────────────────────────┬─────────┬───────────┬─────────┬────────┬────────┐
-│ Category                │ Android │ iOS (TCA) │ Backend │ Score  │ Status │
-├─────────────────────────┼─────────┼───────────┼─────────┼────────┼────────┤
-│ Feature Boundary        │  X/10   │   X/10    │  X/10   │  X/30  │ 🟢🟡🔴│
-│ Logic Gap Detection     │  X/10   │   X/10    │  X/10   │  X/30  │ 🟢🟡🔴│
-│ Integration Wiring      │  X/10   │   X/10    │  X/10   │  X/30  │ 🟢🟡🔴│
-│ Test Coverage           │  X/10   │   X/10    │  X/10   │  X/30  │ 🟢🟡🔴│
-├─────────────────────────┼─────────┼───────────┼─────────┼────────┼────────┤
-│ OVERALL                 │         │           │         │ X/120  │        │
-└─────────────────────────┴─────────┴───────────┴─────────┴────────┴────────┘
+SCORECARD (0–10 per applicable cell; omit platforms the feature doesn't ship on)
+Category        Android  iOS  Web  Backend
+Boundary
+Logic/Wiring
+Tests
+Sec/A11y/Analytics/Docs
+Status: 🟢 ≥80%  🟡 60–79%  🔴 <60%
 
-Scoring: 🟢 >= 80% | 🟡 60-79% | 🔴 < 60%
-
-CRITICAL GAPS (block ship — fix before merge)
-1. [Platform] — [Gap] — [File/Layer] — [Fix]
-
-HIGH PRIORITY GAPS (fix in next sprint)
-1. [Platform] — [Gap] — [File/Layer] — [Fix]
+FINDINGS (all of them, highest severity first)
+# | Severity | Confidence | Platform | File/Layer | Gap | Fix
 
 MISSING TESTS
-1. [Platform] — [Test description] — [Test type]
-   Scaffold: [Minimal code stub for the missing test]
+# | Platform | Test | Type | Minimal stub
 
-WIRING ISSUES
-1. [Platform] — [Issue] — [From layer → To layer] — [Fix]
+CROSS-PLATFORM INCONSISTENCIES
+# | Behavior/contract | Risk | Fix
 
-CROSS-PLATFORM CONSISTENCY ISSUES
-1. [Behavior or data contract that differs between Android and iOS] — [Risk] — [Fix]
-
-RECOMMENDATIONS
-- [Architectural or process improvement]
-
-NEXT ACTIONS CHECKLIST
-[ ] Fix all CRITICAL gaps before next PR/merge
-[ ] Schedule HIGH PRIORITY gaps for next sprint
-[ ] Add all MISSING TESTS to backlog with ticket references
-[ ] Resolve WIRING ISSUES before QA handoff
-[ ] Address CROSS-PLATFORM issues before dual-platform release
-═══════════════════════════════════════════════════════
+NEXT ACTIONS
+Critical → block merge · High → next sprint · Medium/Low → backlog
 ```
+
+Match length to the feature; no restated summaries.
 
 ## Recurring Mode
 
-This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
+This is a recurring goal, not a one-shot (mechanism trade-offs: the `engagement-automation` skill).
 
 - **Cadence:** monthly
 - **Session loop:** none — session loops expire after 7 days, so a monthly cadence never fires in-session; it belongs in the cloud routine below.
-- **Unattended:** cloud routine — Monthly audit of shipped-vs-used features against analytics. Recipes: docs/AUTOMATION.md in the plugin repo.
+- **Unattended:** cloud routine — audit each feature merged in the last month (from merge history) with this skill, using the assumed-scope rule in Step 1 instead of asking. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~120k tokens/run; cap at one run per monthly period.
-- **Guardrails:** read-only run; deliver feature health report; flag dead/unshipped surface; report on failure rather than retrying.
+- **Guardrails:** the audit itself is read-only; the routine (not the skill) delivers the combined report as an issue; report on failure rather than retrying.

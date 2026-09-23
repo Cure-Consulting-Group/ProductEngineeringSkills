@@ -1,9 +1,10 @@
 ---
 name: qsbs-compliance
-description: "Track and enforce IRC §1202 QSBS qualification — gross asset test, active business test, C-Corp status, holding periods, disqualifying events"
-when_to_use: "Use when reviewing entity structure, equity changes, asset growth, or business activity that could affect QSBS status; also annual health checks. NOT general tax advice (CPA) or HIPAA/GDPR (compliance-architect)."
+description: "Checks IRC §1202 QSBS qualification for C-corps under both OBBBA regimes. Use when an equity event, entity change, asset growth, or revenue mix could affect QSBS, or for an annual QSBS health check."
+when_to_use: "NOT for other tax positions (use irc-lookup or tax-analyst agent) or HIPAA/GDPR/PCI (use compliance-architect)."
 argument-hint: "[entity-or-product]"
 allowed-tools: ["Read", "Grep", "Glob"]
+disallowed-tools: Write Edit
 context: fork
 ---
 
@@ -11,10 +12,14 @@ context: fork
 
 > **READ-ONLY SKILL.** Produce analysis only: do not edit files, do not run
 > mutating commands, and do not create or delete resources. Under Claude Code
-> this is enforced by the `allowed-tools` / `disallowed-tools` frontmatter above.
+> the `disallowed-tools` frontmatter above blocks Write and Edit.
+> Bash stays available for read-only inspection (grep, git log, scanners), so even
+> under Claude Code "no mutating commands" is advisory, not enforced.
 > **Other runtimes do not enforce it** — Codex and Antigravity ignore those
 > fields, and activation there can widen rather than narrow file access — so on
 > any runtime other than Claude Code this paragraph is the only guardrail.
+
+**Outcome:** a QSBS Compliance Scorecard (Step 5) per entity, returned in the response, with every test marked PASS / FAIL / AT RISK / UNKNOWN (missing data), every figure labeled with its regime, and every risk given a severity and a mitigation. **Done** when each test has a status and each UNKNOWN names the document that would resolve it.
 
 IRC §1202 Qualified Small Business Stock compliance monitoring. QSBS excludes gain up to a per-issuer cap (the greater of a dollar cap or 10× basis) per shareholder — but qualification is fragile. A single disqualifying event can void the exclusion for affected issuances.
 
@@ -30,7 +35,7 @@ analyses; reconcile with `tax/irc-lookup/reference/obbba-changes.md`):
 
 Always label every figure in an output with the regime it belongs to.
 
-This skill does NOT constitute tax advice. All output requires CPA/tax attorney review.
+This is planning analysis, not tax advice: a wrong QSBS call can cost a founder seven figures of excludable gain, so every output goes to a CPA or tax attorney before anyone acts on it.
 
 ## Step 1: Classify the QSBS Task
 
@@ -54,7 +59,7 @@ This skill does NOT constitute tax advice. All output requires CPA/tax attorney 
 
 ## Step 3: §1202 Qualification Criteria
 
-Run each test. ALL must pass simultaneously and continuously.
+Run each test; all must hold at the same time, and several must hold continuously through the holding period. Report every finding, including low-severity ones — ranking happens in the scorecard. Read `references/section-1202-tests.md` when computing gross assets, classifying revenue as qualified vs. services, fixing clock-start dates, or checking state conformity.
 
 ### Test 1: C-Corporation Requirement
 - Entity must be a domestic C-Corporation at time of stock issuance
@@ -102,7 +107,7 @@ Run each test. ALL must pass simultaneously and continuously.
 
 ## Step 4: Disqualifying Event Detection
 
-Scan for these red flags. Any one can void QSBS:
+Scan for these red flags; any one can void QSBS for some or all issuances:
 
 | Event | Risk Level | Action |
 |-------|-----------|--------|
@@ -119,7 +124,7 @@ Scan for these red flags. Any one can void QSBS:
 
 ## Step 5: Output — QSBS Compliance Scorecard
 
-Generate this artifact for each entity:
+Return this scorecard in the response for each entity (it is read-only output, not a file). Match length to the need; no filler sections or restated summaries.
 
 ```markdown
 # QSBS Compliance Scorecard — [Entity Name]
@@ -180,5 +185,4 @@ For Cure Consulting Group entities, track these specifically:
 - For cap table modeling: use `investor-reporting` or `fundraising-materials`
 - For entity structure decisions: consult tax attorney (no skill replaces this)
 - For post-OBBBA §1202 figures and authority: use `irc-lookup` (its OBBBA-changes reference, `tax/irc-lookup/reference/obbba-changes.md`)
-- For detailed test mechanics (gross-asset calculation, revenue classification, clock-start dates, state conformity): read `references/section-1202-tests.md`
 - For Delaware franchise tax: consult the CPA (no skill covers it)

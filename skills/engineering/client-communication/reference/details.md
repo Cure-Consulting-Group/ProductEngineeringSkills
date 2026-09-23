@@ -1,133 +1,89 @@
-# client-communication: detailed reference
+# client-communication: secondary templates
 
-> Reference material for the `client-communication` skill, split out for progressive disclosure. Loaded on demand from SKILL.md.
+> Read when the classified need is Sprint Demo, Milestone Report, RAG status, QBR, or meeting
+> facilitation. The weekly status, escalation, and executive summary templates live in SKILL.md.
 
-## Contents
-- Step 4: Status Update Templates
-
-## Step 4: Status Update Templates
-
-### Weekly Status Report
+## Sprint Demo Script
 
 ```
-Subject: [Project Name] — Week of [Date] Status Update
+SPRINT DEMO — Sprint [X] — [Date] — 30 min cap
+Presenter: [Name] | Audience: [Names, roles] | Agenda sent 24h before
 
-Hi [Client Name],
+1. INTRO (2 min)  Theme in 1–2 sentences. Goals: [Goal] — Complete / Partial / Moved
+2. WHAT WE BUILT (20 min)
+   [Feature] — what it does (1 non-technical sentence)
+     Flow: [Navigate to X] → [Do Y] → [Show Z]
+     Why it matters: [user / business impact]
+   Technical improvements: ≤2 min unless the audience is technical
+3. METRICS (3 min)  Completed vs planned; bugs opened/closed/remaining; product KPI movement
+4. WHAT'S NEXT (3 min)  Top 3 next-sprint priorities; next milestone — date — status
+5. Q&A (2 min)  Capture questions; research items get an owner and a date
 
-Here's your weekly update for [Project Name].
-
-PROGRESS THIS WEEK
-  - [Completed item 1 — one sentence, outcome-focused]
-  - [Completed item 2]
-  - [Completed item 3]
-
-IN PROGRESS
-  - [Item 1 — expected completion date]
-  - [Item 2 — expected completion date]
-
-BLOCKERS / NEEDS YOUR ATTENTION
-  - [Blocker 1 — what's blocked, what we need, by when]
-  - [Decision needed — context, options, recommendation, deadline]
-  (If none: "No blockers this week.")
-
-UPCOMING NEXT WEEK
-  - [Planned item 1]
-  - [Planned item 2]
-
-TIMELINE & BUDGET
-  Timeline: [On track / X days ahead / X days behind — explanation if behind]
-  Budget:   [On track / X% burned of total — flag if trending over]
-  Next milestone: [Name] — [Date] — [On track / At risk]
-
-Best,
-[Your name]
+FOLLOW-UP within 24h: recording link, summary email, action items
 ```
 
-Rules for weekly status:
-- Send on the same day every week (Monday recommended)
-- Keep under 1 page / 1 screen scroll
-- Lead with completed work (positive momentum)
-- Never bury blockers at the bottom -- they go in their own section
-- Use concrete dates, not "soon" or "next week hopefully"
-- If there is bad news, put it in BLOCKERS, not buried in progress
+Environment checklist: staging checked 1 hour before; realistic test data (not "test123"); test
+accounts ready; flow rehearsed end-to-end; fallback screenshots; screen share legible;
+notifications silenced; recording on; backup presenter named.
 
-### Milestone Report
+Async recording (for absent stakeholders): 10–15 minutes, intro slide, narrated walkthrough per
+feature, closing slide with next steps and decisions needed; link it in the weekly email.
+
+## Milestone Report
 
 ```
-MILESTONE REPORT
-Project: [Name]
-Milestone: [Milestone name / number]
-Date: [Date]
+MILESTONE REPORT — [Project] — [Milestone] — [Date]
 Status: [Complete / Partially Complete / At Risk]
 
-MILESTONE SUMMARY
-  This milestone aimed to deliver: [1-2 sentence description]
-
-  Acceptance criteria:
-    - [Criterion 1]: [Met / Not met — explanation]
-    - [Criterion 2]: [Met / Not met — explanation]
-    - [Criterion 3]: [Met / Not met — explanation]
-
-  Overall: [X of Y criteria met]
+GOAL  [1–2 sentences]
+ACCEPTANCE CRITERIA  [Criterion]: Met / Not met — why   (Overall X of Y)
 
 DELIVERABLES
-  ┌────┬──────────────────────────────┬────────────┬───────────────────┐
-  │ #  │ Deliverable                  │ Status     │ Notes             │
-  ├────┼──────────────────────────────┼────────────┼───────────────────┤
-  │ 1  │ [Feature/deliverable name]   │ Complete   │                   │
-  │ 2  │ [Feature/deliverable name]   │ Complete   │ [Minor caveat]    │
-  │ 3  │ [Feature/deliverable name]   │ Partial    │ [What remains]    │
-  │ 4  │ [Feature/deliverable name]   │ Deferred   │ [Moved to M3]     │
-  └────┴──────────────────────────────┴────────────┴───────────────────┘
+  | # | Deliverable | Status (Complete/Partial/Deferred) | Notes |
 
-BUDGET
-  Budget allocated:    $[X]
-  Budget spent:        $[Y] ([Z]%)
-  Forecast at complete: $[W]
-  Variance:            [Under / Over by $X — explanation]
-
-TIMELINE
-  Planned completion:  [Date]
-  Actual completion:   [Date]
-  Variance:            [On time / X days early / X days late — explanation]
-
-RISKS CARRIED FORWARD
-  - [Risk 1 — impact and mitigation plan]
-  - [Risk 2 — impact and mitigation plan]
-
-NEXT MILESTONE
-  Name: [Next milestone]
-  Target date: [Date]
-  Key deliverables: [List]
-  Dependencies: [External dependencies or decisions needed]
+BUDGET    Allocated \$[X] | Spent \$[Y] ([Z]%) | Forecast \$[W] | Variance [why]
+TIMELINE  Planned [Date] | Actual [Date] | Variance [why]
+RISKS CARRIED FORWARD  - [Risk — impact — mitigation]
+NEXT MILESTONE  [Name] — [Date] — deliverables — dependencies / client decisions needed
 ```
 
-### RAG Status Report
+## RAG Status
 
 ```
-RAG STATUS — [Project Name] — [Date]
-
-┌──────────────────────┬────────┬──────────────────────────────────────┐
-│ Workstream           │ Status │ Summary                              │
-├──────────────────────┼────────┼──────────────────────────────────────┤
-│ Backend / API        │ GREEN  │ On track. Auth and CRUD complete.     │
-│ Frontend / UI        │ AMBER  │ 3 days behind. Design revisions       │
-│                      │        │ added scope. Catching up this sprint. │
-│ Mobile (Android)     │ GREEN  │ On track. Feature parity with web.    │
-│ Mobile (iOS)         │ RED    │ Blocked on Apple review. Submitted    │
-│                      │        │ appeal. ETA unknown.                  │
-│ Infrastructure       │ GREEN  │ Staging and prod environments ready.  │
-│ QA / Testing         │ AMBER  │ Test automation behind by 1 sprint.   │
-│                      │        │ Manual testing covering gap.          │
-└──────────────────────┴────────┴──────────────────────────────────────┘
-
-RAG definitions:
-  GREEN:  On track. No issues or risks that affect timeline/budget.
-  AMBER:  Minor issue or risk. Mitigation in progress. May affect timeline
-          if not resolved within [timeframe].
-  RED:    Significant issue. Stakeholder action or decision needed.
-          Will affect timeline/budget without intervention.
-
-Rule: If anything is RED, it must be escalated (not just reported).
-      Use the Risk Escalation framework (Step 5).
+RAG STATUS — [Project] — [Date]
+| Workstream | Status | Summary (what, why, when it recovers) |
 ```
+
+GREEN: on track, nothing threatening timeline/budget. AMBER: issue with mitigation in progress;
+will hit timeline if unresolved by [date]. RED: needs stakeholder action or decision; will hit
+timeline/budget without intervention. Anything RED is escalated (SKILL.md Step 4), not just reported.
+
+## Quarterly Business Review (60 min)
+
+1. Quarter recap (5) — objectives set vs met, key deliverables
+2. Metrics & health (10) — agreed product metrics, delivery quality, uptime, budget vs plan
+3. Demo (10) — the 2–3 most impactful features
+4. Challenges & learnings (5) — top issues and how they were resolved
+5. Next quarter (10) — 3–5 objectives, milestones, what we need from the client, known risks
+6. Discussion (20) — client priorities and feedback
+
+## Meeting Facilitation
+
+Agenda (sent ≥4 hours before; no agenda, no meeting):
+```
+[Meeting] — [Date] [Time + TZ] — [Duration] — [Link]
+Pre-read: [links]
+[Time] [Topic] — [Presenter] — Inform / Discuss / Decide
+[Time] Action items and next steps — [Facilitator]
+```
+
+Decision log (one source of truth; link ADRs from the `sdlc` skill):
+```
+| # | Date | Decision | Decided by | Context / link |
+```
+
+Action items: `[ACTION] [Description] — [one owner] — [specific date]`, sent within 24 hours, tracked
+in one system; overdue items are raised at the next meeting.
+
+Default to async (email with a decision deadline, recorded walkthrough) for status and simple
+decisions; meet live for demos, escalations, multi-trade-off decisions, and conflict.
