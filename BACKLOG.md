@@ -40,12 +40,11 @@ overridable defaults; tax profile stays at `.claude/tax-profile.md`; cpa-benchma
 (Python port deferred); worktree port registry at `<git-common-dir>/worktree-ports.json`; LTV
 lifetime cap 60 months.
 
-**Still open (need the owner's answer, not a default):** (1) the proposed SOW terms in
-`legal-doc-scaffold` Step 4 — 5-business-day acceptance with silence = accepted, liability capped at
-12 months of fees, pause after 15 days overdue, 30-day termination, 12-month non-solicit — remain
-labeled "proposed"; (9) interview AI policy in `interview-system-designer` (no AI in screens, AI
-allowed onsite); (10) technology-radar facts: Claude API in Adopt, Autograph and Antigravity listed
-as users; (11) the Cure "Antigravity" product description (AI orchestration IDE, VS Code fork).
+**Resolved by the owner (2026-09-23):** (1) SOW terms adopted as Cure defaults — "proposed" label
+removed; attorney-review markers stay on liability/IP/governing law; (9) AI assistance allowed in every
+interview stage, each stage designed so the assistant alone can't pass; (10) technology-radar facts
+confirmed; (11) Cure's "Antigravity" IDE product retired/renamed — removed from portfolio-registry,
+technology-radar, and product-marketing (also ends the name clash with Google Antigravity).
 
 Captured 2026-09-23 on the Opus 5.5 switch. Method per `docs/MAINTENANCE.md` quarterly meta-loop:
 three platform lanes (Claude Code docs; Codex 0.155 and agy 1.2.8 **probed on this machine**, not read

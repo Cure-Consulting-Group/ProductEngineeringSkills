@@ -60,9 +60,8 @@ confirmation before writing.
 1. Vendly — LATAM merchant OS (Android/iOS, Firebase, Stripe, multi-language)
 2. Autograph — AI medical scribe (HIPAA, LLM, clinical workflow)
 3. The Initiated — women's basketball recruiting (NCAA, B2B+B2C, events)
-4. Antigravity — AI agent orchestration IDE (VS Code fork, open source). This is Cure's product, not Google Antigravity, the agent runtime this library also targets; write "Antigravity (Cure IDE)" wherever the two could be confused.
-5. TwntyHoops — basketball media/events (content, community)
-6. Cure Consulting Group — the consultancy (client work, this skill library)
+4. TwntyHoops — basketball media/events (content, community)
+5. Cure Consulting Group — the consultancy (client work, this skill library)
 
 ## Step 3: Write the Registry
 

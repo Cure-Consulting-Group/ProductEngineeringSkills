@@ -104,16 +104,16 @@ If the loop exceeds 8 hours of candidate time across all stages, you will lose c
 
 ### AI-Assistant Policy (decide per stage, publish to candidates)
 
-Engineers use AI coding assistants daily, and remote candidates can use them undetected. Every loop states, in writing and before the interview, which stages allow them. Cure default:
+Engineers use AI coding assistants daily, and remote candidates can use them undetected. Cure default (owner decision, 2026-09-23): **AI assistance is allowed in every stage**, disclosed and on screen share, because that is how the job is done. Every loop still publishes this in writing before the interview, and each stage is designed so the assistant alone can't pass it:
 
 | Stage | Policy | What it measures |
 |-------|--------|------------------|
-| Technical screen | No AI assistance; candidate narrates | Fundamentals, reading code, communication |
+| Technical screen | AI allowed on screen share; candidate narrates what they accept, reject, and why | Fundamentals shown through review: reading generated code, spotting its errors, communication |
 | Onsite coding | AI allowed with screen share; task sized so the assistant alone doesn't finish it | Decomposition, prompting judgment, reviewing and correcting generated code, tests |
-| System design | No AI; discussion-based | Tradeoff reasoning in real time |
+| System design | AI allowed as a reference; the candidate owns and defends every tradeoff live | Tradeoff reasoning, pushing back on plausible-but-wrong suggestions |
 | Take-home (if used) | AI allowed, disclosed; debrief walks through every choice | Ownership of the submitted code |
 
-Rubrics score *judgment over the output* (did they catch the wrong suggestion, did they test it), not keystrokes. Undisclosed use where banned is handled via follow-up probing on the candidate's own code, not detection software. Revisit the policy quarterly.
+Rubrics score *judgment over the output* (did they catch the wrong suggestion, did they test it), not keystrokes. Since nothing is banned, there is nothing to detect — probe understanding with follow-ups on the candidate's own choices instead. Revisit the policy quarterly.
 
 ### System Design Stage
 
