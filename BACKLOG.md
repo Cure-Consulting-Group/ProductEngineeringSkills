@@ -1,8 +1,286 @@
 # BACKLOG
 
-Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates.
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates. Wave 5 (2026-09-23, open) is the Opus 5.5 re-evaluation: every skill made to route, run, and stay correct in Claude Code, Codex, and Antigravity.
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
+
+---
+
+# Wave 5 (2026-09-23) — Tri-Runtime Excellence: Opus 5.5, Codex, Antigravity
+
+Captured 2026-09-23 on the Opus 5.5 switch. Method per `docs/MAINTENANCE.md` quarterly meta-loop:
+three platform lanes (Claude Code docs; Codex 0.155 and agy 1.2.8 **probed on this machine**, not read
+from docs) plus a full 103-skill corpus review against a six-dimension rubric, then an independent verify
+pass on every load-bearing claim before it entered a ticket. Evidence lives in
+`docs/evaluations/2026-09-23/` (`platform-facts.md` + three per-skill review files with line numbers).
+
+**Theme: the library is conformance-green and runtime-blind.** `audit-library.py` scores 9.98/10; the
+rubric review scores the same corpus **~19/30 mean** (engineering 17.7, platform/product 17.7,
+business/tax median 22). Every skill ships to three runtimes, but it is authored for one — and some of it
+for a model two generations old.
+
+## Verified findings (do not re-research; verified 2026-09-23)
+
+- **Triggers are invisible outside Claude.** Codex and Antigravity read `description` only. 86/103 skills
+  keep their "Use when…" text in `when_to_use`. Codex's default budget further cuts every description
+  to ~110 chars at our library size (measured, mean 108).
+- **Guardrails diverge by runtime.** `disable-model-invocation` is honored by agy, **ignored by Codex**
+  (`proposal-generator`, `legal-doc-scaffold`, `engagement-automation` auto-fire there).
+- **Silent drops.** `stitch-design` frontmatter is invalid YAML (L6–7); Codex and agy drop it, Claude
+  tolerates it, and `audit-library.py` scores it green.
+- **Neither non-Claude install is live.** The Codex plugin is not installed on this machine; Antigravity
+  loads **0 skills** from our Claude manifest (domain-array `skills` ignored). A flat plugin export loads 100/103.
+- **Codex auto-loads `hooks/hooks.json`** from a plugin root; ours assumes Claude env vars and prompt hooks.
+- **The Wave 2.5 "workspace did not load" result was a false negative** — headless `agy -p` needs
+  `--add-dir <ws>`. This also affects the tri-lane agy invocation.
+- **Wave 2.5 C2's precondition is now met**: the team actively uses Antigravity. Gemini CLI, by contrast,
+  can no longer run a model here (`IneligibleTierError`) — drop it as a target.
+- **Context-block rent.** 71 skills inject the same 4-line `` !`cmd` `` block (git log, package.json,
+  PORTFOLIO.md, `ls src/`) — including 12 non-code business/tax skills and legal/market-research. It renders
+  as literal noise in Codex and agy.
+- **Opus 5 guidance contradicts library habits.** Anthropic's Opus 5 guide says remove verification
+  scaffolding and "double-check" instructions, constrain scope explicitly, and gate delegation.
+  56 skills carry an unconditional "Code/Artifact Generation (Required)" section that writes files
+  regardless of request — including `incident-response` mid-incident.
+- **Factual defects (each verified against source):** 2026 QBI threshold stated as \$201,775 single — that is
+  the MFS figure; single is \$201,750 (Rev. Proc. 2025-32) — wrong in `irc-lookup:81` **and the CPA benchmark
+  answer key** `tcp-planning.json:11`; `qsbs-compliance` predates OBBBA (\$10M/\$50M/5-yr vs \$15M/\$75M/
+  tiered 3-4-5-yr) and contradicts the library's own `irc-lookup/reference/obbba-changes.md`; §174A small-
+  business retroactive election expired 2026-07-06 but is presented as open; §25C/§25D terminated after
+  2025 but shown as available; `tax-recommendations:23` model example claims 401(k) deferrals save SE tax;
+  `dcf-modeling:39` equity bridge double-counts cash; `compliance-architect:309` lists GA4 BAA "Available";
+  `database-architect:68` "500 writes/sec per document" (sustained limit is ~1/sec); `request.geo` (removed
+  in Next 15) in `edge-computing`/`infrastructure-scaffold`; 8 skills schedule `/loop 1w|4w`, which never
+  fire (loops expire at 7 days); `python3 skills/<name>/…` script paths broken since the domain move
+  (`dora-metrics`, `accessibility-audit` +1); `test-accounts` forbids plus-addressing then uses `test+` for
+  every persona; `cure-infra-bootstrap` pins `--skills-version 5.0.0`; routes to nonexistent skills
+  (`retirement-plan`, `corp-finance-ops`, `nil-contracts`); `portfolio-registry` 503 lines with unclosed fences.
+
+## Release plan
+
+| Release | Bump | Tickets | Theme |
+|---|---|---|---|
+| v7.9.1 | patch | T52 | Verified factual/structural defects |
+| v7.10.0 | minor | T53, T54, T55, T56 | Portable triggers, context diet, Codex + Antigravity installs made real |
+| v7.11.0 | minor | T57, T58, T59 | Opus 5.5 authoring pass, consolidation, currency discipline |
+| v7.12.0 | minor | T60 | Evidence: migrate to `claude plugin eval`, tri-runtime eval matrix |
+
+T52 ships immediately and independently. T53 before T55/T56 (installs are only worth doing once
+triggers survive the trip). T60 can start in parallel with T57 and should gate T58's merges.
+Estimate: **10–14 dev-days** across four releases.
+
+**Definition of done:** every skill routes correctly from `description` alone in all three runtimes
+(measured with `codex debug prompt-input` and `agy -p "/skills"`); no skill silently dropped or silently
+unguarded in any runtime; zero known factual defects; rubric mean ≥24/30; and ≥30 skills carry a
+measured with/without Δ from `claude plugin eval`.
+
+---
+
+## T52 — Verified-defect hotfix
+
+**Status:** Open · **Release:** v7.9.1 (patch)
+
+**Scope:** fix every item in *Factual defects* above, plus:
+1. `stitch-design` frontmatter (move `tools`/`env` under `metadata:` or delete); remove its "trigger
+   aggressively" line (L80) and client design systems.
+2. `audit-library.py`: **strict YAML parse of every frontmatter (CRIT)**; relative-link + cross-skill-name
+   resolution (CRIT on nonexistent skill names); `/loop <N>w` lint; `python3 skills/<name>/` path lint.
+3. CPA benchmark: correct `tcp-planning.json:11`, then re-score any recorded runs graded against it.
+4. Tax skills: add `verified: YYYY-MM-DD` next to every dollar figure/threshold that changes annually
+   (feeds T59's staleness lint). Flag-not-assert: WOTC renewal, §21 phase-down, SSTS section list,
+   §280E rescheduling — mark "confirm before use" rather than guessing.
+
+**Why:** these are wrong answers delivered with confidence — the tax and compliance ones to clients.
+
+**Acceptance:** each defect has a diff; audit fails on a reintroduced invalid-YAML fixture; benchmark
+answer key matches Rev. Proc. 2025-32.
+
+**Effort:** 1–1.5 days.
+
+---
+
+## T53 — Portable triggers: `description` carries what + when in the first 100 chars
+
+**Status:** Open · **Release:** v7.10.0
+
+**Scope:**
+1. Rewrite all 103 descriptions: first sentence ≤100 chars = what + when (third person, key terms).
+   `when_to_use` keeps only Claude-side disambiguation ("NOT for… use X") — it is a bonus, not the trigger.
+2. Audit rules: WARN if no trigger verb/phrase in first 110 chars of `description`; combined budget stays
+   ≤350 target.
+3. Generate `agents/openai.yaml` for every `disable-model-invocation` skill with
+   `policy.allow_implicit_invocation: false` (via `sync-metadata.py`), so Codex matches Claude/agy.
+4. Resolve 5 overlapping trigger clusters named in the review files (design ×3, AI ×2, bootstrap ×2,
+   agent-design ×2, finance/agents) — at least make them mutually exclusive in `description`.
+
+**Why:** description is the only field every runtime reads; Codex shows ~110 chars. A skill that
+doesn't route is dead weight in two of three runtimes.
+
+**Acceptance:** `codex debug prompt-input` listing shows a trigger for all 103; spot-check 10 natural-
+phrasing prompts per runtime route to the right skill.
+
+**Effort:** 1.5 days.
+
+---
+
+## T54 — Context-block diet
+
+**Status:** Open · **Release:** v7.10.0
+
+**Scope:** replace the universal 4-line injection block (71 skills) with (a) nothing for business/tax/
+legal/marketing/comms skills, (b) a domain-specific block where the output genuinely depends on it, and
+(c) portable phrasing everywhere: "Context (pre-filled in Claude Code; elsewhere run these first): …".
+Consider one `scripts/context.sh` per domain the body tells the model to run. Also remove `$ARGUMENTS`/
+positional-arg dependence from bodies (not substituted in Codex/agy).
+
+**Why:** up to ~100 lines of irrelevant context per invocation in Claude; literal noise elsewhere.
+
+**Acceptance:** no business/tax/legal skill injects package.json/git log; injected blocks ≤10 lines each.
+
+**Effort:** 0.5–1 day.
+
+---
+
+## T55 — Codex install made real
+
+**Status:** Open · **Release:** v7.10.0 · **Depends on:** T53
+
+**Scope:**
+1. Fence Claude hooks from Codex: publish a Codex plugin root without `hooks/` (or Codex-aware guards);
+   verify with an install into a throwaway `CODEX_HOME`.
+2. Install on the consultant machines; record `codex plugin list` + one explicit (`$name`) and one
+   implicit activation transcript.
+3. `docs/CONSUMING-PROJECTS.md`: recommend `skills.max_context_tokens` ≈12–15k or domain subsets via
+   `[[skills.config]] enabled=false`.
+4. Read-only auditors: ship `.codex/agents/*.toml` with `sandbox_mode = "read-only"` for the
+   security/secret/tax review roles (the only real enforcement Codex offers).
+5. CI: `codex debug prompt-input` smoke (no model call) asserting 103 listed, 0 dropped.
+6. Small managed AGENTS.md block (routing + invariants only, ≪32 KiB).
+
+**Effort:** 1.5 days.
+
+---
+
+## T56 — Antigravity install made real (re-opens T25/T26 with a named consumer)
+
+**Status:** Open · **Release:** v7.10.0 · **Depends on:** T53
+
+**Scope:**
+1. Generated **flat agy plugin** (`plugin.json {"name":"cure"}` + `skills/<name>/` with `reference/`,
+   `scripts/`) installed via `agy plugin install`; built in CI, not committed (resolves Wave 2.5 A4).
+   Collision check against `~/.gemini/config/` builtins at install (A5).
+2. Export transforms: fold `when_to_use` into `description` (post-T53 this is near no-op);
+   rewrite `` !`cmd` `` to run-first prose; keep `disable-model-invocation` (agy honors it); prose
+   guardrails for `allowed-tools`/`disallowed-tools`/`context: fork` skills.
+3. Personas → agy custom agents (`skills:` + `rules:`); output styles/path rules → plugin `rules/`
+   (model-decision/glob mode, ≤24KB each). Verify behavior, not just install.
+4. Fix tri-lane agy invocation to pass `--add-dir <worktree>`.
+5. Correct Wave 2.5 facts/C5 table to point at `docs/evaluations/2026-09-23/platform-facts.md`;
+   formally drop Gemini CLI as a target.
+6. CI smoke: `agy -p "/skills" --output-format json` on the export asserts 103 listed.
+
+**Effort:** 2–2.5 days.
+
+---
+
+## T57 — Opus 5.5 / GPT-5.6 authoring pass
+
+**Status:** Open · **Release:** v7.11.0
+
+**Scope** (one rulebook, all three vendors agree):
+1. Make every "Code/Artifact Generation (Required)" section conditional on the Step-1 classification
+   (56 skills); `incident-response` generates nothing until mitigation is done.
+2. Delete explicit verification/"double-check"/"re-verify" scaffolding in skills and agents; keep only
+   domain-specific acceptance criteria.
+3. Reviewer/auditor agents: "report every finding with severity + confidence; filtering happens after"
+   — never "only high severity" (Opus 5 follows it literally and loses recall).
+4. Orchestration skills/agents: explicit delegation criteria + spawn caps; Codex-side, say explicitly
+   when to spawn (its default prompt forbids it).
+5. Cut textbook material the model already knows (10+ skills flagged S1≤2); replace with Cure decisions,
+   gotchas, and output contracts. Add a length-calibration line to document-producing skills.
+6. Replace rigid "execute all steps, do not skip" scripts with outcome + success criteria + stop rule.
+7. Fix the 12 "see reference/details.md" pointers that give no *when to read* guidance.
+8. Resolve intra- and cross-skill contradictions listed in the review files (coverage %, retry policy,
+   token format `value` vs `$value`, MTTR, FID→INP, OpenAPI version, runway thresholds).
+9. False read-only banners (~9 skills per the review files) — either enforce via `disallowed-tools` or reword.
+
+**Why:** Anthropic (Opus 5), OpenAI (GPT-5.6) and Google (Gemini 3) guides all say the same thing:
+outcome over steps, emphasis only for invariants, no redundant verification. OpenAI reports +10–15% with
+41–66% fewer tokens from simplification.
+
+**Acceptance:** rubric S2 ≥4 for ≥90% of skills; T60 shows no Δ regression on covered skills.
+
+**Effort:** 3–4 days (parallelizable by domain).
+
+---
+
+## T58 — Consolidation (evidence-gated)
+
+**Status:** Open · **Release:** v7.11.0 · **Gated by:** T35 usage report + T60 Δ
+
+**Candidates** (from review; each needs usage + Δ before merging):
+- `product-design` → `design-studio`; narrow `design-system` to Storybook/governance
+- `agent-workflow-designer` → `agent-designer`
+- `project-bootstrap` + `cure-infra-bootstrap` → one
+- `ai-feature-builder` + `llmops` (generate the same `src/llm/` files)
+- `comps-analysis`, `equity-research`, `merger-modeling`, `dcf-modeling` → preload into
+  `investment-banker`/`equity-analyst` agents rather than listing as top-level skills
+- `qsbs-compliance` → `tax/` domain; `fundraising-materials` ∩ `investor-reporting` dedupe
+- Hard-coded portfolio lists (4 skills) → `PORTFOLIO.md` only; resolve the "Antigravity" product-name
+  collision with Google Antigravity
+
+**Why:** fewer, sharper skills route better in every runtime and cut ~8k-token listing rent.
+
+**Effort:** 1.5–2 days.
+
+---
+
+## T59 — Currency discipline
+
+**Status:** Open · **Release:** v7.11.0
+
+**Scope:**
+1. Platform sweep (21 engineering skills S4≤2): iOS 26/Liquid Glass, Swift 6, M3 Expressive, Firebase BoM
+   34 (no KTX), Functions v2, Next 16 `proxy.ts`, Tailwind v4, INP, Stripe item-level
+   `current_period_*`, MCP `isError`, Node 20 EOL / `actions/checkout` pins, model IDs and prices
+   (GPT-4o/o1/Gemini Ultra/old Claude prices; `llmops` lacks prompt caching and Batch API).
+2. `metadata.verified: YYYY-MM-DD` per skill (Agent Skills spec field) + audit WARN when >180 days,
+   CRIT for tax/legal/compliance skills >365 days or after a known law-change date.
+3. Replace "2025" hard-coded into search queries with "current year".
+
+**Effort:** 2 days.
+
+---
+
+## T60 — Evidence: adopt `claude plugin eval`, tri-runtime matrix
+
+**Status:** Open · **Release:** v7.12.0
+
+**Scope:**
+1. Port the 20 golden tasks to `claude plugin eval` cases (native 3× with/without arms, Δ, CI
+   `--threshold`); set a non-colliding eval dir in `plugin.json` or migrate `evals/` wholesale.
+2. Retire the Claude backend of `run-evals.py`; keep it only as the Codex/agy runner for `--mode model`.
+3. Add `tool_used: Skill` graders — measures routing, the thing T53 fixes.
+4. Effort sweep on Opus 5.5 (`low`/`medium`/`high`) for agents; retune `effort:` frontmatter.
+5. Target ≥30 skills with measured Δ; feed T30.9 audit calibration (Δ≤0 caps score at 8.0).
+
+**Why:** the last sweep showed on=off=100% at n=1 — we have no evidence any skill beats bare Opus 5.5.
+The platform now measures that for us.
+
+**Effort:** 2–3 days + eval spend.
+
+---
+
+## Wave 5 risks
+
+- **T53 is a 103-file rewrite** — do it with a generator-assisted pass and review diffs per domain;
+  routing regressions are invisible without T60's `tool_used` graders.
+- **Vendor drift**: agy went 1.1.27→1.2.8 and changed discovery semantics in two weeks. Every install
+  claim carries a version; CI smokes (T55.5, T56.6) are the backstop.
+- **Tax figures**: flag-not-assert for anything not confirmed from a primary source; a wrong confident
+  number is worse than a "confirm" marker.
+- **Not reviewed this wave:** the 40 agents and 4 personas (only their descriptions were measured).
+  Schedule a same-rubric pass before T57 edits agent prompts.
 
 ---
 
