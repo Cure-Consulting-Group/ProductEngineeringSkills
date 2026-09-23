@@ -205,7 +205,7 @@ Before publishing every post:
 This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
 
 - **Cadence:** weekly
-- **Session loop:** `/loop 1w /cure-product-engineering:seo-content-engine`
+- **Session loop:** none — session loops expire after 7 days, so a weekly cadence never fires in-session; it belongs in the cloud routine below.
 - **Unattended:** cloud routine — Weekly ranking check and brief generation for the active keyword set. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~80k tokens/run; cap at one run per weekly period.
 - **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver content briefs + ranking deltas as a report file; report on failure rather than retrying.

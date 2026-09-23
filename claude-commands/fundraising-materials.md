@@ -333,16 +333,17 @@ PRE-MONEY / POST-MONEY CALCULATION
     Investor ownership = \$2M / \$12M = 16.67%
 
 SAFE CONVERSION
-  SAFEs convert at the LOWER of:
-    1. Valuation cap / fully diluted shares = price per share at cap
-    2. Discount rate applied to priced round price
+  Converts at the LOWER of the cap price or the discounted round price.
+  Round price = pre-money valuation / pre-money fully diluted shares (never post-money).
+  POST-MONEY SAFE (YC standard since 2018): SAFE ownership = investment / post-money cap,
+  measured on capitalization that includes the SAFE shares, before new money.
 
-  Example:
-    SAFE: \$500K at \$8M cap
-    Priced round: \$2M at \$12M pre-money (\$14M post)
-    Price per share at round: \$14M / 10M shares = \$1.40
-    Price per share at cap: \$8M / 10M shares = \$0.80 ← lower, this applies
-    SAFE converts to: \$500K / \$0.80 = 625,000 shares
+  Example (post-money SAFE, no discount; 10,000,000 founder + pool shares):
+    SAFE \$500K at \$8M post-money cap → 6.25% → 666,667 shares; cap price \$0.75
+    Round: \$2M at \$12M pre → \$12M / 10,666,667 = \$1.125; cap applies (\$0.75 lower)
+    New investor 1,777,778 shares (14.29%); 12,444,444 × \$1.125 = \$14M post ✓; SAFE 5.36%
+  PRE-MONEY SAFE (older form): cap price = cap / capitalization EXCLUDING SAFE
+    shares (\$8M / 10,000,000 = \$0.80 → 625,000 shares). Confirm which form was signed.
 
 DILUTION MODELING
   For each scenario, model:

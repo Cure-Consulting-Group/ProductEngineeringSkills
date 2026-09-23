@@ -150,18 +150,24 @@ contested; expect scrutiny, consider disclosure).
 ## C. Retirement — the largest single deduction available
 
 ### C1. Solo 401(k) stacking — **Conservative**
-- Employee deferral `[constants]` $24,500 (2026) + $8,000 catch-up at 50, **plus**
+- Employee deferral `[constants]` $24,500 (2026) + $8,000 catch-up at 50 ($11,250 at ages 60–63) (verified 2026-09-23, IRS Notice 2025-67), **plus**
   employer profit sharing (25% of comp for a corp; ~20% of net SE income for a
   sole prop), total cap `[constants]` $72,000 (2026; +catch-up).
 - Beats a SEP for the same income because the employee deferral is not limited by
   the 25% test.
-- **Deadline**: plan must be **adopted by year end** for employee deferrals
-  (employer contributions can be funded through the extended due date).
+- **Deadline**: a plan may be adopted after year end, by the return due date, and
+  receive employer contributions for that year (SECURE Act §201). For a **sole
+  proprietor or single-member LLC in the plan's first year**, employee deferrals
+  may also be made up to the return due date (SECURE 2.0 §317; commentators read
+  this as the unextended due date — confirm). Otherwise deferral elections must be
+  in place under the plan's terms by year end.
+- **Elective deferrals do not reduce SE tax** — §1402 net earnings are computed
+  before them. The saving is income tax only.
 
 ### C2. Defined benefit / cash balance plan — **Moderate**
 - For a consistently profitable owner over ~45 with high income, deductible
-  contributions can reach `[constants]` $290,000 (2026) in benefit-level funding — far
-  beyond DC limits.
+  contributions fund an annual benefit of up to `[constants]` $290,000 (2026 §415(b)
+  limit; verified 2026-09-23, IRS Notice 2025-67) — typically far beyond DC limits.
 - Requires an actuary, a multi-year funding commitment, and coverage of eligible
   employees. Expensive; only worth it above roughly $250k–300k of stable profit.
 - Can be paired with a solo 401(k) (combined plan limits apply).
@@ -301,9 +307,11 @@ contested; expect scrutiny, consider disclosure).
 ### G2. §174A + §41 coordination — **Conservative**, high value here
 - Domestic R&E immediately deductible again (OBBBA), *and* eligible for the §41
   credit. Take the §280C(c) reduced-credit election or reduce the deduction.
-- Small businesses may retroactively apply §174A to 2022–2024 and recover
-  previously capitalized amounts over 1 or 2 years — **check whether the entity
-  has unamortized 2022–2024 domestic R&E on the books.** `VERIFY`
+- The small-business election to apply §174A retroactively to 2022–2024 **expired**
+  (earlier of 2026-07-06 or the §6511 period; Rev. Proc. 2025-28). Still live:
+  any taxpayer may recover unamortized 2022–2024 domestic R&E in full in its first
+  tax year beginning after 2024 or ratably over that year and the next —
+  **check whether the entity has unamortized 2022–2024 domestic R&E on the books.** `VERIFY`
 - Product development is R&E. For most young software companies the blocker is not
   eligibility — it is the absence of wage QREs, because the engineering was done
   by uncompensated founders.

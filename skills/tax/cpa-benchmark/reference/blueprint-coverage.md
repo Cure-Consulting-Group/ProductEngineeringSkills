@@ -49,7 +49,7 @@ These are real holes. Do not read a passing score as competency in them.
 | **Payroll tax compliance mechanics** (941/940/W-2/W-3 filing, deposit schedules, trust fund recovery §6672) | Becomes directly relevant the moment any entity establishes payroll — and establishing payroll is a common recommendation | **High** |
 | **Partnership taxation depth** (§704(b) allocations, §704(c), §751 hot assets, §754 elections, basis adjustments) | Only reachable where a real partnership exists; a disregarded SMLLC and an S corp do not raise it | Low unless the group has a partnership |
 | **Property transaction depth** (§1231 netting and recapture, §1250 unrecaptured gain, §121 exclusion, §1033) | Only 3 questions today | Medium |
-| **Accounting method changes** (§481(a), Form 3115, Rev. Proc. 2015-13) | Required if §174A retroactive relief or a §471(c) inventory method is adopted | Medium |
+| **Accounting method changes** (§481(a), Form 3115, Rev. Proc. 2015-13) | Required if the §174A unamortized-R&E catch-up or a §471(c) inventory method is adopted | Medium |
 | **Business law** (REG area II) | Out of scope by design | Not planned |
 
 ## Additional coverage gaps the benchmark tests

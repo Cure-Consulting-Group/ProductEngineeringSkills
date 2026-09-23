@@ -10,7 +10,7 @@ forever if missed — no §9100 relief, no amended return, no reasonable cause.
 | **§83(b)** | §83(b)(2) | **30 days from transfer** | **None.** Send certified mail, keep the receipt, attach a copy to the return. Form 15620 may be used. |
 | **§41(h) payroll offset** | §41(h) | On the **timely filed original return** | **None** — cannot be made on an amended return |
 | **NY PTET** | NY Tax Law Art. 24-A | **March 15 of the tax year** | **None.** Annual and irrevocable |
-| **Form 8850 (WOTC)** | §51 | **28 days from hire** | **None** |
+| **Form 8850 (WOTC)** | §51 | **28 days from hire** | **None**. §51 lapsed for hires after 2025-12-31 — confirm reauthorization before use (unverified as of 2026-09-23) |
 | **§1045 QSBS rollover** | §1045 | 60 days from sale | None |
 | **§1031 exchange** | §1031(a)(3) | 45-day ID / 180-day close | None |
 | **§475(f) mark-to-market** | §475(f) | Due date of the **prior** year's return | None — wait a full year |
@@ -43,7 +43,9 @@ Not an election; a **method change** requiring consent.
   Form 3115 with the return, copy to the IRS.
 - **§481(a) adjustment**: negative (taxpayer-favorable) taken entirely in the year
   of change; positive spread over four years.
-- Common triggers: **§174A retroactive relief** for 2022–2024 domestic R&E,
+- Common triggers: **§174A catch-up of unamortized 2022–2024 domestic R&E**
+  (Rev. Proc. 2025-28 statement in lieu of Form 3115; the small-business
+  retroactive election expired 2026-07-06),
   adopting a **§471(c)** inventory method at a small inventory business, or a
   cash-to-accrual change once gross receipts cross the §448 threshold.
 

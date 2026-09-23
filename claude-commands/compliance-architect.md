@@ -41,11 +41,11 @@ Report compliance posture before detailed framework analysis.
 
 | Regulation | Trigger | Key Requirements | Penalty Range |
 |-----------|---------|-----------------|---------------|
-| HIPAA | Health data (PHI) for US persons | BAA chain, access controls, encryption, audit logs, breach notification within 60 days | \$100–\$50,000 per violation, up to \$1.5M/year per category |
-| COPPA | Users under 13 (US) | Verifiable parental consent, data minimization, no behavioral advertising, deletion on request | \$50,120 per violation (FTC) |
+| HIPAA | Health data (PHI) for US persons | BAA chain, access controls, encryption, audit logs, breach notification within 60 days | Inflation-adjusted yearly: ~\$145 to ~\$2.19M per violation, calendar-year cap ~\$2.19M per identical provision (2025 adjustment — confirm before use) |
+| COPPA | Users under 13 (US) | Verifiable parental consent, separate consent for third-party disclosure, written data-retention policy and information-security program (2025 Rule amendments: effective 2025-06-23, compliance date 2026-04-22), data minimization, deletion on request | ~\$53,088 per violation (FTC 2025 figure, adjusted every January — confirm before use) |
 | GDPR | EU/EEA residents' personal data | Lawful basis, DPO, DPIA, 72-hour breach notification, right to erasure, data portability | Up to 4% of global annual revenue or 20M EUR |
-| CCPA/CPRA | California residents' personal information | Right to know, delete, opt-out of sale, no discrimination, 45-day response window | \$2,500 per violation, \$7,500 per intentional violation |
-| PCI DSS | Credit card processing/storage | Network segmentation, encryption, access control, vulnerability management, quarterly scans | \$5,000–\$100,000/month from payment brands |
+| CCPA/CPRA | California residents' personal information | Right to know, delete, opt-out of sale, no discrimination, 45-day response window | ~\$2,663 per violation, ~\$7,988 per intentional violation (2025 CPI adjustment — confirm before use) |
+| PCI DSS | Credit card processing/storage | PCI DSS v4.0.1 (current; v4.0 retired 2024-12-31; future-dated requirements mandatory since 2025-03-31): network segmentation, encryption, access control, vulnerability management, quarterly scans | \$5,000–\$100,000/month from payment brands |
 | SOC 2 | B2B SaaS / enterprise customers | Trust Service Criteria (security, availability, confidentiality, processing integrity, privacy) | No direct penalty — loss of enterprise deals |
 | Multi-Regulation | Multiple of above | Union of all applicable requirements; strictest standard wins on conflicts | Compounding risk |
 
@@ -125,11 +125,13 @@ Collection: users
 │ email               │ CONFIDENTIAL │ GDPR/CCPA   │ Account + 30 days│
 │ displayName         │ CONFIDENTIAL │ GDPR/CCPA   │ Account + 30 days│
 │ dateOfBirth         │ CONFIDENTIAL │ COPPA/GDPR  │ Account + 30 days│
-│ healthRecords       │ RESTRICTED   │ HIPAA       │ 6 years (HIPAA)  │
+│ healthRecords       │ RESTRICTED   │ HIPAA       │ State law*       │
 │ paymentMethodToken  │ RESTRICTED   │ PCI DSS     │ Active sub only  │
 │ parentConsentRecord │ RESTRICTED   │ COPPA       │ Account + 3 years│
 └─────────────────────┴──────────────┴─────────────┴───────────────────┘
 ```
+
+\* HIPAA does not set a medical-record retention period (its 6-year rule covers compliance documentation); state law does — commonly 6–10 years for adults and longer for minors. Confirm per state before use.
 
 ## Step 4: Consent Management Architecture
 
@@ -148,7 +150,7 @@ Document ID: {userId}_{consentType}_{timestamp}
   ipAddress: string,           // captured at time of consent (encrypted)
   userAgent: string,           // browser/device info at time of consent
   timestamp: Timestamp,        // server timestamp — never client-provided
-  expiresAt: Timestamp | null, // null = until withdrawn; COPPA = re-consent annually
+  expiresAt: Timestamp | null, // null = until withdrawn (COPPA has no annual re-consent rule)
   parentEmail: string | null,  // COPPA: parent/guardian email for verification
   withdrawnAt: Timestamp | null
 }
@@ -170,7 +172,10 @@ COPPA (users under 13):
   - Verifiable parental consent BEFORE collecting any data
   - Methods: signed consent form, credit card verification, video call,
     government ID check, knowledge-based authentication
-  - Re-verify consent annually
+  - Separate verifiable consent before disclosing a child's data to third parties
+    (2025 amendments; compliance date 2026-04-22), unless integral to the service
+  - Written children's data-retention policy (keep only as long as reasonably
+    necessary; no indefinite retention) and a written information-security program
   - Parent can review, delete, and refuse further collection at any time
 
 CCPA/CPRA:
@@ -248,9 +253,11 @@ Log EVERY access to CONFIDENTIAL and RESTRICTED data:
   - Failed access attempt → log with denial reason
 
 Retention:
-  - HIPAA audit logs: 6 years minimum
+  - HIPAA: required documentation (policies, procedures, risk analyses, and the
+    activity/audit-review records they call for) — 6 years from creation or last
+    effective date (45 CFR 164.316(b)(2)); keep audit logs on the same clock
   - GDPR audit logs: duration of processing + 1 year
-  - PCI audit logs: 1 year readily available, archive for 3 years
+  - PCI DSS 4.0.1 (Req. 10.5.1): at least 12 months, most recent 3 months immediately available
   - SOC 2 audit logs: 1 year minimum
 
 Storage:
@@ -286,22 +293,19 @@ See [reference/details.md](reference/details.md) (section “Step 6: Platform-Sp
 
 ### Business Associate Agreement (HIPAA)
 
-```
-Required BAA chain for HIPAA:
-  ┌─────────────────────┬──────────────┬──────────────────────────────┐
-  │ Vendor              │ BAA Status   │ Notes                        │
-  ├─────────────────────┼──────────────┼──────────────────────────────┤
-  │ Google Cloud / Firebase │ Available│ Must enable in GCP console   │
-  │ Stripe              │ Available    │ Request via Stripe support    │
-  │ SendGrid / Twilio   │ Available    │ Enterprise plan required      │
-  │ OpenAI              │ Available    │ Enterprise plan, no PHI in    │
-  │                     │              │ standard API without BAA     │
-  │ Sentry              │ Available    │ Business plan required        │
-  │ Vercel              │ Not available│ Do NOT route PHI through      │
-  │ Analytics (GA4)     │ Available    │ But do NOT send PHI to GA4   │
-  │ Mixpanel            │ Available    │ Enterprise plan               │
-  └─────────────────────┴──────────────┴──────────────────────────────┘
+Required BAA chain for HIPAA (vendor terms change — re-verify at engagement start):
 
+| Vendor | BAA | Notes |
+|---|---|---|
+| Google Cloud / Firebase | Available | Covers only products on Google's HIPAA Covered Products list (e.g. Firestore, Cloud Storage for Firebase); Firebase Analytics, Crashlytics, etc. are NOT covered |
+| Google Analytics / GA4 | **Not offered** | Google offers no BAA for GA — never send PHI to GA4 |
+| Stripe | Not offered | Relies on HIPAA's payment-processing exemption — keep PHI out of descriptors, metadata, invoices |
+| Twilio (SMS/Voice) | Available | Security or Enterprise Edition only |
+| SendGrid | **Not offered** | Not a HIPAA-eligible service — use a BAA-covered email provider for PHI |
+| Vercel | Available | Pro add-on or Enterprise |
+| OpenAI / Sentry / Mixpanel | Plan-dependent | Confirm before use |
+
+```
 BAA checklist:
   - [ ] BAA signed with every vendor that touches PHI
   - [ ] BAA specifies permitted uses and disclosures

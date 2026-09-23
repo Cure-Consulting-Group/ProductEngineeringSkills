@@ -33,18 +33,21 @@ what moved, so a stale assumption gets caught before it reaches a return.
 
 | Item | Change | Confidence |
 |---|---|---|
-| **§174 / §174A R&E** | Immediate domestic R&E expensing **restored** for tax years beginning after 2024. Foreign R&E still amortized over 15 years. Small businesses (gross receipts ≤ ~$31M) may apply retroactively to 2022–2024; unamortized 2022–2024 domestic amounts may be recovered over 1 or 2 years. **Directly relevant to any in-house product development.** | `VERIFY` |
+| **§174 / §174A R&E** | Immediate domestic R&E expensing **restored** for tax years beginning after 2024. Foreign R&E still amortized over 15 years. Small-business (gross receipts ≤ $31M) retroactive election for 2022–2024 **expired** — deadline was the earlier of 2026-07-06 or the §6511 period (Rev. Proc. 2025-28). Still live: any taxpayer may recover unamortized 2022–2024 domestic amounts in full in the first tax year beginning after 2024 or ratably over that year and the next. **Directly relevant to any in-house product development.** | `VERIFY` |
 | **§168(k) bonus** | 100% bonus made **permanent** for property acquired after 2025-01-19. No more phase-down schedule. | `ENGINE` |
 | **§179 expensing** | Limit raised to $2.5M (2025) / $2.56M (2026); phase-out threshold $4M / $4.09M. | `ENGINE` |
 | **§168(n) qualified production property** | New 100% expensing for **nonresidential real property used in manufacturing/production**, construction beginning after 2025-01-19 and before 2029. **Potentially large for any entity that acquires or builds production space — but only if the activity is genuinely manufacturing.** | `VERIFY` |
 | **§199A QBI** | Made permanent. Phase-in range **widened** to $75k single / $150k MFJ (from $50k/$100k), which softens the SSTB cliff. New **$400 minimum deduction** when active QBI ≥ $1,000 (2026+). | `ENGINE` |
 | **§461(l) excess business loss** | Made **permanent** (was scheduled to expire). Disallowed amounts carry forward as NOL. 2026 threshold indexed — **confirm the exact figure**, and check whether the engine encodes it at all. | `VERIFY` |
 | **§163(j) interest limitation** | Reverted to the more favorable **EBITDA-based** ATI computation (depreciation and amortization added back). | `VERIFY` |
-| **§1202 QSBS** | Materially expanded for stock **acquired after 2025-07-04**: tiered exclusion (50% at 3 years, 75% at 4 years, 100% at 5 years), per-issuer cap raised **$10M → $15M** (indexed after 2026), gross-assets test raised **$50M → $75M**. Stock acquired on or before 2025-07-04 keeps the old rules. **Critical to the timing of any spinout that expects QSBS** — the acquisition date decides which regime applies. | `VERIFY` |
+| **§1202 QSBS** | Materially expanded for stock **acquired after 2025-07-04**: tiered exclusion (50% at 3 years, 75% at 4 years, 100% at 5 years), per-issuer cap raised **$10M → $15M** (greater of that or 10× basis, unchanged; $15M indexed for tax years beginning after 2026), gross-assets test raised **$50M → $75M** (indexed from 2027); unexcluded gain on 3- and 4-year sales taxed at 28%. §1045 (60-day rollover of QSBS held >6 months) is a deferral, not an exclusion. Operational tracking lives in `security/qsbs-compliance`, which uses these same figures. Stock acquired on or before 2025-07-04 keeps the old rules. **Critical to the timing of any spinout that expects QSBS** — the acquisition date decides which regime applies. | `VERIFY` |
 | **§1400Z opportunity zones** | Made permanent with rolling 10-year zone designations beginning 2027. | `VERIFY` |
 | **§127 educational assistance** | Made permanent and indexed; continues to cover student loan principal and interest. | `VERIFY` |
 | **§45S paid leave credit** | Made permanent. | `VERIFY` |
 | **§45F employer child care credit** | Increased. | `VERIFY` |
+| **§25C / §25D home energy credits** | **Terminated**: §25D for expenditures after 2025-12-31; §25C for property placed in service after 2025-12-31. Prior-year §25D carryforwards only. (verified 2026-09-23, IRS OBBB FAQs for §§25C/25D/25E/30D/45W) | `ENGINE` |
+| **§30D / §25E / §45W clean vehicles** | **Terminated** for vehicles acquired after 2025-09-30 (binding contract + payment by that date still qualifies when placed in service later). (verified 2026-09-23, same IRS FAQs) | `ENGINE` |
+| **§21 / §129 dependent care** | 2026+: §21 maximum rate 50%, phasing down with AGI to 35% then a 20% floor (confirm breakpoints before use — unverified as of 2026-09-23); §129 exclusion $5,000 → $7,500 ($3,750 MFS), not indexed. | `VERIFY` |
 | 1099-NEC / 1099-MISC threshold | Raised from $600 to $2,000 (indexed), effective for payments after 2025. **Changes contractor reporting obligations for every payer.** | `VERIFY` |
 | Form 1099-K threshold | Restored to the old $20,000 / 200-transaction test. | `VERIFY` |
 
@@ -52,7 +55,9 @@ what moved, so a stale assumption gets caught before it reaches a return.
 
 - **§280E** still disallows deductions for cannabis businesses at the federal
   level. Rescheduling was not enacted by OBBBA. A state that decouples changes the
-  state result only — the federal posture is unchanged.
+  state result only — the federal posture is unchanged. Marijuana rescheduling to
+  Schedule III (which would end §280E for it) is an administrative process —
+  confirm its current status before use (unverified as of 2026-09-23).
 - **§1031** remains **real property only**. Any entity summary still listing §1031
   against equipment or inventory is wrong post-TCJA and should not be relied on.
 - **Corporate rate** stays 21% flat (§11). No change.

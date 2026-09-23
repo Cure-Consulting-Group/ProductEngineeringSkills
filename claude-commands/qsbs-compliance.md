@@ -7,7 +7,19 @@
 > fields, and activation there can widen rather than narrow file access — so on
 > any runtime other than Claude Code this paragraph is the only guardrail.
 
-IRC §1202 Qualified Small Business Stock compliance monitoring. QSBS allows up to \$10M (or 10× basis) in capital gains exclusion per shareholder — but qualification is fragile. A single disqualifying event can void the entire exclusion retroactively.
+IRC §1202 Qualified Small Business Stock compliance monitoring. QSBS excludes gain up to a per-issuer cap (the greater of a dollar cap or 10× basis) per shareholder — but qualification is fragile. A single disqualifying event can void the exclusion for affected issuances.
+
+**Two regimes — the issuance date decides which applies** (OBBBA, P.L. 119-21;
+verified 2026-09-23, Grant Thornton and *The Tax Adviser* Nov 2025 OBBBA §1202
+analyses; reconcile with `tax/irc-lookup/reference/obbba-changes.md`):
+
+| | Stock issued **on or before 2025-07-04** | Stock issued **after 2025-07-04** |
+|---|---|---|
+| Per-issuer cap | Greater of \$10M or 10× basis | Greater of \$15M or 10× basis; \$15M inflation-indexed for tax years beginning after 2026 |
+| Gross-asset test | ≤ \$50M | ≤ \$75M (indexed from 2027) |
+| Holding period / exclusion | >5 years → 100% (for stock acquired after 2010-09-27); nothing before 5 years | 3 yrs → 50%, 4 yrs → 75%, 5+ yrs → 100%; unexcluded gain taxed at 28% |
+
+Always label every figure in an output with the regime it belongs to.
 
 This skill does NOT constitute tax advice. All output requires CPA/tax attorney review.
 
@@ -16,7 +28,7 @@ This skill does NOT constitute tax advice. All output requires CPA/tax attorney 
 | Task | Output | Urgency |
 |------|--------|---------|
 | Initial qualification assessment | Full §1202 checklist with pass/fail per criterion | High — do before any equity event |
-| Holding period tracker | Per-shareholder holding period table with 5-year countdown | Ongoing |
+| Holding period tracker | Per-shareholder holding period table with 3/4/5-year (post-2025-07-04) or 5-year (earlier) countdown | Ongoing |
 | Disqualifying event scan | Risk analysis of proposed corporate action | Critical — run before any structural change |
 | Annual health check | Year-end compliance scorecard | Annual |
 | Equity event impact | Pre/post analysis of proposed issuance, buyback, or redemption | Before event |
@@ -39,7 +51,7 @@ Run each test. ALL must pass simultaneously and continuously.
 - Entity must be a domestic C-Corporation at time of stock issuance
 - S-Corp, LLC, LP, or foreign corp stock does NOT qualify
 - **Check**: Read articles of incorporation, verify no S-election (Form 2553) filed
-- **Disqualifier**: Converting to S-Corp or LLC voids QSBS retroactively for all shares issued during C-Corp period? No — only shares issued while a C-Corp qualify; conversion doesn't void existing QSBS but no new QSBS can be issued
+- **Disqualifier**: Only stock issued while the entity is a C-Corp can be QSBS, and the corporation must remain a C-Corp during substantially all of the holder's holding period. An S election or conversion therefore blocks new QSBS and puts the exclusion on already-issued shares at risk — treat it as CRITICAL and get counsel before any conversion.
 
 ### Test 2: Original Issuance
 - Stock must be acquired at original issuance (not secondary market)
@@ -48,12 +60,12 @@ Run each test. ALL must pass simultaneously and continuously.
 - SAFE conversions count if resulting stock is newly issued
 - **Check**: Review cap table for secondary transfers, stock purchase agreements
 
-### Test 3: Gross Asset Test (<\$50M)
-- Aggregate gross assets must not exceed \$50M at any time from incorporation through immediately after the stock issuance
+### Test 3: Gross Asset Test (≤ \$50M pre-2025-07-05 issuances / ≤ \$75M later issuances)
+- Aggregate gross assets must not exceed the threshold for that issuance's regime (\$50M if issued on or before 2025-07-04; \$75M, indexed from 2027, if issued after) at any time from incorporation through immediately after the stock issuance
 - Gross assets = cash + adjusted basis of all property (NOT fair market value)
 - Includes assets of subsidiaries (>50% owned)
 - **Check**: Balance sheet at each issuance date, adjusted basis records
-- **Disqualifier**: Exceeding \$50M at any point after incorporation and before/during issuance permanently disqualifies that issuance
+- **Disqualifier**: Exceeding the applicable threshold at any point before or immediately after an issuance disqualifies that issuance and all later issuances; stock already issued keeps its status
 
 ### Test 4: Active Business Test (>80% Qualified)
 - At least 80% of assets (by value) must be used in the active conduct of one or more qualified trades or businesses
@@ -68,16 +80,16 @@ Run each test. ALL must pass simultaneously and continuously.
 - **Consulting revenue is NOT qualified** — if >20% of revenue comes from consulting/professional services, risk increases
 - **Check**: Revenue breakdown by activity type, employee time allocation
 
-### Test 5: Holding Period (5 Years)
-- Shareholder must hold stock for at least 5 years from issuance date
-- Partial exclusion available via §1045 rollover if sold before 5 years (held >6 months)
-- **Check**: Issuance date per shareholder, calculate 5-year anniversary
+### Test 5: Holding Period (regime-dependent)
+- Stock issued on or before 2025-07-04: must be held **more than 5 years** for any exclusion.
+- Stock issued after 2025-07-04: **3 years → 50%, 4 years → 75%, 5 years → 100%** exclusion.
+- **§1045 is a rollover, not an exclusion**: if QSBS held **more than 6 months** is sold, the holder may elect to defer the gain by buying replacement QSBS within **60 days**; the holding period tacks onto the replacement stock. Gain is deferred, not excluded.
+- **Check**: Issuance date per shareholder, the regime it falls under, and the 3/4/5-year anniversaries
 
-### Test 6: Redemption Restrictions
-- The corporation must not have made significant redemptions (>5% of aggregate value) within 2 years before or 1 year after the issuance
-- "Significant" = more than de minimis
-- Targeted redemptions of the shareholder's family are always disqualifying
-- **Check**: All buyback/redemption transactions within the window
+### Test 6: Redemption Restrictions (§1202(c)(3); Treas. Reg. §1.1202-2)
+- **Related-party test**: stock is not QSBS if the corporation redeemed stock from the taxpayer or a related person within **2 years before or 2 years after** the issuance (de minimis exception: aggregate redemptions ≤ \$10,000 or ≤ 2% of the holder's stock)
+- **Significant-redemption test**: no stock is QSBS if the corporation redeemed more than **5% of the aggregate value** of all its stock within **1 year before or 1 year after** the issuance (subject to a de minimis exception)
+- **Check**: All buyback/redemption transactions within both windows; confirm de minimis figures against the regulation before relying on them
 
 ## Step 4: Disqualifying Event Detection
 
@@ -86,8 +98,8 @@ Scan for these red flags. Any one can void QSBS:
 | Event | Risk Level | Action |
 |-------|-----------|--------|
 | S-Corp election filed | **CRITICAL** | Blocks all future QSBS issuance |
-| LLC conversion | **CRITICAL** | Voids qualification structure entirely |
-| Gross assets exceed \$50M | **CRITICAL** | Disqualifies all issuances after threshold crossed |
+| LLC conversion | **CRITICAL** | Ends C-Corp status: no new QSBS, and the holding-period C-Corp requirement is at risk for existing shares |
+| Gross assets exceed \$50M (pre-2025-07-05 regime) / \$75M (later regime) | **CRITICAL** | Disqualifies all issuances after threshold crossed |
 | Stock buyback >5% within window | **HIGH** | May disqualify specific issuances |
 | Revenue mix shifts to >20% consulting | **HIGH** | Active business test at risk |
 | Merger or acquisition | **HIGH** | Depends on structure — stock-for-stock may preserve, asset sale may not |
@@ -114,16 +126,16 @@ Generate this artifact for each entity:
 |------|--------|--------|
 | C-Corp Status | PASS/FAIL | [current entity type, any elections] |
 | Original Issuance | PASS/FAIL | [secondary transfers found?] |
-| Gross Asset Test (<\$50M) | PASS/FAIL | Current: $[X]M. Headroom: $[50-X]M |
+| Gross Asset Test (≤ \$50M or \$75M by issuance regime) | PASS/FAIL | Current: [X]M. Headroom vs applicable threshold: [T-X]M |
 | Active Business (>80%) | PASS/FAIL | Qualified: [X]%, Non-qualified: [Y]% |
-| Holding Period (5yr) | TRACKING | [table of shareholders with dates] |
-| Redemption Window | PASS/FAIL | [recent redemptions within 2yr/1yr] |
+| Holding Period (3/4/5yr or 5yr by regime) | TRACKING | [table of shareholders with dates] |
+| Redemption Window | PASS/FAIL | [related-party 2yr/2yr; significant >5% 1yr/1yr] |
 
 ## Holding Period Tracker
 
-| Shareholder | Shares | Issuance Date | 5-Year Date | Status |
-|-------------|--------|---------------|-------------|--------|
-| [name] | [count] | [date] | [date] | [X yr Y mo remaining] |
+| Shareholder | Shares | Issuance Date | Regime (pre/post 2025-07-04) | 3/4/5-Year Dates | Status |
+|-------------|--------|---------------|------------------------------|------------------|--------|
+| [name] | [count] | [date] | [pre/post] | [dates] | [X yr Y mo to next tier] |
 
 ## Risk Factors
 
@@ -158,4 +170,6 @@ For Cure Consulting Group entities, track these specifically:
 - For HIPAA/GDPR/PCI compliance: use `compliance-architect`
 - For cap table modeling: use `investor-reporting` or `fundraising-materials`
 - For entity structure decisions: consult tax attorney (no skill replaces this)
-- For Delaware franchise tax: use `corp-finance-ops` (when available)
+- For post-OBBBA §1202 figures and authority: use `irc-lookup` (its OBBBA-changes reference, `tax/irc-lookup/reference/obbba-changes.md`)
+- For detailed test mechanics (gross-asset calculation, revenue classification, clock-start dates, state conformity): read `references/section-1202-tests.md`
+- For Delaware franchise tax: consult the CPA (no skill covers it)

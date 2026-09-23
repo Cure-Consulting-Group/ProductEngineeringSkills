@@ -34,7 +34,7 @@ Tickmark legend, used consistently:
 Ⓕ  footed / recomputed
 Ⓐ  agreed to prior year return
 Ⓡ  reconciled — see reconciliation W/P
-Ⓔ  estimate — basis of estimate documented (SSTS No. 4)
+Ⓔ  estimate — basis of estimate documented (SSTS §2.4)
 Ⓠ  inquiry made — see 08_INQUIRY
 ⚠  open item — must clear before filing
 ```

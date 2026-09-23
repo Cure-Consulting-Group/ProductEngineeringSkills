@@ -53,15 +53,26 @@ doing research it does not intend to exploit itself (funded for, or transferred
 to, another party) does not reach §174A this way. Get this wrong and the deduction
 lands in the wrong year entirely.
 
-### The retroactive opportunity
-Small businesses (gross receipts ≤ ~\$31M (indexed annually — confirm for the tax
-year via the `constants` binding)) may apply §174A **retroactively to
-2022–2024**, and unamortized domestic R&E from those years may be recovered over
-one or two years. **Check whether the entity is carrying capitalized 2022–2024
-domestic R&E on the books** — if so this is a one-time recovery, claimed via
-Form 3115, and it is easy to miss because nothing on the current return points
-at it.
-`VERIFY` the mechanics against primary text before filing.
+### Transition relief — two separate items (Rev. Proc. 2025-28)
+1. **Small-business retroactive election — EXPIRED.** Small businesses (≤ \$31M
+   average gross receipts for 2025) could apply §174A retroactively to 2022–2024
+   by amended returns (or an election statement with the 2024 return). The
+   deadline was the **earlier of 2026-07-06 or the §6511 refund limitations
+   period** for each year. As of 2026-09-23 it has **passed** — do not present it
+   as available (verified 2026-09-23, Rev. Proc. 2025-28). Only confirm
+   whether it *was* made.
+2. **Catch-up of unamortized 2022–2024 domestic R&E — still relevant.** Any
+   taxpayer (not only small businesses) may deduct the remaining unamortized
+   2022–2024 domestic R&E in full in its first tax year beginning after 2024, or
+   ratably over that year and the next (2025 and 2026 for calendar-year filers),
+   via an automatic method change (statement in lieu of Form 3115). **Check
+   whether the entity is carrying capitalized 2022–2024 domestic R&E on the
+   books** — nothing on the current return points at it. If the 2025 return is
+   already filed, check what was elected; a ratable election still produces a
+   2026 deduction. `VERIFY` the mechanics against Rev. Proc. 2025-28 before filing.
+
+Current-year §174A expensing of domestic R&E (tax years beginning after 2024) is
+unaffected by either item.
 
 ## 2. The §41 credit — where software gets favorable treatment
 

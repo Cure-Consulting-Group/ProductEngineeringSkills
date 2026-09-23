@@ -1,7 +1,7 @@
 ---
 name: stripe-integration
 description: "Integrate Stripe payments and subscriptions via Firebase Cloud Functions with webhook handling"
-when_to_use: "Use when integrating Stripe subscriptions, one-time payments, or billing portal via Firebase Cloud Functions. NOT for marketplace/Connect (use stripe-connect when available)."
+when_to_use: "Use when integrating Stripe subscriptions, one-time payments, or billing portal via Firebase Cloud Functions. NOT for marketplace/Connect flows (not covered by any Cure skill)."
 argument-hint: "[payment-feature]"
 ---
 

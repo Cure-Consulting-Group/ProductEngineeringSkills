@@ -440,7 +440,7 @@ Error Budget:
 This is a recurring goal, not a one-shot (mechanism trade-offs: `/engagement-automation`).
 
 - **Cadence:** monthly
-- **Session loop:** `/loop 4w /cure-product-engineering:performance-review`
+- **Session loop:** session loops expire after 7 days, so a monthly cadence never fires in-session; it belongs in the cloud routine below. In-session alternative, during an active optimization push: `/loop 1d /cure-product-engineering:performance-review`.
 - **Unattended:** cloud routine — Monthly performance pass over hot paths; compare against the previous run's baselines. Recipes: docs/AUTOMATION.md in the plugin repo.
 - **Budget:** ~150k tokens/run; cap at one run per monthly period.
 - **Guardrails:** read-only run (advisory — recurring-mode doctrine per AUTOMATION.md, not harness-enforced); deliver performance findings as an issue per regression; report on failure rather than retrying.

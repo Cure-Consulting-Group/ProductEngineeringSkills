@@ -4,6 +4,7 @@
 
 ## Contents
 - Shared Infrastructure
+- Cross-Product Dependencies
 
 ## Shared Infrastructure
 
@@ -69,4 +70,27 @@
 | Secrets vault | [1Password / GCP Secret Manager / AWS Secrets Manager] |
 | Rotation policy | [90 days / manual / none] |
 | Environment injection | [dotenv / GCP Secret Manager / GitHub Secrets] |
-```
+
+## Cross-Product Dependencies
+
+### Dependency Matrix
+
+| From | To | Type | What | Risk if Broken | Mitigation |
+|------|----|------|------|----------------|------------|
+| Vendly | Shared Firebase | Infrastructure | Auth, Firestore, Cloud Functions | All auth fails, data inaccessible | Multi-region, failover config |
+| Autograph | OpenAI API | External vendor | GPT-4 for medical transcription | Core feature unusable | Fallback to Claude, queue system |
+| The Initiated | Vendly design tokens | Design | Shared spacing, grid, type scale | Inconsistent UI | Tokens versioned, pinned |
+| Antigravity | VS Code upstream | Open source | Fork base, extension API | Feature divergence, security patches | Weekly upstream sync, patch process |
+| All products | GitHub Actions | CI/CD | Build, test, deploy pipelines | No deploys, no PR checks | Local build fallback documented |
+| All products | Firebase Auth | Identity | User authentication | Complete auth failure | Status page monitoring, cached tokens |
+
+### Dependency Rules
+- Every external dependency must have a documented fallback or degradation strategy
+- Shared infrastructure changes require notification to ALL dependent product teams
+- Breaking changes to shared services require 2-week migration window minimum
+- Vendor dependencies must be evaluated quarterly for cost, reliability, and alternatives
+- Cross-product data flows must be documented in security review scope
+
+### Circular Dependency Check
+[List any circular dependencies — these are architectural red flags that need resolution]
+- [None / List if found]

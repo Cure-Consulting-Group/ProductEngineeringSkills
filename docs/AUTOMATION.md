@@ -35,7 +35,7 @@ Fixed-interval skill runs:
 
 ```
 /loop 30m check CI on this branch and fix failures as they appear
-/loop 1w /cure-product-engineering:burn-rate-tracker
+/loop 1d /cure-product-engineering:security-review   # daily during an active hardening sprint
 ```
 
 Self-paced, goal-driven (the model chooses its cadence and stops itself):
@@ -44,7 +44,9 @@ Self-paced, goal-driven (the model chooses its cadence and stops itself):
 /loop keep the test suite green; stop when it passes 3 consecutive runs or after 5 fix attempts, and report either way
 ```
 
-Notes: loops are session-scoped (die with the session), expire after 7 days,
+Notes: loops are session-scoped (die with the session), expire after 7 days
+(so any interval of 7d or longer never fires — weekly/monthly cadences belong
+in a cloud routine below),
 and only fire skills Claude may auto-invoke — never `disable-model-invocation`
 on a loopable skill.
 

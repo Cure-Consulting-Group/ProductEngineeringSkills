@@ -65,7 +65,7 @@ Before generating, confirm:
 - **Best for:** real-time sync, mobile-first apps, denormalized data, serverless backends
 - **Sweet spot:** <10M documents per collection, fan-out read patterns
 - **Strengths:** automatic scaling, offline persistence, real-time listeners, zero server management
-- **Limitations:** no cross-document joins, limited aggregation, 1MB document size limit, 500 writes/sec per document
+- **Limitations:** no cross-document joins, server-side aggregation limited to count/sum/avg, 1 MiB document size limit, ~1 sustained write/sec per document (shard hot counters — Firebase "distributed counters" guide); ramp new collections from 500 ops/sec, +50% every 5 min (500/50/5 rule)
 - **Choose when:** the app needs real-time updates, mobile offline support, or rapid prototyping
 
 ### PostgreSQL

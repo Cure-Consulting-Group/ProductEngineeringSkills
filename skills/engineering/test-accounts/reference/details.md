@@ -38,15 +38,18 @@ async function assertEnvironment() {
   }
 }
 
+// Addresses from tests/support/qa-email.ts (see email-accounts.md) — catch-all QA domain, no plus-addressing
+import { qaEmail } from '../tests/support/qa-email';
+const PROJECT = process.env.QA_PROJECT ?? 'acme';
 const PERSONAS = {
-  free:    { email: 'test+free@example.com',    displayName: 'Alex Free',      role: 'user',  tier: 'free' },
-  premium: { email: 'test+premium@example.com', displayName: 'Jordan Premium', role: 'user',  tier: 'premium' },
-  admin:   { email: 'test+admin@example.com',   displayName: 'Sam Admin',      role: 'admin', tier: 'staff' },
-  new:     { email: 'test+new@example.com',     displayName: 'Riley New',      role: 'user',  tier: 'free' },
-  power:   { email: 'test+power@example.com',   displayName: 'Morgan Power',   role: 'user',  tier: 'premium' },
-  expired: { email: 'test+expired@example.com', displayName: 'Casey Expired',  role: 'user',  tier: 'expired' },
-  banned:  { email: 'test+banned@example.com',  displayName: 'Jamie Banned',   role: 'user',  tier: 'suspended' },
-  multi:   { email: 'test+multi@example.com',   displayName: 'Taylor Multi',   role: 'user',  tier: 'premium' },
+  free:    { email: qaEmail(PROJECT, 'free'), displayName: 'Alex Free',      role: 'user',  tier: 'free' },
+  premium: { email: qaEmail(PROJECT, 'premium'), displayName: 'Jordan Premium', role: 'user',  tier: 'premium' },
+  admin:   { email: qaEmail(PROJECT, 'admin'), displayName: 'Sam Admin',      role: 'admin', tier: 'staff' },
+  new:     { email: qaEmail(PROJECT, 'new'), displayName: 'Riley New',      role: 'user',  tier: 'free' },
+  power:   { email: qaEmail(PROJECT, 'power'), displayName: 'Morgan Power',   role: 'user',  tier: 'premium' },
+  expired: { email: qaEmail(PROJECT, 'expired'), displayName: 'Casey Expired',  role: 'user',  tier: 'expired' },
+  banned:  { email: qaEmail(PROJECT, 'banned'), displayName: 'Jamie Banned',   role: 'user',  tier: 'suspended' },
+  multi:   { email: qaEmail(PROJECT, 'multi'), displayName: 'Taylor Multi',   role: 'user',  tier: 'premium' },
 };
 
 async function seedUsers(auth: any, db: FirebaseFirestore.Firestore) {
@@ -118,14 +121,14 @@ END $$;
 -- Personas
 INSERT INTO users (id, email, display_name, role, tier, created_at, updated_at)
 VALUES
-  ('00000000-0000-0000-0000-000000000001', 'test+free@example.com',    'Alex Free',      'user',  'free',      NOW(), NOW()),
-  ('00000000-0000-0000-0000-000000000002', 'test+premium@example.com', 'Jordan Premium', 'user',  'premium',   NOW(), NOW()),
-  ('00000000-0000-0000-0000-000000000003', 'test+admin@example.com',   'Sam Admin',      'admin', 'staff',     NOW(), NOW()),
-  ('00000000-0000-0000-0000-000000000004', 'test+new@example.com',     'Riley New',      'user',  'free',      NOW(), NOW()),
-  ('00000000-0000-0000-0000-000000000005', 'test+power@example.com',   'Morgan Power',   'user',  'premium',   NOW(), NOW()),
-  ('00000000-0000-0000-0000-000000000006', 'test+expired@example.com', 'Casey Expired',  'user',  'expired',   NOW(), NOW()),
-  ('00000000-0000-0000-0000-000000000007', 'test+banned@example.com',  'Jamie Banned',   'user',  'suspended', NOW(), NOW()),
-  ('00000000-0000-0000-0000-000000000008', 'test+multi@example.com',   'Taylor Multi',   'user',  'premium',   NOW(), NOW())
+  ('00000000-0000-0000-0000-000000000001', 'qa-acme-free-20260101@qa.acme.dev',    'Alex Free',      'user',  'free',      NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000002', 'qa-acme-premium-20260101@qa.acme.dev', 'Jordan Premium', 'user',  'premium',   NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000003', 'qa-acme-admin-20260101@qa.acme.dev',   'Sam Admin',      'admin', 'staff',     NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000004', 'qa-acme-new-20260101@qa.acme.dev',     'Riley New',      'user',  'free',      NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000005', 'qa-acme-power-20260101@qa.acme.dev',   'Morgan Power',   'user',  'premium',   NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000006', 'qa-acme-expired-20260101@qa.acme.dev', 'Casey Expired',  'user',  'expired',   NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000007', 'qa-acme-banned-20260101@qa.acme.dev',  'Jamie Banned',   'user',  'suspended', NOW(), NOW()),
+  ('00000000-0000-0000-0000-000000000008', 'qa-acme-multi-20260101@qa.acme.dev',   'Taylor Multi',   'user',  'premium',   NOW(), NOW())
 ON CONFLICT (id) DO UPDATE SET
   email = EXCLUDED.email,
   display_name = EXCLUDED.display_name,
@@ -237,7 +240,7 @@ function generateSyntheticPatient() {
 function generateCOPPATestPair() {
   return {
     minor: {
-      email: `test+minor-${faker.string.nanoid(6)}@example.com`,
+      email: qaEmail(PROJECT, 'minor', { unique: true }),
       displayName: faker.person.firstName() + ' (Minor)',
       dateOfBirth: faker.date.birthdate({ min: 8, max: 12, mode: 'age' }),
       parentalConsentGiven: false, // Start without consent
@@ -245,7 +248,7 @@ function generateCOPPATestPair() {
       _testData: true,
     },
     guardian: {
-      email: `test+guardian-${faker.string.nanoid(6)}@example.com`,
+      email: qaEmail(PROJECT, 'guardian', { unique: true }),
       displayName: faker.person.firstName() + ' (Guardian)',
       dateOfBirth: faker.date.birthdate({ min: 30, max: 50, mode: 'age' }),
       linkedMinors: [], // Populated after consent flow
@@ -326,5 +329,35 @@ async function verifyGDPRDeletion(userId: string) {
   }
 
   console.log(`GDPR deletion verified: no data found for user ${userId}`);
+}
+```
+
+## Firestore Batch Delete by Test Prefix
+
+```typescript
+async function deleteCollectionByPrefix(
+  db: FirebaseFirestore.Firestore,
+  collection: string,
+  field: string,
+  prefix: string
+) {
+  const snapshot = await db.collection(collection)
+    .where(field, '>=', prefix)
+    .where(field, '<', prefix + '\uf8ff')
+    .limit(500) // Firestore batch limit
+    .get();
+
+  if (snapshot.empty) return 0;
+
+  const batch = db.batch();
+  snapshot.docs.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+
+  // Recurse for large datasets
+  if (snapshot.size === 500) {
+    const more = await deleteCollectionByPrefix(db, collection, field, prefix);
+    return snapshot.size + more;
+  }
+  return snapshot.size;
 }
 ```

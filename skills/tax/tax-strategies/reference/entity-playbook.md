@@ -47,8 +47,9 @@ taxpayer; the method belongs to the library.
   Medicare tax, which is what converts a dead
   carryforward into cash at a company with no tax liability. **It must be elected
   on a timely filed original return** — it cannot be added by amendment.
-- Is there unamortized **2022–2024 domestic R&E** on the books that §174A
-  retroactive relief could recover?
+- Is there unamortized **2022–2024 domestic R&E** on the books that the §174A
+  catch-up (full in 2025, or ratably 2025–2026) could recover? The small-business
+  retroactive election expired 2026-07-06.
 - Are **intercompany services** papered — written agreement, a defensible method,
   benchmarking, and actual invoicing *and payment*? Booked-but-unpaid fees invite
   a §482 reallocation.

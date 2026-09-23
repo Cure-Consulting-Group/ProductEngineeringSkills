@@ -95,7 +95,7 @@ Dashboards, analytics, recruiting, finance, SaaS, CRM, operations, admin. Densit
 - Master-detail for object-centred work; side panel for quick edits that must not lose the list context; full page for anything with more than roughly 8 fields.
 - Filters and facets left or top, persistent on desktop, in a sheet on mobile; sort visible in the header; search is a first-class citizen above 50 rows.
 - Bulk actions appear on selection, in a bar that replaces the header, never as a permanent toolbar.
-- Charts answer a stated question; every chart carries that question as its title. See the `dataviz` skill for mark specs.
+- Charts answer a stated question; every chart carries that question as its title. If a `dataviz` skill is installed (not part of this library), use it for mark specs.
 - One number per tile only when the number is the point; otherwise put it in the table.
 
 ## 8. Decision record

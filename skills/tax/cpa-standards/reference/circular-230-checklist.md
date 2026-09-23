@@ -15,7 +15,7 @@ performed each check.
 [ ] PTIN current (if signing for compensation)
 [ ] §7216 consents obtained for any disclosure or use beyond return preparation
     [ ] Third-party/API processing of return information covered
-[ ] Prior-year returns obtained and reviewed (SSTS No. 3)
+[ ] Prior-year returns obtained and reviewed (SSTS §2.3)
 [ ] Carryforward attributes captured from prior year
 [ ] Fee arrangement — no contingent fee on an original return (§10.27)
 ```
@@ -27,14 +27,14 @@ performed each check.
     [ ] W-2s, 1099s (NEC/MISC/INT/DIV/B/R/K), K-1s, 1098s
     [ ] 1099 totals reconciled to reported gross receipts — differences explained
     [ ] Bank/merchant deposits reconciled to revenue (Stripe, Apple, direct)
-[ ] All return questions answered (SSTS No. 2) — none left blank
+[ ] All return questions answered (SSTS §2.2) — none left blank
     [ ] Foreign account / FBAR questions
     [ ] Virtual currency question
     [ ] Schedule C vehicle questions (do you have evidence? is it written?)
 [ ] Due diligence inquiries made where information appears
-    incorrect / inconsistent / incomplete (§10.34, SSTS No. 3)
+    incorrect / inconsistent / incomplete (§10.34, SSTS §2.3)
     [ ] Each inquiry, answer, and date logged
-[ ] Estimates used only where permissible and reasonable (SSTS No. 4)
+[ ] Estimates used only where permissible and reasonable (SSTS §2.4)
     [ ] NOT used for any §274(d) strict-substantiation item
     [ ] Not presented with false precision
 [ ] Each non-routine position evaluated against the standard
@@ -77,7 +77,7 @@ performed each check.
 [ ] Next-year planning items and deadlines calendared
 ```
 
-## Error discovery (SSTS No. 6, §10.21)
+## Error discovery (SSTS §1.2; Circular 230 §10.21)
 
 ```
 [ ] Client informed promptly, in writing

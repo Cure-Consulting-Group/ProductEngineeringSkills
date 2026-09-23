@@ -52,8 +52,8 @@ Ranked by expected cost = frequency × severity. Each carries a detection test.
 | # | Error | Why it matters |
 |---|---|---|
 | 31 | No position memo for a non-routine item | Guts the §6664(c) reasonable-cause defense |
-| 32 | Return questions left blank | SSTS No. 2 violation |
-| 33 | Estimate used for a strict-substantiation item | SSTS No. 4 violation; disallowance |
+| 32 | Return questions left blank | SSTS §2.2 violation |
+| 33 | Estimate used for a strict-substantiation item | SSTS §2.4 violation; disallowance |
 | 34 | Diagnostic accepted with no explanation | An open item in disguise |
 | 35 | Review performed in the same pass as preparation | No independent control existed |
 | 36 | Election statement missing from the file | The election may not have been made at all |

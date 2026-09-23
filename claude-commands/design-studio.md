@@ -131,7 +131,7 @@ One folder, scaled to `DEPTH`: the classification and ten-question answers, the 
 - CSS, Compose, or SwiftUI implementation alone: `web-design-expert`, `android-design-expert`, `ios-design-expert`.
 - Storybook, Showkase, SwiftUI catalogues, governance: `design-system`.
 - UI generation through Stitch: `stitch-design`.
-- Charts and data visualisation marks: `dataviz`.
+- Charts and data visualisation marks: the separate `dataviz` skill if installed (not part of this library); otherwise the chart rules in `references/ux-architecture.md`.
 
 ## Limitations
 

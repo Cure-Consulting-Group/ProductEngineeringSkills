@@ -72,7 +72,8 @@ A complete cite for a position includes **statute + implementing authority + the
 year's number**:
 
 > Qualified business income deduction — IRC §199A(a); Treas. Reg. §1.199A-1(c);
-> 2026 threshold \$201,775 single / \$403,500 MFJ per Rev. Proc. 2025-32, recorded
+> 2026 threshold \$201,750 single/HOH / \$201,775 MFS / \$403,500 MFJ per Rev. Proc. 2025-32
+> (verified 2026-09-23, Rev. Proc. 2025-32), recorded
 > in the project's `constants` binding for tax year 2026.
 
 ## Output shape

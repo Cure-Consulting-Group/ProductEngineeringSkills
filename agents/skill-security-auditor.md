@@ -31,7 +31,7 @@ You are static-analysis only. You read files, you grep, you do not execute, you 
 
 - Before any new skill, agent, or persona is committed
 - Auto-triggered via `PreToolUse` hook on `Write` / `Edit` to `skills/**`, `agents/**`, `personas/**`
-- On demand: `/cure-product-engineering:skill-security-auditor` for batch audit of an existing directory
+- On demand: spawn the `cure-product-engineering:skill-security-auditor` agent (it is an agent, not a slash skill) for batch audit of an existing directory
 
 ## Detection Categories
 

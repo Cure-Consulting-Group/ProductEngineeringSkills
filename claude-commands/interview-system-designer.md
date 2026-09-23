@@ -257,8 +257,8 @@ Format the loop spec as a one-page summary table that the hiring manager can han
 
 ## Cross-References
 
-- `/qa-engineer` — for designing the technical question bank when the role is QA-focused.
+- The `qa-engineer` agent — for designing the technical question bank when the role is QA-focused.
 - `/performance-review` — for the post-hire 6-month and 12-month evaluation that closes the loop on interview validity.
 - `/legal-doc-scaffold` — for offer letter and contractor agreement templates.
 - `/client-handoff` — when handing the running interview system back to the client team.
-- `/technical-program-manager` — for hires into TPM-adjacent roles where the rubric needs program-management signals.
+- `/project-manager` — for hires into TPM-adjacent roles where the rubric needs program-management signals.
