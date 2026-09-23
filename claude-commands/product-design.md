@@ -11,10 +11,10 @@ Match length to the need; no filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Design files: !`ls DESIGN.md design/DESIGN.md design/tokens.json tokens.json 2>/dev/null | head -4 | grep . || echo "(no DESIGN.md or tokens)"`
-- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
+- Design files: `ls DESIGN.md design/DESIGN.md design/tokens.json tokens.json 2>/dev/null | head -4 | grep . || echo "(no DESIGN.md or tokens)"`
+- Platforms present: `ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
 
 Use existing tokens and component names from the listed files; never invent a parallel token set.
 

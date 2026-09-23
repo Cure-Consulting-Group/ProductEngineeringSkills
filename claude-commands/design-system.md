@@ -13,11 +13,11 @@ run design-studio first (Step 6 "Systemise") or ask the user to.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Token files: !`ls design/tokens.json tokens.json tokens/*.json 2>/dev/null | head -4 | grep . || echo "(no token file)"`
-- Catalog tooling: !`grep -m3 -oE '"(storybook|@storybook/[a-z-]+|style-dictionary)": *"[^"]+"' package.json 2>/dev/null | grep . || echo "(no Storybook/Style Dictionary in package.json)"`
-- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
+- Token files: `ls design/tokens.json tokens.json tokens/*.json 2>/dev/null | head -4 | grep . || echo "(no token file)"`
+- Catalog tooling: `grep -m3 -oE '"(storybook|@storybook/[a-z-]+|style-dictionary)": *"[^"]+"' package.json 2>/dev/null | grep . || echo "(no Storybook/Style Dictionary in package.json)"`
+- Platforms present: `ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
 
 ## Step 1: Classify
 

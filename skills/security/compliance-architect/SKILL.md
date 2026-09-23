@@ -26,10 +26,10 @@ rest with separated keys; every control has an automated test.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Rules and config: !`ls firestore.rules storage.rules database.rules.json firebase.json 2>/dev/null || echo "(no Firebase rules files)"`
+- Stack manifest: `head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Rules and config: `ls firestore.rules storage.rules database.rules.json firebase.json 2>/dev/null || echo "(no Firebase rules files)"`
 
 ## Automated Compliance Scan
 

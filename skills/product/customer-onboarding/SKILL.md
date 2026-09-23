@@ -14,10 +14,10 @@ filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Portfolio products: !`grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 || echo "(none detected)"`
+- Portfolio products: `grep -m6 -E '^#{2,3} ' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Platforms present: `ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 || echo "(none detected)"`
 
 Use the platforms present to pick the screen implementation (Compose, SwiftUI, React) in Step 6.
 

@@ -15,11 +15,11 @@ metadata:
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack: !`ls package.json next.config.* build.gradle.kts Package.swift Podfile firebase.json 2>/dev/null | head -6 || echo "(none detected)"`
-- Existing perf configs: !`ls lighthouserc* .lighthouserc* k6* artillery* 2>/dev/null | head -5 || echo "(none)"`
-- Existing build stats: !`ls .next/analyze .next/build-manifest.json 2>/dev/null | head -3 || echo "(no build output)"`
+- Stack: `ls package.json next.config.* build.gradle.kts Package.swift Podfile firebase.json 2>/dev/null | head -6 || echo "(none detected)"`
+- Existing perf configs: `ls lighthouserc* .lighthouserc* k6* artillery* 2>/dev/null | head -5 || echo "(none)"`
+- Existing build stats: `ls .next/analyze .next/build-manifest.json 2>/dev/null | head -3 || echo "(no build output)"`
 
 ## Baseline (read-only)
 

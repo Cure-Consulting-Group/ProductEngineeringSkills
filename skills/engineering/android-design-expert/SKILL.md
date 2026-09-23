@@ -19,10 +19,10 @@ Related: `product-design` (cross-platform specs), `android-feature-scaffold` (fe
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Build config: !`grep -hE "compileSdk|targetSdk|minSdk|compose-bom|material3" app/build.gradle.kts gradle/libs.versions.toml 2>/dev/null | head -12 || echo "(no Gradle config found)"`
-- Existing theme: !`find . -path ./node_modules -prune -o -path "*/ui/theme/*.kt" -print 2>/dev/null | head -6`
+- Build config: `grep -hE "compileSdk|targetSdk|minSdk|compose-bom|material3" app/build.gradle.kts gradle/libs.versions.toml 2>/dev/null | head -12 || echo "(no Gradle config found)"`
+- Existing theme: `find . -path ./node_modules -prune -o -path "*/ui/theme/*.kt" -print 2>/dev/null | head -6`
 
 ## Step 1: Classify the Request
 

@@ -30,10 +30,10 @@ find, including low-severity and low-confidence ones; ranking happens in the rep
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack manifest: !`head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
-- Security-relevant files: !`ls firestore.rules storage.rules firebase.json .env.example proxy.ts middleware.ts next.config.* 2>/dev/null | head -12 || echo "(none)"`
+- Stack manifest: `head -40 package.json 2>/dev/null || head -40 build.gradle.kts 2>/dev/null || head -20 Podfile 2>/dev/null || echo "(none detected)"`
+- Security-relevant files: `ls firestore.rules storage.rules firebase.json .env.example proxy.ts middleware.ts next.config.* 2>/dev/null | head -12 || echo "(none)"`
 
 ## Step 1: Classify the Review
 

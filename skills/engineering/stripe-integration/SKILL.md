@@ -15,10 +15,10 @@ Client (Android / iOS / web) → Firebase Callable Functions v2 → Stripe API �
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stripe SDK in use: !`grep -h '"stripe"\|com.stripe\|stripe-ios\|@stripe/' functions/package.json package.json app/build.gradle.kts Package.resolved 2>/dev/null | head -8 || echo "(no Stripe dependency found)"`
-- Existing Stripe code: !`grep -rlE "stripe|Stripe" functions/src src app 2>/dev/null | grep -v node_modules | head -10 || echo "(none)"`
+- Stripe SDK in use: `grep -h '"stripe"\|com.stripe\|stripe-ios\|@stripe/' functions/package.json package.json app/build.gradle.kts Package.resolved 2>/dev/null | head -8 || echo "(no Stripe dependency found)"`
+- Existing Stripe code: `grep -rlE "stripe|Stripe" functions/src src app 2>/dev/null | grep -v node_modules | head -10 || echo "(none)"`
 
 ## Step 1: Classify the Integration
 

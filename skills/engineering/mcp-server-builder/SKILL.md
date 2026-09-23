@@ -17,10 +17,10 @@ Cure standard: tools are explicit, schemas are strict, secrets never leak into r
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing MCP code/SDK: !`grep -rlE '@modelcontextprotocol|from mcp|FastMCP|MCPServer|McpServer' --include=*.py --include=*.ts --include=package.json --include=pyproject.toml . 2>/dev/null | grep -v node_modules | head -8 || echo "(none)"`
-- Client configs present: !`ls .mcp.json .codex/config.toml mcp_config.json 2>/dev/null || echo "(none)"`
+- Existing MCP code/SDK: `grep -rlE '@modelcontextprotocol|from mcp|FastMCP|MCPServer|McpServer' --include=*.py --include=*.ts --include=package.json --include=pyproject.toml . 2>/dev/null | grep -v node_modules | head -8 || echo "(none)"`
+- Client configs present: `ls .mcp.json .codex/config.toml mcp_config.json 2>/dev/null || echo "(none)"`
 
 ## Step 1: Classify the Build
 

@@ -27,10 +27,10 @@ when every entry and exit point of the feature has been traced on each platform 
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift firebase.json 2>/dev/null | head -5 | grep . || echo "(none detected)"`
-- Recent commits: !`git log --oneline -8 2>/dev/null || echo "(not a git repo)"`
+- Platforms present: `ls package.json build.gradle.kts Podfile Package.swift firebase.json 2>/dev/null | head -5 | grep . || echo "(none detected)"`
+- Recent commits: `git log --oneline -8 2>/dev/null || echo "(not a git repo)"`
 
 ## Step 1: Classify
 

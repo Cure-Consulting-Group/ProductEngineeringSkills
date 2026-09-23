@@ -25,10 +25,10 @@ Deliver the requested feature. This skill owns `src/llm/client.ts`, `src/llm/pro
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack: !`ls package.json pyproject.toml requirements.txt build.gradle.kts Package.swift 2>/dev/null | head -5 || echo "(none detected)"`
-- Existing LLM code: !`grep -rlE "@anthropic-ai|anthropic|openai|@google/genai|google.genai|vertexai|ai-sdk|from 'ai'" --include=*.ts --include=*.tsx --include=*.py --include=*.kt --include=*.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | head -8 || echo "(none)"`
+- Stack: `ls package.json pyproject.toml requirements.txt build.gradle.kts Package.swift 2>/dev/null | head -5 || echo "(none detected)"`
+- Existing LLM code: `grep -rlE "@anthropic-ai|anthropic|openai|@google/genai|google.genai|vertexai|ai-sdk|from 'ai'" --include=*.ts --include=*.tsx --include=*.py --include=*.kt --include=*.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | head -8 || echo "(none)"`
 
 Extend an existing client wrapper rather than adding a second one.
 

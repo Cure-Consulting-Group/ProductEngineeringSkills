@@ -22,6 +22,14 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 | T59 | ✅ Done | 73/103 skills carry `metadata.verified: 2026-09-23`; the other 30 deliberately don't (claims not all source-checked). Staleness lint advisory until next quarter |
 | T60 | ✅ Built; full sweep pending owner OK | `plugin-evals/` (40 cases, 32 skills) on `claude plugin eval`; Ring 0 rewired, cost-capped. **Pilot (8 cases × 1 run, \$3.90): WITH 1.00 / W/OUT 1.00 on 7/8 — no measurable plugin Δ under Opus 5.5** on generic-correctness graders. Implication: skill value must be graded on Cure-specific conventions (next wave's grader work), not generic correctness the bare model already has. One routing miss fixed (stripe-integration). Full sweep ≈ \$60–90 |
 
+**Post-release finding (2026-09-23, v7.10.1):** the full eval sweep (234 runs, \$79) showed Δ=0 on
+34/39 cases — but traces proved 69 skills never loaded in the with-arm: their `` !`cmd` `` context
+injection hit a denied Bash permission check at load time, failing the whole skill (a Wave 2 T20
+side effect, live in every headless/CI/routine session in consuming projects). Converted 161
+injections in 69 skills to run-first prose; audit CRIT added; market-research 0.00 → 1.00 and
+dora-metrics confirmed loading. **The sweep's "no measurable Δ" conclusion is void** for those 69
+skills; re-sweep required before any T58 consolidation decision.
+
 **Owner decisions surfaced by the pass (not made by the agents):** proposed Cure SOW defaults in
 `legal-doc-scaffold` (5-day acceptance, 12-month liability cap — labeled "proposed" in the skill);
 branch policy main → staging → release tag (release-management); App Hosting as Next.js default;

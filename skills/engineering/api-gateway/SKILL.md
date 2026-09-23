@@ -13,10 +13,10 @@ metadata:
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack manifest: !`head -30 package.json 2>/dev/null || echo "(no package.json)"`
-- Gateway/BFF code: !`find . -maxdepth 4 -path "*/node_modules" -prune -o \( -iname "*gateway*" -o -iname "*bff*" -o -name "supergraph*.yaml" -o -name "router.yaml" \) -print 2>/dev/null | head -5 || echo "(none)"`
+- Stack manifest: `head -30 package.json 2>/dev/null || echo "(no package.json)"`
+- Gateway/BFF code: `find . -maxdepth 4 -path "*/node_modules" -prune -o \( -iname "*gateway*" -o -iname "*bff*" -o -name "supergraph*.yaml" -o -name "router.yaml" \) -print 2>/dev/null | head -5 || echo "(none)"`
 
 ## Step 1: Classify
 

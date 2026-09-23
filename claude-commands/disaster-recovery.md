@@ -7,11 +7,11 @@ sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Firebase config: !`(cat firebase.json 2>/dev/null || echo "(no firebase.json)") | head -25`
-- Firebase projects: !`(cat .firebaserc 2>/dev/null || echo "(no .firebaserc)") | head -10`
-- Existing DR assets: !`(ls scripts/ docs/ 2>/dev/null | grep -iE 'backup|restore|dr|failover|runbook' || echo "(none)") | head -10`
+- Firebase config: `(cat firebase.json 2>/dev/null || echo "(no firebase.json)") | head -25`
+- Firebase projects: `(cat .firebaserc 2>/dev/null || echo "(no .firebaserc)") | head -10`
+- Existing DR assets: `(ls scripts/ docs/ 2>/dev/null | grep -iE 'backup|restore|dr|failover|runbook' || echo "(none)") | head -10`
 
 ## Step 1: Classify
 

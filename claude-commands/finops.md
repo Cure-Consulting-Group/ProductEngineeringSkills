@@ -9,13 +9,13 @@ filler sections or restated summaries.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Portfolio: !`sed -n '1,20p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
-- Firebase projects: !`cat .firebaserc 2>/dev/null | head -15 || echo "(no .firebaserc)"`
-- Function sizing: !`grep -rhoE "memory: *['\"]?[0-9]+[A-Za-z]*|minInstances: *[0-9]+|maxInstances: *[0-9]+" functions/src 2>/dev/null | sort | uniq -c | head -10 || echo "(no functions/src)"`
-- IaC surface: !`ls *.tf terraform/ 2>/dev/null | head -10 || echo "(no terraform)"`
-- Metered APIs: !`grep -oiE "\"(openai|@anthropic-ai/sdk|@google/genai|@sendgrid/mail|twilio|stripe)\"" package.json functions/package.json 2>/dev/null | sort -u || echo "(none found)"`
+- Portfolio: `sed -n '1,20p' PORTFOLIO.md 2>/dev/null || echo "(no PORTFOLIO.md)"`
+- Firebase projects: `cat .firebaserc 2>/dev/null | head -15 || echo "(no .firebaserc)"`
+- Function sizing: `grep -rhoE "memory: *['\"]?[0-9]+[A-Za-z]*|minInstances: *[0-9]+|maxInstances: *[0-9]+" functions/src 2>/dev/null | sort | uniq -c | head -10 || echo "(no functions/src)"`
+- IaC surface: `ls *.tf terraform/ 2>/dev/null | head -10 || echo "(no terraform)"`
+- Metered APIs: `grep -oiE "\"(openai|@anthropic-ai/sdk|@google/genai|@sendgrid/mail|twilio|stripe)\"" package.json functions/package.json 2>/dev/null | sort -u || echo "(none found)"`
 
 ## Step 1: Classify
 

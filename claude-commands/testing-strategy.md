@@ -6,10 +6,10 @@ This skill is the **library's source of truth for coverage thresholds and CI ret
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack manifest: !`head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || head -20 Package.swift 2>/dev/null || head -20 pyproject.toml 2>/dev/null || echo "(none detected)"`
-- Coverage/test config: !`ls jest.config* vitest.config* playwright.config* pytest.ini .nycrc* 2>/dev/null | head -5 || echo "(none)"`
+- Stack manifest: `head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || head -20 Package.swift 2>/dev/null || head -20 pyproject.toml 2>/dev/null || echo "(none detected)"`
+- Coverage/test config: `ls jest.config* vitest.config* playwright.config* pytest.ini .nycrc* 2>/dev/null | head -5 || echo "(none)"`
 
 ## Step 1: Classify
 

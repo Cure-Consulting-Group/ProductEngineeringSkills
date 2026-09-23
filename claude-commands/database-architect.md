@@ -4,10 +4,10 @@
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Schema files: !`find . -maxdepth 4 -path "*/node_modules" -prune -o \( -name "*.sql" -o -name "schema.prisma" -o -name "firestore.indexes.json" -o -name "*Entity.kt" \) -print 2>/dev/null | head -8 || echo "(none)"`
-- Stack manifest: !`head -25 package.json 2>/dev/null || head -25 build.gradle.kts 2>/dev/null || echo "(none detected)"`
+- Schema files: `find . -maxdepth 4 -path "*/node_modules" -prune -o \( -name "*.sql" -o -name "schema.prisma" -o -name "firestore.indexes.json" -o -name "*Entity.kt" \) -print 2>/dev/null | head -8 || echo "(none)"`
+- Stack manifest: `head -25 package.json 2>/dev/null || head -25 build.gradle.kts 2>/dev/null || echo "(none detected)"`
 
 ## Step 1: Classify
 

@@ -17,11 +17,11 @@ past that is silently dropped, which is why the index stays one line per entry.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Claude memory dir: !`for d in ~/.claude/projects/*"$(basename "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || pwd)")")"/memory; do [ -f "$d/MEMORY.md" ] && echo "$d: $(wc -l < "$d/MEMORY.md") index lines, $(ls "$d" | wc -l) files"; done 2>/dev/null | head -3`
-- Repo memory (other runtimes): !`wc -l docs/memory/MEMORY.md 2>/dev/null || echo "(no docs/memory)"`
-- Repo age: !`git log --reverse --format=%cs 2>/dev/null | head -1`
+- Claude memory dir: `for d in ~/.claude/projects/*"$(basename "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || pwd)")")"/memory; do [ -f "$d/MEMORY.md" ] && echo "$d: $(wc -l < "$d/MEMORY.md") index lines, $(ls "$d" | wc -l) files"; done 2>/dev/null | head -3`
+- Repo memory (other runtimes): `wc -l docs/memory/MEMORY.md 2>/dev/null || echo "(no docs/memory)"`
+- Repo age: `git log --reverse --format=%cs 2>/dev/null | head -1`
 
 If the first line is empty, find the directory with `ls ~/.claude/projects | grep <repo-name>`.
 Read `CLAUDE.md`/`AGENTS.md` too — anything already there must not be duplicated into memory.

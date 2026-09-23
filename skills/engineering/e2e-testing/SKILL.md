@@ -19,11 +19,11 @@ Policy owned elsewhere: coverage targets, retry counts, and flake quarantine lim
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- E2E tooling in deps: !`grep -hoE '"(@playwright/test|cypress|detox|@axe-core/playwright)"' package.json 2>/dev/null | sort -u || echo "(none in package.json)"`
-- Existing E2E files: !`find . -path ./node_modules -prune -o \( -name '*.spec.ts' -o -name '*UITests*' -o -path '*androidTest*' \) -print 2>/dev/null | head -10`
-- Config: !`ls playwright.config.* cypress.config.* 2>/dev/null || echo "(no web E2E config)"`
+- E2E tooling in deps: `grep -hoE '"(@playwright/test|cypress|detox|@axe-core/playwright)"' package.json 2>/dev/null | sort -u || echo "(none in package.json)"`
+- Existing E2E files: `find . -path ./node_modules -prune -o \( -name '*.spec.ts' -o -name '*UITests*' -o -path '*androidTest*' \) -print 2>/dev/null | head -10`
+- Config: `ls playwright.config.* cypress.config.* 2>/dev/null || echo "(no web E2E config)"`
 
 ## Step 1: Classify the Need
 

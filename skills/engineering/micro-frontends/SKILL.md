@@ -15,11 +15,11 @@ Default answer for most Cure clients: **don't split**. A monorepo with package b
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Apps and workspace: !`ls apps packages 2>/dev/null | head -20; ls pnpm-workspace.yaml turbo.json nx.json microfrontends.json 2>/dev/null`
-- Framework versions: !`grep -hoE '"(next|react|@vercel/microfrontends|@module-federation/[a-z-]+|single-spa)": *"[^"]+"' package.json apps/*/package.json 2>/dev/null | sort -u | head -10`
-- Cross-app routing today: !`grep -lE "rewrites|assetPrefix" next.config.* apps/*/next.config.* vercel.json 2>/dev/null | head -5 || echo "(none)"`
+- Apps and workspace: `ls apps packages 2>/dev/null | head -20; ls pnpm-workspace.yaml turbo.json nx.json microfrontends.json 2>/dev/null`
+- Framework versions: `grep -hoE '"(next|react|@vercel/microfrontends|@module-federation/[a-z-]+|single-spa)": *"[^"]+"' package.json apps/*/package.json 2>/dev/null | sort -u | head -10`
+- Cross-app routing today: `grep -lE "rewrites|assetPrefix" next.config.* apps/*/next.config.* vercel.json 2>/dev/null | head -5 || echo "(none)"`
 
 ## Step 1: Classify
 

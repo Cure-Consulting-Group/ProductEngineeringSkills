@@ -6,10 +6,10 @@ Measure what drives decisions, not everything.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack: !`ls package.json build.gradle.kts Podfile Package.swift pubspec.yaml 2>/dev/null | head -5 || echo "(none detected)"`
-- Existing tracking calls: !`grep -rhoE "(logEvent|trackEvent|analytics\.track|posthog\.capture|mixpanel\.track|gtag)\(\s*['\"][A-Za-z0-9_]+" --include=*.ts --include=*.tsx --include=*.js --include=*.kt --include=*.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | sort | uniq -c | sort -rn | head -10 || echo "(none)"`
+- Stack: `ls package.json build.gradle.kts Podfile Package.swift pubspec.yaml 2>/dev/null | head -5 || echo "(none detected)"`
+- Existing tracking calls: `grep -rhoE "(logEvent|trackEvent|analytics\.track|posthog\.capture|mixpanel\.track|gtag)\(\s*['\"][A-Za-z0-9_]+" --include=*.ts --include=*.tsx --include=*.js --include=*.kt --include=*.swift --exclude-dir=node_modules --exclude-dir=.git . 2>/dev/null | sort | uniq -c | sort -rn | head -10 || echo "(none)"`
 
 If events exist, audit them against Step 3 before proposing new ones; report the count of unique event names and naming violations.
 

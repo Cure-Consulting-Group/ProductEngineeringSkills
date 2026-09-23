@@ -6,10 +6,10 @@ This skill owns retrieval quality, index drift, and chunking. Prompt evals, mode
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Language/stack: !`ls package.json pyproject.toml requirements.txt go.mod 2>/dev/null | head -4 || echo "(none detected)"`
-- Existing retrieval code: !`grep -rlE 'pgvector|pinecone|qdrant|weaviate|chroma|embeddings\.create|embed\(' --include=*.py --include=*.ts . 2>/dev/null | grep -v node_modules | head -8 || echo "(none)"`
+- Language/stack: `ls package.json pyproject.toml requirements.txt go.mod 2>/dev/null | head -4 || echo "(none detected)"`
+- Existing retrieval code: `grep -rlE 'pgvector|pinecone|qdrant|weaviate|chroma|embeddings\.create|embed\(' --include=*.py --include=*.ts . 2>/dev/null | grep -v node_modules | head -8 || echo "(none)"`
 
 ## Step 1: Classify the RAG Type
 

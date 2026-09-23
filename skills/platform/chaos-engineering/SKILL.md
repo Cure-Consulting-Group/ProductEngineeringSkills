@@ -18,11 +18,11 @@ the gap list, not an experiment. Match length to the need; no filler sections or
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Firebase config: !`(cat firebase.json 2>/dev/null || echo "(no firebase.json)") | head -25`
-- Existing resilience code: !`(grep -rlE 'circuit|retry|backoff|timeout' src functions/src lib app 2>/dev/null || echo "(none found)") | head -10`
-- CI workflows: !`(ls .github/workflows/ 2>/dev/null || echo "(none)") | head -10`
+- Firebase config: `(cat firebase.json 2>/dev/null || echo "(no firebase.json)") | head -25`
+- Existing resilience code: `(grep -rlE 'circuit|retry|backoff|timeout' src functions/src lib app 2>/dev/null || echo "(none found)") | head -10`
+- CI workflows: `(ls .github/workflows/ 2>/dev/null || echo "(none)") | head -10`
 
 ## Step 1: Classify
 

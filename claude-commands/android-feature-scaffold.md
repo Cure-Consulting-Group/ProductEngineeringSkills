@@ -7,10 +7,10 @@ the feature is registered in navigation and DI, and the ViewModel and use-case t
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Versions: !`grep -hE "compose-bom|hilt|navigation|kotlin|lifecycle|junit|mockk|turbine" gradle/libs.versions.toml 2>/dev/null | head -12 || echo "(no version catalog)"`
-- Existing features: !`find . -path "*/feature/*" -name "*ViewModel.kt" 2>/dev/null | head -8`
+- Versions: `grep -hE "compose-bom|hilt|navigation|kotlin|lifecycle|junit|mockk|turbine" gradle/libs.versions.toml 2>/dev/null | head -12 || echo "(no version catalog)"`
+- Existing features: `find . -path "*/feature/*" -name "*ViewModel.kt" 2>/dev/null | head -8`
 
 Match the existing features' package structure and naming before applying the defaults below.
 

@@ -6,9 +6,9 @@ Push, in-app, email, and SMS that respect user preferences, reach the device, st
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing notification code: !`grep -rlE "FirebaseMessaging|firebase-messaging|UNUserNotificationCenter|POST_NOTIFICATIONS|sendgrid|postmark|twilio|resend" --include=*.kt --include=*.swift --include=*.ts --include=*.js --include=*.xml --include=*.json . 2>/dev/null | grep -v node_modules | head -10 || echo "(none found)"`
+- Existing notification code: `grep -rlE "FirebaseMessaging|firebase-messaging|UNUserNotificationCenter|POST_NOTIFICATIONS|sendgrid|postmark|twilio|resend" --include=*.kt --include=*.swift --include=*.ts --include=*.js --include=*.xml --include=*.json . 2>/dev/null | grep -v node_modules | head -10 || echo "(none found)"`
 
 ## Invariants
 

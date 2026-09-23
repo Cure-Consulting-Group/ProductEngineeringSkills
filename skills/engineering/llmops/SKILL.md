@@ -15,10 +15,10 @@ metadata:
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- LLM SDKs in use: !`grep -E '"(@anthropic-ai/sdk|openai|@google/genai|ai|langchain)"' package.json 2>/dev/null | head -8; grep -iE '^(anthropic|openai|google-genai|langchain)' requirements.txt pyproject.toml 2>/dev/null | head -5 || echo "(none detected)"`
-- Existing LLM/eval code: !`ls -d src/llm evals eval prompts 2>/dev/null || echo "(none)"`
+- LLM SDKs in use: `grep -E '"(@anthropic-ai/sdk|openai|@google/genai|ai|langchain)"' package.json 2>/dev/null | head -8; grep -iE '^(anthropic|openai|google-genai|langchain)' requirements.txt pyproject.toml 2>/dev/null | head -5 || echo "(none detected)"`
+- Existing LLM/eval code: `ls -d src/llm evals eval prompts 2>/dev/null || echo "(none)"`
 
 ## Step 1: Classify
 

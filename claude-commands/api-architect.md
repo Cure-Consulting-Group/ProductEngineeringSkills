@@ -4,10 +4,10 @@
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing specs: !`find . -maxdepth 4 \( -name "openapi*.y*ml" -o -name "openapi*.json" -o -name "*.graphql" \) -not -path "*/node_modules/*" 2>/dev/null | head -5 || echo "(none)"`
-- Route files: !`find . -maxdepth 5 -path "*/node_modules" -prune -o \( -path "*/api/*" -o -path "*/routes/*" \) -type f -print 2>/dev/null | head -5 || echo "(none)"`
+- Existing specs: `find . -maxdepth 4 \( -name "openapi*.y*ml" -o -name "openapi*.json" -o -name "*.graphql" \) -not -path "*/node_modules/*" 2>/dev/null | head -5 || echo "(none)"`
+- Route files: `find . -maxdepth 5 -path "*/node_modules" -prune -o \( -path "*/api/*" -o -path "*/routes/*" \) -type f -print 2>/dev/null | head -5 || echo "(none)"`
 
 ## Step 1: Classify
 

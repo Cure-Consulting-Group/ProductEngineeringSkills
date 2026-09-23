@@ -7,9 +7,9 @@
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
-- Recent changes (the first suspect in most incidents): !`git log --since="3 days ago" --oneline 2>/dev/null | head -10 || echo "(not a git repo)"`
-- Existing runbooks: !`ls docs/runbooks/ docs/post-mortems/ 2>/dev/null | head -10 || echo "(none)"`
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
+- Recent changes (the first suspect in most incidents): `git log --since="3 days ago" --oneline 2>/dev/null | head -10 || echo "(not a git repo)"`
+- Existing runbooks: `ls docs/runbooks/ docs/post-mortems/ 2>/dev/null | head -10 || echo "(none)"`
 
 ## Step 1: Classify the Mode
 

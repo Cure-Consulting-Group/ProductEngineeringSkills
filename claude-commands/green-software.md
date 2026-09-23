@@ -7,10 +7,10 @@ has an expected carbon and cost effect. Match length to the need; no filler sect
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Deploy config: !`ls firebase.json vercel.json app.yaml Dockerfile *.tf 2>/dev/null | head -10 || echo "(none)"`
-- Regions in config: !`grep -rhoE '"?region"?\s*[:=]\s*"?[a-z]+-[a-z]+[0-9]' --include=*.json --include=*.tf --include=*.yaml --include=*.ts . 2>/dev/null | sort -u | head -8 || echo "(none found)"`
+- Deploy config: `ls firebase.json vercel.json app.yaml Dockerfile *.tf 2>/dev/null | head -10 || echo "(none)"`
+- Regions in config: `grep -rhoE '"?region"?\s*[:=]\s*"?[a-z]+-[a-z]+[0-9]' --include=*.json --include=*.tf --include=*.yaml --include=*.ts . 2>/dev/null | sort -u | head -8 || echo "(none found)"`
 
 ## Step 1: Classify the Sustainability Need
 

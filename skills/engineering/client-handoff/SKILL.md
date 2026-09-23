@@ -20,11 +20,11 @@ production deploy and a rollback.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Stack manifest: !`head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || echo "(none detected)"`
-- Infra and CI files: !`ls firebase.json *.tf Dockerfile vercel.json .github/workflows/ fastlane/ 2>/dev/null | head -15 || echo "(none)"`
-- Env template: !`ls .env.example .env.sample 2>/dev/null || echo "(no .env.example)"`
+- Stack manifest: `head -30 package.json 2>/dev/null || head -30 build.gradle.kts 2>/dev/null || echo "(none detected)"`
+- Infra and CI files: `ls firebase.json *.tf Dockerfile vercel.json .github/workflows/ fastlane/ 2>/dev/null | head -15 || echo "(none)"`
+- Env template: `ls .env.example .env.sample 2>/dev/null || echo "(no .env.example)"`
 
 ## Step 1: Classify the Handoff
 

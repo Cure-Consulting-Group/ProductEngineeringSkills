@@ -16,9 +16,9 @@ Most loops are accreted, copied from a previous employer, and never measured. Cu
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run this command first):
+Context — run this read-only command first; skip it if it fails or isn't permitted (it only tailors the output):
 
-- Existing hiring materials: !`find . -maxdepth 3 \( -iname 'interview*' -o -iname 'hiring*' -o -iname 'rubric*' \) -not -path '*/node_modules/*' 2>/dev/null | head -10`
+- Existing hiring materials: `find . -maxdepth 3 \( -iname 'interview*' -o -iname 'hiring*' -o -iname 'rubric*' \) -not -path '*/node_modules/*' 2>/dev/null | head -10`
 
 Read any existing materials before designing. Ask for the role's actual stack so technical stages match the job (no Rust questions for a TypeScript role).
 

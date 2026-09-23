@@ -6,10 +6,10 @@ Every environment starts from a known, reproducible test state: named personas, 
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing seed/fixture code: !`grep -rlE "seed|fixture|factory|faker" scripts tests src functions 2>/dev/null | grep -v node_modules | head -10 || echo "(none)"`
-- Auth/DB/payments in use: !`grep -hoE '"(firebase-admin|firebase|@supabase/supabase-js|pg|prisma|stripe|@faker-js/faker)"' package.json functions/package.json 2>/dev/null | sort -u | head -10 || echo "(no package.json)"`
+- Existing seed/fixture code: `grep -rlE "seed|fixture|factory|faker" scripts tests src functions 2>/dev/null | grep -v node_modules | head -10 || echo "(none)"`
+- Auth/DB/payments in use: `grep -hoE '"(firebase-admin|firebase|@supabase/supabase-js|pg|prisma|stripe|@faker-js/faker)"' package.json functions/package.json 2>/dev/null | sort -u | head -10 || echo "(no package.json)"`
 
 ## Step 1: Classify the Need
 

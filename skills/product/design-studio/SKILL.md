@@ -44,11 +44,11 @@ Every script supports `--help` and is Python stdlib only; external needs are lis
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Design files: !`ls DESIGN.md design/DESIGN.md tokens.json design/tokens.json 2>/dev/null | head -4 | grep . || echo "(no DESIGN.md or tokens)"`
-- Existing assets: !`ls -d design/ brand/ assets/brand/ public/brand/ 2>/dev/null | head -4 | grep . || echo "(none)"`
-- Platforms present: !`ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
+- Design files: `ls DESIGN.md design/DESIGN.md tokens.json design/tokens.json 2>/dev/null | head -4 | grep . || echo "(no DESIGN.md or tokens)"`
+- Existing assets: `ls -d design/ brand/ assets/brand/ public/brand/ 2>/dev/null | head -4 | grep . || echo "(none)"`
+- Platforms present: `ls package.json build.gradle.kts Podfile Package.swift 2>/dev/null | head -4 | grep . || echo "(none detected)"`
 
 Read any DESIGN.md or token file listed before Step 1. Honour what exists: an existing DESIGN.md, token file, or component library overrides every default below. Read PORTFOLIO.md when the work is for a portfolio brand.
 
