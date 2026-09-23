@@ -30,12 +30,22 @@ injections in 69 skills to run-first prose; audit CRIT added; market-research 0.
 dora-metrics confirmed loading. **The sweep's "no measurable Δ" conclusion is void** for those 69
 skills; re-sweep required before any T58 consolidation decision.
 
-**Owner decisions surfaced by the pass (not made by the agents):** proposed Cure SOW defaults in
-`legal-doc-scaffold` (5-day acceptance, 12-month liability cap — labeled "proposed" in the skill);
-branch policy main → staging → release tag (release-management); App Hosting as Next.js default;
-anonymous API rate limit 20/min (api-architect); CI retries 0 unit / ≤1 E2E with quarantine
-(testing-strategy); Firebase Functions Node 22 vs 24; keep `disable-model-invocation` on
-`legal-doc-scaffold` and `proposal-generator`; technology-radar "Adopt" placements.
+**Owner decisions (2026-09-23).** Approved as written in the skills: keep `disable-model-invocation`
+on `legal-doc-scaffold` + `proposal-generator`; branch policy main → staging → prod only from a release
+tag or `release/*` with approval (release-management); Firebase App Hosting as the Next.js default;
+Functions on Node 22 (24 stays "confirm before use" until Firebase lists it GA); anonymous API rate
+limit 20/min as a tunable default (api-architect owns); CI retries 0 unit/integration, ≤1 E2E with
+quarantine (testing-strategy owns); iOS 17 floor, baseline M3, basic Consent Mode as per-client-
+overridable defaults; tax profile stays at `.claude/tax-profile.md`; cpa-benchmark stays on Node
+(Python port deferred); worktree port registry at `<git-common-dir>/worktree-ports.json`; LTV
+lifetime cap 60 months.
+
+**Still open (need the owner's answer, not a default):** (1) the proposed SOW terms in
+`legal-doc-scaffold` Step 4 — 5-business-day acceptance with silence = accepted, liability capped at
+12 months of fees, pause after 15 days overdue, 30-day termination, 12-month non-solicit — remain
+labeled "proposed"; (9) interview AI policy in `interview-system-designer` (no AI in screens, AI
+allowed onsite); (10) technology-radar facts: Claude API in Adopt, Autograph and Antigravity listed
+as users; (11) the Cure "Antigravity" product description (AI orchestration IDE, VS Code fork).
 
 Captured 2026-09-23 on the Opus 5.5 switch. Method per `docs/MAINTENANCE.md` quarterly meta-loop:
 three platform lanes (Claude Code docs; Codex 0.155 and agy 1.2.8 **probed on this machine**, not read
