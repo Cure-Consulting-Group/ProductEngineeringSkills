@@ -158,7 +158,6 @@ Brief overview linking to full `/technology-radar` output if available.
 | Vendly | [stage] | P0 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
 | Autograph | [stage] | P1 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
 | The Initiated | [stage] | P1 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
-| Antigravity | [stage] | P2 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
 | TwntyHoops | [stage] | P2 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
 | Cure Consulting | [stage] | P1 | [$X] | [$X/mo] | [Xmo] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] | [G/Y/R] |
 
@@ -210,8 +209,6 @@ Products (6):
     LLM: [model IDs]. Clinical workflow.
   - The Initiated (P1, MVP) — Women's basketball recruiting. Web, B2B+B2C.
     NCAA compliance. Events platform.
-  - Antigravity (P2, alpha) — Cure's AI agent orchestration IDE (VS Code fork,
-    open source; not Google Antigravity, the agent runtime). TypeScript + Electron.
   - TwntyHoops (P2, growth) — Basketball media/events. Web, content + community.
   - Cure Consulting (P1, mature) — Consultancy. Client work + this skill library.
 

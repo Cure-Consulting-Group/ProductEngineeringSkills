@@ -7,7 +7,7 @@
 
 ## Step 5: Default Radar for Cure Consulting Group
 
-Pre-populate from PORTFOLIO.md and the dependency scan; drop any entry the scan doesn't confirm. "Antigravity" below is Cure's IDE product, not Google Antigravity (the agent runtime).
+Pre-populate from PORTFOLIO.md and the dependency scan; drop any entry the scan doesn't confirm.
 
 ### ADOPT
 
@@ -30,7 +30,7 @@ Swift + SwiftUI
 
 TypeScript + Next.js App Router
   Ring: Adopt | Quadrant: Languages & Frameworks
-  Products: Vendly (Web), The Initiated (Web), Antigravity (Web)
+  Products: Vendly (Web), The Initiated (Web)
   Since: 2023-Q2
   Rationale: App Router with Server Components reduces client bundle size and simplifies
   data fetching. TypeScript catches bugs at compile time. Largest web framework ecosystem.
@@ -38,7 +38,7 @@ TypeScript + Next.js App Router
 
 Tailwind CSS
   Ring: Adopt | Quadrant: Languages & Frameworks
-  Products: Vendly (Web), The Initiated (Web), Antigravity (Web)
+  Products: Vendly (Web), The Initiated (Web)
   Since: 2023-Q2
   Rationale: Utility-first CSS eliminates style drift across products. Tailwind v4 is
   CSS-first: design tokens map in via `@theme` in CSS (no tailwind.config). Fast iteration.
@@ -71,7 +71,7 @@ GitHub Actions
 
 Playwright
   Ring: Adopt | Quadrant: Tools
-  Products: Vendly (Web), The Initiated (Web), Antigravity (Web)
+  Products: Vendly (Web), The Initiated (Web)
   Since: 2024-Q1
   Rationale: Cross-browser E2E testing with auto-waiting. Better reliability than Cypress.
   Native support for multiple browser contexts, network interception, and component testing.
@@ -119,7 +119,7 @@ Trunk-Based Development
 
 Claude API / Anthropic SDK
   Ring: Adopt | Quadrant: Platforms
-  Products: Antigravity (Cure IDE), Autograph, and Cure's agent tooling
+  Products: Autograph and Cure's agent tooling
   Since: [quarter adopted]
   Rationale: Default LLM provider for agentic, coding, and long-document features; this
   skill library itself is Claude-first. Pin exact model IDs per feature and re-check
@@ -246,16 +246,16 @@ UIKit (iOS)
 
 Pages Router (Next.js)
   Ring: Hold | Quadrant: Languages & Frameworks
-  Products: Antigravity (Web — 6 routes still on pages/)
+  Products: [any web product with routes still on pages/]
   Since: 2024-Q2 (moved from Adopt)
   Rationale: App Router is the Adopt standard. Pages Router cannot use Server Components,
   streaming, or parallel routes. Maintaining both routers complicates the codebase.
-  Migration: Move remaining routes to app/. Effort: M (Antigravity). Target: [quarter].
+  Migration: Move remaining routes to app/. Effort: M per product. Target: [quarter].
   Owner: Frontend Lead
 
 Jest
   Ring: Hold | Quadrant: Tools
-  Products: Antigravity (Web), The Initiated (Web — partial)
+  Products: The Initiated (Web — partial)
   Since: 2024-Q3 (moved from Adopt)
   Rationale: Vitest is faster (native ESM, Vite-powered), compatible with Jest API,
   and aligns with our Vite/Next.js toolchain. Jest's CJS-first architecture causes

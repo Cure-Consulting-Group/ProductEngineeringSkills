@@ -56,24 +56,6 @@ Visual direction:   Game action, scouting film stills, data overlays on
                     — film sessions, coaching huddles, athlete highlight clips.
 ```
 
-### Antigravity (Cure's IDE — not Google Antigravity)
-```
-Note:               Cure's product. Never confuse it with Google Antigravity, the
-                    agent runtime; don't reuse Google's branding or claims.
-What:               AI agent orchestration IDE for developers (VS Code fork,
-                    open source)
-ICP:                Senior engineers, technical founders, AI-native dev teams
-Tone:               Technical, direct, no fluff. Builder-to-builder.
-                    Respects engineering rigor.
-Language:           English only
-Core message:       Ship with agents. Not prompts.
-Key differentiators: Skill-based architecture, multi-agent coordination,
-                    production-grade patterns, built on VS Code
-Personality:        Elite, precise, builder-minded, no-nonsense
-Visual direction:   Dark mode UI, code snippets, terminal output, architecture
-                    diagrams. No stock illustrations. Show the tool in use.
-```
-
 ### TwntyHoops
 ```
 What:               Basketball media and events brand

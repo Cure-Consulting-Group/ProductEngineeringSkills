@@ -80,7 +80,6 @@
 | Vendly | Shared Firebase | Infrastructure | Auth, Firestore, Cloud Functions | All auth fails, data inaccessible | Multi-region, failover config |
 | Autograph | OpenAI API | External vendor | LLM for medical transcription | Core feature unusable | Fallback to Claude, queue system |
 | The Initiated | Vendly design tokens | Design | Shared spacing, grid, type scale | Inconsistent UI | Tokens versioned, pinned |
-| Antigravity (Cure IDE, not Google Antigravity) | VS Code upstream | Open source | Fork base, extension API | Feature divergence, security patches | Weekly upstream sync, patch process |
 | All products | GitHub Actions | CI/CD | Build, test, deploy pipelines | No deploys, no PR checks | Local build fallback documented |
 | All products | Firebase Auth | Identity | User authentication | Complete auth failure | Status page monitoring, cached tokens |
 

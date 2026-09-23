@@ -62,7 +62,7 @@ Mark with `<!-- ATTORNEY REVIEW: reason -->` at minimum: governing law and venue
 
 ## Step 4: Cure Consulting SOW Positions
 
-**Proposed defaults (Wave 5, 2026-09-23) — not yet approved by Cure leadership or counsel.** Only milestone-or-net-30 payment and deliverables-with-acceptance-criteria predate this list; treat every other number below as a placeholder and mark it `<!-- ATTORNEY REVIEW: proposed Cure default -->` in any draft until the owner signs off.
+**Cure defaults (approved by the owner, 2026-09-23).** Starting positions, not legal advice: liability, IP, and governing-law clauses in any draft still carry `<!-- ATTORNEY REVIEW -->` markers.
 
 Starting positions for Cure as the service provider — note any the client asks to change for counsel:
 - **Scope:** explicit in-scope and out-of-scope lists; anything not listed is a change order.

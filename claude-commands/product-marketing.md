@@ -30,9 +30,9 @@ before writing. With no ICP research, say so and suggest the market-research ski
 
 ## Step 2: Identify the Product
 
-Read `reference/brands.md` for the product's section (Vendly, Autograph, The Initiated, Antigravity,
+Read `reference/brands.md` for the product's section (Vendly, Autograph, The Initiated,
 TwntyHoops, Cure Consulting Group): ICP, tone, languages, core message, differentiators, visual
-direction. "Antigravity" there is Cure's IDE product, not Google Antigravity. For a product not in the
+direction. For a product not in the
 registry, gather the same fields first.
 
 ## Step 3: Platform Rules (verified 2026-09-23 — platforms change these often)
