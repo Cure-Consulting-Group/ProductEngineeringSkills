@@ -30,6 +30,17 @@ injections in 69 skills to run-first prose; audit CRIT added; market-research 0.
 dora-metrics confirmed loading. **The sweep's "no measurable Δ" conclusion is void** for those 69
 skills; re-sweep required before any T58 consolidation decision.
 
+**Re-sweep on v7.10.1 (2026-09-23, 234 runs, \$85.92 list-price est. on the Max plan) — the first
+honest with/without measurement.** Mean Δ −0.03 → **+0.06**; cases with plugin worse: 3 → **0**;
+better: 1 → **5** — market-research **+1.00** (3/3 vs 0/3, the only statistically meaningful Δ at n=3),
+t20-product-ux-architecture +0.33 (positive in all three measurements today), ai-feature-builder,
+t09-runbook, t18-illustrator +0.33 each (one run in three; within noise). Of the 34 Δ=0 cases: routing
+cases fire the skill correctly but bare Opus 5.5 also passes the generic grader; in 12 of 19 task-style
+cases the model **never invoked a skill**. Next-wave implications: (a) graders must test Cure-specific
+conventions, not generic correctness, or Δ stays unmeasurable; (b) task-phrased prompts don't route to
+skills under Opus 5.5 — descriptions may need task verbs ("fix", "write", "migrate"), or those skills are
+genuinely redundant; T58 consolidation should use (a)+(b), not this sweep's zeros.
+
 **Owner decisions (2026-09-23).** Approved as written in the skills: keep `disable-model-invocation`
 on `legal-doc-scaffold` + `proposal-generator`; branch policy main → staging → prod only from a release
 tag or `release/*` with approval (release-management); Firebase App Hosting as the Next.js default;
