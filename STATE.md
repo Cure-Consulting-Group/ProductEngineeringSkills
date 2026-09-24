@@ -35,7 +35,7 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 
 | | |
 |---|---|
-| Library version | 7.10.2 (2026-09-24) |
+| Library version | 7.11.0 (2026-09-24) — Opus 5.5 guide alignment |
 | Last wave | Wave 5 — tri-runtime (Opus 5.5 / Codex / Antigravity); see BACKLOG.md |
-| Machines verified with `install-runtimes.sh` | primary Mac (codex 0.155.0, agy 1.2.9) — v7.10.2, 2026-09-24 |
+| Machines verified with `install-runtimes.sh` | primary Mac (codex 0.155.0, agy 1.2.9) — v7.11.0, 2026-09-24 |
 | Open owner decisions | none (all Wave 5 items resolved 2026-09-23) |
