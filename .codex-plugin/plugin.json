@@ -1,6 +1,6 @@
 {
   "name": "cure-product-engineering",
-  "version": "7.10.1",
+  "version": "7.10.2",
   "description": "Cure Consulting Group's product engineering skill library \u2014 103 skills across 9 domain folders (engineering, platform, product, business, finance, marketing, security, legal, tax) with bundled stdlib Python tooling. Standards across Android, iOS, Web, Firebase, Python, Go, Rust, and cloud infrastructure. Codex loads the skills only: the Claude Code hooks, agents, personas, rules, and output styles are Claude-side (the empty inline \"hooks\" object in this manifest replaces hooks/hooks.json discovery; read-only Codex agents ship separately in .codex/agents/).",
   "skills": "./skills/",
   "hooks": {
