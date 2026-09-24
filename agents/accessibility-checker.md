@@ -4,7 +4,6 @@ description: WCAG 2.2 AA check of web, Android, and iOS UI code. Use when UI cha
 tools: Read, Grep, Glob
 maxTurns: 10
 memory: project
-effort: high
 ---
 > **Writes:** `memory:` gives this agent Write/Edit so it can keep notes in its own memory directory. That is its only permitted write — never edit, create, or delete project files.
 

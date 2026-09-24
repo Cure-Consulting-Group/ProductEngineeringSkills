@@ -20,6 +20,25 @@ recipe book.
 6. Every iteration terminates — non-blocking is non-negotiable. No watch mode,
    no dev servers, no interactive prompts, hard timeouts on slow checks. A
    blocked iteration doesn't fail loudly; it silently kills the automation.
+7. A turn that ends in text is a report, not proof the task is done (Opus 5.5
+   ends turns on progress updates). Keep the task as a checklist; if a run ends
+   with items open and no blocker named, continue it with a message naming the
+   open items — at most 2–3 automatic continuations, then stop for review.
+   Add the early-stop instruction below to routine prompts.
+
+**Early-stop instruction for unattended prompts** (adapted from Anthropic's Opus 5.5
+prompting guide; put it at the end of the routine prompt, and leave it out of
+human-in-the-loop sessions):
+
+```
+A message with no tool call ends your run, and the work stops there. Don't end
+with a summary that announces the next step, an offer to continue, a list of
+decisions that don't block the remaining work, or a pause because a milestone is
+done. Put status notes in the same message as your next tool call and carry on.
+Stop only when nothing can move without a human, or the next step is protected
+from you. This does not override the read-only rule or any confirmation on
+risky actions.
+```
 
 ---
 

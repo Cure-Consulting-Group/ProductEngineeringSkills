@@ -61,12 +61,18 @@ shared files. Before spawning sessions:
 
 | Work type | Model/effort | Concurrency |
 |---|---|---|
-| Judgment: architecture, review, audits, tricky debugging | Strong model, high effort | Serial, or 2 max |
+| Judgment: architecture, review, audits, tricky debugging | Strong model; start at its default effort and raise only where your evals show a gain (Opus 5.5's default `medium` matches Opus 5 at `high`) | Serial, or 2 max |
 | Mechanical: migrations, test fixes, doc gen, scaffolds | Cheaper model / lower effort | Parallel freely |
 | Verification of others' output | Strong model, but read-only | Parallel (no write conflicts) |
 
 Watch the shared budget: if sessions start rate-limiting each other, cut
 concurrency before cutting model quality on judgment work.
+
+Give a lead agent a time signal: append `elapsed <s>s / <budget>s` to each
+message the harness sends it (set the budget a little above the time you want),
+or, if you can't estimate one, tell it "Time matters here: the earlier a correct
+result is obtained, the better." Opus 5.5 paces to it and parallelizes more; a
+budget is advisory, so keep a hard timeout if you need one.
 
 ## Step 4: Blast radius → autonomy
 

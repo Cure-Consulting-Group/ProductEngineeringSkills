@@ -157,7 +157,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | accessibility-audit | WCAG 2.2 AA audit of Android, iOS, and web UI with severity-ranked findings. Use when checking accessibility, a11y, screen reader support, touch targets, or contrast before a release or after a complaint. | Read, Grep, Glob |
 | compliance-architect | Designs HIPAA, COPPA, GDPR, CCPA, and PCI compliance: consent, audit trails, data classification. Use when an app handles health, kids', EU, California, or card data, or needs a BAA/DPA check. | default |
 | qsbs-compliance | Checks IRC §1202 QSBS qualification for C-corps under both OBBBA regimes. Use when an equity event, entity change, asset growth, or revenue mix could affect QSBS, or for an annual QSBS health check. | Read, Grep, Glob |
-| security-review | Security audit of code, APIs, mobile apps, LLM features, and Firebase/cloud config, mapped to OWASP. Use when asked to check security, find vulnerabilities, or review before launch or after adding auth, payments, or PII. | Read, Grep, Glob |
+| security-review | Security review or audit of code, APIs, mobile apps, LLM features, and Firebase/cloud config, mapped to OWASP. Use when asked to check security, find vulnerabilities, or review before launch or after adding auth, payments, or PII. | Read, Grep, Glob |
 
 
 ### Tax (12)

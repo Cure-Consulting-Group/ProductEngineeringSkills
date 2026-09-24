@@ -4,7 +4,6 @@ description: "Sets performance budgets and load-test plans for web, mobile, back
 when_to_use: "NOT for employee performance reviews (HR), DORA metrics (use dora-metrics), or SLOs/alerting (use observability)."
 argument-hint: "[app-or-feature]"
 context: fork
-effort: high
 metadata:
   verified: 2026-09-23
 ---

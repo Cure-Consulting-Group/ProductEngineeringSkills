@@ -4,7 +4,6 @@ description: "Adversarial QA: test plans, edge cases, regression scope, bug tria
 tools: Read, Grep, Glob, Bash
 maxTurns: 20
 memory: project
-effort: high
 ---
 
 # QA Engineer Agent

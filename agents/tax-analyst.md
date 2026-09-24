@@ -5,7 +5,6 @@ tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit
 maxTurns: 15
 skills: cpa-standards, irc-lookup
-effort: high
 ---
 
 # Tax Analyst Agent

@@ -41,6 +41,22 @@ conventions, not generic correctness, or Δ stays unmeasurable; (b) task-phrased
 skills under Opus 5.5 — descriptions may need task verbs ("fix", "write", "migrate"), or those skills are
 genuinely redundant; T58 consolidation should use (a)+(b), not this sweep's zeros.
 
+**Addendum — Anthropic's "Prompting Claude Opus 5.5" guide (read 2026-09-24; v7.11.0).** Most of
+the Opus 5 alignment carried over (the guide says Opus 5 patterns "remain a reasonable starting
+point"); the library had no "think carefully" or reasoning-in-response instructions and `llmops`
+already covered the breaking API changes. Applied: (1) **unattended early stops** — Opus 5.5 ends
+turns on progress reports, so loop.md, AUTOMATION.md (rule 7 + a standing instruction for routine
+prompts) and engagement-automation now treat a text-only turn end as a report, with ≤2–3
+continuations; (2) **effort** — Opus 5.5 defaults to `medium` (≈ Opus 5 `high`); a sweep on seeded
+reviewer tasks (security-review skill, code-reviewer agent; 5/5 recall at both levels, equal cost
+and time, \$4.83) showed no gain from `high`, so all 14 carried-over `effort: high` pins were
+removed (ceiling effect noted: the seeded bugs were too easy to separate levels); (3) **untrusted
+input** guardrail in 9 skills/agents that read third-party material; (4) **frontend defaults** —
+the guide's named fallback styles added to design-studio's anti-pattern list and web-design-expert;
+plus time-budget signals in parallel-agent-orchestration. Also observed: security-review did not
+fire on "Do a security review of src/" (Opus 5.5 did the work itself) — trigger now leads with
+"Security review".
+
 **Owner decisions (2026-09-23).** Approved as written in the skills: keep `disable-model-invocation`
 on `legal-doc-scaffold` + `proposal-generator`; branch policy main → staging → prod only from a release
 tag or `release/*` with approval (release-management); Firebase App Hosting as the Next.js default;
