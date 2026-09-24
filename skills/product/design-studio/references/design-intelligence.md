@@ -63,6 +63,12 @@ Any of these without a written justification is a defect, not a style:
 - the same layout for a hospital, a bank, and a skate brand
 - Inter or Space Grotesk as the unexamined default; emoji as section markers
 - everything centred
+- Opus 5.5's own fallback set (Anthropic, Opus 5.5 guide): cream or off-white page backgrounds, italic accent
+  words in headlines, numbered "01/02/03" section labels, monospace eyebrow labels, pill-shaped buttons
+
+Name the specific patterns to avoid in the prompt or brief, not "avoid a generic AI look" — a general
+instruction just swaps one default for another. Check the first result for which defaults it used
+instead and extend the list.
 
 Replacement rule: hierarchy from typography and spacing first; containers only where an object is genuinely separate; colour for meaning before decoration.
 

@@ -95,7 +95,8 @@ Anything that runs without a human watching:
 3. **Deliver somewhere durable.** Every run ends by writing its result to an issue, PR comment, or report file. A routine whose output only lives in a session transcript doesn't exist.
 4. **Stop conditions, not vibes.** Self-paced loops state the goal AND the give-up condition ("stop when tests pass or after 5 attempts; report either way").
 5. **Non-blocking iterations, always.** Every loop iteration terminates: non-interactive commands only, no watch mode or dev servers, no prompts, hard timeouts on anything slow. One blocked iteration silently kills the whole automation.
-6. **Verify liveness monthly.** Loops expire in 7 days; routines fail silently when auth or webhooks rot. Put a "check the automations" line in the engagement's recurring ops.
+6. **Turn ends are reports, not completion.** Opus 5.5 ends turns on progress updates; an unattended run that treats one as "done" stops partway. Give the run a checklist and the early-stop instruction from `docs/AUTOMATION.md`; continue a run that ends with open items and no named blocker at most 2–3 times, then stop for review.
+7. **Verify liveness monthly.** Loops expire in 7 days; routines fail silently when auth or webhooks rot. Put a "check the automations" line in the engagement's recurring ops.
 
 ## Step 5: Output
 

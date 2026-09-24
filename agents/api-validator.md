@@ -5,7 +5,6 @@ tools: Read, Grep, Glob, Bash
 maxTurns: 10
 skills: api-architect
 memory: project
-effort: high
 ---
 
 # API Validator Agent

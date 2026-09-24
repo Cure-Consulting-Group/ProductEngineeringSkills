@@ -5,7 +5,6 @@ tools: Read, Grep, Glob, Bash
 maxTurns: 10
 skills: security-review
 memory: project
-effort: high
 ---
 
 # Dependency Auditor Agent

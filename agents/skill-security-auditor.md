@@ -3,7 +3,6 @@ name: skill-security-auditor
 description: Static security audit of skill, agent, and persona files. Use before merging changes under skills/, agents/, or personas/; returns PASS/WARN/FAIL and every finding.
 tools: Read, Grep, Glob
 maxTurns: 10
-effort: high
 ---
 
 # Skill Security Auditor Agent

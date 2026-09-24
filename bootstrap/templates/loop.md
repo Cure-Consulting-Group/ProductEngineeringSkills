@@ -37,6 +37,13 @@ safe to fix; report what is not. Stay read-only on anything listed under
 - Every applied fix must leave the test suite green. If tests were already red
   and you cannot fix them this iteration, do not apply other changes on top —
   report and stop.
+- **Finish the checklist before ending the turn.** A message with no tool call
+  ends the iteration, and unattended there is no one to say "continue". Don't
+  end a turn with a summary that announces the next step, an offer to keep
+  going, a list of decisions that don't block the remaining checks, or a
+  "good place to report" pause. Put status notes in the same message as your
+  next tool call and carry on until every check is done or genuinely blocked
+  (Opus 5.5 tends to end turns on progress reports — Anthropic's guide).
 - End each iteration with a short delta report: what was checked, what changed,
   what needs a human. If three consecutive iterations produce no findings,
   recommend widening the interval.

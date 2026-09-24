@@ -5,7 +5,6 @@ tools: Read, Grep, Glob, Bash
 maxTurns: 12
 skills: ci-cd-pipeline
 memory: project
-effort: high
 ---
 
 # Deployment Validator Agent

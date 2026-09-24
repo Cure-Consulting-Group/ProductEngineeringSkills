@@ -4,7 +4,6 @@ description: Audits Firestore, Storage, and RTDB security rules against the data
 tools: Read, Grep, Glob, Bash
 maxTurns: 10
 memory: project
-effort: high
 ---
 
 # Firebase Security Auditor Agent

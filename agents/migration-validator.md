@@ -4,7 +4,6 @@ description: Reviews DB migrations for rollback safety, locking, and zero-downti
 tools: Read, Grep, Glob, Bash
 maxTurns: 12
 memory: project
-effort: high
 ---
 
 # Migration Validator Agent

@@ -62,6 +62,9 @@ Applies only when Step 1 classified the request as build/handoff or the user ask
 
 ## Step 5: Anti-Patterns
 
+- Model fallback styles when no direction is given (Anthropic, Opus 5.5 guide): cream/off-white backgrounds, italic
+  accent words in headlines, numbered "01/02/03" section labels, monospace labels, pill-shaped buttons. Name
+  them as exclusions in the spec; "avoid a generic look" only swaps one default for another.
 - Placeholder-only labels; `outline: none` without replacement; hover-only interactions; disabled buttons with no explanation.
 - Pixel font sizes; horizontal scroll at 320px; images without dimensions (CLS).
 - Arbitrary values instead of tokens; z-index wars (use a token scale); `!important` outside reduced-motion overrides.
