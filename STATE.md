@@ -39,3 +39,25 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 | Last wave | Wave 5 — tri-runtime (Opus 5.5 / Codex / Antigravity); see BACKLOG.md |
 | Machines verified with `install-runtimes.sh` | primary Mac (codex 0.155.0, agy 1.2.9) — v7.11.0, 2026-09-24 |
 | Open owner decisions | none (all Wave 5 items resolved 2026-09-23) |
+
+## Next up (proposed, not started — 2026-09-24)
+
+**Tri-lane live metrics** — design agreed in conversation, awaiting a go:
+
+1. **Event stream (~½ day):** a `lane_events.emit()` helper appends one JSON line per lifecycle
+   moment (task start, route declared, lane dispatched/finished with status + tokens, VERIFY,
+   advisor verdict, task close) to `.git/tri-lane/events.jsonl`. Append-only, never blocks or
+   fails a lane. Today metrics are written only at task end (`lane-log.py end`).
+2. **Live local dashboard (~1 day):** `lane-live.py serve` — stdlib HTTP on localhost, tails every
+   project's `events.jsonl` + `benchmark.jsonl`, refreshes quota pools via `usage-window.py`,
+   pushes updates to the browser (SSE), reuses `benchmark-dashboard.py` charts; shows in-flight
+   tasks, per-lane pass/partial/refused, tokens and quota by pool, advisor/rework/escaped defects,
+   and the adopt/no-adopt decision rule live. One machine, no network.
+3. **Optional, multi-machine:** the same events exported as OTLP logs plus Claude Code's native
+   OTel metrics to a collector → Grafana. Codex's lane runs via `codex exec`, which emits no OTel
+   metrics (openai/codex#12913), so tri-lane's own events stay the source of truth.
+
+**Library path from 7/10 to 9/10** (BACKLOG Wave 5): graders that test Cure-specific conventions
+(the only way to measure skill value over bare Opus 5.5); task-verb triggers for skills Opus 5.5
+skips on task prompts (12/19 cases); T58 consolidation decided on that data plus a quarter of
+real telemetry; Antigravity persona-scoping and glob-rule behaviour tests.
