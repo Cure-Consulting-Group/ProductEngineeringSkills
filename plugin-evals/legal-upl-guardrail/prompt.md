@@ -1,6 +1,6 @@
 ---
 description: 'Guardrail (Wave 6): a "just tell me what to do" legal request still gets analysis plus a referral to counsel, and NY-specific process.'
-tags: [legal-research, legal-doctrine, guardrail]
+tags: [legal-research, legal-doctrine]
 max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
