@@ -1,10 +1,97 @@
 # BACKLOG
 
-Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates. Wave 5 (2026-09-23, open) is the Opus 5.5 re-evaluation: every skill made to route, run, and stay correct in Claude Code, Codex, and Antigravity.
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates. Wave 5 (2026-09-23, open) is the Opus 5.5 re-evaluation: every skill made to route, run, and stay correct in Claude Code, Codex, and Antigravity. Wave 6 (2026-09-28) builds the legal domain to a measured standard: NY-first research and doctrine, a read-only legal analyst, and a validated bar-style benchmark.
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
 
 ---
+
+# Wave 6 (2026-09-28) — Legal Domain: Bar-Grade, Measured, NY-First
+
+**Execution status (2026-09-28, branch `feat/legal-wave-6`):** all seven tickets built, validated, and measured live.
+
+| Ticket | Status | Deviation / measured result |
+|---|---|---|
+| T61 | ✅ Done | `cite_check.py` also verifies cases **without a token** (exact citation search on CourtListener's public API) and flags `NAME-MISMATCH` (a real cite on the wrong case). Fixture proves it: Babcock/Neumeier VERIFIED, *Jones v. Nobody*, 347 U.S. 483 → NAME-MISMATCH (Brown), the *Mata* fake → NOT-FOUND. CourtListener misses some real cites (*Mata*'s own F. Supp. 3d cite), so NOT-FOUND means "check the Official Reports", never "fabricated". Bluebook NY forms added after Codex memos used them. nysenate.gov admits only curl-style user agents and rate-limits (429 → retried, then UNVERIFIED, never a pass) |
+| T62 | ✅ Done | 14 references, 1,372 lines total (≤150 each, well under 300). Authors corrected the brief in 8 places (CPLR 308(4) is nail-and-mail; Art. 78 has four questions; EPTL 5-1.4 not 3-4.4; 7-1.17 not 7-1.16; NY RPC 1.10 screening since 2025-01-01; GOL 5-701(a)(1) covers lifetime contracts; ABA never adopted nonlawyer ownership; RPL 462 credit eliminated) |
+| T63 | ✅ Done | Tokenless verification removed the "UNVERIFIED without a token" gap. Bash allowlist is prose-enforced (no agent-scoped hook precedent in the library); drafts go through a quoted heredoc |
+| T64 | ✅ Done | 231 items: 140 MBE / 54 NYLE / 30 MPRE / 7 MEE. Added `cite_probe.py` (not in the ticket) once the MCQ ceiling was measured |
+| T65 | ✅ Done | Blind verification: 224/224 MCQ keys confirmed by independent closed-book passes, **0 key changes**; 16 items tightened; 1 essay had wrong law (UPC 2-606 replacement property) and was rewritten. Reference defects caught: 3 wrong case years, 1 misattributed case, stale removal-power law (*Trump v. Slaughter*, June 2026), 12 statute details corrected on nysenate.gov. Live: MCQ at ceiling for Claude and Codex (MBE 100/100; NYLE 98.1 → **100** with doctrine in both families; each bare miss was a NY distinction). Citation probe: with the skill, unverifiable case cites fell 49 → 5 and 100% carried a status (0% bare); bare Codex produced ≥1 wrong citation and 2 unconfirmable, all unlabeled. Detail: `skills/legal/bar-benchmark/benchmark/VALIDATION.md` |
+| T66 | ✅ Built; sweep pending | 4 cases (`route-legal-research`, `route-legal-doctrine`, `route-bar-benchmark`, `legal-upl-guardrail`). Not yet run through `claude plugin eval` (Ring 0 runs them at release) |
+| T67 | ✅ Done | Security audit (skill-security-auditor) returned FAIL on one High: a question file's `ref` could name any local path and send it to a model vendor. Fixed (allowlist + pre-run check), plus agy opt-in, Codex MCP off, token never follows redirects, judge treats answers as data, model-name validation, honest isolation docs. Re-verified |
+
+**Owner items:** none blocking. Optional: a free CourtListener token speeds case checks (`COURTLISTENER_API_TOKEN`). Bar-passage evidence needs a licensed NCBE bank run as a local overlay; nothing in this repo is a bar-passage prediction.
+
+Captured 2026-09-28 from an owner request: "do we have legal agent or law skills? should be trained on the law and be able to pass the NYS Bar" → "fully scope and enhance them now; we want to fully build, measure and validate these skills in real time."
+
+**Starting point.** The legal domain is one skill (`legal-doc-scaffold`, a template generator, `disable-model-invocation`) plus two agents that explicitly disclaim legal analysis (`contract-reviewer`, `legal-compliance`). No authority hierarchy, no citation discipline, no NY doctrine, no measurement. The tax domain is the model to copy: `irc-lookup` (authority + VERIFIED/CATALOG/RECALL flags) → `tax-analyst` (drafts for professional review, never acts) → `cpa-benchmark` (scored bank, pass mark, remediation loop).
+
+**Framing, stated once so no ticket drifts from it.** A skill cannot train a model. What skills add is (1) facts newer than or more local than training (NY CPLR/EPTL/DRL distinctions, NY precedent rules), (2) a procedure the model does not reliably follow unprompted (every citation verified or flagged), (3) an output contract (IRAC memo for attorney review), and (4) measurement. Wave 5 showed bare Opus 5.5 already passes generic graders (Δ≈0 on 34/39 cases), so skill value here must be measured on what is **NY-specific** and on **citation integrity**, not on generic MBE doctrine. A passing benchmark is not a license: output stays "draft for attorney review" (NY Judiciary Law §§478, 484 — unauthorized practice).
+
+**Verified facts (2026-09-28; do not re-research):**
+- NY administers the UBE; passing combined scaled score **266/400**; weights MBE 50% / MEE 30% / MPT 20%. MBE = 200 items, 175 scored, 25 per subject across 7 subjects (Civ Pro, Con Law, Contracts, Crim Law & Pro, Evidence, Real Property, Torts). Sources: ncbex.org/exams/mbe; nybarexam.org.
+- **NY replaces the UBE with NextGen effective July 2028**; NY will not accept NextGen transfer scores from administrations before July 2028. NextGen tests 9 doctrine areas (civ pro, contracts, evidence, torts, business associations, con law, crim law, real property, family law) + 7 lawyering skills. NY keeps the NYLC/NYLE. Source: nybarexam.org home; ncbex.org news.
+- **NYLE**: 50 items, 2 hours, open-book, online; pass = 60% (30/50). NYLC covers 12 subjects: Administrative Law, Business Relationships, Civil Practice and Procedure, Conflict of Laws, Contracts, Criminal Law and Procedure, Evidence, Matrimonial and Family Law, Professional Responsibility, Real Property, Torts and Tort Damages, Trusts Wills and Estates. Course materials updated Oct 2024.
+- **MPRE**: NY passing score **85**; valid 4 years from sitting.
+- **CourtListener citation-lookup v4**: `POST /api/rest/v4/citation-lookup/` with `text` (≤64,000 chars) or `volume`/`reporter`/`page`; **token required** (`Authorization: Token …`); 60 valid citations/min; ≤250 citations/request; per-citation status 200 found / 300 ambiguous / 400 bad reporter / 404 not found / 429 over limit.
+- Official NCBE questions are copyrighted and cannot ship in this repo. Licensed or purchased banks run as a **local overlay** (same pattern as `cpa-benchmark`), never committed.
+
+## Release plan
+
+| Release | Tickets | Theme |
+|---|---|---|
+| v7.12.0 (minor) | T61–T67 | Legal domain: research + doctrine + analyst + benchmark + validation + evals |
+
+## T61 — `legal-research` skill + `cite_check.py`
+
+**Scope:** `skills/legal/legal-research/`. The legal analogue of `irc-lookup`: frame the issue, find controlling authority, descend the hierarchy, verify every citation, record status (`VERIFIED` / `CATALOG` / `RECALL` / `UNVERIFIED-NOT-FOUND`). References: `authority-hierarchy.md` (federal + NY: binding vs persuasive; NY Court of Appeals → Appellate Division (four departments; a trial court follows its own department, else another department's ruling — *Mountain View Coach Lines*) → Supreme Court (trial level) → lower courts), `citation-form.md` (Bluebook vs NY Official Reports Style Manual), `sources.md` (free primary sources + what each is good for). Script `scripts/cite_check.py`: extracts reporter citations from text offline (regex, stdlib), and with `COURTLISTENER_API_TOKEN` set verifies them live against CourtListener v4; without a token every citation is reported `UNVERIFIED` (never silently passed). NY statute cites (CPLR, EPTL, DRL, GOL, BCL, Penal Law, CPL…) mapped to their nysenate.gov law IDs for a verification URL.
+
+**Why:** fabricated citations are the dominant real-world harm of AI legal work (sanctions in *Mata v. Avianca*, S.D.N.Y. 2023). This is the one procedure most worth mechanizing.
+
+**Acceptance:** `--help`/`--json`, stdlib only, exit 1 when any citation is not found or unverified; offline extraction test on a fixture memo; description trigger within 110 chars.
+
+## T62 — `legal-doctrine` skill (routing SKILL.md + 14 subject references)
+
+**Scope:** `skills/legal/legal-doctrine/`. One skill, not fourteen (listing-budget rule). SKILL.md routes an issue to a subject file and states the IRAC contract. References, each with **black-letter rule → elements → majority/minority split → NY distinction → exam traps**: civil-procedure (FRCP + CPLR), evidence (FRE + NY common-law evidence / CPLR Art. 45), constitutional-law, contracts (common law + UCC Art. 2 + GOL), torts (+ NY tort damages, CPLR Art. 14/14-A/16), criminal-law-procedure (+ NY Penal Law / CPL), real-property (+ RPL/RPAPL), business-associations (agency, partnership, corps, LLCs; BCL/LLCL), secured-transactions (UCC Art. 9), trusts-estates (EPTL/SCPA), family-law (DRL/FCA), conflict-of-laws (NY interest analysis — *Babcock*, *Neumeier*), administrative-law (SAPA, CPLR Art. 78), professional-responsibility (NY RPC, 22 NYCRR Part 1200; MPRE/ABA Model Rules differences).
+
+**Acceptance:** every reference ≤300 lines; every NY statute cited by section; anything not confirmed from primary text marked "confirm before use".
+
+## T63 — `legal-analyst` agent
+
+**Scope:** `agents/legal-analyst.md`, modeled on `tax-analyst`: read + Bash (limited to `cite_check.py` and the benchmark runner), `disallowedTools: Write, Edit`, no memory (privilege/confidentiality), preloads `legal-research` only. Output: IRAC memo with a citation table (cite, proposition, status), open questions, attorney handoff checklist, and the not-legal-advice line. Jurisdiction defaults to NY and must be stated. `contract-reviewer` and `legal-compliance` hand off doctrine questions to it.
+
+## T64 — `bar-benchmark` skill + scored question bank
+
+**Scope:** `skills/legal/bar-benchmark/`: Python stdlib runner (`bar_bench.py`: list/template/key/stats/sources/score, `--json`), bank in `benchmark/questions/*.json`: **MBE-style** 7 subjects × 20 = 140; **NYLE-style** NY-distinction items ~50 across the 12 NYLC subjects; **MPRE-style** 30; **MEE-style essays** 7 with point rubrics. Score report per component with the component pass marks below, plus a **UBE-weighted proxy** (MBE 50 / MEE 30 / NY-weighted), and remediation targets naming the reference file that should have carried the rule. Local overlays: `.claude/bar-benchmark/questions/`, `BAR_BENCHMARK_QUESTIONS`, `--questions`.
+
+**Pass marks (proxy, not predictive):** MBE-style ≥70% (real MBE passing ≈ 60–65% raw; set higher because the bank is self-authored); NYLE-style ≥75% (real 60%; same reason); MPRE-style ≥80%; essays ≥7/10 rubric average.
+
+## T65 — Validation: blind key verification + live measurement
+
+**Scope:** (1) `validate_bank.py` structural lint (schema, unique ids, 4 choices, answer letter balance, cite + why present, no answer leaked in stem). (2) **Blind key verification:** every item answered by an independent agent that never saw the key; every disagreement adjudicated against primary law and either the key fixed or the item rewritten; log committed as `benchmark/VALIDATION.md` with counts. (3) **Live measurement** `run_live.py`: sends questions (no key) in batches to a headless CLI (`claude -p`, `codex exec`, `gemini -p`), two arms — **bare** vs **doctrine** (the matching `legal-doctrine` reference prepended) — scores both, writes `results/<date>-<backend>.json`. Essay grading uses a judge from a different model family when available, otherwise labeled "same-family, advisory" (house rule from `run-evals.py`).
+
+**Honesty constraint:** a self-authored bank inflates scores; the report says so. The number is a regression gate and a skill-uplift instrument, not a bar-passage prediction. Bar-passage evidence requires a licensed NCBE overlay run.
+
+## T66 — Evals
+
+**Scope:** `plugin-evals/` cases: `route-legal-research` (natural phrasing reaches the skill), `route-bar-benchmark`, `legal-cite-integrity` (a NY question whose memo must carry a status on every citation and never present an unverified cite as verified), `legal-upl-guardrail` (a "just tell me what to do" request must still end with attorney review). `evals/index.json` updated so Ring 0 gates changes to the legal skills.
+
+## T67 — Integration, docs, release
+
+**Scope:** `contract-reviewer` + `legal-compliance` route doctrine questions to `legal-analyst`; `cure-engagement-pm` + `cure-solo-consultant` loadouts; `skills/legal/README.md`; skill-security-auditor pass on new files; `audit-library.py` green; `sync-metadata.py --write`; `generate-overview.py`; legacy `claude-commands/` sync; `scripts/release.sh minor`.
+
+## Wave 6 risks
+
+| Risk | Mitigation |
+|---|---|
+| Answer-key errors (self-authored bank) | T65 blind verification; every item carries a cite and a `why`; misses in live runs are re-adjudicated before being treated as model error |
+| Score read as "passes the bar" | Report banner + pass marks labeled proxy; NCBE overlay path documented |
+| Hallucinated citations in doctrine references | References cite statutes by section and cases by name + year; anything uncertain marked "confirm before use"; `cite_check.py` runs over the references |
+| UPL | Agent is read-only, drafts for attorney review, disclaimer in every output |
+| Law drift (NextGen 2028, NY amendments) | `metadata.verified` dated; NextGen switch noted in bar-benchmark maintenance section |
+
+---
+
 
 # Wave 5 (2026-09-23) — Tri-Runtime Excellence: Opus 5.5, Codex, Antigravity
 

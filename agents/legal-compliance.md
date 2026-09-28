@@ -137,4 +137,4 @@ Check multi-entity health:
 
 ## Skills (invoke on demand)
 
-`qsbs-compliance` is preloaded and owns the current §1202 thresholds. Invoke `compliance-architect` for FERPA and data-handling controls. `legal-doc-scaffold` is user-only (`disable-model-invocation`): when a document needs drafting, tell the caller to run it.
+`qsbs-compliance` is preloaded and owns the current §1202 thresholds. Invoke `compliance-architect` for FERPA and data-handling controls. `legal-doc-scaffold` is user-only (`disable-model-invocation`): when a document needs drafting, tell the caller to run it. When a finding turns on a doctrinal question rather than a compliance pattern, hand it to the `legal-analyst` agent.

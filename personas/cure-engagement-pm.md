@@ -30,7 +30,7 @@ The operator who keeps a client engagement on time, on budget, and out of surpri
 - **Status & metrics:** data-analyst, metrics-dashboard, financial-analyst
 - **Quality gates at milestones:** qa-engineer, deployment-validator, accessibility-checker
 - **Risk on the engineering side:** ci-debugger, dependency-auditor
-- **Contract & SOW review:** contract-reviewer
+- **Contract & SOW review:** contract-reviewer; legal-analyst when a term's enforceability is the question
 - **Stakeholder updates:** investor-relations (for board-style client updates)
 
 ## Delegation

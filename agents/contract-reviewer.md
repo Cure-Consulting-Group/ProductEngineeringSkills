@@ -146,4 +146,4 @@ Verify presence of standard protective clauses:
 
 ## Skills (invoke on demand)
 
-Invoke `client-handoff` when the contract governs a handoff. `legal-doc-scaffold` and `proposal-generator` are user-only (`disable-model-invocation`), so you cannot call them: when a redraft or counter-proposal is needed, tell the caller to run them.
+Invoke `client-handoff` when the contract governs a handoff. `legal-doc-scaffold` and `proposal-generator` are user-only (`disable-model-invocation`), so you cannot call them: when a redraft or counter-proposal is needed, tell the caller to run them. When a flagged term turns on what the law actually is (enforceability of a non-compete or a liability cap, a statute of frauds or choice-of-law question), hand that question to the `legal-analyst` agent, which answers with verified authority.
