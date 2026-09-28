@@ -6,6 +6,28 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 
 ---
 
+# Wave 6.1 (2026-09-28) — Legal practice references for the portfolio
+
+**Execution status (2026-09-28, branch `feat/legal-wave-6-1`, stacked on PR #76):** all three tickets done.
+
+| Ticket | Status | Result |
+|---|---|---|
+| T68 | ✅ Done | 6 references, 590 lines (54–152 each). Status changes surfaced: GBL §899-a covers interscholastic athletes (HS NIL "consulting" is agent activity); Ed. Law §6438-c reaches HS juniors/seniors; SHIELD covers health data since 2025-03-21; NYHIPA not law (S929 vetoed; S9269 passed, undelivered); SAFE for Kids rules effective 2027-01-25; NY FAIR Act in force 2026-02-17; GBL §527-a amended 2025-11-05; FCC one-to-one consent vacated; adult-use cannabis still Schedule I (medical-only Schedule III, 2026-04-28); *Upsolve* lost, cert denied; 22 NYCRR Part 161 in force; NYSBA Op. 1271: % of legal fees = fee sharing |
+| T69 | ✅ Done | Two independent verifiers, ~235 claims, 3 author errors fixed. Practice probe run on Claude and Codex (see VALIDATION.md). `cite_check` gained NY Official Reports style (80 NY2d 336) and 5 more reporters after the Finality pre-read showed it missed them. Harness race found and fixed (also pushed to PR #76) |
+| T70 | ✅ Done | Pre-reads committed, not pushed, on `legal/pre-read-2026-09-28`: Finality e4eebc3, Bloomkeeping 08fdd53, Level5 471b327. Each found product-level issues beyond the legal questions (see the PR description) |
+
+Captured 2026-09-28 from a portfolio survey (~40 project folders). Finding: the Wave 6 doctrine files are organised by bar subject, but the portfolio's live legal questions are mostly regulatory areas the bar doesn't test — minors' data and likeness (10+ projects), consumer subscription law (6), IP and open-source licensing (7), NIL/athlete-agent registration (3), NY cannabis regulation (2), and legal-tech UPL (2). Owner direction: proceed; exclude Logo3 and LeaseElite from follow-up work.
+
+| Ticket | Scope |
+|---|---|
+| T68 | Six practice references in `legal-doctrine/reference/`: `minors-likeness-nil.md`, `privacy-health-data.md`, `consumer-protection.md`, `ip-licensing.md`, `cannabis-ny.md`, `legal-tech-upl.md`. Every section number, threshold, deadline, and enactment status verified against a primary source and dated; unverified items carry "confirm before use"; each ends with "Where this stops" |
+| T69 | Independent verification pass on the six files (same method as T65); routing table in `legal-doctrine/SKILL.md`; `cite_probe.py --suite practice` prompts for the new areas |
+| T70 | First real use: `legal-analyst` pre-reads committed on `legal/pre-read-2026-09-28` branches (not pushed) in Finality (ASSERTED ledger rows + UPL memo), Bloomkeeping (R-items + C2–C7/Q7 memos), and Level5 (recording consent, FCA/AKS on coding suggestions, TODO(legal) triage) |
+
+**Acceptance:** audit + doc-claims green; every new reference ≤250 lines with a dated verified list; verification pass logged in `bar-benchmark/benchmark/VALIDATION.md`; each pre-read carries a status on every citation and the not-legal-advice line.
+
+---
+
 # Wave 6 (2026-09-28) — Legal Domain: Bar-Grade, Measured, NY-First
 
 **Execution status (2026-09-28, branch `feat/legal-wave-6`):** all seven tickets built, validated, and measured live.

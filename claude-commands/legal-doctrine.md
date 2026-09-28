@@ -5,7 +5,7 @@ element. Done means: the governing law (majority/federal/UCC/MPC vs New York) is
 element is applied to the facts, the NY distinction is flagged where it changes the result, and
 the answer carries the not-legal-advice line when it is about a real matter.
 
-The reference files hold what a frontier model gets wrong unprompted: exact elements, the
+The bar-subject files hold what a frontier model gets wrong unprompted: exact elements, the
 majority/minority splits exams test, New York statutes and Court of Appeals rules that depart
 from the multistate rule, limitation periods, and traps. They're a `CATALOG` source (see
 `legal-research`): good for analysis and exam answers; any rule relied on for a real matter
@@ -41,6 +41,17 @@ question about a tort). Each file opens with a "Load when" line.
 | Choice of law, interest analysis, borrowing statute, judgments recognition | `reference/conflict-of-laws.md` |
 | Agency rulemaking and adjudication, Article 78, FOIL | `reference/administrative-law.md` |
 | Lawyer ethics, NY RPC vs ABA Model Rules, UPL, AI use in practice | `reference/professional-responsibility.md` |
+
+**Practice references** (regulatory areas the bar doesn't test; read these for product and client work):
+
+| Issue | Reference file |
+|---|---|
+| Minors' names, photos, clips; minors' contracts; NY child-data laws; COPPA interplay; athlete agents and NIL | `reference/minors-likeness-nil.md` |
+| Breach and safeguards (SHIELD), consumer-health data, recording consent, biometrics, student data (Ed. Law §2-d) | `reference/privacy-health-data.md` |
+| Deceptive practices, auto-renewal and free trials, endorsements and reviews, SMS/telemarketing consent | `reference/consumer-protection.md` |
+| Copyright and work-for-hire, fair use, trademark clearance, trade dress, open-source licenses, AI-generated works | `reference/ip-licensing.md` |
+| NY adult-use cannabis: OCM, 9 NYCRR Parts 113–130, vendor arrangements, federal overlay | `reference/cannabis-ny.md` |
+| Software vs the practice of law, lawyer referral and fee-sharing rules, AI legal tools | `reference/legal-tech-upl.md` |
 
 ## Step 3: Answer in IRAC
 
