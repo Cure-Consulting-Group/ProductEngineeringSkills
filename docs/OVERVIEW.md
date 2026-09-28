@@ -7,7 +7,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.12.0 |
+| Version | 7.13.0 |
 | Skills | 106 |
 | Agents | 41 |
 | Personas | 4 |
@@ -103,7 +103,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- | --- |
 | bar-benchmark | Scores legal competency on a NY bar-style bank (MBE, NYLE, MPRE, MEE essays). Use when baselining a model, gating legal skill changes, or measuring the legal skills' uplift live. | default |
 | legal-doc-scaffold | Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy for attorney review. Use when a product or engagement needs a starting draft built from a required-clause checklist and compliance flags. | default |
-| legal-doctrine | Black-letter law by subject with New York distinctions and bar-exam traps. Use when analyzing a legal issue (contracts, torts, CPLR, evidence, estates, family, ethics) or answering a bar-style question. | default |
+| legal-doctrine | Black-letter law and NY practice references with bar-exam traps. Use when analyzing a legal issue (contracts, CPLR, estates, privacy, NIL, IP, cannabis, ethics) or answering a bar-style question. | default |
 | legal-research | Legal research and citation verification, New York first. Use when a legal question needs controlling authority, a memo's citations need checking, or a case or statute cite must be confirmed real. | default |
 
 
@@ -281,7 +281,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.12.0). 106 skills (domain-organized), … |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.13.0). 106 skills (domain-organized), … |
 | SessionStart | startup | command | python3 -c " |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
