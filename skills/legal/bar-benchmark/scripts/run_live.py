@@ -23,6 +23,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -47,10 +48,16 @@ EMPTY = None
 MODEL_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:\[\]-]*")
 
 
+_WD_LOCK = threading.Lock()
+
+
 def workdir():
+    """One empty directory per process. Locked: parallel calls must not each create one, or the
+    loser is garbage-collected (and deleted) while a subprocess is still running in it."""
     global EMPTY
-    if EMPTY is None:
-        EMPTY = tempfile.TemporaryDirectory(prefix="bar-bench-")
+    with _WD_LOCK:
+        if EMPTY is None:
+            EMPTY = tempfile.TemporaryDirectory(prefix="bar-bench-")
     return EMPTY.name
 
 
@@ -64,7 +71,13 @@ def call(backend, prompt, model=None, timeout=900):
                "--no-session-persistence", "--output-format", "json"]
         cmd += ["--model", model] if model else []
         r = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=timeout, cwd=workdir())
-        d = json.loads(r.stdout)
+        try:
+            d = json.loads(r.stdout)
+        except ValueError:
+            # rate limit, auth, or CLI error: an empty answer scores as wrong, never as right
+            print(f"warning: claude returned no JSON (exit {r.returncode}): {(r.stderr or r.stdout)[:200]}",
+                  file=sys.stderr)
+            return "", None
         return d.get("result", ""), d.get("total_cost_usd")
     if backend == "codex":
         with tempfile.NamedTemporaryFile(suffix=".txt") as out:

@@ -34,14 +34,16 @@ import urllib.request
 
 API = "https://www.courtlistener.com/api/rest/v4/citation-lookup/"
 SEARCH = "https://www.courtlistener.com/api/rest/v4/search/"
+# Periods optional on the NY reporters: the NY Official Reports style (Tanbook) writes "80 NY2d 336".
 REPORTERS = (r"U\.\s?S\.|S\.\s?Ct\.|L\.\s?Ed\.(?:\s?2d)?|F\.\s?Supp\.(?:\s?[23]d)?|F\.(?:\s?(?:2d|3d|4th))?"
-             r"|F\.\s?App'x|N\.Y\.(?:\s?[23]d)?|A\.D\.(?:\s?[23]d)?|Misc\.(?:\s?[23]d)?"
-             r"|N\.E\.(?:\s?[23]d)?|N\.Y\.S\.(?:\s?[23]d)?|B\.R\.|A\.(?:\s?[23]d)?|P\.(?:\s?[23]d)?")
+             r"|F\.\s?App'x|N\.?Y\.?S\.?(?:\s?[23]d)?|N\.?Y\.?(?:\s?[23]d)?|A\.?D\.?(?:\s?[23]d)?|Misc\.?(?:\s?[23]d)?"
+             r"|N\.E\.(?:\s?[23]d)?|B\.R\.|A\.(?:\s?[23]d)?|P\.(?:\s?[23]d)?"
+             r"|S\.W\.(?:\s?[23]d)?|So\.(?:\s?[23]d)?|N\.W\.(?:\s?2d)?|S\.E\.(?:\s?2d)?|Cal\.\s?Rptr\.(?:\s?[23]d)?")
 CASE_RE = re.compile(rf"\b(\d{{1,4}})\s+({REPORTERS})\s+(\d{{1,5}})\b")
 SLIP_RE = re.compile(r"\b(\d{4})\s+N\.?Y\.?\s+Slip\s+Op\.?\s+(\d{3,6})(?:\(U\))?", re.I)
 PROP_RE = re.compile(r"\b\d{4}\s+(?:WL|U\.S\.\s?Dist\.\s?LEXIS|N\.Y\.\s?LEXIS)\s+\d+", re.I)
 _W = r"(?:[A-Z][\w'&-]*\.?|of|the|and|&|ex rel\.)"
-NAME_RE = re.compile(rf"((?:{_W}\s+){{0,6}}{_W}\s+v\.\s+(?:{_W},?\s+){{0,6}}{_W}),?\s*$")
+NAME_RE = re.compile(rf"((?:{_W}\s+){{0,6}}{_W}\s+v\.?\s+(?:{_W},?\s+){{0,6}}{_W}),?\s*$")
 SIGNALS = re.compile(r"^(?:(?:Under|See|Also|Cf\.|But|Accord|Compare|In|And|The)\s+)+")
 
 # NY consolidated-law ids on nysenate.gov: https://www.nysenate.gov/legislation/laws/<ID>/<section>
@@ -102,8 +104,8 @@ def extract(text):
         before = re.sub(r"[*_]", "", text[max(0, m.start() - 160):m.start()])
         nm = NAME_RE.search(before)
         name = SIGNALS.sub("", norm(nm.group(1))) if nm else None
-        cites.append({"kind": "case", "cite": key, "name": name if name and " v. " in name else None,
-                      "volume": m.group(1), "reporter": norm(m.group(2)), "page": m.group(3)})
+        cites.append({"kind": "case", "cite": key, "name": name if name and " v" in name else None,
+                      "volume": m.group(1), "reporter": canon(norm(m.group(2))), "page": m.group(3)})
     for m in SLIP_RE.finditer(text):
         key = norm(m.group(0))
         if key not in seen:
@@ -132,6 +134,20 @@ def extract(text):
             cites.append({"kind": "cfr", "cite": key,
                           "url": f"https://www.ecfr.gov/current/title-{m.group(1)}/section-{m.group(2)}"})
     return cites
+
+
+_OFFICIAL = [(r"^N\.?Y\.?S\.?", "N.Y.S."), (r"^N\.?Y\.?", "N.Y."), (r"^A\.?D\.?", "A.D."), (r"^Misc\.?", "Misc.")]
+
+
+def canon(reporter):
+    """Tanbook 'NY2d' / 'AD3d' / 'Misc 3d' → the dotted form CourtListener indexes."""
+    rep = reporter.replace(" ", "")
+    for pat, dotted in _OFFICIAL:
+        m = re.match(pat, rep)
+        if m:
+            series = rep[m.end():]
+            return dotted + series if dotted != "Misc." else f"Misc. {series}".strip()
+    return reporter
 
 
 def tokens(name):

@@ -49,6 +49,16 @@ PROMPTS = [
     ("business-associations.md", "A New York LLC formed in 2023 never completed its publication requirement. Can it sue a "
                                  "customer for an unpaid invoice in New York Supreme Court?"),
 ]
+PRACTICE = [
+    ("minors-likeness-nil.md", "A New York youth basketball app publishes box scores and highlight clips showing 14-year-old players' "
+                               "full names. Parents never signed releases. What New York and federal law applies?"),
+    ("consumer-protection.md", "A New York startup sells a $49/year app subscription with a 2-month free trial that "
+                               "auto-renews and requires a card up front. What must its signup and cancellation flow do?"),
+    ("legal-tech-upl.md", "A website helps New York homeowners contest property tax assessments and wants to earn 15% of the "
+                          "fees law firms collect from homeowners it refers. Is that permissible?"),
+    ("privacy-health-data.md", "An AI medical scribe records doctor-patient visits; some doctors in New York see patients "
+                               "located in other states by video. What recording-consent law applies?"),
+]
 ASK = ("Write a short legal research memo (under 400 words) answering this New York question. Cite the controlling "
        "statutes and cases. After the memo, list every authority you cited, one per line.\n\nQUESTION: ")
 STATUS = re.compile(r"\b(VERIFIED|EXISTS-UNREAD|CATALOG|RECALL|UNVERIFIED|NOT[- ]VERIFIED|confirm before use|"
@@ -101,12 +111,15 @@ def main():
     ap.add_argument("--backend", default="claude", choices=sorted(run_live.FAMILY), help="candidate CLI")
     ap.add_argument("--model", help="candidate model override")
     ap.add_argument("--runs", type=int, default=1, help="repetitions per prompt per arm")
+    ap.add_argument("--suite", default="bar", choices=["bar", "practice", "all"],
+                    help="bar-subject memo prompts, practice-area prompts (Wave 6.1), or both")
     ap.add_argument("--no-live", action="store_true", help="skip the network statute check")
     ap.add_argument("--rescore", help="re-measure the memos stored in an earlier results file (no model calls)")
     ap.add_argument("--dry-run", action="store_true", help="show the plan, call nothing")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     a = ap.parse_args()
-    jobs = [(arm, ref, q) for arm in ("bare", "skill") for ref, q in PROMPTS for _ in range(a.runs)]
+    prompts = {"bar": PROMPTS, "practice": PRACTICE, "all": PROMPTS + PRACTICE}[a.suite]
+    jobs = [(arm, ref, q) for arm in ("bare", "skill") for ref, q in prompts for _ in range(a.runs)]
     if a.dry_run:
         print(json.dumps({"calls": len(jobs), "backend": a.backend}, indent=2))
         return 0
@@ -153,7 +166,9 @@ def main():
                "case_existence_checked": bool(os.environ.get("COURTLISTENER_API_TOKEN")), "arms": arms}
     run_live.RESULTS.mkdir(exist_ok=True)
     run_rec["rescored_from"] = a.rescore
-    out = run_live.RESULTS / f"{run_rec['date'][:10]}-cite-{a.backend}.json"
+    suite = "" if a.suite == "bar" else f"{a.suite}-"
+    run_rec["suite"] = a.suite
+    out = run_live.RESULTS / f"{run_rec['date'][:10]}-cite-{suite}{a.backend}.json"
     out.write_text(json.dumps(run_rec, indent=2))
     summary = {arm: {k: v for k, v in agg.items() if k != "samples"} for arm, agg in arms.items()}
     if a.json:
