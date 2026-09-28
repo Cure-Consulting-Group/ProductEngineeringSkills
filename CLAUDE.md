@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 103 production-grade skills (organized into 9 domain folders), 40 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 106 production-grade skills (organized into 9 domain folders), 41 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Machine Setup (every machine, every release)
 
@@ -21,7 +21,7 @@ skills/{domain}/{name}/SKILL.md — 103 skills, organized by domain folder
                                  Domains: engineering (40), platform (11), product (11), business (14),
                                  finance (4), marketing (6), security (4), legal (1), tax (12)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
-agents/*.md                    — 40 specialized subagents with tool/skill bindings
+agents/*.md                    — 41 specialized subagents with tool/skill bindings
 personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant)
 hooks/hooks.json               — Multi-layer hooks (command + prompt) across 9 event types incl. Stop quality gate, ConfigChange audit, skill security guard
 rules/*.md                     — 11 path-specific coding standards
@@ -127,7 +127,7 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 | **brand-guardian** | Voice/tone consistency, visual identity audit, microcopy quality, cross-platform consistency | Read-only |
 | **growth-analyst** | Activation funnels, retention mechanics, viral coefficients, growth experiment infrastructure | Read + Bash |
 
-### Business & Finance Agents (5)
+### Business & Finance Agents (6)
 
 | Agent | Purpose | Tools |
 |-------|---------|-------|
@@ -136,6 +136,7 @@ Bump the version in `.claude-plugin/plugin.json` when making changes:
 | **investor-relations** | Board updates, KPI dashboards, fundraising narratives, investor materials | Read + Bash |
 | **contract-reviewer** | SOW/contract risk analysis, missing clauses, unfavorable terms, IP issues | Read-only |
 | **tax-analyst** | Tax workpapers, return review, estimates, audit risk — drafts for CPA review, never files | Read + Bash (no Write/Edit) |
+| **legal-analyst** | NY-first legal research memos (IRAC) with every citation verified or flagged — drafts for attorney review, never advises | Read + Bash (no Write/Edit) |
 
 ### Data & Analytics Agents (3)
 

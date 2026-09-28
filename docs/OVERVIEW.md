@@ -8,8 +8,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- |
 | Plugin | cure-product-engineering |
 | Version | 7.11.0 |
-| Skills | 103 |
-| Agents | 40 |
+| Skills | 106 |
+| Agents | 41 |
 | Personas | 4 |
 | Hooks (entries) | 17 |
 | Rules | 11 |
@@ -97,11 +97,14 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | merger-modeling | Models M&A accretion/dilution: pro-forma EPS, deal mix, purchase price allocation, synergies. Use when judging an acquisition's financial impact on the buyer. | default |
 
 
-### Legal (1)
+### Legal (4)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
+| bar-benchmark | Scores legal competency on a NY bar-style bank (MBE, NYLE, MPRE, MEE essays). Use when baselining a model, gating legal skill changes, or measuring the legal skills' uplift live. | default |
 | legal-doc-scaffold | Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy for attorney review. Use when a product or engagement needs a starting draft built from a required-clause checklist and compliance flags. | default |
+| legal-doctrine | Black-letter law by subject with New York distinctions and bar-exam traps. Use when analyzing a legal issue (contracts, torts, CPLR, evidence, estates, family, ethics) or answering a bar-style question. | default |
+| legal-research | Legal research and citation verification, New York first. Use when a legal question needs controlling authority, a memo's citations need checking, or a case or statute cite must be confirmed real. | default |
 
 
 ### Marketing (6)
@@ -225,11 +228,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | test-runner | Runs the test suite, checks coverage, and flags skipped or flaky tests. Use after writing code or before a commit; reports results and doesn't fix code. | Read, Grep, Glob, Bash |
 
 
-### Legal (2)
+### Legal (3)
 
 | Agent | Purpose | Tools |
 | --- | --- | --- |
 | contract-reviewer | Business-risk review of SOWs, MSAs, NDAs, and contracts. Use when checking terms for scope, payment, IP, liability, or termination risk. Not legal advice. | Read, Grep, Glob |
+| legal-analyst | Drafts NY-first legal research memos with every citation verified, for attorney review. Use when a legal question needs an IRAC answer with authority, or a draft's citations need checking. | Read, Grep, Glob, Bash |
 | legal-compliance | Flags QSBS, FERPA, NCAA, trademark, and entity-compliance risk. Use when checking a portfolio company or codebase against those regimes. Not legal advice. | Read, Grep, Glob |
 
 
@@ -277,12 +281,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.11.0). 103 skills (domain-organized), … |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.11.0). 106 skills (domain-organized), … |
 | SessionStart | startup | command | python3 -c " |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 103 skills, 40 agents, 4 personas. Use /cure-p… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 106 skills, 41 agents, 4 personas. Use /cure-p… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | PostToolUseFailure |  | command | python3 -c " |
