@@ -45,21 +45,25 @@ When that happens, add NextGen-shaped sets (integrated skills items) rather than
 ## Step 2: Run
 
 ```bash
-S=<plugin>/skills/legal/bar-benchmark/scripts
-python3 $S/validate_bank.py                          # structural lint; must be clean
-python3 $S/bar_bench.py stats                        # coverage
-python3 $S/run_live.py --backend claude --arm both   # live: bare vs doctrine, writes results/
-python3 $S/run_live.py --backend codex --component nyle
-python3 $S/cite_probe.py --backend claude --runs 2    # citation integrity: memos, live statute check
-python3 $S/bar_bench.py list --component mpre        # exam mode for a human or another agent
-python3 $S/bar_bench.py score answers.json           # grade an answer file; exit 1 on fail
+S="<plugin>/skills/legal/bar-benchmark/scripts"
+python3 "$S"/validate_bank.py                          # structural lint; must be clean
+python3 "$S"/bar_bench.py stats                        # coverage
+python3 "$S"/run_live.py --backend claude --arm both   # live: bare vs doctrine, writes results/
+python3 "$S"/run_live.py --backend codex --component nyle
+python3 "$S"/cite_probe.py --backend claude --runs 2    # citation integrity: memos, live statute check
+python3 "$S"/bar_bench.py list --component mpre        # exam mode for a human or another agent
+python3 "$S"/bar_bench.py score answers.json           # grade an answer file; exit 1 on fail
 ```
 
-`run_live.py` sends questions without the key to a headless CLI in an empty directory (no
-project files, no plugins, no tools in the bare arm), batches 10 MCQs per call, and grades essays
+`run_live.py` sends questions without the key to a headless CLI in an empty temporary directory
+and batches 10 MCQs per call. Isolation differs by backend: `claude` runs with no tools, no
+plugins, no MCP servers, and no project settings; `codex` runs in its read-only sandbox with MCP
+servers disabled (it can still read files and loads your global Codex instructions); `agy` has no
+tools-off mode, so the runner refuses it unless you pass `--allow-agy`. Every item's `ref` must
+name a file in `legal-doctrine/reference/`, and the run stops otherwise. The runner grades essays
 with a judge. The judge defaults to a different model family (Codex for a Claude candidate);
 same-family judging is labeled advisory. Each run writes `results/<date>-<backend>.json` with
-scores, answers, and cost.
+scores, answers, and cost. Results from runs on client material (overlays) stay out of git.
 
 **Self-assessment in a session** (no CLI): `list` the questions only, answer every one before
 opening the key or any reference file, then `score`. Consulting the key first makes the number

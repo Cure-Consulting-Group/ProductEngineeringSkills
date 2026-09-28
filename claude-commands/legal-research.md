@@ -62,10 +62,13 @@ their gaps). Search the web for current sources; say the date you checked.
 python3 <plugin>/skills/legal/legal-research/scripts/cite_check.py draft.md --live
 ```
 
-- **Cases**: checked against CourtListener's citation-lookup API when `COURTLISTENER_API_TOKEN`
-  is set (free account). It also compares the case name in the draft with the name on record,
-  which catches the classic fabrication: a real citation attached to the wrong case. Without a
-  token, every case stays `UNVERIFIED`. Say so; don't treat it as a pass.
+- **Cases**: checked against CourtListener: the citation-lookup API when `COURTLISTENER_API_TOKEN`
+  is set (free account; faster, batch), otherwise an exact citation search on its public API
+  (one request a second). It also compares the case name in the draft with the name on record,
+  which catches the classic fabrication: a real citation attached to the wrong case
+  (`NAME-MISMATCH`). `NOT-FOUND` means "not in CourtListener", not "fabricated": its index misses
+  some reporter cites (it lacks *Mata v. Avianca*'s own F. Supp. 3d cite). Check the Official
+  Reports or the court's site before calling a case fake.
 - **Statutes**: NY consolidated laws map to nysenate.gov (`CPLR` → `CVP`, `EPTL` → `EPT`, `DRL` →
   `DOM`, `GOL` → `GOB`, `BCL` → `BSC`…), federal to Cornell LII / eCFR. `--live` confirms the
   section exists.
