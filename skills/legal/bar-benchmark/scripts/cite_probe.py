@@ -61,7 +61,7 @@ PRACTICE = [
 ]
 ASK = ("Write a short legal research memo (under 400 words) answering this New York question. Cite the controlling "
        "statutes and cases. After the memo, list every authority you cited, one per line.\n\nQUESTION: ")
-STATUS = re.compile(r"\b(VERIFIED|EXISTS-UNREAD|CATALOG|RECALL|UNVERIFIED|NOT[- ]VERIFIED|confirm before use|"
+STATUS = re.compile(r"\b(VERIFIED|EXISTS-UNREAD|CATALOG|RECALL|REFERENCE-ONLY|UNVERIFIED|NOT[- ]VERIFIED|confirm before use|"
                     r"unverified|not verified|verify before)\b", re.I)
 
 

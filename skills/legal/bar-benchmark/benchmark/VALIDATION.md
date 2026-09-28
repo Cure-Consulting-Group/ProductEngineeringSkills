@@ -97,3 +97,41 @@ two it couldn't back up, all unlabeled: the *Mata v. Avianca* failure mode, meas
 **Caveats.** n = 12 memos per arm; nysenate.gov rate-limited part of the statute checks (counted
 as unchecked, never as pass); CourtListener misses some real reporter cites, so not-found is
 adjudicated by hand before being called wrong.
+
+## 2026-09-28 — Wave 6.1 practice references
+
+**Authoring and verification.** Six practice references (590 lines) written by three authors
+against primary sources, then fact-checked by two independent verifiers (~235 claims).
+Verifiers confirmed every headline status claim and caught three author errors:
+Education Law §2-d penalty tiers (\$1k / \$5k / \$10k, not "up to \$10k later"); GBL §527-a
+cancellation subsections ((1)(d)/(d-1), not (1)(e)); *Epic v. Apple* status (cert granted
+2026-06-30, No. 25-1311). Also corrected: Penal Law §222.40 is possession, not sale.
+`cite_check.py` over the six files: every reporter-cited case VERIFIED except *Florida Bar v.
+TIKD*, 326 So. 3d 1073 (Fla. 2021) — real, not indexed by CourtListener.
+
+**Practice-suite citation probe** (`cite_probe.py --suite practice`, 4 prompts × 2 runs per arm).
+
+| Candidate | Arm | Statute cites (exist) | Case cites (found) | Carry a status |
+|---|---|---|---|---|
+| Claude | bare | 34 (34) | 19 (16; 1 not found, 2 unchecked) | 0% |
+| Claude | skill | 27 (27) | 1 (1) | 100% |
+| Codex | bare | 28 (28) | 15 (11; 4 not found) | 0% |
+| Codex | skill | 18 (18) | 2 (2) | 100% |
+
+All five not-found cites were adjudicated **real**: *Schultz v. Boy Scouts*, 65 N.Y.2d 189 (1985);
+*Matter of People v. Sirius XM Radio*, 243 A.D.3d 424 (1st Dep't 2025); *Ballan v. Sirota*,
+163 A.D.3d 516 (2d Dep't 2018). CourtListener's index misses many recent A.D.3d cites, so
+NOT-FOUND over-counts fabrication; across every run to date the only confirmed wrong citation
+is bare Codex's *Cohen v. Abruzzo*, 225 A.D.3d 723 (the case is 228 A.D.3d 724).
+
+**Disclosures.** (1) The first practice runs were discarded: a race in `run_live.workdir()`
+(introduced by the security fix, after the Wave 6 runs) deleted the shared temp dir mid-call and
+produced empty memos; fixed with a lock and re-run clean. Wave 6 numbers predate the race.
+(2) `cite_probe`'s status pattern now also recognizes `REFERENCE-ONLY`, a label Codex used; the
+Codex practice run was rescored after that change (0% → 100% on 2 cites). (3) With the skill,
+models also cite cases by name and year without a reporter; those aren't counted as case cites.
+
+**Reading.** Same result as Wave 6, in the regulatory areas the portfolio needs: with the skill,
+both models drop from 34 to 3 reporter-cited cases, rely on statutes that all check out, and
+label every authority. The reference files also let both models state 2025–2026 changes (NY
+auto-renewal amendments, the FAIR Act, SAFE for Kids rules) that bare runs don't mention.
