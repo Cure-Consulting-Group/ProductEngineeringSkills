@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "prepared_date": "2026-09-28",
+  "currency": "USD",
+  "product": "initiated-recruiting",
+  "cash_reserve_fraction": 0.25,
+  "build_time_reserve_fraction": 0.2,
+  "build_incremental_cash": [50, 150],
+  "manual_coordination_baselines": [12, 25, 40],
+  "effort": [
+    {"name": "Inventory, environment and baseline", "hours": [6, 10]},
+    {"name": "Claim adapter", "hours": [8, 12]},
+    {"name": "Coach verification and Terminal", "hours": [14, 24]},
+    {"name": "Discovery and recruiting board", "hours": [8, 14]},
+    {"name": "GA4 and PM signals", "hours": [8, 16]},
+    {"name": "Data health and freshness", "hours": [6, 12]},
+    {"name": "Design and accessibility", "hours": [8, 14]},
+    {"name": "Held-out evaluation and QA", "hours": [10, 20]},
+    {"name": "Scoped repair and outcomes", "hours": [8, 16]},
+    {"name": "Operations and dashboard integration", "hours": [6, 10]}
+  ],
+  "scenarios": {
+    "lean_readonly": {
+      "description": "One product, lightweight daily reads and selected journey reviews; no repair writes.",
+      "workloads": {"triage": 60, "product_review": 6, "design_review": 4, "engineering_review": 20, "deep_investigation": 2, "repair_bundle": 0, "release_followup": 12},
+      "browser_runs": 60, "browser_minutes": 4, "control_active_seconds": 600, "control_requests": 3000,
+      "firestore_reads": 100000, "firestore_writes": 30000, "firestore_gib": 0.5,
+      "artifact_gib": 15, "egress_gib": 2, "logging_gib": 2, "pubsub_gib": 0.1,
+      "scheduler_jobs": 0, "secret_versions": 2, "secret_accesses": 3000,
+      "linux_minutes": 240, "macos_minutes": 0, "search_calls": 10,
+      "ancillary_allowance": {"artifact_operations_registry_backups": 5, "analytics_queries_and_monitoring": 10},
+      "oversight_hours": [2, 4], "maintenance_hours": [1, 3], "review_hours_per_repair": [0.5, 1.0]
+    },
+    "balanced": {
+      "description": "Routine claim, coach/Terminal and board reviews with eight authorized draft repair attempts.",
+      "workloads": {"triage": 300, "product_review": 24, "design_review": 12, "engineering_review": 60, "deep_investigation": 4, "repair_bundle": 8, "release_followup": 24},
+      "browser_runs": 120, "browser_minutes": 4, "control_active_seconds": 1800, "control_requests": 10000,
+      "firestore_reads": 300000, "firestore_writes": 100000, "firestore_gib": 1.5,
+      "artifact_gib": 40, "egress_gib": 6, "logging_gib": 6, "pubsub_gib": 0.3,
+      "scheduler_jobs": 0, "secret_versions": 4, "secret_accesses": 10000,
+      "linux_minutes": 900, "macos_minutes": 0, "search_calls": 30,
+      "ancillary_allowance": {"artifact_operations_registry_backups": 10, "analytics_queries_and_monitoring": 20},
+      "oversight_hours": [3, 5], "maintenance_hours": [2, 4], "review_hours_per_repair": [0.5, 1.0]
+    },
+    "intensive": {
+      "description": "Higher-frequency reviews and 24 draft repair attempts, subject to actual eligible task volume.",
+      "workloads": {"triage": 900, "product_review": 72, "design_review": 30, "engineering_review": 180, "deep_investigation": 12, "repair_bundle": 24, "release_followup": 72},
+      "browser_runs": 360, "browser_minutes": 4, "control_active_seconds": 7200, "control_requests": 30000,
+      "firestore_reads": 900000, "firestore_writes": 300000, "firestore_gib": 4,
+      "artifact_gib": 120, "egress_gib": 18, "logging_gib": 18, "pubsub_gib": 0.9,
+      "scheduler_jobs": 0, "secret_versions": 6, "secret_accesses": 30000,
+      "linux_minutes": 2400, "macos_minutes": 0, "search_calls": 90,
+      "ancillary_allowance": {"artifact_operations_registry_backups": 30, "analytics_queries_and_monitoring": 50},
+      "oversight_hours": [4, 7], "maintenance_hours": [3, 6], "review_hours_per_repair": [0.5, 1.0]
+    }
+  }
+}
