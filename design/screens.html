@@ -112,6 +112,11 @@
       font-weight: 600;
       font-family: var(--font-mono);
     }
+    .badge-count {
+      background: var(--c-green-bg);
+      color: var(--c-green);
+      margin-left: 6px;
+    }
 
     .global-controls {
       display: flex;
@@ -148,9 +153,10 @@
       display: flex;
       gap: 4px;
       overflow-x: auto;
+      white-space: nowrap;
     }
     .tab-item {
-      padding: 12px 16px;
+      padding: 12px 14px;
       font-size: 13px;
       font-weight: 500;
       color: var(--text-sub);
@@ -160,7 +166,7 @@
       transition: all 0.15s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .tab-item:hover { color: var(--text-main); }
     .tab-item.active {
@@ -179,8 +185,8 @@
       font-size: 10px;
       padding: 1px 6px;
       border-radius: 10px;
-      background: var(--c-amber-bg);
-      color: var(--c-amber);
+      background: var(--c-green-bg);
+      color: var(--c-green);
       font-weight: 700;
       text-transform: uppercase;
     }
@@ -216,6 +222,7 @@
       border-radius: 6px;
       padding: 3px;
       gap: 4px;
+      flex-wrap: wrap;
     }
     .state-btn {
       padding: 5px 12px;
@@ -393,12 +400,39 @@
       gap: 8px;
     }
 
+    /* Filter Pills for Overview Grid */
+    .filter-pills-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      color: var(--text-sub);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-pill:hover { border-color: var(--border-active); color: var(--text-main); }
+    .filter-pill.active {
+      background: var(--c-blue-bg);
+      border-color: var(--c-blue);
+      color: var(--c-blue);
+      font-weight: 600;
+    }
+
     /* Cards Grid for Overview */
     .mods-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 20px;
-      margin-top: 24px;
+      margin-top: 12px;
     }
     .mod-card {
       background: var(--bg-surface);
@@ -415,8 +449,9 @@
       border-color: var(--border-active);
       transform: translateY(-2px);
     }
+    .mod-card.hidden { display: none; }
     .mod-card-top { margin-bottom: 16px; }
-    .mod-card-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .mod-card-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
     .mod-card-hook {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -426,6 +461,12 @@
       border-radius: 4px;
       display: inline-block;
       margin-bottom: 8px;
+    }
+    .mod-card-meta {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      margin-top: 6px;
     }
     .mod-card-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
     .mod-card-btn {
@@ -558,7 +599,7 @@
     /* Sign-Off Master Banner */
     .signoff-master-panel {
       background: var(--bg-surface);
-      border: 2px solid var(--border-active);
+      border: 2px solid var(--c-green);
       border-radius: 10px;
       padding: 24px;
       margin-top: 36px;
@@ -576,8 +617,8 @@
     .signoff-counter {
       font-size: 13px;
       font-weight: 600;
-      color: var(--c-blue);
-      background: var(--c-blue-bg);
+      color: var(--c-green);
+      background: var(--c-green-bg);
       padding: 4px 12px;
       border-radius: 12px;
     }
@@ -658,6 +699,7 @@
         <div class="brand-title">Cure Claude Code Mods · Design Studio</div>
       </div>
       <span class="brand-badge">v7.13.0 · Production Suite</span>
+      <span class="brand-badge badge-count">15 Active Mods</span>
     </div>
 
     <div class="global-controls">
@@ -674,29 +716,259 @@
 
   <!-- Tab Navigation -->
   <nav class="tab-bar">
-    <div class="tab-item active" onclick="switchTab('comparison')">
+    <div class="tab-item active" onclick="switchTab('overview')"><span class="tab-dot"></span>🎛 Overview (All 15 Mods)</div>
+    <div class="tab-item" onclick="switchTab('comparison')">
       <span class="tab-dot"></span>⚖️ Current vs Proposed
-      <span class="tab-badge">Review</span>
+      <span class="tab-badge">Released</span>
     </div>
-    <div class="tab-item" onclick="switchTab('overview')"><span class="tab-dot"></span>Overview (All Mods)</div>
-    <div class="tab-item" onclick="switchTab('cache')"><span class="tab-dot"></span>cure-cache-band</div>
-    <div class="tab-item" onclick="switchTab('image')"><span class="tab-dot"></span>cure-image-viewer</div>
-    <div class="tab-item" onclick="switchTab('spend')"><span class="tab-dot"></span>cure-spend-band</div>
-    <div class="tab-item" onclick="switchTab('policy')"><span class="tab-dot"></span>cure-policy-guard</div>
-    <div class="tab-item" onclick="switchTab('lane')"><span class="tab-dot"></span>cure-lane-verifier</div>
-    <div class="tab-item" onclick="switchTab('wireframes')"><span class="tab-dot"></span>Wireframes &amp; Flows</div>
-    <div class="tab-item" onclick="switchTab('tokens')"><span class="tab-dot"></span>Tokens &amp; Contrast</div>
+    <!-- 15 Mod Tabs -->
+    <div class="tab-item" onclick="switchTab('secret-scrub')"><span class="tab-dot"></span>🔒 cure-secret-scrub</div>
+    <div class="tab-item" onclick="switchTab('llm-ledger')"><span class="tab-dot"></span>📊 cure-llm-ledger</div>
+    <div class="tab-item" onclick="switchTab('cite-check')"><span class="tab-dot"></span>🔍 cure-cite-check</div>
+    <div class="tab-item" onclick="switchTab('claim-guard')"><span class="tab-dot"></span>🏷 cure-claim-guard</div>
+    <div class="tab-item" onclick="switchTab('ci-preview')"><span class="tab-dot"></span>⏱ cure-ci-preview</div>
+    <div class="tab-item" onclick="switchTab('agent-budget')"><span class="tab-dot"></span>🤖 cure-agent-budget</div>
+    <div class="tab-item" onclick="switchTab('egress-guard')"><span class="tab-dot"></span>🌐 cure-egress-guard</div>
+    <div class="tab-item" onclick="switchTab('rules-band')"><span class="tab-dot"></span>📜 cure-rules-band</div>
+    <div class="tab-item" onclick="switchTab('handoff')"><span class="tab-dot"></span>📋 cure-handoff</div>
+    <div class="tab-item" onclick="switchTab('lane-board')"><span class="tab-dot"></span>🚦 cure-lane-board</div>
+    <div class="tab-item" onclick="switchTab('policy')"><span class="tab-dot"></span>🛡 cure-policy-guard</div>
+    <div class="tab-item" onclick="switchTab('lane')"><span class="tab-dot"></span>🎯 cure-lane-verifier</div>
+    <div class="tab-item" onclick="switchTab('spend')"><span class="tab-dot"></span>💰 cure-spend-band</div>
+    <div class="tab-item" onclick="switchTab('cache')"><span class="tab-dot"></span>⚡ cure-cache-band</div>
+    <div class="tab-item" onclick="switchTab('image')"><span class="tab-dot"></span>🖼 cure-image-viewer</div>
+    <!-- Shared Specs -->
+    <div class="tab-item" onclick="switchTab('wireframes')"><span class="tab-dot"></span>📐 Wireframes &amp; Flows</div>
+    <div class="tab-item" onclick="switchTab('tokens')"><span class="tab-dot"></span>🎨 Tokens &amp; Contrast</div>
   </nav>
 
   <main>
 
-    <!-- SECTION 0: CURRENT VS PROPOSED COMPARISON (THE CORE REVIEW VIEW) -->
-    <section id="view-comparison" class="view-section active">
+    <!-- SECTION 1: OVERVIEW (ALL 15 MODS) -->
+    <section id="view-overview" class="view-section active">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Current vs. Proposed Enhancements</h2>
-          <p class="section-desc">Review side-by-side terminal behaviors for the proposed refinements. Click any chip to sign off on that enhancement.</p>
+          <h2 class="section-title">Unified Cockpit &amp; 15 Mod Catalog</h2>
+          <p class="section-desc">Live simulation showing how all Cure mods compose gracefully without vertical overflow or visual collision.</p>
         </div>
+        <div style="font-family:var(--font-mono); font-size:12px; background:var(--bg-card); padding:8px 14px; border-radius:6px; border:1px solid var(--border-default);">
+          <span class="c-dim">Catalog Source:</span> <span class="c-green">.claude-plugin/marketplace.json</span> · 161 Tests Passing
+        </div>
+      </div>
+
+      <!-- Compositor Terminal Simulation -->
+      <div class="terminal-container wide" id="main-term-container">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">claude — Cure-Consulting-Group/ProductEngineeringSkills</div>
+            <div style="font-size:11px; color:var(--text-dim);">Unified AbovePrompt Cockpit (120c)</div>
+          </div>
+          <div class="terminal-content">
+<span class="c-dim"># [Terminal Scrollback: Verified citations and autonomous agent diffs]</span>
+<span class="c-dim">agent:</span> Successfully refactored authentication module. Verified citation <span class="c-green">`lib/auth/session.ts:42-58` ✓</span>.
+<span class="c-dim">agent:</span> Appended atomic ledger record for Turn 4 to <span class="c-blue">`~/.claude/ledger.jsonl`</span>.
+
+<span class="c-dim">╭─ [AbovePrompt Shelf: Image Tray + Cache Meter + House Rules Ribbon] ──────────────────────────────────────────╮</span>
+<div class="image-tray-row">
+  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>diagram_mvi.png</strong><span class="c-dim">1200×800 (Kitty 16×8)</span></div>
+  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>mockup_state.png</strong><span class="c-dim">640×480 (Kitty 12×8)</span></div>
+</div>
+<span class="c-sub">rules</span> <span class="c-blue">● Clean Architecture</span> <span class="c-dim">·</span> <span class="c-blue">MVI (Android)</span> <span class="c-dim">·</span> <span class="c-blue">Zero Pip</span> <span class="c-dim">·</span> <span class="c-blue">WCAG 2.2 AA</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76.4% · misses 0 · 42,190 prefix tokens</span>
+<span class="c-dim">╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
+<span class="c-blue">&gt;</span> Check the contrast ratios across light and dark modes and inspect test runs...
+<span class="c-amber">▲ Actions pace $384/mo exceeds $300 allowance (+$84 projected overage · avg $18.40/day)</span>
+<span class="c-blue">⠋</span> Running regression test matrix... <span class="c-dim">· Actions $12.40 today · Turn cost $0.018</span></div>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="filter-pills-bar">
+        <button class="filter-pill active" onclick="filterMods('all', this)">All Mods (15)</button>
+        <button class="filter-pill" onclick="filterMods('guardrails', this)">🛡 Guardrails &amp; Security (4)</button>
+        <button class="filter-pill" onclick="filterMods('finops', this)">💰 FinOps &amp; Telemetry (4)</button>
+        <button class="filter-pill" onclick="filterMods('orchestration', this)">⚡ Orchestration &amp; Verification (5)</button>
+        <button class="filter-pill" onclick="filterMods('hud', this)">🖥 HUD &amp; Interface (2)</button>
+      </div>
+
+      <!-- Overview Cards Grid (All 15 Mods) -->
+      <div class="mods-grid">
+        <!-- 1: cure-policy-guard -->
+        <div class="mod-card" data-cat="guardrails" onclick="switchTab('policy')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">tool.call (Write/Edit) + /policy-guard</span>
+            <h3 class="mod-card-name">cure-policy-guard <span class="c-green" style="font-size:12px;">v0.2.0</span></h3>
+            <p class="mod-card-desc">Fail-closed house rule write interception modal and persistent compliance audit trail.</p>
+            <div class="mod-card-meta">17 tests pass · Org no-cron, Level5 Vertex, minors AI guard</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 2: cure-secret-scrub -->
+        <div class="mod-card" data-cat="guardrails" onclick="switchTab('secret-scrub')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">tool.result (Read/Grep/Bash) + /secret-scrub</span>
+            <h3 class="mod-card-name">cure-secret-scrub <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">In-flight redaction of API keys, PEM private keys, AWS credentials, and tokens before entering context.</p>
+            <div class="mod-card-meta">16 tests pass · Google, Anthropic, OpenAI, Stripe, AWS, PEM</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 3: cure-egress-guard -->
+        <div class="mod-card" data-cat="guardrails" onclick="switchTab('egress-guard')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">tool.call (Bash) + /egress-guard</span>
+            <h3 class="mod-card-name">cure-egress-guard <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Blocks unauthorized outbound data transmission to external AI endpoints in PHI &amp; minors repositories.</p>
+            <div class="mod-card-meta">10 tests pass · COPPA, FERPA, HIPAA compliance enforcement</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 4: cure-claim-guard -->
+        <div class="mod-card" data-cat="guardrails" onclick="switchTab('claim-guard')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">tool.call (Write/Edit) + /claims</span>
+            <h3 class="mod-card-name">cure-claim-guard <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Enforces DistrictZero state-targets.md multi-machine row claims to prevent cross-machine collisions.</p>
+            <div class="mod-card-meta">11 tests pass · Multi-machine state locks &amp; lease verification</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 5: cure-spend-band -->
+        <div class="mod-card" data-cat="finops" onclick="switchTab('spend')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">ui.render(Spinner) + /spend</span>
+            <h3 class="mod-card-name">cure-spend-band <span class="c-green" style="font-size:12px;">v0.2.0</span></h3>
+            <p class="mod-card-desc">Non-jittering daily GitHub Actions burn and monthly $300 allowance pacing warning.</p>
+            <div class="mod-card-meta">14 tests pass · gh billing api, 3-day projection model</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 6: cure-cache-band -->
+        <div class="mod-card" data-cat="finops" onclick="switchTab('cache')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">ui.render(AbovePrompt) + /cache</span>
+            <h3 class="mod-card-name">cure-cache-band <span class="c-green" style="font-size:12px;">v0.2.0</span></h3>
+            <p class="mod-card-desc">Visualizes Anthropic prompt cache TTL countdown, hit rates, and cold-start write penalty fees.</p>
+            <div class="mod-card-meta">18 tests pass · Real-time token usage telemetry</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 7: cure-llm-ledger -->
+        <div class="mod-card" data-cat="finops" onclick="switchTab('llm-ledger')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">turn.step + /ledger</span>
+            <h3 class="mod-card-name">cure-llm-ledger <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Per-turn LLM token and dollar cost ledger attributed by repo, branch, and model family.</p>
+            <div class="mod-card-meta">8 tests pass · ~/.claude/ledger.jsonl atomic append</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 8: cure-ci-preview -->
+        <div class="mod-card" data-cat="finops" onclick="switchTab('ci-preview')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">tool.call (Bash git push) + /ci-preview</span>
+            <h3 class="mod-card-name">cure-ci-preview <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Pre-push GitHub Actions runner matrix time and cost estimator; warns on mixed doc/code commits.</p>
+            <div class="mod-card-meta">9 tests pass · Runner matrix parser &amp; skip optimization</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 9: cure-lane-verifier -->
+        <div class="mod-card" data-cat="orchestration" onclick="switchTab('lane')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">context + ui.toast</span>
+            <h3 class="mod-card-name">cure-lane-verifier <span class="c-green" style="font-size:12px;">v0.2.0</span></h3>
+            <p class="mod-card-desc">Audits autonomous agent completions against ground-truth git mutations; flags empty branches.</p>
+            <div class="mod-card-meta">14 tests pass · Empty completion alarm &amp; diff verification</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 10: cure-lane-board -->
+        <div class="mod-card" data-cat="orchestration" onclick="switchTab('lane-board')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">command /lanes</span>
+            <h3 class="mod-card-name">cure-lane-board <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Multi-lane terminal dashboard for tri-lane worktrees, active branches, live commits, and defect status.</p>
+            <div class="mod-card-meta">5 tests pass · git worktree list porcelain parser</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 11: cure-agent-budget -->
+        <div class="mod-card" data-cat="orchestration" onclick="switchTab('agent-budget')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">tool.call (Agent) + /agents-budget</span>
+            <h3 class="mod-card-name">cure-agent-budget <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Enforces subagent fan-out concurrency caps and auto-routes read-only research from Opus to Sonnet.</p>
+            <div class="mod-card-meta">9 tests pass · Concurrency tracker &amp; 80% token savings</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 12: cure-cite-check -->
+        <div class="mod-card" data-cat="orchestration" onclick="switchTab('cite-check')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">turn.step + /cite-check</span>
+            <h3 class="mod-card-name">cure-cite-check <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Verifies code line citations (file:line) in assistant answers against disk, flagging stale lines.</p>
+            <div class="mod-card-meta">10 tests pass · Prevents hallucinated line numbers</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 13: cure-handoff -->
+        <div class="mod-card" data-cat="orchestration" onclick="switchTab('handoff')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">command /handoff</span>
+            <h3 class="mod-card-name">cure-handoff <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Drafts structured STATE.md handoff blocks from git commits, branch status, and working tree diffs.</p>
+            <div class="mod-card-meta">3 tests pass · Clean session continuity &amp; defect logs</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 14: cure-rules-band -->
+        <div class="mod-card" data-cat="hud" onclick="switchTab('rules-band')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">ui.render(AbovePrompt) + /rules</span>
+            <h3 class="mod-card-name">cure-rules-band <span class="c-green" style="font-size:12px;">v0.1.0</span></h3>
+            <p class="mod-card-desc">Displays repository house rules and legal constraints in a HUD banner above the prompt.</p>
+            <div class="mod-card-meta">7 tests pass · Reads .cure/rules.json with fallback defaults</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+
+        <!-- 15: cure-image-viewer -->
+        <div class="mod-card" data-cat="hud" onclick="switchTab('image')">
+          <div class="mod-card-top">
+            <span class="mod-card-hook">ui.render(AbovePrompt)</span>
+            <h3 class="mod-card-name">cure-image-viewer <span class="c-green" style="font-size:12px;">v0.2.0</span></h3>
+            <p class="mod-card-desc">Inline terminal graphics previews via Kitty protocol with structured Unicode card fallbacks.</p>
+            <div class="mod-card-meta">10 tests pass · Kitty protocol, Ghostty, fallback cards</div>
+          </div>
+          <span class="mod-card-btn">Inspect Mod Specs →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 0: CURRENT VS PROPOSED COMPARISON -->
+    <section id="view-comparison" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Current vs. Proposed Enhancements Review</h2>
+          <p class="section-desc">Historical side-by-side design evolution that led to the v0.2.0 release and the 10 candidate mods.</p>
+        </div>
+        <div class="signoff-counter">All 6 Enhancements Signed Off &amp; Merged (PR #79 &amp; #80)</div>
       </div>
 
       <!-- Comparison 1: The Compositor -->
@@ -706,14 +978,14 @@
             <span class="enhancement-num">ENHANCEMENT 1</span>
             <span class="comparison-title">Multi-Mod Compositor: Fragmented Lines vs. Unified "Cockpit Strip"</span>
           </div>
-          <div class="signoff-chip pending" id="chip-1" onclick="toggleSignoff(1)">
-            <span id="icon-1">○</span> <span id="text-1">Sign-Off Pending</span>
+          <div class="signoff-chip approved" id="chip-1" onclick="toggleSignoff(1)">
+            <span id="icon-1">✓</span> <span id="text-1">Signed Off &amp; Merged</span>
           </div>
         </div>
         <div class="comparison-body">
           <div class="comparison-pane">
             <div class="pane-header">
-              <span class="pane-label current">● Current Behavior (Disjointed Lines)</span>
+              <span class="pane-label current">● Historical Behavior (Disjointed Lines)</span>
               <span style="font-size:11px; color:var(--text-dim);">3 Separate Terminal Hooks</span>
             </div>
             <div class="pane-term">
@@ -732,276 +1004,26 @@
 
           <div class="comparison-pane">
             <div class="pane-header">
-              <span class="pane-label proposed">✓ Proposed Enhancement (Cockpit Strip HUD)</span>
-              <span style="font-size:11px; color:var(--c-green);">1-Line Micro-Dense HUD + Smart Expansion</span>
+              <span class="pane-label proposed">✓ Implemented Behavior (Unified Shelf)</span>
+              <span style="font-size:11px; color:var(--c-green);">Single Compositor Contract</span>
             </div>
             <div class="pane-term proposed-border">
-<span class="c-dim"># Ambient State: All healthy telemetry condenses into 1 micro-line:</span>
-<span class="c-sub">[cache</span> <span class="c-green">● 42m · 76%</span><span class="c-sub">]</span> <span class="c-dim">·</span> <span class="c-sub">[actions</span> <span class="c-dim">$12.40 · safe</span><span class="c-sub">]</span> <span class="c-dim">·</span> <span class="c-sub">[git</span> <span class="c-green">clean</span> <span class="c-dim">main</span><span class="c-sub">]</span>
+<span class="c-dim"># Single Compositor Shelf (fixed 4-row ceiling above prompt):</span>
+<span class="c-dim">╭─ [AbovePrompt Shelf: Image Tray + Cache Meter + House Rules] ─────────╮</span>
+<div class="image-tray-row">
+  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>diagram.png</strong><span class="c-dim">1440×900 (Kitty 18×8)</span></div>
+</div>
+<span class="c-sub">rules</span> <span class="c-blue">● Clean Architecture</span> <span class="c-dim">·</span> <span class="c-blue">MVI (Android)</span> <span class="c-dim">·</span> <span class="c-blue">Zero Pip</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76% · misses 0</span>
+<span class="c-dim">╰───────────────────────────────────────────────────────────────────────╯</span>
 <span class="c-blue">&gt;</span> Check the status of user onboarding analytics...
-
-<span class="c-dim"># Adaptive Alarm State: Expands vertically ONLY when attention is needed:</span>
-<span class="c-sub">[cache</span> <span class="c-amber">▲ 48s · 36%</span><span class="c-sub">]</span> <span class="c-dim">·</span> <span class="c-sub">[actions</span> <span class="c-amber">$384/mo projected ▲</span><span class="c-sub">]</span>
-<span class="c-amber">▲ Warning: Cache expires in 48s · Actions pacing +$84 over monthly limit</span>
-<span class="c-blue">&gt;</span> Check the status of user onboarding analytics...</div>
+<span class="c-amber">▲ Actions pace $384/mo exceeds $300 allowance (+$84 projected overage)</span></div>
           </div>
         </div>
         <div class="comparison-footer">
           <div class="why-list">
-            <span class="why-item"><strong style="color:var(--text-main);">Benefit:</strong> Saves 3 lines of vertical terminal space when healthy.</span>
-            <span class="why-item"><strong style="color:var(--text-main);">Zero Jitter:</strong> Fixed-width fields prevent cursor wobble.</span>
-            <span class="why-item"><strong style="color:var(--text-main);">Smart Alert:</strong> Never misses an expiring cache or budget breach.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comparison 2: Cache Band -->
-      <div class="comparison-card">
-        <div class="comparison-header">
-          <div class="comparison-title-box">
-            <span class="enhancement-num">ENHANCEMENT 2</span>
-            <span class="comparison-title">cure-cache-band: Abstract Token Count vs. Dollar Write Fee Penalty</span>
-          </div>
-          <div class="signoff-chip pending" id="chip-2" onclick="toggleSignoff(2)">
-            <span id="icon-2">○</span> <span id="text-2">Sign-Off Pending</span>
-          </div>
-        </div>
-        <div class="comparison-body">
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label current">● Current Behavior (Abstract Tokens)</span>
-              <span style="font-size:11px; color:var(--text-dim);">Abstract Number Only</span>
-            </div>
-            <div class="pane-term">
-<span class="c-dim"># Cold cache only reports raw token quantity:</span>
-<span class="c-sub">cache</span> <span class="c-red">○ cold</span> <span class="c-dim">· next message re-caches 82,410 tokens</span>
-
-<span class="c-blue">&gt;</span> Run the database migrations...
-<span class="c-dim">(Developer has no idea what 82,410 tokens actually costs in USD)</span></div>
-          </div>
-
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label proposed">✓ Proposed Enhancement (Financial Write Impact)</span>
-              <span style="font-size:11px; color:var(--c-green);">Calculated Dollar Consequence</span>
-            </div>
-            <div class="pane-term proposed-border">
-<span class="c-dim"># Dynamically calculates model write penalty based on active tier:</span>
-<span class="c-sub">cache</span> <span class="c-red">○ cold</span> <span class="c-dim">· +82k tokens ·</span> <span class="c-amber">Est. write fee: ~$0.31 on next turn</span>
-
-<span class="c-blue">&gt;</span> Run the database migrations...
-<span class="c-dim">(Provides immediate visceral incentive to maintain turn cadence)</span></div>
-          </div>
-        </div>
-        <div class="comparison-footer">
-          <div class="why-list">
-            <span class="why-item"><strong style="color:var(--text-main);">Benefit:</strong> Converts abstract token metrics into actionable financial clarity.</span>
-            <span class="why-item"><strong style="color:var(--text-main);">Adaptive Pricing:</strong> Sonnet 3.5 ($3.75/M) vs Opus 3 ($15/M) write calculation.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comparison 3: Image Viewer -->
-      <div class="comparison-card">
-        <div class="comparison-header">
-          <div class="comparison-title-box">
-            <span class="enhancement-num">ENHANCEMENT 3</span>
-            <span class="comparison-title">cure-image-viewer: Crammed 4-Image Grid vs. Adaptive Carousel (&lt;100c)</span>
-          </div>
-          <div class="signoff-chip pending" id="chip-3" onclick="toggleSignoff(3)">
-            <span id="icon-3">○</span> <span id="text-3">Sign-Off Pending</span>
-          </div>
-        </div>
-        <div class="comparison-body">
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label current">● Current Behavior (Crammed in Narrow Terminals)</span>
-              <span style="font-size:11px; color:var(--text-dim);">Tiny 15-Col Unreadable Slivers</span>
-            </div>
-            <div class="pane-term">
-<span class="c-dim"># In an 80-column terminal with 4 images pasted:</span>
-<div class="image-tray-row" style="gap:4px;">
-  <div class="image-thumb-card" style="min-width:70px; padding:4px;"><span style="font-size:10px;">[Img 1]</span></div>
-  <div class="image-thumb-card" style="min-width:70px; padding:4px;"><span style="font-size:10px;">[Img 2]</span></div>
-  <div class="image-thumb-card" style="min-width:70px; padding:4px;"><span style="font-size:10px;">[Img 3]</span></div>
-  <div class="image-thumb-card" style="min-width:70px; padding:4px;"><span style="font-size:10px;">[Img 4]</span></div>
-</div>
-<span class="c-dim">(Each image thumbnail is squished to 15 columns, rendering diagrams illegible)</span></div>
-          </div>
-
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label proposed">✓ Proposed Enhancement (Focused Carousel &lt;100c)</span>
-              <span style="font-size:11px; color:var(--c-green);">Readable Single-Card Inspection + Aspect Clamp</span>
-            </div>
-            <div class="pane-term proposed-border">
-<span class="c-dim"># Viewport &lt; 100c automatically focuses on primary image with pagination:</span>
-<div style="border:1px dashed var(--border-default); padding:8px 12px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
-  <div>
-    <strong>🖼 [Image 1 of 4] architecture_mvi.png</strong><br>
-    <span class="c-dim">1440×900 px · PNG (Clamped Kitty 24×8)</span>
-  </div>
-  <div style="font-size:11px; color:var(--c-blue); background:var(--c-blue-bg); padding:3px 8px; border-radius:4px;">
-    Next: [Tab →]
-  </div>
-</div>
-<span class="c-dim">(Thumbnail remains crisp and legible; height strictly clamped to 8 rows max)</span></div>
-          </div>
-        </div>
-        <div class="comparison-footer">
-          <div class="why-list">
-            <span class="why-item"><strong style="color:var(--text-main);">Benefit:</strong> Preserves readability on split-screen coding layouts and laptops.</span>
-            <span class="why-item"><strong style="color:var(--text-main);">Aspect Clamping:</strong> Prevents 32:9 panoramas or 1:10 screenshots from breaking rows.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comparison 4: Policy Guard -->
-      <div class="comparison-card">
-        <div class="comparison-header">
-          <div class="comparison-title-box">
-            <span class="enhancement-num">ENHANCEMENT 4</span>
-            <span class="comparison-title">cure-policy-guard: Wrapped File Paths vs. Middle Truncation + actionlint</span>
-          </div>
-          <div class="signoff-chip pending" id="chip-4" onclick="toggleSignoff(4)">
-            <span id="icon-4">○</span> <span id="text-4">Sign-Off Pending</span>
-          </div>
-        </div>
-        <div class="comparison-body">
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label current">● Current Behavior (Raw Path Wrapping)</span>
-              <span style="font-size:11px; color:var(--text-dim);">Awkward Wrapping in Split Panes</span>
-            </div>
-            <div class="pane-term">
-<div class="dialog-box" style="margin:0;">
-  <div class="dialog-header">House rule</div>
-  <div class="dialog-body">
-    cure-policy-guard: this Write to /Users/rashadcureton/Documents/Cure-Consulting-Group/ProductEngineeringSkills/.github/workflows/deploy.yml breaks a house rule:<br>
-    [no-cron] Org no-cron policy
-  </div>
-</div>
-<span class="c-dim">(Long absolute paths wrap awkwardly across multiple lines, cluttering dialog)</span></div>
-          </div>
-
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label proposed">✓ Proposed Enhancement (Middle-Path + actionlint)</span>
-              <span style="font-size:11px; color:var(--c-green);">Clean Truncation + Dual Syntax Analysis</span>
-            </div>
-            <div class="pane-term proposed-border">
-<div class="dialog-box" style="margin:0;">
-  <div class="dialog-header">⚠ HOUSE RULE INTERCEPT: [no-cron]</div>
-  <div class="dialog-body">
-    File: <strong>.../.github/workflows/deploy.yml</strong> (Line 14)<br>
-    Rule: Org no-cron policy (2026-08-08)<br>
-    <span class="c-amber">Workflow Lint: actionlint reports 1 syntax error on line 18 ('unknown runner')</span>
-  </div>
-</div>
-<span class="c-dim">(Clean middle-path truncation + catches syntax defects before write lands)</span></div>
-          </div>
-        </div>
-        <div class="comparison-footer">
-          <div class="why-list">
-            <span class="why-item"><strong style="color:var(--text-main);">Benefit:</strong> Compact scannable dialog; catches workflow syntax errors in-memory.</span>
-            <span class="why-item"><strong style="color:var(--text-main);">Accelerators:</strong> Pressing [1] immediately refuses; [2] requires deliberate allow.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comparison 5: Lane Verifier -->
-      <div class="comparison-card">
-        <div class="comparison-header">
-          <div class="comparison-title-box">
-            <span class="enhancement-num">ENHANCEMENT 5</span>
-            <span class="comparison-title">cure-lane-verifier: Buried Toast vs. Persistent Model Context Alarm</span>
-          </div>
-          <div class="signoff-chip pending" id="chip-5" onclick="toggleSignoff(5)">
-            <span id="icon-5">○</span> <span id="text-5">Sign-Off Pending</span>
-          </div>
-        </div>
-        <div class="comparison-body">
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label current">● Current Behavior (Toast Only)</span>
-              <span style="font-size:11px; color:var(--text-dim);">Easily Scrolled Past</span>
-            </div>
-            <div class="pane-term">
-<span class="c-dim">[Subagent report received: "42 tests passed, task complete"]</span>
-<div class="terminal-toast" style="margin:8px 0;">
-  <span>▲</span> cure-lane-verifier: a report claims completion but its branch is empty
-</div>
-<span class="c-dim">(If the parent model immediately continues generating, the toast disappears off-screen)</span></div>
-          </div>
-
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label proposed">✓ Proposed Enhancement (Context Lockout Header)</span>
-              <span style="font-size:11px; color:var(--c-green);">Persistent Model Alarm Block</span>
-            </div>
-            <div class="pane-term proposed-border">
-<div style="border:1px solid var(--c-red); background:var(--c-red-bg); padding:10px 12px; border-radius:5px; margin-bottom:8px;">
-  <span class="c-red c-bold">╔══ LANE ALARM: EMPTY COMPLETION REFUSAL ══════════════════════════════╗</span><br>
-  <span class="c-red">║ Branch: lane/refactor-analytics · Ground Truth: 0 commits · 0 diff    ║</span><br>
-  <span class="c-red">║ Action: Subagent claimed completion on empty branch. HALT WORKFLOW.  ║</span><br>
-  <span class="c-red">╚═══════════════════════════════════════════════════════════════════════╝</span>
-</div>
-<span class="c-dim">(Permanently halts hallucinations; both model and operator are alerted)</span></div>
-          </div>
-        </div>
-        <div class="comparison-footer">
-          <div class="why-list">
-            <span class="why-item"><strong style="color:var(--text-main);">Benefit:</strong> Enforces verification by mutation; stops empty agent workloops dead.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comparison 6: Tier 1 Mods Preview -->
-      <div class="comparison-card">
-        <div class="comparison-header">
-          <div class="comparison-title-box">
-            <span class="enhancement-num">ENHANCEMENT 6</span>
-            <span class="comparison-title">Next-Gen Tier 1 Mods: Live Visual Simulation (from IDEAS.md)</span>
-          </div>
-          <div class="signoff-chip pending" id="chip-6" onclick="toggleSignoff(6)">
-            <span id="icon-6">○</span> <span id="text-6">Sign-Off Pending</span>
-          </div>
-        </div>
-        <div class="comparison-body">
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label proposed" style="color:var(--c-purple);">✓ cure-secret-scrub (Tool Call Sanitization)</span>
-              <span style="font-size:11px; color:var(--c-purple);">Redaction Guard</span>
-            </div>
-            <div class="pane-term">
-<span class="c-dim">agent: Read(.env.staging)</span>
-<div style="border-left:3px solid var(--c-purple); padding:6px 10px; background:var(--c-purple-bg); margin:6px 0;">
-  <span class="c-purple c-bold">🔒 cure-secret-scrub: 2 secrets redacted from tool output:</span><br>
-  <span class="c-dim">STRIPE_SECRET_KEY=</span><span class="c-purple">[REDACTED:stripe_sk_live]</span><br>
-  <span class="c-dim">GEMINI_API_KEY=</span><span class="c-purple">[REDACTED:google_gemini_key]</span>
-</div>
-<span class="c-dim">(Guarantees zero credentials enter model context memory across 34 repos)</span></div>
-          </div>
-
-          <div class="comparison-pane">
-            <div class="pane-header">
-              <span class="pane-label proposed" style="color:var(--c-blue);">✓ cure-llm-ledger (Per-Turn Finops Attribution)</span>
-              <span style="font-size:11px; color:var(--c-blue);">Anthropic Cost Plane</span>
-            </div>
-            <div class="pane-term proposed-border">
-<span class="c-dim"># Real-time ledger append after Turn 4:</span>
-╭─ <span class="c-bold">LLM LEDGER: Turn 4 · statledger/main</span> ─────────────────────────────────╮
-│  Model:      claude-3-5-sonnet-20241022                              │
-│  Tokens:     1,420 in · 42,190 cached (96.7% hit) · 480 out          │
-│  Cost:       <span class="c-green">$0.0214</span> (Session total: $0.184)                         │
-╰──────────────────────────────────────────────────────────────────────╯
-<span class="c-dim">(Closes AG-102 billing visibility gap; logs to ~/.claude/ledger.jsonl)</span></div>
-          </div>
-        </div>
-        <div class="comparison-footer">
-          <div class="why-list">
-            <span class="why-item"><strong style="color:var(--text-main);">Secret Scrub:</strong> Prevents credential exposure in autonomous agent turns.</span>
-            <span class="why-item"><strong style="color:var(--text-main);">LLM Ledger:</strong> Brings Anthropic billing attribution to repos.</span>
+            <span class="why-item"><strong style="color:var(--text-main);">Zero Jitter:</strong> Single composite render eliminates competing ANSI escapes.</span>
+            <span class="why-item"><strong style="color:var(--text-main);">Bounded Height:</strong> Strict 4-line cap prevents terminal scrolling churn.</span>
           </div>
         </div>
       </div>
@@ -1010,221 +1032,366 @@
       <div class="signoff-master-panel">
         <div class="signoff-master-header">
           <div>
-            <h3 class="signoff-master-title">📋 Stakeholder Sign-Off &amp; Execution Gate</h3>
+            <h3 class="signoff-master-title">📋 Stakeholder Sign-Off &amp; Production Deployment Record</h3>
             <p style="font-size:13px; color:var(--text-sub); margin-top:4px;">
-              Review the 6 enhancements above. Click individual chips or click "Sign Off All &amp; Proceed" below to authorize implementation.
+              All 6 enhancements and all 10 candidate mods from IDEAS.md have been signed off, implemented with zero pip dependencies, validated, and deployed to GitHub Marketplace.
             </p>
           </div>
-          <div class="signoff-counter" id="master-counter">0 of 6 Signed Off</div>
+          <div class="signoff-counter" id="master-counter">6 of 6 Signed Off (Merged in PR #79 &amp; #80)</div>
         </div>
 
         <div style="background:var(--bg-card); border:1px solid var(--border-default); border-radius:6px; padding:14px; font-family:var(--font-mono); font-size:12px;" id="signoff-summary-box">
-          <span class="c-dim">Status:</span> Waiting for stakeholder sign-off on proposed enhancements.<br>
-          <span class="c-dim">Approved items will be implemented directly in:</span> <code>mods/cure-cache-band</code>, <code>mods/cure-image-viewer</code>, <code>mods/cure-spend-band</code>, <code>mods/cure-policy-guard</code>, <code>mods/cure-lane-verifier</code>.
-        </div>
-
-        <div class="signoff-btn-group">
-          <button class="btn-signoff-primary" onclick="signoffAll()">Sign Off All 6 Enhancements &amp; Proceed</button>
-          <button class="btn-control" onclick="resetSignoffs()">Reset Sign-offs</button>
+          <span class="c-green c-bold">✓ ALL ENHANCEMENTS AND 15 MODS LIVE IN PRODUCTION MARKETPLACE!</span><br>
+          <span style="color:var(--text-main);">Consuming projects can install via: <code>/plugin install &lt;mod-name&gt;@cure</code></span>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 1: OVERVIEW (ALL 5 MODS) -->
-    <section id="view-overview" class="view-section">
+    <!-- SECTION 2: SECRET SCRUB -->
+    <section id="view-secret-scrub" class="view-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Unified AbovePrompt Compositor Simulator</h2>
-          <p class="section-desc">Live simulation showing how all five Cure mods compose gracefully without vertical overflow or visual collision.</p>
+          <h2 class="section-title">cure-secret-scrub Specifications</h2>
+          <p class="section-desc">Intercepts Read, Grep, and Bash outputs in-flight to redact API credentials before entering model context.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setSecretState('api')">API Keys Redacted</button>
+          <button class="state-btn" onclick="setSecretState('certs')">Private Keys &amp; AWS</button>
+          <button class="state-btn" onclick="setSecretState('cmd')">Slash Command (/secret-scrub)</button>
         </div>
       </div>
-
-      <div class="terminal-container wide" id="main-term-container">
+      <div class="terminal-container wide">
         <div class="terminal-window">
           <div class="terminal-bar">
             <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
-            <div class="term-title">claude — Cure-Consulting-Group/ProductEngineeringSkills</div>
-            <div style="font-size:11px; color:var(--text-dim);">80×32 (Fixed 4-row cap)</div>
+            <div class="term-title">cure-secret-scrub · Tool Result Sanitizer</div>
+            <div id="secret-state-label" style="font-size:11px; color:var(--c-purple);">State: API Key Redaction</div>
           </div>
-          <div class="terminal-content">
-<span class="c-dim"># [Terminal Scrollback: Conversation history and verified agent diffs]</span>
-<span class="c-dim">agent:</span> Successfully refactored token linting script. Run <span class="c-blue">`python3 tokens_lint.py`</span> to verify.
-
-<span class="c-dim">╭─ [AbovePrompt Shelf: Image Tray + Cache Meter] ───────────────────────╮</span>
-<div class="image-tray-row">
-  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>diagram_mvi.png</strong><span class="c-dim">1200×800 (Kitty 16×8)</span></div>
-  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>mockup_state.png</strong><span class="c-dim">640×480 (Kitty 12×8)</span></div>
+          <div class="terminal-content" id="secret-term-content">
+<span class="c-dim">agent: Read(.env.production)</span>
+<div style="border-left:3px solid var(--c-purple); padding:6px 10px; background:var(--c-purple-bg); margin:6px 0;">
+  <span class="c-purple c-bold">🔒 cure-secret-scrub: 3 credentials redacted from tool output:</span><br>
+  <span class="c-dim">STRIPE_SECRET_KEY=</span><span class="c-purple">[REDACTED:stripe_sk_live]</span><br>
+  <span class="c-dim">GEMINI_API_KEY=</span><span class="c-purple">[REDACTED:google_gemini_key]</span><br>
+  <span class="c-dim">OPENAI_API_KEY=</span><span class="c-purple">[REDACTED:openai_sk_proj]</span><br>
+  <span class="c-dim">PORT=8080</span><br>
+  <span class="c-dim">NODE_ENV=production</span>
 </div>
-<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76% · misses 0</span>
-<span class="c-dim">╰───────────────────────────────────────────────────────────────────────╯</span>
-<span class="c-blue">&gt;</span> Check the contrast ratios across light and dark modes...
-<span class="c-amber">▲ Actions pace $384/mo exceeds $300 allowance (+$84 projected overage)</span>
-<span class="c-blue">⠋</span> Compiling test suites... <span class="c-dim">· Actions $12.40 today</span></div>
-        </div>
-      </div>
-
-      <!-- Overview Cards Grid -->
-      <div class="mods-grid">
-        <div class="mod-card" onclick="switchTab('cache')">
-          <div class="mod-card-top">
-            <span class="mod-card-hook">ui.render(AbovePrompt)</span>
-            <h3 class="mod-card-name">cure-cache-band</h3>
-            <p class="mod-card-desc">Visualizes Anthropic prompt cache TTL countdown, hit rates, and cold-start token fees.</p>
-          </div>
-          <span class="mod-card-btn">Inspect Mod Specs →</span>
-        </div>
-
-        <div class="mod-card" onclick="switchTab('image')">
-          <div class="mod-card-top">
-            <span class="mod-card-hook">ui.render(AbovePrompt)</span>
-            <h3 class="mod-card-name">cure-image-viewer</h3>
-            <p class="mod-card-desc">Inline terminal graphics previews via Kitty protocol with structured Unicode card fallbacks.</p>
-          </div>
-          <span class="mod-card-btn">Inspect Mod Specs →</span>
-        </div>
-
-        <div class="mod-card" onclick="switchTab('spend')">
-          <div class="mod-card-top">
-            <span class="mod-card-hook">ui.render(Spinner) + /spend</span>
-            <h3 class="mod-card-name">cure-spend-band</h3>
-            <p class="mod-card-desc">Non-jittering daily GitHub Actions burn and monthly $300 allowance pacing warning.</p>
-          </div>
-          <span class="mod-card-btn">Inspect Mod Specs →</span>
-        </div>
-
-        <div class="mod-card" onclick="switchTab('policy')">
-          <div class="mod-card-top">
-            <span class="mod-card-hook">ui.ask + /policy-guard</span>
-            <h3 class="mod-card-name">cure-policy-guard</h3>
-            <p class="mod-card-desc">Fail-closed house rule write interception modal and persistent compliance audit trail.</p>
-          </div>
-          <span class="mod-card-btn">Inspect Mod Specs →</span>
-        </div>
-
-        <div class="mod-card" onclick="switchTab('lane')">
-          <div class="mod-card-top">
-            <span class="mod-card-hook">context + ui.toast</span>
-            <h3 class="mod-card-name">cure-lane-verifier</h3>
-            <p class="mod-card-desc">Audits autonomous agent completions against ground-truth git mutations; flags empty branches.</p>
-          </div>
-          <span class="mod-card-btn">Inspect Mod Specs →</span>
+<span class="c-green">✓ Clean: Zero plain-text credentials entered model conversation memory.</span></div>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 2: CACHE BAND -->
-    <section id="view-cache" class="view-section">
+    <!-- SECTION 3: LLM LEDGER -->
+    <section id="view-llm-ledger" class="view-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">cure-cache-band Specifications</h2>
-          <p class="section-desc">Renders above the prompt. Ambient color shifts indicate when re-cache write penalties are imminent.</p>
+          <h2 class="section-title">cure-llm-ledger Specifications</h2>
+          <p class="section-desc">Atomic per-turn token and dollar cost ledger attributed by repo, branch, and model family.</p>
         </div>
         <div class="state-switcher">
-          <button class="state-btn active" onclick="setCacheState('warm')">Warm (1h)</button>
-          <button class="state-btn" onclick="setCacheState('expiring')">Expiring (&lt;15m)</button>
-          <button class="state-btn" onclick="setCacheState('cold')">Cold (Penalty)</button>
-          <button class="state-btn" onclick="setCacheState('dash')">Slash Command (/cache)</button>
+          <button class="state-btn active" onclick="setLedgerState('turn')">Turn Ledger Record</button>
+          <button class="state-btn" onclick="setLedgerState('cmd')">Slash Command (/ledger)</button>
+          <button class="state-btn" onclick="setLedgerState('jsonl')">JSONL Storage Format</button>
         </div>
       </div>
-
       <div class="terminal-container wide">
         <div class="terminal-window">
           <div class="terminal-bar">
             <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
-            <div class="term-title">cure-cache-band · Interactive State Preview</div>
-            <div id="cache-state-label" style="font-size:11px; color:var(--c-green);">State: Warm</div>
+            <div class="term-title">cure-llm-ledger · FinOps Turn Cost Plane</div>
+            <div id="ledger-state-label" style="font-size:11px; color:var(--c-blue);">State: Turn Attribution</div>
           </div>
-          <div class="terminal-content" id="cache-term-content">
-<span class="c-dim"># State A: Normal Warm Cache (Subscription Plan 1h TTL)</span>
-<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████████ 59m left</span> <span class="c-dim">· hit 76% · misses 0</span>
-<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>
-<span class="c-blue">&gt;</span> Prompt ready. Caching prefix active (42,190 prompt tokens cached).</div>
+          <div class="terminal-content" id="ledger-term-content">
+<span class="c-dim"># Real-time ledger append after Turn 4:</span>
+╭─ <span class="c-bold">LLM LEDGER: Turn 4 · ProductEngineeringSkills/main</span> ──────────────────────╮
+│  Model:          <span class="c-blue">claude-3-5-sonnet-20241022</span>                                  │
+│  Input Tokens:   1,420 unprompted + 42,190 cached (<span class="c-green">96.7% cache hit rate</span>)   │
+│  Output Tokens:  480 completion tokens                                       │
+│  Turn Cost:      <span class="c-green">$0.0214</span> USD                                                  │
+│  Session Total:  <span class="c-bold">$0.1842</span> USD across 4 turns                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+<span class="c-dim">(Appended record to ~/.claude/ledger.jsonl)</span></div>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 3: IMAGE VIEWER -->
-    <section id="view-image" class="view-section">
+    <!-- SECTION 4: CITE CHECK -->
+    <section id="view-cite-check" class="view-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">cure-image-viewer Specifications</h2>
-          <p class="section-desc">Inline graphics via Kitty protocol (Ghostty/Kitty) with graceful aspect-ratio bounding box fallback.</p>
+          <h2 class="section-title">cure-cite-check Specifications</h2>
+          <p class="section-desc">Verifies file:line code citations in assistant answers against disk, flagging stale lines before delivery.</p>
         </div>
         <div class="state-switcher">
-          <button class="state-btn active" onclick="setImageState('kitty')">Kitty Protocol (Ghostty/Kitty)</button>
-          <button class="state-btn" onclick="setImageState('fallback')">Unicode Fallback (Apple Terminal/Warp)</button>
-          <button class="state-btn" onclick="setImageState('multi')">Multi-Image (4 Pasted)</button>
+          <button class="state-btn active" onclick="setCiteState('verified')">Verified Citation</button>
+          <button class="state-btn" onclick="setCiteState('stale')">Stale Citation Alert</button>
+          <button class="state-btn" onclick="setCiteState('cmd')">Slash Command (/cite-check)</button>
         </div>
       </div>
-
       <div class="terminal-container wide">
         <div class="terminal-window">
           <div class="terminal-bar">
             <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
-            <div class="term-title">cure-image-viewer · Graphic &amp; Fallback Modes</div>
-            <div id="image-state-label" style="font-size:11px; color:var(--c-blue);">Mode: Kitty Graphics Protocol</div>
+            <div class="term-title">cure-cite-check · Code Citation Verifier</div>
+            <div id="cite-state-label" style="font-size:11px; color:var(--c-green);">State: Verified</div>
           </div>
-          <div class="terminal-content" id="image-term-content">
-<div class="image-tray-row">
-  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>[Image #1]</strong><span class="c-dim">1440×900 px · PNG (Kitty 18×8)</span></div>
+          <div class="terminal-content" id="cite-term-content">
+<span class="c-dim">agent:</span> The session validation handler is defined in <span class="c-green">lib/auth/session.ts:42-58</span>.
+<div style="border-left:3px solid var(--c-green); padding:6px 10px; background:var(--c-green-bg); margin:6px 0;">
+  <span class="c-green c-bold">✓ CITE-CHECK: 1 citation verified against disk:</span><br>
+  <span class="c-dim">File: lib/auth/session.ts (68 lines total) · Range 42-58 confirmed valid.</span>
+</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: CLAIM GUARD -->
+    <section id="view-claim-guard" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-claim-guard Specifications</h2>
+          <p class="section-desc">Enforces DistrictZero state-targets.md multi-machine row claims to prevent cross-machine collisions.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setClaimState('valid')">Authorized Machine Claim</button>
+          <button class="state-btn" onclick="setClaimState('blocked')">Cross-Machine Collision</button>
+          <button class="state-btn" onclick="setClaimState('cmd')">Slash Command (/claims)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-claim-guard · Multi-Machine Coordination</div>
+            <div id="claim-state-label" style="font-size:11px; color:var(--c-green);">State: Valid Machine Claim</div>
+          </div>
+          <div class="terminal-content" id="claim-term-content">
+<span class="c-dim">agent: Writing to state-targets.md row for target "auth-service"...</span>
+<div style="border-left:3px solid var(--c-green); padding:6px 10px; background:var(--c-green-bg); margin:6px 0;">
+  <span class="c-green c-bold">✓ CLAIM GUARD: Authorized</span><br>
+  <span class="c-dim">Runner ID: macbook-pro-m3 matches claimed runner for row #14.</span><br>
+  <span class="c-dim">Lease expiry: 2026-10-07 18:30 UTC. Write permitted.</span>
+</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: CI PREVIEW -->
+    <section id="view-ci-preview" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-ci-preview Specifications</h2>
+          <p class="section-desc">Pre-push GitHub Actions runner matrix time &amp; cost estimator; warns when commits mix doc notes with code.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setCiState('matrix')">Matrix Cost Estimate</button>
+          <button class="state-btn" onclick="setCiState('mixed')">Mixed Doc/Code Warning</button>
+          <button class="state-btn" onclick="setCiState('cmd')">Slash Command (/ci-preview)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-ci-preview · Pre-Push Runner Estimator</div>
+            <div id="ci-state-label" style="font-size:11px; color:var(--c-blue);">State: Matrix Estimate</div>
+          </div>
+          <div class="terminal-content" id="ci-term-content">
+<span class="c-dim"># Intercepting pre-push git push origin feat/billing-stripe:</span>
+╭─ <span class="c-bold">CI RUNNER PREVIEW: feat/billing-stripe</span> ─────────────────────────────────────╮
+│  Workflows Triggered:  2 (.github/workflows/ci.yml, deploy.yml)             │
+│  Runner Matrix:        4x ubuntu-latest (8 min) + 2x macos-14 (14 min)      │
+│  Estimated Wall Clock: 7m 10s (parallel execution)                           │
+│  Estimated CI Cost:    <span class="c-green">$0.42 gross</span> (within monthly included minutes)       │
+╰─────────────────────────────────────────────────────────────────────────────╯</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: AGENT BUDGET -->
+    <section id="view-agent-budget" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-agent-budget Specifications</h2>
+          <p class="section-desc">Enforces subagent fan-out concurrency caps and auto-routes read-only research from Opus to Sonnet.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setAgentBudgetState('cap')">Concurrency Cap Alert</button>
+          <button class="state-btn" onclick="setAgentBudgetState('routing')">Model Down-Routing</button>
+          <button class="state-btn" onclick="setAgentBudgetState('cmd')">Slash Command (/agents-budget)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-agent-budget · Subagent Fan-Out Guard</div>
+            <div id="agent-budget-state-label" style="font-size:11px; color:var(--c-amber);">State: Concurrency Cap Alert</div>
+          </div>
+          <div class="terminal-content" id="agent-budget-term-content">
+<span class="c-dim">agent: Attempting to spawn Subagent #4 (lane/research-auth)...</span>
+<div class="terminal-toast">
+  <span>▲</span><span><strong>cure-agent-budget:</strong> Max concurrent subagent limit reached (3 active). Subagent queued until active worker completes.</span>
 </div>
-<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76%</span>
-<span class="c-blue">&gt;</span> Look at [Image #1] and suggest improvements to the architecture...</div>
+<span class="c-dim">Active Workers:</span>
+  [1] lane/auth-mvi (Running · Turn 2 · Sonnet)
+  [2] lane/billing-stripe (Running · Turn 4 · Sonnet)
+  [3] lane/doc-audit (Running · Turn 1 · Haiku)</div>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 4: SPEND BAND -->
-    <section id="view-spend" class="view-section">
+    <!-- SECTION 8: EGRESS GUARD -->
+    <section id="view-egress-guard" class="view-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">cure-spend-band Specifications</h2>
-          <p class="section-desc">Monitors GitHub Actions burn via `gh api`. Fixed-width suffix eliminates spinner wobble.</p>
+          <h2 class="section-title">cure-egress-guard Specifications</h2>
+          <p class="section-desc">Prevents unauthorized outbound AI vendor network transmission in sensitive repositories (PHI / minors).</p>
         </div>
         <div class="state-switcher">
-          <button class="state-btn active" onclick="setSpendState('safe')">Safe Pace ($12/day)</button>
-          <button class="state-btn" onclick="setSpendState('overage')">Overage Pacing Warning</button>
-          <button class="state-btn" onclick="setSpendState('report')">Executive Report (/spend)</button>
+          <button class="state-btn active" onclick="setEgressState('blocked')">Blocked AI Egress</button>
+          <button class="state-btn" onclick="setEgressState('allowed')">Allowed Internal Endpoint</button>
+          <button class="state-btn" onclick="setEgressState('cmd')">Slash Command (/egress-guard)</button>
         </div>
       </div>
-
       <div class="terminal-container wide">
         <div class="terminal-window">
           <div class="terminal-bar">
             <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
-            <div class="term-title">cure-spend-band · Telemetry &amp; Reporting</div>
-            <div id="spend-state-label" style="font-size:11px; color:var(--c-green);">Pacing: Normal</div>
+            <div class="term-title">cure-egress-guard · Sensitive Egress Firewall</div>
+            <div id="egress-state-label" style="font-size:11px; color:var(--c-red);">State: Blocked AI Egress</div>
           </div>
-          <div class="terminal-content" id="spend-term-content">
-<span class="c-dim"># Ambient Spinner Integration (During turn execution):</span>
-<span class="c-blue">⠋</span> Running regression test suite... <span class="c-dim">· Actions $12.40 today</span>
-
-<span class="c-dim"># When Prompt is Active (Within budget):</span>
-<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span>
-<span class="c-blue">&gt;</span> Ship the release notes for v7.13.0...</div>
+          <div class="terminal-content" id="egress-term-content">
+<span class="c-dim">agent: Calling Bash: `curl -X POST https://api.openai.com/v1/chat/completions ...`</span>
+<div class="dialog-box">
+  <div class="dialog-header">🚨 EGRESS GUARD BLOCKED: External AI Vendor Call</div>
+  <div class="dialog-body">
+    Repo: <strong>initiated-recruiting</strong> (Protected Classification: Minors Data / COPPA)<br>
+    Target URL: <strong>https://api.openai.com/v1/chat/completions</strong><br>
+    Violation: Unapproved third-party AI transmission from student-facing repository.
+  </div>
+  <div class="dialog-actions">
+    <button class="dialog-btn primary" onclick="resolveEgress(false)">[1] Refuse network request (Default)</button>
+    <button class="dialog-btn" onclick="resolveEgress(true)">[2] Allow once (Log security incident)</button>
+  </div>
+</div>
+<div id="egress-result-line"></div></div>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 5: POLICY GUARD -->
+    <!-- SECTION 9: RULES BAND -->
+    <section id="view-rules-band" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-rules-band Specifications</h2>
+          <p class="section-desc">Displays repository house rules and legal/architectural constraints in an AbovePrompt HUD banner.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setRulesState('banner')">HUD Ribbon Mount</button>
+          <button class="state-btn" onclick="setRulesState('custom')">Custom .cure/rules.json</button>
+          <button class="state-btn" onclick="setRulesState('cmd')">Slash Command (/rules)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-rules-band · AbovePrompt HUD Rules</div>
+            <div id="rules-state-label" style="font-size:11px; color:var(--c-blue);">State: HUD Ribbon Mount</div>
+          </div>
+          <div class="terminal-content" id="rules-term-content">
+<span class="c-dim"># AbovePrompt Shelf with active repo house rules:</span>
+<span class="c-sub">rules</span> <span class="c-blue">● Clean Architecture</span> <span class="c-dim">·</span> <span class="c-blue">MVI (Android)</span> <span class="c-dim">·</span> <span class="c-blue">Next.js App Router</span> <span class="c-dim">·</span> <span class="c-blue">Zero Pip</span> <span class="c-dim">·</span> <span class="c-blue">WCAG 2.2 AA</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████████ 58m left</span>
+<span class="c-blue">&gt;</span> Ready for task...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 10: HANDOFF -->
+    <section id="view-handoff" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-handoff Specifications</h2>
+          <p class="section-desc">Drafts structured STATE.md handoff blocks from git commits, branch status, and working tree diffs.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setHandoffState('clean')">Clean Branch Handoff</button>
+          <button class="state-btn" onclick="setHandoffState('dirty')">Dirty Workspace Draft</button>
+          <button class="state-btn" onclick="setHandoffState('cmd')">Slash Command (/handoff)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-handoff · Session Continuity Generator</div>
+            <div id="handoff-state-label" style="font-size:11px; color:var(--c-green);">State: Clean Branch Handoff</div>
+          </div>
+          <div class="terminal-content" id="handoff-term-content">
+<span class="c-dim"># Drafted STATE.md handoff block ready to copy or write:</span>
+╭─ <span class="c-bold">CURE SESSION HANDOFF: feat/billing-stripe</span> ─────────────────────────────────╮
+│  Branch:       feat/billing-stripe (up to date with origin/feat/billing)     │
+│  Commits (2):  8a4b2c1 feat: add Stripe webhook signature validation         │
+│                1f9d4e2 test: add 14 mutation tests for webhook events        │
+│  Tree Status:  Clean (0 uncommitted files)                                   │
+│  Next Steps:   Deploy staging Cloud Function; run end-to-end webhook replay. │
+╰─────────────────────────────────────────────────────────────────────────────╯</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 11: LANE BOARD -->
+    <section id="view-lane-board" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-lane-board Specifications</h2>
+          <p class="section-desc">Multi-lane dashboard for tri-lane worktrees, active branches, live commits, and defect window status.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setLaneBoardState('lanes')">Multi-Lane Matrix</button>
+          <button class="state-btn" onclick="setLaneBoardState('defect')">Defect Window Flag</button>
+          <button class="state-btn" onclick="setLaneBoardState('cmd')">Slash Command (/lanes)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-lane-board · Tri-Lane Dashboard</div>
+            <div id="lane-board-state-label" style="font-size:11px; color:var(--c-blue);">State: Multi-Lane Matrix</div>
+          </div>
+          <div class="terminal-content" id="lane-board-term-content">
+╭─ <span class="c-bold">TRI-LANE ORCHESTRATION BOARD</span> ──────────────────────────────────────────────╮
+│  LANE            BRANCH                 COMMITS   DIRTY   STATUS             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│  lane/auth-mvi   feat/auth-mvi          +3 ahead    0     <span class="c-green">✓ Verified Clean</span>   │
+│  lane/billing    feat/billing-stripe    +2 ahead    0     <span class="c-green">✓ Verified Clean</span>   │
+│  main (origin)   main                    0 ahead    0     <span class="c-blue">● Baseline Sync</span>    │
+╰──────────────────────────────────────────────────────────────────────────────╯</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 12: POLICY GUARD -->
     <section id="view-policy" class="view-section">
       <div class="section-header">
         <div>
           <h2 class="section-title">cure-policy-guard Specifications</h2>
-          <p class="section-desc">Intercepts unsafe file modifications in real time. Fails closed by default to enforce compliance.</p>
+          <p class="section-desc">Fail-closed house rule write interception modal and persistent compliance audit trail.</p>
         </div>
         <div class="state-switcher">
-          <button class="state-btn active" onclick="setPolicyState('intercept')">Interactive Dialog ($.ui.ask)</button>
+          <button class="state-btn active" onclick="setPolicyState('intercept')">Write Intercept Modal</button>
           <button class="state-btn" onclick="setPolicyState('audit')">Audit Trail (/policy-guard)</button>
         </div>
       </div>
-
       <div class="terminal-container wide">
         <div class="terminal-window">
           <div class="terminal-bar">
             <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
             <div class="term-title">cure-policy-guard · Real-Time Write Interception</div>
-            <div style="font-size:11px; color:var(--c-red);">Status: Intercept Active</div>
           </div>
           <div class="terminal-content" id="policy-term-content">
 <span class="c-dim">agent: Calling Write(.github/workflows/deploy.yml)...</span>
@@ -1251,7 +1418,7 @@
       </div>
     </section>
 
-    <!-- SECTION 6: LANE VERIFIER -->
+    <!-- SECTION 13: LANE VERIFIER -->
     <section id="view-lane" class="view-section">
       <div class="section-header">
         <div>
@@ -1264,7 +1431,6 @@
           <button class="state-btn" onclick="setLaneState('dirty')">Dirty Worktree Warning</button>
         </div>
       </div>
-
       <div class="terminal-container wide">
         <div class="terminal-window">
           <div class="terminal-bar">
@@ -1287,7 +1453,95 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
       </div>
     </section>
 
-    <!-- SECTION 7: WIREFRAMES & FLOWS -->
+    <!-- SECTION 14: SPEND BAND -->
+    <section id="view-spend" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-spend-band Specifications</h2>
+          <p class="section-desc">Non-jittering daily GitHub Actions burn and monthly $300 allowance pacing warning.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setSpendState('safe')">Safe Pacing ($12/day)</button>
+          <button class="state-btn" onclick="setSpendState('overage')">Overage Warning (&gt;$300)</button>
+          <button class="state-btn" onclick="setSpendState('report')">Slash Command (/spend)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-spend-band · Telemetry &amp; Reporting</div>
+            <div id="spend-state-label" style="font-size:11px; color:var(--c-green);">Pacing: Normal ($12/day)</div>
+          </div>
+          <div class="terminal-content" id="spend-term-content">
+<span class="c-dim"># Ambient Spinner Integration (During turn execution):</span>
+<span class="c-blue">⠋</span> Running regression test suite... <span class="c-dim">· Actions $12.40 today</span>
+
+<span class="c-dim"># When Prompt is Active (Within budget):</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span>
+<span class="c-blue">&gt;</span> Ship the release notes for v7.13.0...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 15: CACHE BAND -->
+    <section id="view-cache" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-cache-band Specifications</h2>
+          <p class="section-desc">Visualizes Anthropic prompt cache TTL countdown, hit rates, and cold-start token fees.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setCacheState('warm')">Warm (1h)</button>
+          <button class="state-btn" onclick="setCacheState('expiring')">Expiring (&lt;15m)</button>
+          <button class="state-btn" onclick="setCacheState('cold')">Cold (Penalty)</button>
+          <button class="state-btn" onclick="setCacheState('dash')">Slash Command (/cache)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-cache-band · Interactive State Preview</div>
+            <div id="cache-state-label" style="font-size:11px; color:var(--c-green);">State: Warm (1h)</div>
+          </div>
+          <div class="terminal-content" id="cache-term-content">
+<span class="c-dim"># State A: Normal Warm Cache (Subscription Plan 1h TTL)</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████████ 59m left</span> <span class="c-dim">· hit 76% · misses 0</span>
+<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>
+<span class="c-blue">&gt;</span> Prompt ready. Caching prefix active (42,190 prompt tokens cached).</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 16: IMAGE VIEWER -->
+    <section id="view-image" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">cure-image-viewer Specifications</h2>
+          <p class="section-desc">Inline terminal graphics previews via Kitty protocol with structured Unicode card fallbacks.</p>
+        </div>
+        <div class="state-switcher">
+          <button class="state-btn active" onclick="setImageState('kitty')">Kitty Protocol Mode</button>
+          <button class="state-btn" onclick="setImageState('fallback')">Unicode Card Fallback</button>
+          <button class="state-btn" onclick="setImageState('multi')">Multi-Image Grid (4x)</button>
+        </div>
+      </div>
+      <div class="terminal-container wide">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="term-title">cure-image-viewer · Graphic &amp; Fallback Modes</div>
+            <div id="image-state-label" style="font-size:11px; color:var(--text-sub);">Mode: Kitty Graphics Protocol</div>
+          </div>
+          <div class="terminal-content" id="image-term-content">
+<div class="image-tray-row"><div class="image-thumb-card"><div class="image-icon">🖼</div><strong>[Image #1]</strong><span class="c-dim">1440×900 px · PNG (Kitty 18×8)</span></div></div><span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76%</span>
+<span class="c-blue">&gt;</span> Look at [Image #1] and suggest improvements to the architecture...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 17: WIREFRAMES & FLOWS -->
     <section id="view-wireframes" class="view-section">
       <div class="section-header">
         <div>
@@ -1308,7 +1562,7 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
       </div>
     </section>
 
-    <!-- SECTION 8: TOKENS & CONTRAST -->
+    <!-- SECTION 18: TOKENS & CONTRAST -->
     <section id="view-tokens" class="view-section">
       <div class="section-header">
         <div>
@@ -1354,28 +1608,21 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
             <td>color</td>
             <td><span class="token-swatch" style="background:#15803D;"></span>#15803D (Green-700)</td>
             <td><span class="token-swatch" style="background:#4ADE80;"></span>#4ADE80 (Green-400)</td>
-            <td><span class="c-green">7.42 : 1 (Passes AA)</span></td>
+            <td><span class="c-green">5.82 : 1 (Passes AA)</span></td>
           </tr>
           <tr>
             <td><code>semantic.color.status.warning</code></td>
             <td>color</td>
             <td><span class="token-swatch" style="background:#B45309;"></span>#B45309 (Amber-700)</td>
             <td><span class="token-swatch" style="background:#FBBF24;"></span>#FBBF24 (Amber-400)</td>
-            <td><span class="c-green">6.85 : 1 (Passes AA)</span></td>
+            <td><span class="c-green">5.14 : 1 (Passes AA)</span></td>
           </tr>
           <tr>
-            <td><code>semantic.color.status.danger</code></td>
+            <td><code>semantic.color.status.error</code></td>
             <td>color</td>
             <td><span class="token-swatch" style="background:#B91C1C;"></span>#B91C1C (Red-700)</td>
             <td><span class="token-swatch" style="background:#F87171;"></span>#F87171 (Red-400)</td>
-            <td><span class="c-green">7.15 : 1 (Passes AA)</span></td>
-          </tr>
-          <tr>
-            <td><code>semantic.color.border.default</code></td>
-            <td>color</td>
-            <td><span class="token-swatch" style="background:#CBD5E1;"></span>#CBD5E1 (Gray-300)</td>
-            <td><span class="token-swatch" style="background:#334155;"></span>#334155 (Gray-700)</td>
-            <td><span class="c-green">3.47 : 1 (Passes UI 3:1)</span></td>
+            <td><span class="c-green">5.41 : 1 (Passes AA)</span></td>
           </tr>
         </tbody>
       </table>
@@ -1384,7 +1631,8 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
   </main>
 
   <script>
-    const signoffs = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+    // State Tracking
+    const signoffs = { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true };
 
     function toggleSignoff(id) {
       signoffs[id] = !signoffs[id];
@@ -1405,28 +1653,30 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
       let count = 0;
       for (let i = 1; i <= 6; i++) {
         const chip = document.getElementById('chip-' + i);
+        if (!chip) continue;
         const icon = document.getElementById('icon-' + i);
         const text = document.getElementById('text-' + i);
         if (signoffs[i]) {
           count++;
           chip.className = 'signoff-chip approved';
-          icon.textContent = '✓';
-          text.textContent = 'Signed Off';
+          if (icon) icon.textContent = '✓';
+          if (text) text.textContent = 'Signed Off & Merged';
         } else {
           chip.className = 'signoff-chip pending';
-          icon.textContent = '○';
-          text.textContent = 'Sign-Off Pending';
+          if (icon) icon.textContent = '○';
+          if (text) text.textContent = 'Sign-Off Pending';
         }
       }
 
-      document.getElementById('master-counter').textContent = `${count} of 6 Signed Off`;
+      const counter = document.getElementById('master-counter');
+      if (counter) counter.textContent = `${count} of 6 Signed Off`;
       const summaryBox = document.getElementById('signoff-summary-box');
-      if (count === 6) {
-        summaryBox.innerHTML = `<span class="c-green c-bold">✓ ALL 6 ENHANCEMENTS SIGNED OFF!</span><br><span style="color:var(--text-main);">Full stakeholder approval granted. You can now instruct the assistant: <strong>"Signed off, proceed with implementation"</strong> to begin coding the approved enhancements.</span>`;
-      } else if (count > 0) {
-        summaryBox.innerHTML = `<span class="c-amber c-bold">● ${count} of 6 signed off.</span><br><span style="color:var(--text-main);">Approved: ${Object.keys(signoffs).filter(k => signoffs[k]).map(k => `Enhancement ${k}`).join(', ')}.</span>`;
-      } else {
-        summaryBox.innerHTML = `<span class="c-dim">Status:</span> Waiting for stakeholder sign-off on proposed enhancements.<br><span class="c-dim">Approved items will be implemented directly in:</span> <code>mods/cure-cache-band</code>, <code>mods/cure-image-viewer</code>, <code>mods/cure-spend-band</code>, <code>mods/cure-policy-guard</code>, <code>mods/cure-lane-verifier</code>.`;
+      if (summaryBox) {
+        if (count === 6) {
+          summaryBox.innerHTML = `<span class="c-green c-bold">✓ ALL ENHANCEMENTS AND 15 MODS LIVE IN PRODUCTION MARKETPLACE!</span><br><span style="color:var(--text-main);">Merged in PR #79 &amp; #80. Consuming projects can install via: <code>/plugin install &lt;mod-name&gt;@cure</code></span>`;
+        } else {
+          summaryBox.innerHTML = `<span class="c-amber c-bold">● ${count} of 6 signed off.</span>`;
+        }
       }
     }
 
@@ -1450,6 +1700,20 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
       if (mode === 'narrow') btns[2].classList.add('active');
     }
 
+    function filterMods(category, btn) {
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      
+      const cards = document.querySelectorAll('.mod-card');
+      cards.forEach(c => {
+        if (category === 'all' || c.getAttribute('data-cat') === category) {
+          c.classList.remove('hidden');
+        } else {
+          c.classList.add('hidden');
+        }
+      });
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
@@ -1457,67 +1721,395 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
       const targetSec = document.getElementById('view-' + tabId);
       if (targetSec) targetSec.classList.add('active');
       
-      const activeIdx = ['comparison', 'overview', 'cache', 'image', 'spend', 'policy', 'lane', 'wireframes', 'tokens'].indexOf(tabId);
-      if (activeIdx >= 0) {
-        document.querySelectorAll('.tab-item')[activeIdx].classList.add('active');
+      const tabMap = {
+        'overview': 0, 'comparison': 1, 'secret-scrub': 2, 'llm-ledger': 3,
+        'cite-check': 4, 'claim-guard': 5, 'ci-preview': 6, 'agent-budget': 7,
+        'egress-guard': 8, 'rules-band': 9, 'handoff': 10, 'lane-board': 11,
+        'policy': 12, 'lane': 13, 'spend': 14, 'cache': 15, 'image': 16,
+        'wireframes': 17, 'tokens': 18
+      };
+      
+      const idx = tabMap[tabId];
+      if (idx !== undefined) {
+        const items = document.querySelectorAll('.tab-item');
+        if (items[idx]) items[idx].classList.add('active');
       }
     }
 
-    /* Cache States */
-    function setCacheState(st) {
-      const box = document.getElementById('cache-term-content');
-      const lbl = document.getElementById('cache-state-label');
-      if (st === 'warm') {
-        lbl.textContent = 'State: Warm (1h)';
+    /* Secret Scrub States */
+    function setSecretState(st) {
+      const box = document.getElementById('secret-term-content');
+      const lbl = document.getElementById('secret-state-label');
+      if (st === 'api') {
+        lbl.textContent = 'State: API Key Redaction';
+        lbl.style.color = 'var(--c-purple)';
+        box.innerHTML = `<span class="c-dim">agent: Read(.env.production)</span>
+<div style="border-left:3px solid var(--c-purple); padding:6px 10px; background:var(--c-purple-bg); margin:6px 0;">
+  <span class="c-purple c-bold">🔒 cure-secret-scrub: 3 credentials redacted from tool output:</span><br>
+  <span class="c-dim">STRIPE_SECRET_KEY=</span><span class="c-purple">[REDACTED:stripe_sk_live]</span><br>
+  <span class="c-dim">GEMINI_API_KEY=</span><span class="c-purple">[REDACTED:google_gemini_key]</span><br>
+  <span class="c-dim">OPENAI_API_KEY=</span><span class="c-purple">[REDACTED:openai_sk_proj]</span><br>
+  <span class="c-dim">PORT=8080</span>
+</div>
+<span class="c-green">✓ Clean: Zero plain-text credentials entered model conversation memory.</span>`;
+      } else if (st === 'certs') {
+        lbl.textContent = 'State: Private Keys & AWS';
+        lbl.style.color = 'var(--c-purple)';
+        box.innerHTML = `<span class="c-dim">agent: Grep(search_pattern="PRIVATE KEY")</span>
+<div style="border-left:3px solid var(--c-purple); padding:6px 10px; background:var(--c-purple-bg); margin:6px 0;">
+  <span class="c-purple c-bold">🔒 cure-secret-scrub: 2 private keys redacted:</span><br>
+  <span class="c-dim">server.key: </span><span class="c-purple">[REDACTED:pem_private_key]</span><br>
+  <span class="c-dim">deploy.sh: AWS_ACCESS_KEY_ID=</span><span class="c-purple">[REDACTED:aws_access_key_id]</span>
+</div>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /secret-scrub';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">SECRET SCRUB TELEMETRY</span> ─────────────────────────────────────────────╮
+│  Status: Active · In-Flight Redaction Guard                           │
+│  Redacted Credentials This Session: <span class="c-green">5 credentials</span>                      │
+│  - Google API Keys:          1                                       │
+│  - Stripe Secret Keys:       1                                       │
+│  - OpenAI API Keys:          1                                       │
+│  - AWS Access Keys:          1                                       │
+│  - PEM Private Keys:         1                                       │
+│  Protected Tools: Read, Grep, Bash                                   │
+╰──────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* LLM Ledger States */
+    function setLedgerState(st) {
+      const box = document.getElementById('ledger-term-content');
+      const lbl = document.getElementById('ledger-state-label');
+      if (st === 'turn') {
+        lbl.textContent = 'State: Turn Attribution';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `<span class="c-dim"># Real-time ledger append after Turn 4:</span>
+╭─ <span class="c-bold">LLM LEDGER: Turn 4 · ProductEngineeringSkills/main</span> ──────────────────────╮
+│  Model:          <span class="c-blue">claude-3-5-sonnet-20241022</span>                                  │
+│  Input Tokens:   1,420 unprompted + 42,190 cached (<span class="c-green">96.7% cache hit rate</span>)   │
+│  Output Tokens:  480 completion tokens                                       │
+│  Turn Cost:      <span class="c-green">$0.0214</span> USD                                                  │
+│  Session Total:  <span class="c-bold">$0.1842</span> USD across 4 turns                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+<span class="c-dim">(Appended record to ~/.claude/ledger.jsonl)</span>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /ledger';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">LLM COST LEDGER SUMMARY</span> ────────────────────────────────────────────╮
+│  Repository:  Cure-Consulting-Group/ProductEngineeringSkills          │
+│  Branch:      main · Session Turns: 12                               │
+├──────────────────────────────────────────────────────────────────────┤
+│  claude-3-5-sonnet:  12 turns · 18,240 in · 5,120 out · $0.2412       │
+│  claude-3-5-haiku:    4 turns ·  6,100 in · 1,420 out · $0.0145       │
+│  claude-3-opus:       1 turn  ·  2,400 in ·   850 out · $0.0990       │
+├──────────────────────────────────────────────────────────────────────┤
+│  Session Total:      <span class="c-green">$0.3547</span> (Saved $1.42 via prompt cache)          │
+│  Persisted Ledger:   ~/.claude/ledger.jsonl (atomic append)          │
+╰──────────────────────────────────────────────────────────────────────╯`;
+      } else if (st === 'jsonl') {
+        lbl.textContent = 'State: JSONL Storage Schema';
+        lbl.style.color = 'var(--c-dim)';
+        box.innerHTML = `<span class="c-dim"># Schema of ~/.claude/ledger.jsonl:</span>
+{
+  "timestamp": "2026-10-07T14:42:01Z",
+  "session_id": "s_9f82ab",
+  "repo": "ProductEngineeringSkills",
+  "branch": "main",
+  "turn": 4,
+  "model": "claude-3-5-sonnet-20241022",
+  "input_tokens": 1420,
+  "cache_read_tokens": 42190,
+  "cache_write_tokens": 0,
+  "output_tokens": 480,
+  "cost_usd": 0.0214
+}`;
+      }
+    }
+
+    /* Cite Check States */
+    function setCiteState(st) {
+      const box = document.getElementById('cite-term-content');
+      const lbl = document.getElementById('cite-state-label');
+      if (st === 'verified') {
+        lbl.textContent = 'State: Verified';
         lbl.style.color = 'var(--c-green)';
-        box.innerHTML = `<span class="c-dim"># State A: Normal Warm Cache (Subscription Plan 1h TTL)</span>\n<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████████ 59m left</span> <span class="c-dim">· hit 76% · misses 0</span>\n<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>\n<span class="c-blue">&gt;</span> Prompt ready. Caching prefix active (42,190 prompt tokens cached).`;
-      } else if (st === 'expiring') {
-        lbl.textContent = 'State: Expiring (<15m)';
-        lbl.style.color = 'var(--c-amber)';
-        box.innerHTML = `<span class="c-dim"># State B: Expiring Cache (<25% TTL Remaining - Amber Alert)</span>\n<span class="c-sub">cache</span> <span class="c-amber">▲ 5m ███░░░░░░░░░░░░░ 53s left</span> <span class="c-dim">· hit 36% · misses 1</span>\n<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>\n<span class="c-blue">&gt;</span> Prompt ready. Cache will lapse in 53s unless turn submitted.`;
-      } else if (st === 'cold') {
-        lbl.textContent = 'State: Cold (Penalty)';
+        box.innerHTML = `<span class="c-dim">agent:</span> The session validation handler is defined in <span class="c-green">lib/auth/session.ts:42-58</span>.
+<div style="border-left:3px solid var(--c-green); padding:6px 10px; background:var(--c-green-bg); margin:6px 0;">
+  <span class="c-green c-bold">✓ CITE-CHECK: 1 citation verified against disk:</span><br>
+  <span class="c-dim">File: lib/auth/session.ts (68 lines total) · Range 42-58 confirmed valid.</span>
+</div>`;
+      } else if (st === 'stale') {
+        lbl.textContent = 'State: Stale Citation Alert';
         lbl.style.color = 'var(--c-red)';
-        box.innerHTML = `<span class="c-dim"># State C: Cold Lapsed Cache (Calculated Write Penalty)</span>\n<span class="c-sub">cache</span> <span class="c-red">○ cold</span> <span class="c-dim">· next message re-caches 82,410 tokens (~$0.25 write fee)</span>\n<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>\n<span class="c-blue">&gt;</span> Prompt ready. Cache prefix lapsed; next turn will pay full write fee.`;
-      } else if (st === 'dash') {
-        lbl.textContent = 'Slash Command: /cache';
+        box.innerHTML = `<span class="c-dim">agent:</span> Reference jwt token verification in <span class="c-red">lib/auth/jwt.ts:95-110</span>.
+<div class="terminal-toast">
+  <span>▲</span><span><strong>cure-cite-check:</strong> Stale citation detected! lib/auth/jwt.ts has only 80 lines (cited lines 95-110 exceed file length).</span>
+</div>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /cite-check';
         lbl.style.color = 'var(--c-blue)';
-        box.innerHTML = `╭──────────────────────────────────────────────────────────────────────╮\n│  <span class="c-bold">ANTHROPIC PROMPT CACHE TELEMETRY</span> · Main Conversation                │\n│  Status: <span class="c-green">● WARM (1h TTL)</span> · Source: Inferred from subscription limits │\n├──────────────────────────────────────────────────────────────────────┤\n│  Time Left:          54m 12s remaining before expiration             │\n│  Session Hit Rate:   76.4% of all input tokens served from cache     │\n│  Miss Count:         0 cache misses recorded this session            │\n│  Cached Prefix:      42,190 tokens currently warm                    │\n╰──────────────────────────────────────────────────────────────────────╯`;
+        box.innerHTML = `╭─ <span class="c-bold">CITE CHECK AUDIT</span> ───────────────────────────────────────────────────╮
+│  Total Citations Audited: 18 · <span class="c-green">Verified: 17</span> · <span class="c-red">Stale: 1</span>                │
+│  Accuracy Rate: 94.4%                                                │
+│  Recent Stale Flag: lib/auth/jwt.ts:95-110 (Line index out of bounds)│
+╰──────────────────────────────────────────────────────────────────────╯`;
       }
     }
 
-    /* Image States */
-    function setImageState(st) {
-      const box = document.getElementById('image-term-content');
-      const lbl = document.getElementById('image-state-label');
-      if (st === 'kitty') {
-        lbl.textContent = 'Mode: Kitty Graphics Protocol';
-        box.innerHTML = `<div class="image-tray-row"><div class="image-thumb-card"><div class="image-icon">🖼</div><strong>[Image #1]</strong><span class="c-dim">1440×900 px · PNG (Kitty 18×8)</span></div></div><span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76%</span>\n<span class="c-blue">&gt;</span> Look at [Image #1] and suggest improvements to the architecture...`;
-      } else if (st === 'fallback') {
-        lbl.textContent = 'Mode: Unicode Fallback Card';
-        box.innerHTML = `╭─ Image #1 ─────────────────────────╮\n│ 🖼  architecture_mvi.png            │\n│ 1440 × 900 px · 342 KB (PNG)       │\n╰────────────────────────────────────╯\n<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76%</span>\n<span class="c-blue">&gt;</span> Look at [Image #1] and suggest improvements to the architecture...`;
-      } else if (st === 'multi') {
-        lbl.textContent = 'Mode: Multi-Image Grid (4 Images)';
-        box.innerHTML = `<div class="image-tray-row">\n  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>diagram_1.png</strong><span class="c-dim">1200×800</span></div>\n  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>screen_2.png</strong><span class="c-dim">800×600</span></div>\n  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>flow_3.png</strong><span class="c-dim">1024×768</span></div>\n  <div class="image-thumb-card"><div class="image-icon">📁</div><strong>+1 more</strong><span class="c-dim">overflow pill</span></div>\n</div>\n<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span>\n<span class="c-blue">&gt;</span> Compare the three screen progressions above...`;
-      }
-    }
-
-    /* Spend States */
-    function setSpendState(st) {
-      const box = document.getElementById('spend-term-content');
-      const lbl = document.getElementById('spend-state-label');
-      if (st === 'safe') {
-        lbl.textContent = 'Pacing: Normal ($12/day)';
+    /* Claim Guard States */
+    function setClaimState(st) {
+      const box = document.getElementById('claim-term-content');
+      const lbl = document.getElementById('claim-state-label');
+      if (st === 'valid') {
+        lbl.textContent = 'State: Authorized Machine Claim';
         lbl.style.color = 'var(--c-green)';
-        box.innerHTML = `<span class="c-dim"># Ambient Spinner Integration (During turn execution):</span>\n<span class="c-blue">⠋</span> Running regression test suite... <span class="c-dim">· Actions $12.40 today</span>\n\n<span class="c-dim"># When Prompt is Active (Within budget):</span>\n<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span>\n<span class="c-blue">&gt;</span> Ship the release notes for v7.13.0...`;
-      } else if (st === 'overage') {
-        lbl.textContent = 'Pacing: Monthly Overage Warning';
-        lbl.style.color = 'var(--c-amber)';
-        box.innerHTML = `<span class="c-dim"># Spinner with Amber Warning Flag:</span>\n<span class="c-blue">⠋</span> Executing build pipeline... <span class="c-amber">· Actions $28.50 today ▲</span>\n\n<span class="c-dim"># Ambient Status Warning Underneath Prompt:</span>\n<span class="c-blue">&gt;</span> Deploy the worker container to staging...\n<span class="c-amber">▲ Actions pace $384/mo exceeds $300 allowance (+$84 projected overage · avg $18.40/day)</span>`;
-      } else if (st === 'report') {
-        lbl.textContent = 'Slash Command: /spend';
+        box.innerHTML = `<span class="c-dim">agent: Writing to state-targets.md row for target "auth-service"...</span>
+<div style="border-left:3px solid var(--c-green); padding:6px 10px; background:var(--c-green-bg); margin:6px 0;">
+  <span class="c-green c-bold">✓ CLAIM GUARD: Authorized</span><br>
+  <span class="c-dim">Runner ID: macbook-pro-m3 matches claimed runner for row #14.</span><br>
+  <span class="c-dim">Lease expiry: 2026-10-07 18:30 UTC. Write permitted.</span>
+</div>`;
+      } else if (st === 'blocked') {
+        lbl.textContent = 'State: Cross-Machine Collision';
+        lbl.style.color = 'var(--c-red)';
+        box.innerHTML = `<span class="c-dim">agent: Attempting to write row #18 in state-targets.md...</span>
+<div class="dialog-box">
+  <div class="dialog-header">⚠ CLAIM GUARD INTERCEPT: Row Collision</div>
+  <div class="dialog-body">
+    Target: <strong>payment-processor</strong> (Row 18)<br>
+    Current Claim: <strong>mac-mini-m4</strong> (Active Lease until 19:00 UTC)<br>
+    Refused: Write blocked to prevent multi-machine split-brain coordination defect.
+  </div>
+</div>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /claims';
         lbl.style.color = 'var(--c-blue)';
-        box.innerHTML = `╭──────────────────────────────────────────────────────────────────────╮\n│  <span class="c-bold">GITHUB ACTIONS BILLING SUMMARY</span> · Cure-Consulting-Group              │\n│  Freshness: 14:32 UTC (Active) · Monthly Allowance: $300.00          │\n├──────────────────────────────────────────────────────────────────────┤\n│  Today's Burn:       <span class="c-bold">$  12.40</span>    (Last 3-day avg: $14.10/day)        │\n│  Month to Date:      <span class="c-bold">$ 112.50</span>    (37.5% of allowance)                │\n│  Projected Total:    <span class="c-green">$ 248.00</span>    [<span class="c-green">████████████</span><span class="c-dim">░░░░░░░░</span>]  <span class="c-green">SAFE PACE</span>   │\n├──────────────────────────────────────────────────────────────────────┤\n│  Included Usage:     $ 187.50 remaining in plan                      │\n│  Billed Runners:     macOS-14 (62%), ubuntu-latest (38%)             │\n╰──────────────────────────────────────────────────────────────────────╯`;
+        box.innerHTML = `╭─ <span class="c-bold">DISTRICTZERO STATE TARGET CLAIMS</span> ──────────────────────────────────╮
+│  TARGET             RUNNER            STATUS     LEASE EXPIRY        │
+├──────────────────────────────────────────────────────────────────────┤
+│  auth-service       macbook-pro-m3    <span class="c-green">Active</span>     18:30 UTC (Current) │
+│  payment-processor  mac-mini-m4       <span class="c-amber">Active</span>     19:00 UTC (Other)   │
+│  onboarding-flow    unclaimed         <span class="c-dim">Available</span>  --                  │
+╰──────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* CI Preview States */
+    function setCiState(st) {
+      const box = document.getElementById('ci-term-content');
+      const lbl = document.getElementById('ci-state-label');
+      if (st === 'matrix') {
+        lbl.textContent = 'State: Matrix Estimate';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `<span class="c-dim"># Intercepting pre-push git push origin feat/billing-stripe:</span>
+╭─ <span class="c-bold">CI RUNNER PREVIEW: feat/billing-stripe</span> ─────────────────────────────────────╮
+│  Workflows Triggered:  2 (.github/workflows/ci.yml, deploy.yml)             │
+│  Runner Matrix:        4x ubuntu-latest (8 min) + 2x macos-14 (14 min)      │
+│  Estimated Wall Clock: 7m 10s (parallel execution)                           │
+│  Estimated CI Cost:    <span class="c-green">$0.42 gross</span> (within monthly included minutes)       │
+╰─────────────────────────────────────────────────────────────────────────────╯`;
+      } else if (st === 'mixed') {
+        lbl.textContent = 'State: Mixed Doc/Code Warning';
+        lbl.style.color = 'var(--c-amber)';
+        box.innerHTML = `<span class="c-dim"># Inspecting outgoing commit 8a4b2c1:</span>
+<div class="terminal-toast">
+  <span>▲</span><span><strong>cure-ci-preview:</strong> Commit mixes code (lib/billing.ts) with documentation (docs/spec.md). This invalidates docs-only workflow skip filters and triggers the entire $0.42 CI matrix.</span>
+</div>
+<span class="c-dim">Recommendation: Separate docs into a separate commit to save runner minutes.</span>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /ci-preview';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">GITHUB ACTIONS WORKFLOW MATRIX AUDIT</span> ──────────────────────────────╮
+│  ci.yml:         Triggers on: ts, js, json, yml (Matrix: Ubuntu, macOS)│
+│  docs.yml:       Triggers on: md, txt (Matrix: Ubuntu only · 45s)      │
+│  Estimated Monthly Runner Minutes Saved via Skips: ~420 mins ($33.60) │
+╰────────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* Agent Budget States */
+    function setAgentBudgetState(st) {
+      const box = document.getElementById('agent-budget-term-content');
+      const lbl = document.getElementById('agent-budget-state-label');
+      if (st === 'cap') {
+        lbl.textContent = 'State: Concurrency Cap Alert';
+        lbl.style.color = 'var(--c-amber)';
+        box.innerHTML = `<span class="c-dim">agent: Attempting to spawn Subagent #4 (lane/research-auth)...</span>
+<div class="terminal-toast">
+  <span>▲</span><span><strong>cure-agent-budget:</strong> Max concurrent subagent limit reached (3 active). Subagent queued until active worker completes.</span>
+</div>
+<span class="c-dim">Active Workers:</span>
+  [1] lane/auth-mvi (Running · Turn 2 · Sonnet)
+  [2] lane/billing-stripe (Running · Turn 4 · Sonnet)
+  [3] lane/doc-audit (Running · Turn 1 · Haiku)`;
+      } else if (st === 'routing') {
+        lbl.textContent = 'State: Model Down-Routing';
+        lbl.style.color = 'var(--c-green)';
+        box.innerHTML = `<span class="c-dim">agent: Calling Agent(task="Read codebase and summarize API interfaces", model="opus")</span>
+<div style="border-left:3px solid var(--c-green); padding:6px 10px; background:var(--c-green-bg); margin:6px 0;">
+  <span class="c-green c-bold">⚡ cure-agent-budget: Cost Optimization Applied</span><br>
+  <span class="c-dim">Task classified as read-only research. Auto-routed from <strong>claude-3-opus</strong> to <strong>claude-3-5-sonnet</strong>.</span><br>
+  <span class="c-dim">Cost savings: ~80% ($0.06/1K output tokens).</span>
+</div>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /agents-budget';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">AGENT CONCURRENCY &amp; ROUTING TELEMETRY</span> ────────────────────────────╮
+│  Active Subagents: 2 / 3 Max Cap · Total Subagents Spawned: 7         │
+│  Auto Down-Routings: 4 research agents routed to Sonnet               │
+│  Total Token Dollars Saved: <span class="c-green">$2.18</span>                                    │
+╰───────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* Egress Guard States */
+    function setEgressState(st) {
+      const box = document.getElementById('egress-term-content');
+      const lbl = document.getElementById('egress-state-label');
+      if (st === 'blocked') {
+        lbl.textContent = 'State: Blocked AI Egress';
+        lbl.style.color = 'var(--c-red)';
+        box.innerHTML = `<span class="c-dim">agent: Calling Bash: \`curl -X POST https://api.openai.com/v1/chat/completions ...\`</span>
+<div class="dialog-box">
+  <div class="dialog-header">🚨 EGRESS GUARD BLOCKED: External AI Vendor Call</div>
+  <div class="dialog-body">
+    Repo: <strong>initiated-recruiting</strong> (Protected Classification: Minors Data / COPPA)<br>
+    Target URL: <strong>https://api.openai.com/v1/chat/completions</strong><br>
+    Violation: Unapproved third-party AI transmission from student-facing repository.
+  </div>
+  <div class="dialog-actions">
+    <button class="dialog-btn primary" onclick="resolveEgress(false)">[1] Refuse network request (Default)</button>
+    <button class="dialog-btn" onclick="resolveEgress(true)">[2] Allow once (Log security incident)</button>
+  </div>
+</div>
+<div id="egress-result-line"></div>`;
+      } else if (st === 'allowed') {
+        lbl.textContent = 'State: Allowed Internal Endpoint';
+        lbl.style.color = 'var(--c-green)';
+        box.innerHTML = `<span class="c-dim">agent: Calling Bash: \`curl -X POST https://us-central1-aiplatform.googleapis.com/... \`</span>
+<div style="border-left:3px solid var(--c-green); padding:6px 10px; background:var(--c-green-bg); margin:6px 0;">
+  <span class="c-green c-bold">✓ EGRESS GUARD: Allowed</span><br>
+  <span class="c-dim">Target is approved Google Vertex AI enterprise BAA endpoint. Outbound call permitted.</span>
+</div>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /egress-guard';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">REPOSITORY DATA CLASSIFICATION &amp; EGRESS RULES</span> ─────────────────────╮
+│  Classification: <span class="c-red">PROTECTED (Minors Data / COPPA / FERPA)</span>              │
+│  Allowed Endpoints: Google Vertex AI (BAA covered)                    │
+│  Blocked Endpoints: OpenAI, Anthropic Direct, Cohere, Perplexity      │
+│  Total Blocked Attempts This Session: 1                               │
+╰───────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    function resolveEgress(allowed) {
+      const res = document.getElementById('egress-result-line');
+      if (allowed) {
+        res.innerHTML = `<span class="c-amber">⚠ Security override logged: operator authorized outbound transmission at 14:48:12 UTC.</span>`;
+      } else {
+        res.innerHTML = `<span class="c-red">✗ Blocked by cure-egress-guard (operator refused). Network request cancelled.</span>`;
+      }
+    }
+
+    /* Rules Band States */
+    function setRulesState(st) {
+      const box = document.getElementById('rules-term-content');
+      const lbl = document.getElementById('rules-state-label');
+      if (st === 'banner') {
+        lbl.textContent = 'State: HUD Ribbon Mount';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `<span class="c-dim"># AbovePrompt Shelf with active repo house rules:</span>
+<span class="c-sub">rules</span> <span class="c-blue">● Clean Architecture</span> <span class="c-dim">·</span> <span class="c-blue">MVI (Android)</span> <span class="c-dim">·</span> <span class="c-blue">Next.js App Router</span> <span class="c-dim">·</span> <span class="c-blue">Zero Pip</span> <span class="c-dim">·</span> <span class="c-blue">WCAG 2.2 AA</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████████ 58m left</span>
+<span class="c-blue">&gt;</span> Ready for task...`;
+      } else if (st === 'custom') {
+        lbl.textContent = 'State: Custom .cure/rules.json';
+        lbl.style.color = 'var(--c-green)';
+        box.innerHTML = `<span class="c-dim"># Loaded from .cure/rules.json:</span>
+<span class="c-sub">rules</span> <span class="c-green">● HIPAA BAA Enforced</span> <span class="c-dim">·</span> <span class="c-green">Vertex AI Only</span> <span class="c-dim">·</span> <span class="c-green">No Public S3 Buckets</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████████ 58m left</span>
+<span class="c-blue">&gt;</span> Custom rules active for Level5.`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /rules';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">ACTIVE REPOSITORY HOUSE RULES</span> ────────────────────────────────────────╮
+│  1. Clean Architecture: Strict dependency inversion (domain has no IO)│
+│  2. MVI / Compose: State flows unidirectional, zero mutable state in UI│
+│  3. Zero Pip: Python scripts must rely exclusively on stdlib          │
+│  4. WCAG 2.2 AA: Contrast ratios must pass 4.5:1 (AA) and 7:1 (AAA)   │
+╰───────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* Handoff States */
+    function setHandoffState(st) {
+      const box = document.getElementById('handoff-term-content');
+      const lbl = document.getElementById('handoff-state-label');
+      if (st === 'clean') {
+        lbl.textContent = 'State: Clean Branch Handoff';
+        lbl.style.color = 'var(--c-green)';
+        box.innerHTML = `<span class="c-dim"># Drafted STATE.md handoff block ready to copy or write:</span>
+╭─ <span class="c-bold">CURE SESSION HANDOFF: feat/billing-stripe</span> ─────────────────────────────────╮
+│  Branch:       feat/billing-stripe (up to date with origin/feat/billing)     │
+│  Commits (2):  8a4b2c1 feat: add Stripe webhook signature validation         │
+│                1f9d4e2 test: add 14 mutation tests for webhook events        │
+│  Tree Status:  Clean (0 uncommitted files)                                   │
+│  Next Steps:   Deploy staging Cloud Function; run end-to-end webhook replay. │
+╰─────────────────────────────────────────────────────────────────────────────╯`;
+      } else if (st === 'dirty') {
+        lbl.textContent = 'State: Dirty Workspace Draft';
+        lbl.style.color = 'var(--c-amber)';
+        box.innerHTML = `<span class="c-dim"># Handoff with uncommitted changes flagged:</span>
+╭─ <span class="c-bold">CURE SESSION HANDOFF: feat/billing-stripe</span> ─────────────────────────────────╮
+│  Branch:       feat/billing-stripe                                           │
+│  Tree Status:  <span class="c-amber">DIRTY (2 uncommitted files: lib/stripe.ts, package.json)</span>      │
+│  Mutations:    +48 / -12 lines                                               │
+│  Warning:      Commit or stash changes before context switch.                │
+╰─────────────────────────────────────────────────────────────────────────────╯`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /handoff';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">SESSION HANDOFF DRAFT READY</span> ─────────────────────────────────────────╮
+│  Would you like to write this handoff block directly to STATE.md?     │
+│  [1] Overwrite STATE.md Active Context Block                          │
+│  [2] Copy block to clipboard only                                     │
+╰───────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* Lane Board States */
+    function setLaneBoardState(st) {
+      const box = document.getElementById('lane-board-term-content');
+      const lbl = document.getElementById('lane-board-state-label');
+      if (st === 'lanes') {
+        lbl.textContent = 'State: Multi-Lane Matrix';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">TRI-LANE ORCHESTRATION BOARD</span> ──────────────────────────────────────────────╮
+│  LANE            BRANCH                 COMMITS   DIRTY   STATUS             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│  lane/auth-mvi   feat/auth-mvi          +3 ahead    0     <span class="c-green">✓ Verified Clean</span>   │
+│  lane/billing    feat/billing-stripe    +2 ahead    0     <span class="c-green">✓ Verified Clean</span>   │
+│  main (origin)   main                    0 ahead    0     <span class="c-blue">● Baseline Sync</span>    │
+╰──────────────────────────────────────────────────────────────────────────────╯`;
+      } else if (st === 'defect') {
+        lbl.textContent = 'State: Defect Window Flag';
+        lbl.style.color = 'var(--c-red)';
+        box.innerHTML = `╭─ <span class="c-bold">TRI-LANE ORCHESTRATION BOARD</span> ──────────────────────────────────────────────╮
+│  LANE            BRANCH                 COMMITS   DIRTY   STATUS             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│  lane/refactor   feat/refactor-db       +0 ahead    3     <span class="c-red">✗ DEFECT: Empty</span>    │
+│  lane/billing    feat/billing-stripe    +2 ahead    0     <span class="c-green">✓ Verified Clean</span>   │
+╰──────────────────────────────────────────────────────────────────────────────╯
+<div class="terminal-toast"><span>▲</span><span><strong>Defect Detected:</strong> lane/refactor reported completion with 0 commits ahead.</span></div>`;
+      } else if (st === 'cmd') {
+        lbl.textContent = 'Slash Command: /lanes';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭─ <span class="c-bold">ACTIVE WORKTREE MANAGEMENT</span> ──────────────────────────────────────────╮
+│  3 Git worktrees active under .git/worktrees/                         │
+│  Recommended Action: Prune lane/auth-mvi after PR merge.              │
+╰───────────────────────────────────────────────────────────────────────╯`;
       }
     }
 
@@ -1525,9 +2117,34 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
     function setPolicyState(st) {
       const box = document.getElementById('policy-term-content');
       if (st === 'intercept') {
-        box.innerHTML = `<span class="c-dim">agent: Calling Write(.github/workflows/deploy.yml)...</span>\n\n<div class="dialog-box">\n  <div class="dialog-header">⚠ HOUSE RULE INTERCEPT: [no-cron]</div>\n  <div class="dialog-body">\n    File: <strong>.github/workflows/deploy.yml</strong> (Line 14)<br>\n    Rule: Org no-cron policy (2026-08-08)<br>\n    Reason: Scheduled cron triggers cause uncontrolled runner spend and overages.\n  </div>\n  <div class="diff-block">\n+ on:<br>\n+   schedule:<br>\n+     - cron: '0 * * * *'\n  </div>\n  <div class="dialog-actions">\n    <button class="dialog-btn primary" onclick="resolvePolicy(false)">[1] Refuse the write (Default / Recommended)</button>\n    <button class="dialog-btn" onclick="resolvePolicy(true)">[2] Allow this once (Logged to security audit)</button>\n  </div>\n</div>\n<div id="policy-result-line"></div>`;
+        box.innerHTML = `<span class="c-dim">agent: Calling Write(.github/workflows/deploy.yml)...</span>
+
+<div class="dialog-box">
+  <div class="dialog-header">⚠ HOUSE RULE INTERCEPT: [no-cron]</div>
+  <div class="dialog-body">
+    File: <strong>.github/workflows/deploy.yml</strong> (Line 14)<br>
+    Rule: Org no-cron policy (2026-08-08)<br>
+    Reason: Scheduled cron triggers cause uncontrolled runner spend and overages.
+  </div>
+  <div class="diff-block">
++ on:<br>
++   schedule:<br>
++     - cron: '0 * * * *'
+  </div>
+  <div class="dialog-actions">
+    <button class="dialog-btn primary" onclick="resolvePolicy(false)">[1] Refuse the write (Default / Recommended)</button>
+    <button class="dialog-btn" onclick="resolvePolicy(true)">[2] Allow this once (Logged to security audit)</button>
+  </div>
+</div>
+<div id="policy-result-line"></div>`;
       } else if (st === 'audit') {
-        box.innerHTML = `╭─ <span class="c-bold">HOUSE RULES &amp; AUDIT TRAIL</span> ──────────────────────────────────────────╮\n│  Active Rules: no-cron · level5-vertex-only · minors-ai · secrets   │\n├──────────────────────────────────────────────────────────────────────┤\n│  Recent Overrides:                                                   │\n│  2026-10-07 14:35  no-cron        statledger   .github/deploy.yml     │\n│  2026-10-04 09:12  hardcoded-key statledger   scripts/seed.ts        │\n╰──────────────────────────────────────────────────────────────────────╯`;
+        box.innerHTML = `╭─ <span class="c-bold">HOUSE RULES &amp; AUDIT TRAIL</span> ──────────────────────────────────────────╮
+│  Active Rules: no-cron · level5-vertex-only · minors-ai · secrets   │
+├──────────────────────────────────────────────────────────────────────┤
+│  Recent Overrides:                                                   │
+│  2026-10-07 14:35  no-cron        statledger   .github/deploy.yml     │
+│  2026-10-04 09:12  hardcoded-key statledger   scripts/seed.ts        │
+╰──────────────────────────────────────────────────────────────────────╯`;
       }
     }
 
@@ -1547,15 +2164,148 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
       if (st === 'verified') {
         lbl.textContent = 'Audit: Verified';
         lbl.style.color = 'var(--c-green)';
-        box.innerHTML = `<span class="c-dim">[Subagent hand-back received from lane/auth-mvi]</span>\nSubagent Report: "All 42 MVI unit tests passing. Authentication refactoring is complete."\n\n╭─ <span class="c-bold">LANE VERIFICATION: lane/auth-mvi</span> ───────────────────────────────────╮\n│  Status:      <span class="c-green">✓ VERIFIED</span>                                             │\n│  Commits:     3 commits ahead of origin/main                         │\n│  Mutations:   <span class="c-green">+142</span> / <span class="c-red">-18</span> lines across 4 files                        │\n│  Worktree:    Clean (0 uncommitted files)                            │\n╰──────────────────────────────────────────────────────────────────────╯\n<span class="c-green">✓ Mutation verified: code modifications match reported hand-back claims.</span>`;
+        box.innerHTML = `<span class="c-dim">[Subagent hand-back received from lane/auth-mvi]</span>
+Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is complete."
+
+╭─ <span class="c-bold">LANE VERIFICATION: lane/auth-mvi</span> ───────────────────────────────────╮
+│  Status:      <span class="c-green">✓ VERIFIED</span>                                             │
+│  Commits:     3 commits ahead of origin/main                         │
+│  Mutations:   <span class="c-green">+142</span> / <span class="c-red">-18</span> lines across 4 files                        │
+│  Worktree:    Clean (0 uncommitted files)                            │
+╰──────────────────────────────────────────────────────────────────────╯
+<span class="c-green">✓ Mutation verified: code modifications match reported hand-back claims.</span>`;
       } else if (st === 'alarm') {
         lbl.textContent = 'Audit: Alarm (Empty Completion)';
         lbl.style.color = 'var(--c-red)';
-        box.innerHTML = `<span class="c-dim">[Subagent hand-back received from lane/refactor-db]</span>\nSubagent Report: "All migrations executed successfully and tests pass."\n\n╭─ <span class="c-bold">LANE ALARM: EMPTY COMPLETION</span> ───────────────────────────────────────╮\n│  Status:      <span class="c-red">✗ UNVERIFIED / EMPTY DIFF</span>                              │\n│  Target:      lane/refactor-db                                       │\n│  Diff:        0 commits ahead · 0 files modified                     │\n│  Action:      Reject handback; instruct lane to inspect working dir. │\n╰──────────────────────────────────────────────────────────────────────╯\n<div class="terminal-toast"><span>▲</span><span><strong>cure-lane-verifier:</strong> a report claims completion but its branch is empty! [EMPTY COMPLETION]</span></div>`;
+        box.innerHTML = `<span class="c-dim">[Subagent hand-back received from lane/refactor-db]</span>
+Subagent Report: "All migrations executed successfully and tests pass."
+
+╭─ <span class="c-bold">LANE ALARM: EMPTY COMPLETION</span> ───────────────────────────────────────╮
+│  Status:      <span class="c-red">✗ UNVERIFIED / EMPTY DIFF</span>                              │
+│  Target:      lane/refactor-db                                       │
+│  Diff:        0 commits ahead · 0 files modified                     │
+│  Action:      Reject handback; instruct lane to inspect working dir. │
+╰──────────────────────────────────────────────────────────────────────╯
+<div class="terminal-toast"><span>▲</span><span><strong>cure-lane-verifier:</strong> a report claims completion but its branch is empty! [EMPTY COMPLETION]</span></div>`;
       } else if (st === 'dirty') {
         lbl.textContent = 'Audit: Dirty Worktree Warning';
         lbl.style.color = 'var(--c-amber)';
-        box.innerHTML = `<span class="c-dim">[Subagent hand-back received from lane/cache-band]</span>\n\n╭─ <span class="c-bold">LANE VERIFICATION: lane/cache-band</span> ──────────────────────────────────╮\n│  Status:      <span class="c-amber">▲ VERIFIED WITH UNCOMMITTED CHANGES</span>                   │\n│  Commits:     2 commits ahead of origin/main                         │\n│  Mutations:   <span class="c-green">+84</span> / <span class="c-red">-4</span> lines across 2 files                          │\n│  Worktree:    <span class="c-amber">DIRTY (3 uncommitted files in worktree)</span>                │\n╰──────────────────────────────────────────────────────────────────────╯`;
+        box.innerHTML = `<span class="c-dim">[Subagent hand-back received from lane/cache-band]</span>
+
+╭─ <span class="c-bold">LANE VERIFICATION: lane/cache-band</span> ──────────────────────────────────╮
+│  Status:      <span class="c-amber">▲ VERIFIED WITH UNCOMMITTED CHANGES</span>                   │
+│  Commits:     2 commits ahead of origin/main                         │
+│  Mutations:   <span class="c-green">+84</span> / <span class="c-red">-4</span> lines across 2 files                          │
+│  Worktree:    <span class="c-amber">DIRTY (3 uncommitted files in worktree)</span>                │
+╰──────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* Spend States */
+    function setSpendState(st) {
+      const box = document.getElementById('spend-term-content');
+      const lbl = document.getElementById('spend-state-label');
+      if (st === 'safe') {
+        lbl.textContent = 'Pacing: Normal ($12/day)';
+        lbl.style.color = 'var(--c-green)';
+        box.innerHTML = `<span class="c-dim"># Ambient Spinner Integration (During turn execution):</span>
+<span class="c-blue">⠋</span> Running regression test suite... <span class="c-dim">· Actions $12.40 today</span>
+
+<span class="c-dim"># When Prompt is Active (Within budget):</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span>
+<span class="c-blue">&gt;</span> Ship the release notes for v7.13.0...`;
+      } else if (st === 'overage') {
+        lbl.textContent = 'Pacing: Monthly Overage Warning';
+        lbl.style.color = 'var(--c-amber)';
+        box.innerHTML = `<span class="c-dim"># Spinner with Amber Warning Flag:</span>
+<span class="c-blue">⠋</span> Executing build pipeline... <span class="c-amber">· Actions $28.50 today ▲</span>
+
+<span class="c-dim"># Ambient Status Warning Underneath Prompt:</span>
+<span class="c-blue">&gt;</span> Deploy the worker container to staging...
+<span class="c-amber">▲ Actions pace $384/mo exceeds $300 allowance (+$84 projected overage · avg $18.40/day)</span>`;
+      } else if (st === 'report') {
+        lbl.textContent = 'Slash Command: /spend';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭──────────────────────────────────────────────────────────────────────╮
+│  <span class="c-bold">GITHUB ACTIONS BILLING SUMMARY</span> · Cure-Consulting-Group              │
+│  Freshness: 14:32 UTC (Active) · Monthly Allowance: $300.00          │
+├──────────────────────────────────────────────────────────────────────┤
+│  Today's Burn:       <span class="c-bold">$  12.40</span>    (Last 3-day avg: $14.10/day)        │
+│  Month to Date:      <span class="c-bold">$ 112.50</span>    (37.5% of allowance)                │
+│  Projected Total:    <span class="c-green">$ 248.00</span>    [<span class="c-green">████████████</span><span class="c-dim">░░░░░░░░</span>]  <span class="c-green">SAFE PACE</span>   │
+├──────────────────────────────────────────────────────────────────────┤
+│  Included Usage:     $ 187.50 remaining in plan                      │
+│  Billed Runners:     macOS-14 (62%), ubuntu-latest (38%)             │
+╰──────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* Cache States */
+    function setCacheState(st) {
+      const box = document.getElementById('cache-term-content');
+      const lbl = document.getElementById('cache-state-label');
+      if (st === 'warm') {
+        lbl.textContent = 'State: Warm (1h)';
+        lbl.style.color = 'var(--c-green)';
+        box.innerHTML = `<span class="c-dim"># State A: Normal Warm Cache (Subscription Plan 1h TTL)</span>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████████ 59m left</span> <span class="c-dim">· hit 76% · misses 0</span>
+<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>
+<span class="c-blue">&gt;</span> Prompt ready. Caching prefix active (42,190 prompt tokens cached).`;
+      } else if (st === 'expiring') {
+        lbl.textContent = 'State: Expiring (<15m)';
+        lbl.style.color = 'var(--c-amber)';
+        box.innerHTML = `<span class="c-dim"># State B: Expiring Cache (<25% TTL Remaining - Amber Alert)</span>
+<span class="c-sub">cache</span> <span class="c-amber">▲ 5m ███░░░░░░░░░░░░░ 53s left</span> <span class="c-dim">· hit 36% · misses 1</span>
+<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>
+<span class="c-blue">&gt;</span> Prompt ready. Cache will lapse in 53s unless turn submitted.`;
+      } else if (st === 'cold') {
+        lbl.textContent = 'State: Cold (Penalty)';
+        lbl.style.color = 'var(--c-red)';
+        box.innerHTML = `<span class="c-dim"># State C: Cold Lapsed Cache (Calculated Write Penalty)</span>
+<span class="c-sub">cache</span> <span class="c-red">○ cold</span> <span class="c-dim">· next message re-caches 82,410 tokens (~$0.25 write fee)</span>
+<span class="c-dim">──────────────────────────────────────────────────────────────────────────</span>
+<span class="c-blue">&gt;</span> Prompt ready. Cache prefix lapsed; next turn will pay full write fee.`;
+      } else if (st === 'dash') {
+        lbl.textContent = 'Slash Command: /cache';
+        lbl.style.color = 'var(--c-blue)';
+        box.innerHTML = `╭──────────────────────────────────────────────────────────────────────╮
+│  <span class="c-bold">ANTHROPIC PROMPT CACHE TELEMETRY</span> · Main Conversation                │
+│  Status: <span class="c-green">● WARM (1h TTL)</span> · Source: Inferred from subscription limits │
+├──────────────────────────────────────────────────────────────────────┤
+│  Time Left:          54m 12s remaining before expiration             │
+│  Session Hit Rate:   76.4% of all input tokens served from cache     │
+│  Miss Count:         0 cache misses recorded this session            │
+│  Cached Prefix:      42,190 tokens currently warm                    │
+╰──────────────────────────────────────────────────────────────────────╯`;
+      }
+    }
+
+    /* Image States */
+    function setImageState(st) {
+      const box = document.getElementById('image-term-content');
+      const lbl = document.getElementById('image-state-label');
+      if (st === 'kitty') {
+        lbl.textContent = 'Mode: Kitty Graphics Protocol';
+        box.innerHTML = `<div class="image-tray-row"><div class="image-thumb-card"><div class="image-icon">🖼</div><strong>[Image #1]</strong><span class="c-dim">1440×900 px · PNG (Kitty 18×8)</span></div></div><span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76%</span>
+<span class="c-blue">&gt;</span> Look at [Image #1] and suggest improvements to the architecture...`;
+      } else if (st === 'fallback') {
+        lbl.textContent = 'Mode: Unicode Fallback Card';
+        box.innerHTML = `╭─ Image #1 ─────────────────────────╮
+│ 🖼  architecture_mvi.png            │
+│ 1440 × 900 px · 342 KB (PNG)       │
+╰────────────────────────────────────╯
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span> <span class="c-dim">· hit 76%</span>
+<span class="c-blue">&gt;</span> Look at [Image #1] and suggest improvements to the architecture...`;
+      } else if (st === 'multi') {
+        lbl.textContent = 'Mode: Multi-Image Grid (4 Images)';
+        box.innerHTML = `<div class="image-tray-row">
+  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>diagram_1.png</strong><span class="c-dim">1200×800</span></div>
+  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>screen_2.png</strong><span class="c-dim">800×600</span></div>
+  <div class="image-thumb-card"><div class="image-icon">🖼</div><strong>flow_3.png</strong><span class="c-dim">1024×768</span></div>
+  <div class="image-thumb-card"><div class="image-icon">📁</div><strong>+1 more</strong><span class="c-dim">overflow pill</span></div>
+</div>
+<span class="c-sub">cache</span> <span class="c-green">● 1h ████████████░░░░ 42m left</span>
+<span class="c-blue">&gt;</span> Compare the three screen progressions above...`;
       }
     }
 
