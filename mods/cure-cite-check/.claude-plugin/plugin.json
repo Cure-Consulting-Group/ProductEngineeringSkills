@@ -1,0 +1,6 @@
+{
+  "name": "cure-cite-check",
+  "version": "0.1.0",
+  "description": "Verifies file:line code citations in assistant answers against disk, flagging missing files and out-of-range line numbers. Adds /cite-check.",
+  "author": { "name": "Cure Consulting Group" }
+}

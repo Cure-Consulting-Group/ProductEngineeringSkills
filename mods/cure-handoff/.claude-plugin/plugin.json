@@ -1,0 +1,6 @@
+{
+  "name": "cure-handoff",
+  "version": "0.1.0",
+  "description": "Drafts structured STATE.md handoff entries from git commits, branch status, and working tree diffs. Adds /handoff.",
+  "author": { "name": "Cure Consulting Group" }
+}

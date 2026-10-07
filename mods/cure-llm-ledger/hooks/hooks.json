@@ -1,0 +1,4 @@
+{
+  "description": "cure-llm-ledger hooks module",
+  "modules": ["./register.ts"]
+}

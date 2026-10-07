@@ -1,0 +1,6 @@
+{
+  "name": "cure-rules-band",
+  "version": "0.1.0",
+  "description": "Displays repository house rules and legal/architectural constraints in a HUD banner above the prompt. Adds /rules.",
+  "author": { "name": "Cure Consulting Group" }
+}

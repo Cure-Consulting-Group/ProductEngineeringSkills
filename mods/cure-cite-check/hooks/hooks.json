@@ -1,0 +1,4 @@
+{
+  "description": "cure-cite-check hooks module",
+  "modules": ["./register.ts"]
+}

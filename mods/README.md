@@ -1,38 +1,48 @@
 # Cure mods for Claude Code
 
-Five [Claude Code mods](https://code.claude.com/docs/en/plugins/mods/overview.md), published in the `cure` marketplace (this repository) beside the skill library. Each is its own plugin, so you install only the ones you want. The first three each turn a rule or lesson the portfolio already has in writing into a check that runs. The last two are displays.
+Fifteen [Claude Code mods](https://code.claude.com/docs/en/plugins/mods/overview.md), published in the `cure` marketplace (this repository) beside the skill library. Each is its own plugin, so you install only the ones you want.
 
-| Mod | What it does | Where the rule came from |
-|---|---|---|
-| `cure-policy-guard` | Refuses a file write that breaks a written house rule, unless you override. Every override is recorded; `/policy-guard` lists them. | Org no-cron policy (2026-08-08); Level5 `BAA_INVENTORY.md`; minors' data in TIR / SPEDTECH / LearnLift; the hard-coded Gemini key found in TIR scripts |
-| `cure-lane-verifier` | When a subagent or tri-lane lane reports back, attaches git's account of the branches and worktrees the report names. A "complete" with an empty branch is flagged `EMPTY COMPLETION`. | Memory rule *verify lane output by mutation*: a lane reported 42 passing tests with an empty diff |
-| `cure-spend-band` | Shows today's GitHub Actions spend beside the spinner and a warning under the prompt when the month is on pace to exceed the plan's included usage. `/spend` gives the detail. | The September 2026 Actions overage ($264) |
-| `cure-cache-band` | Shows above the prompt how long the prompt cache has left, the session's hit rate and misses, and, once it lapses, how many tokens the next message re-caches. `/cache` gives the detail. | A cold cache re-bills the whole context at the write rate |
-| `cure-image-viewer` | Draws the images you paste above the prompt, from the draft until the turn that sent them ends. | — |
+| Mod | What it does | Where the rule came from | Tests |
+|---|---|---|---|
+| `cure-policy-guard` | Refuses a file write that breaks a written house rule, unless you override. Every override is recorded; `/policy-guard` lists them. | Org no-cron policy (2026-08-08); Level5 `BAA_INVENTORY.md`; minors' data in TIR / SPEDTECH / LearnLift; hardcoded Gemini key | 17 |
+| `cure-lane-verifier` | When a subagent or tri-lane lane reports back, attaches git's account of the branches and worktrees the report names. A "complete" with an empty branch is flagged `EMPTY COMPLETION`. | Memory rule *verify lane output by mutation*: a lane reported 42 passing tests with an empty diff | 14 |
+| `cure-spend-band` | Shows today's GitHub Actions spend beside the spinner and a warning under the prompt when the month is on pace to exceed the plan's included usage. `/spend` gives the detail. | The September 2026 Actions overage ($264) | 14 |
+| `cure-cache-band` | Shows above the prompt how long the prompt cache has left, the session's hit rate and misses, and, once it lapses, how many tokens the next message re-caches. `/cache` gives the detail. | A cold cache re-bills the whole context at the write rate | 18 |
+| `cure-image-viewer` | Draws the images you paste above the prompt, from the draft until the turn that sent them ends. | Terminal UI graphics | 10 |
+| `cure-secret-scrub` | Redacts API keys, tokens, and private keys from Read, Grep, and Bash outputs before they enter model context. `/secret-scrub` lists stats. | Leaked credentials in session exploration across 34 repos | 16 |
+| `cure-llm-ledger` | Per-turn token and dollar cost ledger attributed by repo, branch, and model. Appends atomic JSONL records; `/ledger` gives session breakdown. | Anthropic spend absent from `v_billing_unified` | 8 |
+| `cure-cite-check` | Verifies `file:line` code citations in assistant answers against disk, flagging missing files and out-of-range lines. Adds `/cite-check`. | Memory rule *verify before asserting architecture*: stale file:line citations | 10 |
+| `cure-claim-guard` | Enforces multi-machine state file ownership rules in shared repos (DistrictZero `state-targets.md`), blocking cross-machine collisions. Adds `/claims`. | DistrictZero CLAUDE.md multi-machine coordination | 11 |
+| `cure-ci-preview` | Pre-push GitHub Actions runner time and cost estimator. Warns when commits mix doc notes with code. Adds `/ci-preview`. | Costly matrix builds and lost docs-only skip optimization | 9 |
+| `cure-agent-budget` | Enforces subagent concurrency caps and automatically down-routes read-only research subagents from Opus to Sonnet. Adds `/agents-budget`. | Runaway subagent fan-out token costs | 9 |
+| `cure-egress-guard` | Blocks unauthorized outbound data transmission to external AI vendor endpoints in sensitive repos (PHI, minors). Adds `/egress-guard`. | Level5 PHI and student data privacy guardrails | 10 |
+| `cure-rules-band` | Displays repository house rules and legal/architectural constraints in a HUD banner above the prompt. Adds `/rules`. | Cross-repo context switching and forgotten house rules | 7 |
+| `cure-handoff` | Drafts structured `STATE.md` handoff blocks from git commits, branch status, and working tree diffs. Adds `/handoff`. | Manual STATE.md handoff drift | 3 |
+| `cure-lane-board` | Multi-lane dashboard for tri-lane worktrees, branches, live commits, and defect window status. Adds `/lanes`. | Multi-vendor orchestration tracking across worktrees | 5 |
 
 ## Install
 
-Mods need **Claude Code 2.1.287 or later** (`claude --version`). This machine had 2.1.285 on 2026-10-05:
+Mods need **Claude Code 2.1.287 or later** (`claude --version`).
+
+Install for every session:
 
 ```sh
-brew upgrade --cask claude-code@latest
-```
-
-Try one without installing (it hot-reloads when you save a file):
-
-```sh
-claude --plugin-dir mods/cure-policy-guard   # from a checkout of this repository
-```
-
-Install for every session. The marketplace is the one the skill library already uses:
-
-```
 /plugin marketplace add Cure-Consulting-Group/ProductEngineeringSkills
 /plugin install cure-policy-guard@cure
 /plugin install cure-lane-verifier@cure
 /plugin install cure-spend-band@cure
 /plugin install cure-cache-band@cure
 /plugin install cure-image-viewer@cure
+/plugin install cure-secret-scrub@cure
+/plugin install cure-llm-ledger@cure
+/plugin install cure-cite-check@cure
+/plugin install cure-claim-guard@cure
+/plugin install cure-ci-preview@cure
+/plugin install cure-agent-budget@cure
+/plugin install cure-egress-guard@cure
+/plugin install cure-rules-band@cure
+/plugin install cure-handoff@cure
+/plugin install cure-lane-board@cure
 ```
 
 ## Update

@@ -1,0 +1,6 @@
+{
+  "name": "cure-agent-budget",
+  "version": "0.1.0",
+  "description": "Enforces subagent fan-out concurrency limits and automatically routes read-only research subagents to cost-effective models. Adds /agents-budget.",
+  "author": { "name": "Cure Consulting Group" }
+}

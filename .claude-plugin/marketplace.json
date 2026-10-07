@@ -123,6 +123,157 @@
         "images",
         "terminal"
       ]
+    },
+    {
+      "name": "cure-secret-scrub",
+      "source": "./mods/cure-secret-scrub",
+      "description": "Mod: redacts API keys, private keys, service account secrets, and tokens from Read, Grep, and Bash outputs. Adds /secret-scrub.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "security",
+        "secrets",
+        "redaction"
+      ]
+    },
+    {
+      "name": "cure-llm-ledger",
+      "source": "./mods/cure-llm-ledger",
+      "description": "Mod: per-turn LLM token and dollar cost ledger attributed by repo, branch, and model. Adds /ledger.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "finops",
+        "llmops",
+        "cost-tracking"
+      ]
+    },
+    {
+      "name": "cure-cite-check",
+      "source": "./mods/cure-cite-check",
+      "description": "Mod: verifies code line citations (file:line) in assistant answers against disk, flagging stale lines. Adds /cite-check.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "verification",
+        "citations",
+        "quality"
+      ]
+    },
+    {
+      "name": "cure-claim-guard",
+      "source": "./mods/cure-claim-guard",
+      "description": "Mod: enforces multi-machine state file ownership rules in shared repos (DistrictZero state-targets.md). Adds /claims.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "coordination",
+        "multi-machine",
+        "guardrails"
+      ]
+    },
+    {
+      "name": "cure-ci-preview",
+      "source": "./mods/cure-ci-preview",
+      "description": "Mod: pre-push GitHub Actions CI runner time and cost estimator. Warns when commits mix doc notes with code. Adds /ci-preview.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "ci-cd",
+        "github-actions",
+        "finops"
+      ]
+    },
+    {
+      "name": "cure-agent-budget",
+      "source": "./mods/cure-agent-budget",
+      "description": "Mod: enforces subagent fan-out concurrency caps and auto-routes read-only research subagents to cost-effective models. Adds /agents-budget.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "subagents",
+        "concurrency",
+        "cost-control"
+      ]
+    },
+    {
+      "name": "cure-egress-guard",
+      "source": "./mods/cure-egress-guard",
+      "description": "Mod: prevents unauthorized outbound data transmission to external AI vendor endpoints in sensitive repos (PHI, minors). Adds /egress-guard.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "security",
+        "egress",
+        "compliance",
+        "phi"
+      ]
+    },
+    {
+      "name": "cure-rules-band",
+      "source": "./mods/cure-rules-band",
+      "description": "Mod: displays repository house rules and legal/architectural constraints in a HUD banner above the prompt. Adds /rules.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "hud",
+        "rules",
+        "interface"
+      ]
+    },
+    {
+      "name": "cure-handoff",
+      "source": "./mods/cure-handoff",
+      "description": "Mod: drafts structured STATE.md handoff entries from git commits, branch status, and working tree diffs. Adds /handoff.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "handoff",
+        "workflow",
+        "productivity"
+      ]
+    },
+    {
+      "name": "cure-lane-board",
+      "source": "./mods/cure-lane-board",
+      "description": "Mod: multi-lane dashboard for tri-lane worktrees, branches, live commits, and defect window status. Adds /lanes.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "tri-lane",
+        "orchestration",
+        "dashboard"
+      ]
     }
   ]
 }
