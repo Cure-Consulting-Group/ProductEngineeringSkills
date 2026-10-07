@@ -104,6 +104,13 @@ export function tokensText(tokens: number): string {
   return tokens >= 1000 ? `${Math.round(tokens / 1000)}k` : String(tokens)
 }
 
+/** Estimated write fee for re-caching tokens at Claude 3.5 Sonnet's write rate ($3.75 / M tokens). */
+export function writeFeeText(tokens: number): string {
+  if (tokens <= 0) return ''
+  const fee = (tokens / 1_000_000) * 3.75
+  return fee < 0.01 ? '<$0.01 fee' : `~$${fee.toFixed(2)} fee`
+}
+
 /** The bar's two runs: at least one filled cell while any time is left. */
 export function bar(fraction: number, cells: number = BAR_CELLS): { filled: string; empty: string } {
   const n = Math.min(cells, Math.max(1, Math.round(fraction * cells)))
@@ -113,7 +120,10 @@ export function bar(fraction: number, cells: number = BAR_CELLS): { filled: stri
 /** The band as one plain string: what the timer compares to know a redraw is due, and what /cache prints first. */
 export function bandText(v: View): string {
   if (v.kind === 'none') return ''
-  if (v.kind === 'cold') return `cache ○ cold · next message re-caches ${tokensText(v.tokens)} tokens`
+  if (v.kind === 'cold') {
+    const fee = writeFeeText(v.tokens)
+    return `cache ○ cold · next message re-caches ${tokensText(v.tokens)} tokens${fee ? ` (${fee})` : ''}`
+  }
   const b = bar(v.fraction)
   return `cache ● ${v.ttl} ${b.filled}${b.empty} ${leftText(v.leftMs)} · hit ${v.hitPercent}% · misses ${v.misses}`
 }
@@ -128,6 +138,6 @@ export function reportText(state: CacheState, now: number, ttlSource: string): s
     `  Read from cache       ${tokensText(state.read)} tokens`,
     `  Written to cache      ${tokensText(state.written)} tokens`,
     `  Uncached input        ${tokensText(state.uncached)} tokens`,
-    `  Next message re-sends ${tokensText(state.nextTokens)} tokens${v.kind === 'cold' ? ', all at the cache-write rate' : ''}`,
+    `  Next message re-sends ${tokensText(state.nextTokens)} tokens${v.kind === 'cold' ? `, all at the cache-write rate (${writeFeeText(state.nextTokens)})` : ''}`,
   ].join('\n')
 }

@@ -1,0 +1,82 @@
+scenario,products,line_item,monthly_usd
+lean_readonly,2,LLM: triage,0.2652
+lean_readonly,2,LLM: product_review,3.12
+lean_readonly,2,LLM: design_review,4.16
+lean_readonly,2,LLM: engineering_review,24.96
+lean_readonly,2,LLM: deep_investigation,15.08
+lean_readonly,2,LLM: repair_bundle,0.0
+lean_readonly,2,LLM: release_followup,7.28
+lean_readonly,2,Cloud Run: agent workers,1.78464
+lean_readonly,2,Cloud Run: browser probes,0.82368
+lean_readonly,2,Cloud Run: control API,0.02785
+lean_readonly,2,Firestore: reads,0.075
+lean_readonly,2,Firestore: writes,0.072
+lean_readonly,2,Firestore: state storage,0.15
+lean_readonly,2,Storage: retained evidence,0.5
+lean_readonly,2,Storage: evidence egress,0.6
+lean_readonly,2,Logging: ingestion,2.5
+lean_readonly,2,Pub/Sub: throughput,0.007812
+lean_readonly,2,Scheduler: shared jobs,0.3
+lean_readonly,2,Secret Manager: versions,0.36
+lean_readonly,2,Secret Manager: access,0.03
+lean_readonly,2,GitHub: incremental Linux CI,3.6
+lean_readonly,2,GitHub: incremental macOS CI,9.92
+lean_readonly,2,Search: optional research calls,0.5
+lean_readonly,2,Allowance: artifact_operations_registry_backups,10.0
+lean_readonly,2,Allowance: analytics_queries_and_monitoring,10.0
+lean_readonly,2,Existing subscriptions: incremental,0
+lean_readonly,2,Planning reserve (not expected invoice),24.029046
+balanced,2,LLM: triage,1.326
+balanced,2,LLM: product_review,23.4
+balanced,2,LLM: design_review,12.48
+balanced,2,LLM: engineering_review,74.88
+balanced,2,LLM: deep_investigation,30.16
+balanced,2,LLM: repair_bundle,97.76
+balanced,2,LLM: release_followup,14.56
+balanced,2,Cloud Run: agent workers,8.03088
+balanced,2,Cloud Run: browser probes,2.47104
+balanced,2,Cloud Run: control API,0.1114
+balanced,2,Firestore: reads,0.3
+balanced,2,Firestore: writes,0.27
+balanced,2,Firestore: state storage,0.45
+balanced,2,Storage: retained evidence,1.6
+balanced,2,Storage: evidence egress,2.4
+balanced,2,Logging: ingestion,7.5
+balanced,2,Pub/Sub: throughput,0.039062
+balanced,2,Scheduler: shared jobs,0.6
+balanced,2,Secret Manager: versions,0.6
+balanced,2,Secret Manager: access,0.09
+balanced,2,GitHub: incremental Linux CI,10.8
+balanced,2,GitHub: incremental macOS CI,19.84
+balanced,2,Search: optional research calls,2.0
+balanced,2,Allowance: artifact_operations_registry_backups,20.0
+balanced,2,Allowance: analytics_queries_and_monitoring,25.0
+balanced,2,Existing subscriptions: incremental,0
+balanced,2,Planning reserve (not expected invoice),89.167096
+intensive,2,LLM: triage,5.304
+intensive,2,LLM: product_review,46.8
+intensive,2,LLM: design_review,31.2
+intensive,2,LLM: engineering_review,249.6
+intensive,2,LLM: deep_investigation,90.48
+intensive,2,LLM: repair_bundle,366.6
+intensive,2,LLM: release_followup,43.68
+intensive,2,Cloud Run: agent workers,27.414816
+intensive,2,Cloud Run: browser probes,8.2368
+intensive,2,Cloud Run: control API,0.4456
+intensive,2,Firestore: reads,1.2
+intensive,2,Firestore: writes,0.9
+intensive,2,Firestore: state storage,1.2
+intensive,2,Storage: retained evidence,5.0
+intensive,2,Storage: evidence egress,9.6
+intensive,2,Logging: ingestion,20.0
+intensive,2,Pub/Sub: throughput,0.15625
+intensive,2,Scheduler: shared jobs,1.2
+intensive,2,Secret Manager: versions,1.2
+intensive,2,Secret Manager: access,0.3
+intensive,2,GitHub: incremental Linux CI,28.8
+intensive,2,GitHub: incremental macOS CI,59.52
+intensive,2,Search: optional research calls,6.0
+intensive,2,Allowance: artifact_operations_registry_backups,50.0
+intensive,2,Allowance: analytics_queries_and_monitoring,60.0
+intensive,2,Existing subscriptions: incremental,0
+intensive,2,Planning reserve (not expected invoice),278.709366

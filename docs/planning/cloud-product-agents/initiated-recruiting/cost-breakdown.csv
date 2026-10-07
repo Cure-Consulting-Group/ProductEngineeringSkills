@@ -1,0 +1,82 @@
+scenario,product,line_item,incremental_monthly_usd
+lean_readonly,initiated-recruiting,LLM: triage,0.1326
+lean_readonly,initiated-recruiting,LLM: product_review,2.34
+lean_readonly,initiated-recruiting,LLM: design_review,2.08
+lean_readonly,initiated-recruiting,LLM: engineering_review,12.48
+lean_readonly,initiated-recruiting,LLM: deep_investigation,7.54
+lean_readonly,initiated-recruiting,LLM: repair_bundle,0.0
+lean_readonly,initiated-recruiting,LLM: release_followup,4.368
+lean_readonly,initiated-recruiting,Cloud Run: agent workers,0.940368
+lean_readonly,initiated-recruiting,Cloud Run: browser probes,0.82368
+lean_readonly,initiated-recruiting,Cloud Run: control API,0.0171
+lean_readonly,initiated-recruiting,Firestore: reads,0.03
+lean_readonly,initiated-recruiting,Firestore: writes,0.027
+lean_readonly,initiated-recruiting,Firestore: state storage,0.075
+lean_readonly,initiated-recruiting,Storage: retained evidence,0.3
+lean_readonly,initiated-recruiting,Storage: evidence egress,0.24
+lean_readonly,initiated-recruiting,Logging: ingestion,1.0
+lean_readonly,initiated-recruiting,Pub/Sub: throughput,0.003906
+lean_readonly,initiated-recruiting,Scheduler: shared jobs,0.0
+lean_readonly,initiated-recruiting,Secret Manager: versions,0.12
+lean_readonly,initiated-recruiting,Secret Manager: access,0.009
+lean_readonly,initiated-recruiting,GitHub: incremental Linux CI,1.44
+lean_readonly,initiated-recruiting,GitHub: incremental macOS CI,0.0
+lean_readonly,initiated-recruiting,Search: optional research calls,0.1
+lean_readonly,initiated-recruiting,Allowance: artifact_operations_registry_backups,5.0
+lean_readonly,initiated-recruiting,Allowance: analytics_queries_and_monitoring,10.0
+lean_readonly,initiated-recruiting,Existing subscriptions: incremental,0
+lean_readonly,initiated-recruiting,Planning reserve (not expected invoice),12.266664
+balanced,initiated-recruiting,LLM: triage,0.663
+balanced,initiated-recruiting,LLM: product_review,9.36
+balanced,initiated-recruiting,LLM: design_review,6.24
+balanced,initiated-recruiting,LLM: engineering_review,37.44
+balanced,initiated-recruiting,LLM: deep_investigation,15.08
+balanced,initiated-recruiting,LLM: repair_bundle,48.88
+balanced,initiated-recruiting,LLM: release_followup,8.736
+balanced,initiated-recruiting,Cloud Run: agent workers,4.008576
+balanced,initiated-recruiting,Cloud Run: browser probes,1.64736
+balanced,initiated-recruiting,Cloud Run: control API,0.0517
+balanced,initiated-recruiting,Firestore: reads,0.09
+balanced,initiated-recruiting,Firestore: writes,0.09
+balanced,initiated-recruiting,Firestore: state storage,0.225
+balanced,initiated-recruiting,Storage: retained evidence,0.8
+balanced,initiated-recruiting,Storage: evidence egress,0.72
+balanced,initiated-recruiting,Logging: ingestion,3.0
+balanced,initiated-recruiting,Pub/Sub: throughput,0.011719
+balanced,initiated-recruiting,Scheduler: shared jobs,0.0
+balanced,initiated-recruiting,Secret Manager: versions,0.24
+balanced,initiated-recruiting,Secret Manager: access,0.03
+balanced,initiated-recruiting,GitHub: incremental Linux CI,5.4
+balanced,initiated-recruiting,GitHub: incremental macOS CI,0.0
+balanced,initiated-recruiting,Search: optional research calls,0.3
+balanced,initiated-recruiting,Allowance: artifact_operations_registry_backups,10.0
+balanced,initiated-recruiting,Allowance: analytics_queries_and_monitoring,20.0
+balanced,initiated-recruiting,Existing subscriptions: incremental,0
+balanced,initiated-recruiting,Planning reserve (not expected invoice),43.253339
+intensive,initiated-recruiting,LLM: triage,1.989
+intensive,initiated-recruiting,LLM: product_review,28.08
+intensive,initiated-recruiting,LLM: design_review,15.6
+intensive,initiated-recruiting,LLM: engineering_review,112.32
+intensive,initiated-recruiting,LLM: deep_investigation,45.24
+intensive,initiated-recruiting,LLM: repair_bundle,146.64
+intensive,initiated-recruiting,LLM: release_followup,26.208
+intensive,initiated-recruiting,Cloud Run: agent workers,11.902176
+intensive,initiated-recruiting,Cloud Run: browser probes,4.94208
+intensive,initiated-recruiting,Cloud Run: control API,0.2028
+intensive,initiated-recruiting,Firestore: reads,0.27
+intensive,initiated-recruiting,Firestore: writes,0.27
+intensive,initiated-recruiting,Firestore: state storage,0.6
+intensive,initiated-recruiting,Storage: retained evidence,2.4
+intensive,initiated-recruiting,Storage: evidence egress,2.16
+intensive,initiated-recruiting,Logging: ingestion,9.0
+intensive,initiated-recruiting,Pub/Sub: throughput,0.035156
+intensive,initiated-recruiting,Scheduler: shared jobs,0.0
+intensive,initiated-recruiting,Secret Manager: versions,0.36
+intensive,initiated-recruiting,Secret Manager: access,0.09
+intensive,initiated-recruiting,GitHub: incremental Linux CI,14.4
+intensive,initiated-recruiting,GitHub: incremental macOS CI,0.0
+intensive,initiated-recruiting,Search: optional research calls,0.9
+intensive,initiated-recruiting,Allowance: artifact_operations_registry_backups,30.0
+intensive,initiated-recruiting,Allowance: analytics_queries_and_monitoring,50.0
+intensive,initiated-recruiting,Existing subscriptions: incremental,0
+intensive,initiated-recruiting,Planning reserve (not expected invoice),125.902303

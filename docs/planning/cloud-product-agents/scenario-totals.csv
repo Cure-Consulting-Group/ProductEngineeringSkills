@@ -1,0 +1,4 @@
+scenario,products,llm,modeled_monthly_cash,reserve,monthly_planning_envelope,annual_modeled_cash,annual_planning_envelope,founder_hours_low,founder_hours_high,repair_attempts,accepted_repairs_assumption,managed_runtime_worker_delta
+lean_readonly,2,54.8652,96.1162,24.029,120.1452,1153.3942,1441.7427,6.0,10.0,0.0,0.0,-0.8833
+balanced,2,254.566,356.6684,89.1671,445.8355,4280.0206,5350.0257,12.8,21.6,16.0,9.6,-3.9749
+intensive,2,833.664,1114.8375,278.7094,1393.5468,13378.0496,16722.562,30.0,56.0,60.0,36.0,-13.5689

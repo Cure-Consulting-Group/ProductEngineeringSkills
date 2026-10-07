@@ -1,0 +1,455 @@
+{
+  "schema_version": 1,
+  "prepared_date": "2026-09-27",
+  "currency": "USD",
+  "baseline_products": 2,
+  "days_per_month": 30,
+  "free_tier_credit": 0,
+  "existing_subscription_increment": 0,
+  "token_retry_multiplier": 1.3,
+  "cash_reserve_fraction": 0.25,
+  "repair_acceptance_assumption": 0.6,
+  "notes": [
+    "Scenario counts are combined across two products, not per product.",
+    "Tokens are cumulative billed input/output across all calls in a work order; image and reasoning usage must be included in provider-metered totals.",
+    "No cache, batch, free-tier, private-contract, or subscription credits assumed.",
+    "Cash reserve is unused planning headroom, not an expected invoice.",
+    "Founder hours are AI-assisted active time, not cloud runtime. No salary or subscription total supplied."
+  ],
+  "models": {
+    "luna": {
+      "input_per_million": 0.1,
+      "output_per_million": 0.5,
+      "source": "https://developers.openai.com/api/docs/pricing",
+      "tier": "GPT-6 Luna Standard short context"
+    },
+    "sonnet": {
+      "input_per_million": 2,
+      "output_per_million": 10,
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "tier": "Claude Sonnet 5 base/global"
+    },
+    "sol": {
+      "input_per_million": 2,
+      "output_per_million": 10,
+      "source": "https://developers.openai.com/api/docs/pricing",
+      "tier": "GPT-6 Sol Standard short context"
+    },
+    "opus": {
+      "input_per_million": 4,
+      "output_per_million": 20,
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "tier": "Claude Opus 5.5 base/global"
+    }
+  },
+  "work_types": {
+    "triage": {
+      "minutes": 1,
+      "legs": [
+        {
+          "model": "luna",
+          "input_tokens": 12000,
+          "output_tokens": 1000
+        }
+      ]
+    },
+    "product_review": {
+      "minutes": 3,
+      "legs": [
+        {
+          "model": "sonnet",
+          "input_tokens": 100000,
+          "output_tokens": 10000
+        }
+      ]
+    },
+    "design_review": {
+      "minutes": 6,
+      "legs": [
+        {
+          "model": "sonnet",
+          "input_tokens": 140000,
+          "output_tokens": 12000
+        }
+      ]
+    },
+    "engineering_review": {
+      "minutes": 5,
+      "legs": [
+        {
+          "model": "sol",
+          "input_tokens": 160000,
+          "output_tokens": 16000
+        }
+      ]
+    },
+    "deep_investigation": {
+      "minutes": 12,
+      "legs": [
+        {
+          "model": "opus",
+          "input_tokens": 600000,
+          "output_tokens": 25000
+        }
+      ]
+    },
+    "repair_bundle": {
+      "minutes": 35,
+      "legs": [
+        {
+          "model": "sol",
+          "input_tokens": 1200000,
+          "output_tokens": 70000
+        },
+        {
+          "model": "opus",
+          "input_tokens": 300000,
+          "output_tokens": 20000
+        }
+      ]
+    },
+    "release_followup": {
+      "minutes": 4,
+      "legs": [
+        {
+          "model": "sonnet",
+          "input_tokens": 100000,
+          "output_tokens": 8000
+        }
+      ]
+    }
+  },
+  "rates": {
+    "cloud_job_vcpu_second": 0.000018,
+    "cloud_job_gib_second": 0.000002,
+    "job_vcpu": 2,
+    "job_memory_gib": 4,
+    "cloud_service_vcpu_second": 0.000024,
+    "cloud_service_gib_second": 0.0000025,
+    "service_vcpu": 1,
+    "service_memory_gib": 1,
+    "service_per_million_requests": 0.4,
+    "firestore_per_100k_reads": 0.03,
+    "firestore_per_100k_writes": 0.09,
+    "firestore_gib_month": 0.15,
+    "storage_gib_month": 0.02,
+    "storage_egress_gib": 0.12,
+    "logging_gib": 0.5,
+    "pubsub_per_tib": 40,
+    "scheduler_job_month": 0.1,
+    "secret_version_month": 0.06,
+    "secret_per_10k_access": 0.03,
+    "github_linux_minute": 0.006,
+    "github_macos_minute": 0.062,
+    "search_per_1000": 10,
+    "managed_agent_session_hour": 0.08
+  },
+  "effort": [
+    {
+      "name": "Discovery and baseline",
+      "epic": "01",
+      "pilot": [
+        8,
+        16
+      ],
+      "expansion": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Control plane and dispatch",
+      "epic": "02",
+      "pilot": [
+        16,
+        24
+      ],
+      "expansion": [
+        8,
+        16
+      ]
+    },
+    {
+      "name": "Read connectors and product adapters",
+      "epic": "03",
+      "pilot": [
+        12,
+        20
+      ],
+      "expansion": [
+        8,
+        16
+      ]
+    },
+    {
+      "name": "Role workflows and tool policy",
+      "epic": "04",
+      "pilot": [
+        12,
+        20
+      ],
+      "expansion": [
+        12,
+        20
+      ]
+    },
+    {
+      "name": "Findings and evidence",
+      "epic": "04",
+      "pilot": [
+        8,
+        12
+      ],
+      "expansion": [
+        8,
+        12
+      ]
+    },
+    {
+      "name": "Synthetic QA adapters",
+      "epic": "05",
+      "pilot": [
+        8,
+        12
+      ],
+      "expansion": [
+        8,
+        16
+      ]
+    },
+    {
+      "name": "PM/design and outcome logic",
+      "epic": "04/07",
+      "pilot": [
+        8,
+        12
+      ],
+      "expansion": [
+        8,
+        16
+      ]
+    },
+    {
+      "name": "Dashboard and digest",
+      "epic": "06",
+      "pilot": [
+        8,
+        12
+      ],
+      "expansion": [
+        8,
+        16
+      ]
+    },
+    {
+      "name": "Repair and independent review",
+      "epic": "07",
+      "pilot": [
+        0,
+        0
+      ],
+      "expansion": [
+        24,
+        40
+      ]
+    },
+    {
+      "name": "HoopTrace mobile evidence",
+      "epic": "05",
+      "pilot": [
+        0,
+        0
+      ],
+      "expansion": [
+        16,
+        32
+      ]
+    },
+    {
+      "name": "Evaluation and release gates",
+      "epic": "08",
+      "pilot": [
+        12,
+        20
+      ],
+      "expansion": [
+        8,
+        12
+      ]
+    },
+    {
+      "name": "Runbooks and recovery",
+      "epic": "08",
+      "pilot": [
+        4,
+        8
+      ],
+      "expansion": [
+        4,
+        8
+      ]
+    }
+  ],
+  "build_time_reserve_fraction": 0.2,
+  "build_incremental_cash": {
+    "pilot": [
+      50,
+      150
+    ],
+    "expansion": [
+      100,
+      350
+    ]
+  },
+  "onboarding_hours_per_extra_product": [
+    16,
+    32
+  ],
+  "scenarios": {
+    "lean_readonly": {
+      "description": "Daily small probes, weekly specialist summaries, selected release reviews; no repair writes.",
+      "workloads": {
+        "triage": 120,
+        "product_review": 8,
+        "design_review": 8,
+        "engineering_review": 40,
+        "deep_investigation": 4,
+        "repair_bundle": 0,
+        "release_followup": 20
+      },
+      "browser_runs": 60,
+      "browser_minutes": 4,
+      "control_active_seconds": 900,
+      "control_requests": 10000,
+      "firestore_reads": 250000,
+      "firestore_writes": 80000,
+      "firestore_gib": 1,
+      "artifact_gib": 25,
+      "egress_gib": 5,
+      "logging_gib": 5,
+      "pubsub_gib": 0.2,
+      "scheduler_jobs": 3,
+      "secret_versions": 6,
+      "secret_accesses": 10000,
+      "linux_minutes": 600,
+      "macos_minutes": 160,
+      "search_calls": 50,
+      "ancillary_allowance": {
+        "artifact_operations_registry_backups": 10,
+        "analytics_queries_and_monitoring": 10
+      },
+      "oversight_hours": [
+        4,
+        6
+      ],
+      "maintenance_hours": [
+        2,
+        4
+      ],
+      "review_hours_per_repair": [
+        0.3,
+        0.6
+      ]
+    },
+    "balanced": {
+      "description": "Daily product checks, weekly design, release reviews, 16 bounded repair attempts/month across both products.",
+      "workloads": {
+        "triage": 600,
+        "product_review": 60,
+        "design_review": 24,
+        "engineering_review": 120,
+        "deep_investigation": 8,
+        "repair_bundle": 16,
+        "release_followup": 40
+      },
+      "browser_runs": 180,
+      "browser_minutes": 4,
+      "control_active_seconds": 3600,
+      "control_requests": 40000,
+      "firestore_reads": 1000000,
+      "firestore_writes": 300000,
+      "firestore_gib": 3,
+      "artifact_gib": 80,
+      "egress_gib": 20,
+      "logging_gib": 15,
+      "pubsub_gib": 1,
+      "scheduler_jobs": 6,
+      "secret_versions": 10,
+      "secret_accesses": 30000,
+      "linux_minutes": 1800,
+      "macos_minutes": 320,
+      "search_calls": 200,
+      "ancillary_allowance": {
+        "artifact_operations_registry_backups": 20,
+        "analytics_queries_and_monitoring": 25
+      },
+      "oversight_hours": [
+        4,
+        6
+      ],
+      "maintenance_hours": [
+        4,
+        6
+      ],
+      "review_hours_per_repair": [
+        0.3,
+        0.6
+      ]
+    },
+    "intensive": {
+      "description": "Higher event/review volume and 60 repair attempts/month; useful as workload stress case.",
+      "workloads": {
+        "triage": 2400,
+        "product_review": 120,
+        "design_review": 60,
+        "engineering_review": 400,
+        "deep_investigation": 24,
+        "repair_bundle": 60,
+        "release_followup": 120
+      },
+      "browser_runs": 600,
+      "browser_minutes": 4,
+      "control_active_seconds": 14400,
+      "control_requests": 160000,
+      "firestore_reads": 4000000,
+      "firestore_writes": 1000000,
+      "firestore_gib": 8,
+      "artifact_gib": 250,
+      "egress_gib": 80,
+      "logging_gib": 40,
+      "pubsub_gib": 4,
+      "scheduler_jobs": 12,
+      "secret_versions": 20,
+      "secret_accesses": 100000,
+      "linux_minutes": 4800,
+      "macos_minutes": 960,
+      "search_calls": 600,
+      "ancillary_allowance": {
+        "artifact_operations_registry_backups": 50,
+        "analytics_queries_and_monitoring": 60
+      },
+      "oversight_hours": [
+        6,
+        10
+      ],
+      "maintenance_hours": [
+        6,
+        10
+      ],
+      "review_hours_per_repair": [
+        0.3,
+        0.6
+      ]
+    }
+  },
+  "manual_coordination_baselines": [
+    20,
+    40,
+    60
+  ],
+  "founder_time_value_sensitivity": [
+    100,
+    150,
+    200
+  ]
+}

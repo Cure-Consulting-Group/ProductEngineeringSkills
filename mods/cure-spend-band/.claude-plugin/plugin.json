@@ -1,6 +1,6 @@
 {
   "name": "cure-spend-band",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shows today's GitHub Actions spend beside the spinner, warns under the prompt when the month is on pace to exceed the plan's included usage, and adds /spend. Reads billing through your logged-in gh CLI every 15 minutes.",
   "author": { "name": "Cure Consulting Group" }
 }

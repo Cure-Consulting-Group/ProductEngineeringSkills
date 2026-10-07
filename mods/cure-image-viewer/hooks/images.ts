@@ -32,17 +32,17 @@ export function parseSize(fileOutput: string): { width: number; height: number }
   return m ? { width: Number(m[1]), height: Number(m[2]) } : { width: 0, height: 0 }
 }
 
-/** The box of cells a picture is drawn in: its own aspect, inside MAX_ROWS by `maxColumns`. */
-export function cellBox(width: number, height: number, maxColumns: number = MAX_COLUMNS): { columns: number; rows: number } {
-  if (width <= 0 || height <= 0) return { columns: Math.min(MAX_COLUMNS, maxColumns), rows: MAX_ROWS }
+/** The box of cells a picture is drawn in: its own aspect, inside maxRows by `maxColumns`. */
+export function cellBox(width: number, height: number, maxColumns: number = MAX_COLUMNS, maxRows: number = MAX_ROWS): { columns: number; rows: number } {
+  if (width <= 0 || height <= 0) return { columns: Math.min(MAX_COLUMNS, maxColumns), rows: maxRows }
   const limit = Math.max(1, Math.min(MAX_COLUMNS, maxColumns))
-  let rows = MAX_ROWS
+  let rows = maxRows
   let columns = Math.round((rows * CELL_ASPECT * width) / height)
   if (columns > limit) {
     columns = limit
     rows = Math.max(1, Math.round((columns * height) / (width * CELL_ASPECT)))
   }
-  return { columns: Math.max(1, columns), rows }
+  return { columns: Math.max(1, columns), rows: Math.min(maxRows, rows) }
 }
 
 export function caption(image: Pasted): string {

@@ -109,7 +109,8 @@ const usd = (n: number) => `$${n.toFixed(2)}`
 
 /** The short suffix beside the spinner. */
 export function bandText(s: Spend): string {
-  return `Actions ${usd(s.actionsToday)} today · ${usd(s.dailyAllowance)}/day covered`
+  const over = s.projectedOverage > 0 ? ' ▲' : ''
+  return `Actions ${usd(s.actionsToday)} today · ${usd(s.dailyAllowance)}/day covered${over}`
 }
 
 /** The persistent warning line, or undefined when the month is on pace. */
