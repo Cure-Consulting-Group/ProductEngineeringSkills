@@ -53,6 +53,76 @@
         "cross-vendor-review",
         "worktrees"
       ]
+    },
+    {
+      "name": "cure-policy-guard",
+      "source": "./mods/cure-policy-guard",
+      "description": "Mod: refuses file writes that break a written Cure house rule unless you override; overrides are recorded.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "policy",
+        "guardrails"
+      ]
+    },
+    {
+      "name": "cure-lane-verifier",
+      "source": "./mods/cure-lane-verifier",
+      "description": "Mod: attaches git's evidence to subagent and lane reports; flags a 'complete' with an empty branch.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "verification",
+        "subagents"
+      ]
+    },
+    {
+      "name": "cure-spend-band",
+      "source": "./mods/cure-spend-band",
+      "description": "Mod: today's GitHub Actions spend beside the spinner, a pace warning, and /spend.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "finops",
+        "github-actions"
+      ]
+    },
+    {
+      "name": "cure-cache-band",
+      "source": "./mods/cure-cache-band",
+      "description": "Mod: prompt cache time left, hit rate and misses above the prompt; says what a cold next message re-caches. Adds /cache.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "prompt-cache",
+        "cost"
+      ]
+    },
+    {
+      "name": "cure-image-viewer",
+      "source": "./mods/cure-image-viewer",
+      "description": "Mod: draws the images you paste above the prompt until the turn that sent them ends.",
+      "author": {
+        "name": "Cure Consulting Group",
+        "url": "https://github.com/Cure-Consulting-Group"
+      },
+      "keywords": [
+        "mod",
+        "images",
+        "terminal"
+      ]
     }
   ]
 }

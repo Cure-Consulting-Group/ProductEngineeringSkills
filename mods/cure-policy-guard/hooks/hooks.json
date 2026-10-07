@@ -1,0 +1,4 @@
+{
+  "description": "cure-policy-guard hooks module",
+  "modules": ["./register.ts"]
+}
