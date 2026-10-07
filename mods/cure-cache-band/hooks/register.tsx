@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import { EMPTY, bandText, bar, inferTtl, leftText, recordStep, reportText, tokensText, view } from './cache'
+import { EMPTY, bandText, bar, inferTtl, leftText, recordStep, reportText, tokensText, view, writeFeeText } from './cache'
 
 /**
  * cure-cache-band: a row above the prompt showing how long the prompt cache
@@ -67,10 +67,11 @@ export const register: Register = on => {
     const { Box, Text } = $.ui.resolve(e)
 
     if (v.kind === 'cold') {
+      const fee = writeFeeText(v.tokens)
       return (
         <Box>
           <Text color="red">cache ○ cold</Text>
-          <Text dimColor> · next message re-caches {tokensText(v.tokens)} tokens</Text>
+          <Text dimColor> · next message re-caches {tokensText(v.tokens)} tokens{fee ? ` (${fee})` : ''}</Text>
         </Box>
       )
     }

@@ -95,7 +95,7 @@ test('past the TTL the cache is cold and the next message re-caches everything i
   expect(view(s, T0 + TTL_MS['5m'] - 1).kind).toBe('warm')
   const v = view(s, T0 + TTL_MS['5m'])
   expect(v).toEqual({ kind: 'cold', tokens: 27_000 })
-  expect(bandText(v)).toBe('cache ○ cold · next message re-caches 27k tokens')
+  expect(bandText(v)).toBe('cache ○ cold · next message re-caches 27k tokens (~$0.10 fee)')
 })
 
 test('formatting', async () => {
@@ -114,7 +114,7 @@ test('the report names the TTL source and, when cold, the write rate', async () 
   const s = warm('5m')
   expect(reportText(EMPTY, T0, 'x')).toMatch(/no model response yet/)
   expect(reportText(s, T0 + 1000, 'CURE_CACHE_TTL')).toMatch(/TTL assumed {11}5m \(CURE_CACHE_TTL\)/)
-  expect(reportText(s, T0 + TTL_MS['5m'], 'x')).toMatch(/27k tokens, all at the cache-write rate/)
+  expect(reportText(s, T0 + TTL_MS['5m'], 'x')).toMatch(/27k tokens, all at the cache-write rate \(~\$0.10 fee\)/)
 })
 
 // ── the hooks, end to end ──────────────────────────────────────────────────
@@ -163,7 +163,7 @@ for (const surface of ['terminal', 'desktop'] as const) {
     await clock.advance(50 * 60_000)
     expect(await text()).toBe('cache ● 1h ███░░░░░░░░░░░░░ 10m left · hit 0% · misses 0')
     await clock.advance(10 * 60_000)
-    expect(await text()).toBe('cache ○ cold · next message re-caches 82k tokens')
+    expect(await text()).toBe('cache ○ cold · next message re-caches 82k tokens (~$0.31 fee)')
   })
 }
 

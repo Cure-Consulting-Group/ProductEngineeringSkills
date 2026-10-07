@@ -85,7 +85,16 @@ function denial(violations: Violation[], why: string): string {
   )
 }
 
-const shortPath = (p: string) => p.split('/').slice(-3).join('/')
+export const shortPath = (p: string, maxLen = 38): string => {
+  const parts = p.split('/').filter(Boolean)
+  const tail = parts.slice(-3).join('/')
+  if (tail.length <= maxLen) return tail
+  const filename = parts[parts.length - 1] ?? ''
+  if (parts.length <= 2) return tail
+  const dir = parts[parts.length - 2] ?? ''
+  const mid = `.../${dir}/${filename}`
+  return mid.length <= maxLen ? mid : `.../${filename}`
+}
 
 /** The repository's name (main checkout's directory, also from a worktree) and root. */
 async function locateRepo($: any, path: string): Promise<{ repo: string; root: string }> {

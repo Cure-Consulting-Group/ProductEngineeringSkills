@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Pasted } from '../types'
-import { MAX_SHOWN, caption, cellBox, imageDirs, imageIds, parseSize, sameIds } from './images'
+import { MAX_ROWS, MAX_SHOWN, caption, cellBox, imageDirs, imageIds, parseSize, sameIds } from './images'
 
 /**
  * cure-image-viewer: draws the images you paste above the prompt, from the
@@ -56,8 +56,10 @@ export const register: Register = on => {
 
     const table = $.ui.resolve(e)
     const { Box, Text } = table
-    const shown = images.slice(0, MAX_SHOWN)
+    const isNarrow = e.props.bodyColumns < 100 && images.length > 1
+    const shown = isNarrow ? images.slice(0, 1) : images.slice(0, MAX_SHOWN)
     const each = Math.floor((e.props.bodyColumns - (shown.length - 1) * 2) / shown.length)
+    const maxRows = Math.min(MAX_ROWS, e.props.maxRows || MAX_ROWS)
 
     return (
       <Box flexDirection="column">
@@ -65,7 +67,7 @@ export const register: Register = on => {
           {shown.map(image => {
             const picture = 'Image' in table && image.path !== null && image.path.endsWith('.png')
             if (!picture) return <Text dimColor>{caption(image)}</Text>
-            const size = cellBox(image.width, image.height, each)
+            const size = cellBox(image.width, image.height, each, maxRows)
             return (
               <Box flexDirection="column">
                 <table.Image
@@ -80,7 +82,9 @@ export const register: Register = on => {
             )
           })}
         </Box>
-        {images.length > shown.length ? <Text dimColor>+{images.length - shown.length} more</Text> : null}
+        {images.length > shown.length ? (
+          <Text dimColor>+{images.length - shown.length} more{isNarrow ? ` (${images.length} images pasted)` : ''}</Text>
+        ) : null}
       </Box>
     )
   })

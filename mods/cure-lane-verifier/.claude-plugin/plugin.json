@@ -1,6 +1,6 @@
 {
   "name": "cure-lane-verifier",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "When a subagent or tri-lane lane reports back, attaches git's own account of the worktrees and branches the report names (commits ahead, diff size, uncommitted files) and flags a 'complete' with nothing behind it.",
   "author": { "name": "Cure Consulting Group" }
 }

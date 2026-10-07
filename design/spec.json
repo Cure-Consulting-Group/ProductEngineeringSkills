@@ -1,0 +1,177 @@
+{
+  "product": "Cure Claude Code Mods Suite",
+  "platform": "web",
+  "fidelity": "mid",
+  "nav_items": [
+    "Ambient Shelf",
+    "Policy Guard",
+    "Lane Audit",
+    "Telemetry Dash"
+  ],
+  "screens": [
+    {
+      "id": "ambient-shelf",
+      "name": "Ambient Terminal Shelf",
+      "purpose": "Glanceable telemetry above prompt (Cache TTL, Spend Pacer, Pasted Images) without vertical waste",
+      "nav": "tabs",
+      "primary_action": "Submit prompt",
+      "regions": [
+        {
+          "type": "header",
+          "label": "Claude Code Terminal (80-140 cols)",
+          "fixed": true
+        },
+        {
+          "type": "card",
+          "label": "Scrollback: Previous turn output and code diffs"
+        },
+        {
+          "type": "card",
+          "label": "AbovePrompt Shelf: [🖼 Image #1 · 800x600] | [cache ● 1h ████████████░░░░ 42m · hit 76%]",
+          "sticky": true
+        },
+        {
+          "type": "form",
+          "label": "Prompt Input: > Refactor auth store to MVI pattern...",
+          "rows": 2
+        },
+        {
+          "type": "toolbar",
+          "label": "Spinner / Status: ⠋ Compiling project... · Actions $12.40 today (Safe pace)",
+          "fixed": true
+        }
+      ],
+      "notes": [
+        "Warm state: Cache indicator is calm green; 1h TTL; spend within $300 budget",
+        "Expiring state: Amber indicator when < 15m; countdown ticks by seconds in final minute",
+        "Image paste: Displays Kitty graphics thumbnail or Unicode bounding box"
+      ]
+    },
+    {
+      "id": "policy-guard-modal",
+      "name": "Policy Guard Intercept Dialog",
+      "purpose": "Block non-compliant file writes and prompt user for binary exception decision",
+      "nav": "none",
+      "primary_action": "Refuse the write",
+      "regions": [
+        {
+          "type": "header",
+          "label": "Terminal: Write Tool Intercepted",
+          "fixed": true
+        },
+        {
+          "type": "hero",
+          "label": "⚠ House Rule Violation: [no-cron] Schedule trigger in .github/workflows/deploy.yml"
+        },
+        {
+          "type": "text",
+          "label": "Source: Org no-cron policy (2026-08-08). Scheduled cron triggers cause uncontrolled runner spend."
+        },
+        {
+          "type": "card",
+          "label": "Proposed Diff: + schedule: [{cron: '0 * * * *'}] (Line 14)"
+        },
+        {
+          "type": "toolbar",
+          "label": "[1] Refuse the write (Default)   |   [2] Allow this once (Logged to audit)",
+          "fixed": true
+        }
+      ],
+      "notes": [
+        "Default action is Refuse to prevent accidental automated allowance",
+        "Headless / non-interactive sessions fail closed automatically",
+        "Allowed overrides recorded to persistent audit store with timestamp"
+      ]
+    },
+    {
+      "id": "lane-verifier-card",
+      "name": "Lane Verifier Hand-back Card",
+      "purpose": "Verify subagent completion claims against ground-truth git mutations",
+      "nav": "none",
+      "primary_action": "Accept or re-prompt lane",
+      "regions": [
+        {
+          "type": "header",
+          "label": "Agent Hand-back: lane/auth-mvi",
+          "fixed": true
+        },
+        {
+          "type": "hero",
+          "label": "Report: 'Implemented MVI pattern with 42 unit tests passing'"
+        },
+        {
+          "type": "card",
+          "label": "Git Ground Truth: 3 commits ahead · +142 -18 lines across 4 files · Clean worktree"
+        },
+        {
+          "type": "toolbar",
+          "label": "Status: [VERIFIED ✓] Branch matches reported hand-back claims",
+          "fixed": true
+        }
+      ],
+      "notes": [
+        "Alarm state: If diff is 0 lines / 0 commits, triggers loud toast 'EMPTY COMPLETION'",
+        "Dirty state: Flags uncommitted files in target worktree",
+        "Rides as model context to keep orchestrator informed"
+      ]
+    },
+    {
+      "id": "spend-dashboard",
+      "name": "Spend & Cache Dashboard (/spend & /cache)",
+      "purpose": "Executive tabular telemetry printed cleanly into scrollback on slash command",
+      "nav": "tabs",
+      "primary_action": "Review cost pace",
+      "regions": [
+        {
+          "type": "header",
+          "label": "/spend · GitHub Actions Financial Telemetry",
+          "fixed": true
+        },
+        {
+          "type": "card",
+          "label": "Organization: Cure-Consulting-Group | Freshness: 14:32 UTC (Active)"
+        },
+        {
+          "type": "list",
+          "label": "Metrics: Today ($12.40) | MTD ($112.50 / $300.00 allowance - 37.5%) | Projected ($248.00)",
+          "rows": 4
+        },
+        {
+          "type": "card",
+          "label": "Pace Meter: [████████████░░░░░░░░] Projected $248 vs $300 ceiling (Within allowance)"
+        },
+        {
+          "type": "text",
+          "label": "Historical: Last 3 days burn avg: $9.80/day | Run count: 184 runs"
+        }
+      ],
+      "notes": [
+        "Structured Lip Gloss-style rounded box borders",
+        "Graceful offline indicator if gh api rate limits or network fails",
+        "High-contrast color coding for projected overages"
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "from": "ambient-shelf",
+      "to": "policy-guard-modal",
+      "label": "agent attempts write"
+    },
+    {
+      "from": "policy-guard-modal",
+      "to": "ambient-shelf",
+      "label": "refuse / allow decision"
+    },
+    {
+      "from": "ambient-shelf",
+      "to": "lane-verifier-card",
+      "label": "subagent reports handback"
+    },
+    {
+      "from": "ambient-shelf",
+      "to": "spend-dashboard",
+      "label": "user runs /spend or /cache"
+    }
+  ]
+}

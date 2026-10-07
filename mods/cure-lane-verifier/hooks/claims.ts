@@ -88,7 +88,7 @@ export function formatVerdict(claims: Claims, evidence: readonly Evidence[]): st
       : `- ${e.target}: ${e.ahead} commit(s) ahead of ${e.base}; ${e.shortstat || 'no committed diff'}${e.dirty ? `; ${e.dirty} uncommitted file(s)` : ''}`,
   )
   const head = isEmptyCompletion(claims.claimsDone, evidence)
-    ? 'cure-lane-verifier: EMPTY COMPLETION. The report claims the work is done, but git shows no commits and no changes on what it names. Do not accept it; inspect the worktree before anything else.'
+    ? 'cure-lane-verifier: EMPTY COMPLETION [ALARM]. The report claims completion, but git shows 0 commits and no diff on what it names. HALT WORKFLOW — inspect the target branch/worktree before proceeding.'
     : 'cure-lane-verifier: git evidence for what this report names (read this, not the report, for what landed):'
   return [head, ...lines].join('\n')
 }

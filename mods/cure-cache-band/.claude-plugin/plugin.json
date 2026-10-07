@@ -1,6 +1,6 @@
 {
   "name": "cure-cache-band",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shows above the prompt how long the prompt cache has left, the session's cache hit rate and misses, and what a cold next message would re-cache. Adds /cache.",
   "author": { "name": "Cure Consulting Group" },
   "types": "./types/index.d.ts"

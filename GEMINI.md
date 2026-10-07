@@ -1,5 +1,7 @@
 # ProductEngineeringSkills — Cure Consulting Group
 
+Read [docs/memory/MEMORY.md](docs/memory/MEMORY.md) at session start for current Cure project decisions and user planning preferences; verify its file references before relying on it.
+
 This is the central skill library for all Cure Consulting Group projects. It is distributed as a Claude Code plugin and a set of Gemini skills.
 
 ## Project Identity
