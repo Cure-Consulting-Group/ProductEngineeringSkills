@@ -140,14 +140,20 @@ Limit: after a resume the band shows nothing until the first response, because i
 
 ### cure-image-viewer
 
-It shows the images the draft names (`[Image #1]`), then keeps the submitted ones up until that turn ends. At most four, each at most 10 rows by 40 columns, in the picture's own aspect.
+It shows the images of the prompt you just sent and keeps them up until that turn ends. At most four (one, with a count, when the band is narrower than 100 columns), each at most 10 rows by 40 columns, in the picture's own aspect.
+
+Why not while you are still typing: Claude Code saves a pasted image when the prompt is submitted, not when it is pasted, so a draft's image is not on disk to draw.
 
 Where the pictures come from:
 - The plugin API gives a pasted image's kind, never its bytes. The mod reads the copy Claude Code saves at `<tmp>/claude-<uid>/<project>/<session>/images/<N>.png`.
-- That layout is this build's (2.1.289), not a documented contract. If a file is not there the row says `[Image #N] not found on disk`. Set `CURE_IMAGE_DIR` to point it elsewhere.
+- That layout is this build's (2.1.289), not a documented contract. If a sent image's file is not there the row says `[Image #N] not found on disk`. Set `CURE_IMAGE_DIR` to point it elsewhere.
 
 What draws the picture:
-- The terminal, through the kitty graphics protocol (kitty, Ghostty). Elsewhere, and on the desktop surface, each image is a caption with its pixel size.
+- The terminal, through the kitty graphics protocol. The mod sends the PNG's bytes inline, not a file path for the terminal to open. Tested in Warp 0.2026.09.30 on 2026-10-07 with a script outside Claude Code: inline bytes drew, a file path drew nothing.
+- An image over 2 MiB cannot be sent inline and is captioned with its size instead. Large retina screenshots can exceed that.
+- On a surface with no image element (the desktop app), each image is a caption with its pixel size.
+
+Pasting a file copied in Finder gives Claude the file's icon, not its contents. Copy from Preview, or drag the file in.
 
 ## Verification (2026-10-05, Claude Code 2.1.289)
 
@@ -192,7 +198,7 @@ for m in cure-policy-guard cure-lane-verifier cure-spend-band; do claude plugin 
 | Mod | Tests |
 |---|---|
 | Cache band | 18 |
-| Image viewer | 10 |
+| Image viewer | 12 |
 
 Both pass `claude plugin validate` and type-check. Each suite covers the pure arithmetic plus the hooks end to end with a stubbed clock, model response, file listing and `file`.
 
@@ -203,7 +209,9 @@ Both pass `claude plugin validate` and type-check. Each suite covers the pure ar
 
 One still survives: removing the image viewer's check for a surface with no `Image` element does not fail its test.
 
-**Not yet run live:** neither mod has been exercised in a real session as of this commit. Unverified: whether a pasted image's file exists before the prompt is submitted, and whether Warp draws the picture.
+**Image viewer 0.3.0 (2026-10-07):** switched from a file path to inline bytes after the Warp test above; four mutations of that change were each caught. Established since 0.1.0: a pasted image's file exists only after submit.
+
+**Not yet confirmed live:** whether Claude Code sends images to Warp at all. The Warp test proved the terminal can draw them, not that the engine will ask it to. The cache band has loaded in a session but its figures have not been checked against a known cache state.
 
 ```sh
 for m in cure-cache-band cure-image-viewer; do claude plugin test mods/$m; done

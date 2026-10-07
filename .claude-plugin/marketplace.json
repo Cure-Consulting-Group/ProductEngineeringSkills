@@ -113,7 +113,7 @@
     {
       "name": "cure-image-viewer",
       "source": "./mods/cure-image-viewer",
-      "description": "Mod: draws the images you paste above the prompt until the turn that sent them ends.",
+      "description": "Mod: draws the images you sent above the prompt until the turn that carried them ends.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"

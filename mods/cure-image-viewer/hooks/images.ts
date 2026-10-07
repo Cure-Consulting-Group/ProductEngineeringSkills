@@ -5,6 +5,13 @@ const CELL_ASPECT = 2
 export const MAX_ROWS = 10
 export const MAX_COLUMNS = 40
 export const MAX_SHOWN = 4
+/** The most an Image may carry inline, decoded: the element's own limit. */
+export const MAX_INLINE_BYTES = 2 * 1024 * 1024
+
+/** Whether the picture can be sent to the terminal as bytes. */
+export function fitsInline(image: Pasted): boolean {
+  return image.path !== null && image.path.endsWith('.png') && image.bytes > 0 && image.bytes <= MAX_INLINE_BYTES
+}
 
 /** The ids of every `[Image #N]` in a prompt, in order, each once. */
 export function imageIds(text: string): number[] {
@@ -47,7 +54,9 @@ export function cellBox(width: number, height: number, maxColumns: number = MAX_
 
 export function caption(image: Pasted): string {
   if (image.path === null) return `[Image #${image.id}] not found on disk`
-  return image.width > 0 ? `[Image #${image.id}] ${image.width}×${image.height}` : `[Image #${image.id}]`
+  const size = image.width > 0 ? ` ${image.width}×${image.height}` : ''
+  const tooLarge = image.bytes > MAX_INLINE_BYTES ? ` · ${(image.bytes / (1024 * 1024)).toFixed(1)} MB, too large to draw` : ''
+  return `[Image #${image.id}]${size}${tooLarge}`
 }
 
 export function sameIds(a: readonly Pasted[], ids: readonly number[]): boolean {

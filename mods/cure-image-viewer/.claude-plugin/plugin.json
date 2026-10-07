@@ -1,7 +1,9 @@
 {
   "name": "cure-image-viewer",
-  "version": "0.2.0",
-  "description": "Draws the images you paste above the prompt, from the draft until the turn that sent them ends. Pictures need a kitty-graphics terminal; elsewhere each shows as a caption with its size.",
-  "author": { "name": "Cure Consulting Group" },
+  "version": "0.3.0",
+  "description": "Draws the images you sent above the prompt until the turn that carried them ends. Pictures need a terminal with the kitty graphics protocol (kitty, Ghostty, Warp); elsewhere each shows as a caption with its size.",
+  "author": {
+    "name": "Cure Consulting Group"
+  },
   "types": "./types/index.d.ts"
 }
