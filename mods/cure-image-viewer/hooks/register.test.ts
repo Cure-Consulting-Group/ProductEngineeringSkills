@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { MAX_COLUMNS, MAX_ROWS, caption, cellBox, imageDirs, imageIds, parseSize, projectSlug, sameIds } from './images'
+import { MAX_COLUMNS, MAX_INLINE_BYTES, MAX_ROWS, caption, cellBox, fitsInline, imageDirs, imageIds, parseSize, projectSlug, sameIds } from './images'
 
 test('imageIds finds each pasted image once, in order', async () => {
   expect(imageIds('look at [Image #2] and [Image #1], then [Image #2] again')).toEqual([2, 1])
@@ -34,13 +34,23 @@ test('cellBox keeps the picture\'s aspect inside the row and column limits', asy
 })
 
 test('captions say when a file is missing', async () => {
-  expect(caption({ id: 1, path: '/x/1.png', width: 680, height: 336 })).toBe('[Image #1] 680×336')
-  expect(caption({ id: 2, path: '/x/2.png', width: 0, height: 0 })).toBe('[Image #2]')
-  expect(caption({ id: 3, path: null, width: 0, height: 0 })).toBe('[Image #3] not found on disk')
+  expect(caption({ id: 1, path: '/x/1.png', width: 680, height: 336, bytes: 40_000 })).toBe('[Image #1] 680×336')
+  expect(caption({ id: 2, path: '/x/2.png', width: 0, height: 0, bytes: 0 })).toBe('[Image #2]')
+  expect(caption({ id: 3, path: null, width: 0, height: 0, bytes: 0 })).toBe('[Image #3] not found on disk')
+  expect(caption({ id: 4, path: '/x/4.png', width: 3024, height: 1964, bytes: 3 * 1024 * 1024 })).toBe('[Image #4] 3024×1964 · 3.0 MB, too large to draw')
+})
+
+test('only a PNG of known size within the inline limit is drawn', async () => {
+  const image = { id: 1, path: '/x/1.png', width: 10, height: 10, bytes: MAX_INLINE_BYTES }
+  expect(fitsInline(image)).toBe(true)
+  expect(fitsInline({ ...image, bytes: MAX_INLINE_BYTES + 1 })).toBe(false)
+  expect(fitsInline({ ...image, bytes: 0 })).toBe(false)
+  expect(fitsInline({ ...image, path: '/x/1.jpg' })).toBe(false)
+  expect(fitsInline({ ...image, path: null })).toBe(false)
 })
 
 test('sameIds compares what is shown with what the draft names', async () => {
-  const shown = [{ id: 1, path: null, width: 0, height: 0 }]
+  const shown = [{ id: 1, path: null, width: 0, height: 0, bytes: 0 }]
   expect(sameIds(shown, [1])).toBe(true)
   expect(sameIds(shown, [1, 2])).toBe(false)
   expect(sameIds([], [])).toBe(true)
@@ -51,12 +61,20 @@ test('sameIds compares what is shown with what the draft names', async () => {
 const DIR = '/private/tmp/claude-501/-repo/sess-1/images'
 const bandProps = { hasSurvey: false, isWorking: false, maxRows: 20, bodyColumns: 100, scroll: { offset: 0, bodyRows: 20 }, view: {} }
 
-const world = (on: any, files: string[]) => {
+// A real 1x1 PNG: the engine refuses a source that is not one.
+const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+const reads: string[] = []
+const world = (on: any, files: string[], size = 40_000) => {
+  reads.length = 0
+  on('fs.read', (_$: unknown, e: any) => {
+    reads.push(e.path ?? e)
+    return { value: { base64: PNG } }
+  })
   mock.env(on, {})
   on('session.id', () => ({ value: 'sess-1' }))
   on('session.cwd', () => ({ value: '/repo' }))
   on('session.root', () => ({ value: '/repo' }))
-  on('fs.list', (_$: unknown, e: any) => ({ value: (e.path ?? e) === DIR ? files.map(name => ({ name, kind: 'file', size: 1 })) : [] }))
+  on('fs.list', (_$: unknown, e: any) => ({ value: (e.path ?? e) === DIR ? files.map(name => ({ name, kind: 'file', size })) : [] }))
   on('process.run', (_$: unknown, e: any) => {
     const argv: string[] = e.argv ?? e
     if (argv[0] === 'id') return { value: { exitCode: 0, stdout: '501\n', stderr: '' } }
@@ -76,7 +94,9 @@ test('a submitted image is drawn from the session folder until its turn ends', a
   await $.prompt.submit({ text: 'what is this [Image #1]' } as never)
   const ui = await mount()
   const [image] = await ui.findAll({ type: 'Image' })
-  expect(image?.props).toMatchObject({ source: { file: `${DIR}/1.png`, format: 'png' }, columns: 40, rows: 10, alt: '[Image #1] 680×336' })
+  // The bytes go inline: a terminal that will not open a path (Warp) still draws them.
+  expect(image?.props).toMatchObject({ source: { png: PNG }, columns: 40, rows: 10, alt: '[Image #1] 680×336' })
+  expect(reads).toEqual([`${DIR}/1.png`])
 
   await $.turn.complete({ turnId: 't1', reason: 'done' } as never)
   expect(await (await mount()).findAll({ type: 'Image' })).toHaveLength(0)
@@ -102,4 +122,13 @@ test('image 1 is not mistaken for image 10', async ($, on) => {
   await $.prompt.submit({ text: '[Image #1]' } as never)
   const ui = await $.ui.mount({ plugin: 'cure-image-viewer', surface: 'terminal', component: 'AbovePrompt', props: bandProps as never })
   expect((await ui.findAll({ type: 'Text' })).map(el => el.text)).toEqual(['[Image #1] not found on disk'])
+})
+
+test('an image over the inline limit is captioned, not sent', async ($, on) => {
+  world(on, ['1.png'], 3 * 1024 * 1024)
+  await $.prompt.submit({ text: '[Image #1]' } as never)
+  const ui = await $.ui.mount({ plugin: 'cure-image-viewer', surface: 'terminal', component: 'AbovePrompt', props: bandProps as never })
+  expect(await ui.findAll({ type: 'Image' })).toHaveLength(0)
+  expect((await ui.findAll({ type: 'Text' })).map(el => el.text)).toEqual(['[Image #1] 680×336 · 3.0 MB, too large to draw'])
+  expect(reads).toEqual([])
 })

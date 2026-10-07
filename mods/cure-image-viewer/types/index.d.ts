@@ -6,6 +6,8 @@ export type Pasted = {
   /** Pixel size, 0 when it could not be read. */
   width: number
   height: number
+  /** The file's size in bytes, 0 when unknown. */
+  bytes: number
 }
 
 declare module 'claude-code' {
