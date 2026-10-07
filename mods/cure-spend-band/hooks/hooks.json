@@ -1,0 +1,4 @@
+{
+  "description": "cure-spend-band hooks module",
+  "modules": ["./register.ts"]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "cure-policy-guard",
+  "version": "0.1.0",
+  "description": "Refuses file writes that break a written Cure house rule (no cron in workflows, Vertex-only Gemini in Level5, no new AI vendors in minors' repos, no hard-coded credentials) unless the person overrides; every override is recorded. /policy-guard lists them.",
+  "author": { "name": "Cure Consulting Group" }
+}
