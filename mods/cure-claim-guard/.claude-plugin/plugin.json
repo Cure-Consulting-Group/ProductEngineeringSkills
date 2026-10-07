@@ -1,0 +1,6 @@
+{
+  "name": "cure-claim-guard",
+  "version": "0.1.0",
+  "description": "Enforces multi-machine state file ownership rules in shared repos (DistrictZero state-targets.md), preventing one machine from overwriting another machine's assigned rows. Adds /claims.",
+  "author": { "name": "Cure Consulting Group" }
+}

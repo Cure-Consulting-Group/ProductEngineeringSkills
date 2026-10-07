@@ -1,0 +1,6 @@
+{
+  "name": "cure-egress-guard",
+  "version": "0.1.0",
+  "description": "Prevents unauthorized outbound network transmission to external AI vendor endpoints in sensitive repos (PHI in Level5, student/minors data in TIR/SPEDTECH/LearnLift). Adds /egress-guard.",
+  "author": { "name": "Cure Consulting Group" }
+}

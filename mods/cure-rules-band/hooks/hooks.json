@@ -1,0 +1,4 @@
+{
+  "description": "cure-rules-band hooks module",
+  "modules": ["./register.tsx"]
+}

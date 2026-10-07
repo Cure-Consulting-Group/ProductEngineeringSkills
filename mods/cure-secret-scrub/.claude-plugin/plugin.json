@@ -1,0 +1,6 @@
+{
+  "name": "cure-secret-scrub",
+  "version": "0.1.0",
+  "description": "Redacts credentials (API keys, private keys, service account secrets, tokens) from Read, Grep, and Bash outputs before they enter model context. /secret-scrub shows session redaction stats.",
+  "author": { "name": "Cure Consulting Group" }
+}

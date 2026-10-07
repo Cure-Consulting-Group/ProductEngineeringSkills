@@ -1,0 +1,4 @@
+{
+  "description": "cure-agent-budget hooks module",
+  "modules": ["./register.ts"]
+}

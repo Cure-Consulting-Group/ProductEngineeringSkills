@@ -1,0 +1,6 @@
+{
+  "name": "cure-ci-preview",
+  "version": "0.1.0",
+  "description": "Pre-push GitHub Actions CI runner time and cost estimator. Warns when commits mix doc notes with code, breaking docs-only skip optimizations. Adds /ci-preview.",
+  "author": { "name": "Cure Consulting Group" }
+}

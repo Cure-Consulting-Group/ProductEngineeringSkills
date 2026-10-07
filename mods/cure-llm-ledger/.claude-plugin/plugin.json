@@ -1,0 +1,6 @@
+{
+  "name": "cure-llm-ledger",
+  "version": "0.1.0",
+  "description": "Per-turn LLM token and dollar cost ledger attributed by repository, branch, and model. Appends JSONL records and provides /ledger summary.",
+  "author": { "name": "Cure Consulting Group" }
+}
