@@ -18,7 +18,7 @@ Fifteen [Claude Code mods](https://code.claude.com/docs/en/plugins/mods/overview
 | `cure-egress-guard` | Blocks unauthorized outbound data transmission to external AI vendor endpoints in sensitive repos (PHI, minors). Adds `/egress-guard`. | Level5 PHI and student data privacy guardrails | 10 |
 | `cure-rules-band` | Displays repository house rules and legal/architectural constraints in a HUD banner above the prompt. Adds `/rules`. | Cross-repo context switching and forgotten house rules | 7 |
 | `cure-handoff` | Drafts structured `STATE.md` handoff blocks from git commits, branch status, and working tree diffs. Adds `/handoff`. | Manual STATE.md handoff drift | 3 |
-| `cure-lane-board` | Multi-lane dashboard for tri-lane worktrees, branches, live commits, and defect window status. Adds `/lanes`. | Multi-vendor orchestration tracking across worktrees | 5 |
+| `cure-lane-board` | Multi-lane dashboard for tri-lane worktrees, branches, live commits, defect windows, and pull requests. Adds `/lanes`. | Multi-vendor orchestration tracking across worktrees | 12 |
 
 ## Install
 
