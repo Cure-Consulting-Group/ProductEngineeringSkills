@@ -79,6 +79,18 @@ export function parsePullList(json: string): PullInfo[] {
           }
 
           const check = item as Record<string, unknown>
+          if (typeof check.state === 'string') {
+            const state = check.state.toUpperCase()
+            if (state === 'SUCCESS') {
+              checks.pass++
+            } else if (state === 'FAILURE' || state === 'ERROR') {
+              checks.fail++
+            } else {
+              checks.pending++
+            }
+            continue
+          }
+
           const conclusion = typeof check.conclusion === 'string' ? check.conclusion.toUpperCase() : ''
           const status = typeof check.status === 'string' ? check.status.toUpperCase() : ''
 
@@ -139,6 +151,10 @@ export function foldSalvage(lanes: LaneInfo[]): LaneInfo[] {
     const base = byBranch.get(baseBranch)
     if (!base || base === lane) return true
 
+    if (!lane.merged || lane.commitsAhead !== 0 || lane.path !== '(no worktree)' || lane.dirtyCount !== 0) {
+      return true
+    }
+
     if (base.path === '(no worktree)' && !base.path.includes('+salvage')) {
       base.path = '(no worktree) +salvage'
     }
@@ -161,7 +177,9 @@ const truncate = (value: string, max: number) => {
 
 export function formatLaneBoard(lanes: LaneInfo[], pulls: PullInfo[] = [], notes: string[] = []): string {
   const mergedCount = lanes.filter(lane => lane.merged).length
-  const lines = [`cure-lane-board: ${lanes.length} lane(s) (${mergedCount} merged) · ${pulls.length} open PR(s)`]
+  const pullUnavailable = notes.some(note => note.startsWith('pull requests: could not verify'))
+  const pullSummary = pullUnavailable ? 'PRs: could not verify' : `${pulls.length} open PR(s)`
+  const lines = [`cure-lane-board: ${lanes.length} lane(s) (${mergedCount} merged) · ${pullSummary}`]
 
   if (lanes.length === 0) {
     lines.push('No active tri-lane branches or worktrees detected.')
@@ -185,7 +203,6 @@ export function formatLaneBoard(lanes: LaneInfo[], pulls: PullInfo[] = [], notes
     lines.push('─'.repeat(70))
   }
 
-  const pullUnavailable = notes.some(note => note.startsWith('pull requests: could not verify'))
   if (!pullUnavailable) {
     lines.push('', `Pull requests (open): ${pulls.length}`)
     for (const pull of pulls) {

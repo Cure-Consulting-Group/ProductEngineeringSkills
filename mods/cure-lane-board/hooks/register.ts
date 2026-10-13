@@ -12,12 +12,13 @@ import {
 } from './lanes'
 
 type ProcessResult = { exitCode: number; stdout: string; stderr: string }
+type ProcessInit = { timeoutMs?: number }
 
 const failedProcess = (): ProcessResult => ({ exitCode: 1, stdout: '', stderr: 'process failed' })
 
-async function run($: any, argv: string[]): Promise<ProcessResult> {
+async function run($: any, argv: string[], init?: ProcessInit): Promise<ProcessResult> {
   try {
-    const result = await $.process.run(argv)
+    const result = await $.process.run(argv, init)
     return {
       exitCode: typeof result?.exitCode === 'number' ? result.exitCode : 1,
       stdout: typeof result?.stdout === 'string' ? result.stdout : '',
@@ -126,7 +127,7 @@ export function register(on: On) {
       '30',
       '--json',
       'number,headRefName,title,mergeStateStatus,statusCheckRollup',
-    ])
+    ], { timeoutMs: 15_000 })
 
     if (pullRes.exitCode !== 0) {
       addNote('pull requests: could not verify (gh unavailable)')
@@ -137,7 +138,7 @@ export function register(on: On) {
       const repo = remoteRes.exitCode === 0 ? parseGitHubRemote(remoteRes.stdout) : null
       if (repo) {
         const query = `{repository(owner:"${repo.owner}",name:"${repo.repo}"){mergeQueue{entries(first:20){nodes{position pullRequest{number}}}}}}`
-        const queueRes = await run($, ['gh', 'api', 'graphql', '-f', `query=${query}`])
+        const queueRes = await run($, ['gh', 'api', 'graphql', '-f', `query=${query}`], { timeoutMs: 15_000 })
         if (queueRes.exitCode === 0) {
           applyQueuePositions(pulls, queueRes.stdout)
         } else {

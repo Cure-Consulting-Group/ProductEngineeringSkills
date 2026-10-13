@@ -60,6 +60,26 @@ test('parsePullList: tallies completed, failed, pending and skipped checks', () 
   expect(pulls[0].queue).toBe(null)
 })
 
+test('parsePullList: tallies CheckRun and StatusContext checks', () => {
+  const pulls = parsePullList(
+    JSON.stringify([
+      {
+        number: 511,
+        headRefName: 'feat/status-contexts',
+        title: 'feat: status contexts',
+        mergeStateStatus: 'CLEAN',
+        statusCheckRollup: [
+          { status: 'COMPLETED', conclusion: 'SUCCESS' },
+          { state: 'SUCCESS' },
+          { state: 'PENDING' },
+        ],
+      },
+    ]),
+  )
+
+  expect(pulls[0].checks).toEqual({ pass: 2, fail: 0, pending: 1 })
+})
+
 test('applyQueuePositions: maps merge queue positions by pull request number', () => {
   const pulls = parsePullList('[{"number":510,"headRefName":"feat/x","title":"x","mergeStateStatus":"CLEAN","statusCheckRollup":[]},{"number":499,"headRefName":"docs/x","title":"x","mergeStateStatus":"CLEAN","statusCheckRollup":[]}]')
   applyQueuePositions(
@@ -72,25 +92,54 @@ test('applyQueuePositions: maps merge queue positions by pull request number', (
 })
 
 test('foldSalvage: folds a salvage twin and leaves an orphan visible', () => {
-  const lane = (branch: string, path: string): LaneInfo => ({
+  const lane = (branch: string, path: string, merged = branch === 'lane/topic'): LaneInfo => ({
     name: branch.replace(/^lane\//, ''),
     branch,
     path,
     commitsAhead: 0,
     dirtyCount: 0,
-    windowStatus: branch === 'lane/topic' ? 'merged' : 'pending',
-    merged: branch === 'lane/topic',
+    windowStatus: merged ? 'merged' : 'pending',
+    merged,
   })
 
   const folded = foldSalvage([
     lane('lane/topic', '(no worktree)'),
-    lane('lane/topic-salvage', '(no worktree)'),
+    lane('lane/topic-salvage', '(no worktree)', true),
     lane('lane/orphan-salvage', '(no worktree)'),
   ])
 
   expect(folded.map(row => row.branch)).toEqual(['lane/topic', 'lane/orphan-salvage'])
   expect(folded[0].path).toBe('(no worktree) +salvage')
   expect(folded[1].salvageOf).toBe('lane/orphan')
+})
+
+test('foldSalvage: keeps unmerged salvage work visible', () => {
+  const folded = foldSalvage([
+    {
+      name: 'x',
+      branch: 'lane/x',
+      path: '(no worktree)',
+      commitsAhead: 0,
+      dirtyCount: 0,
+      windowStatus: 'merged',
+      merged: true,
+    },
+    {
+      name: 'x-salvage',
+      branch: 'lane/x-salvage',
+      path: '/repo/.worktrees/x-salvage',
+      commitsAhead: 3,
+      dirtyCount: 0,
+      windowStatus: 'active',
+      merged: false,
+    },
+  ])
+
+  const board = formatLaneBoard(folded)
+  expect(folded.map(row => row.branch)).toEqual(['lane/x', 'lane/x-salvage'])
+  expect(board).toContain('2 lane(s) (1 merged)')
+  expect(board).toContain('lane/x-salvage')
+  expect(board).toContain('3c')
 })
 
 test('parseGitHubRemote: handles ssh and https origin URLs', () => {
@@ -272,5 +321,6 @@ test('command: /lanes reports unavailable gh without throwing', async ($, on) =>
   })
 
   const r = await $.command.run({ command: 'lanes' })
+  expect(r.text).toContain('· PRs: could not verify')
   expect(r.text).toContain('pull requests: could not verify (gh unavailable)')
 })
