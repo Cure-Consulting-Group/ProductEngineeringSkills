@@ -17,3 +17,5 @@ Index only; detail lives in topic files. Seeded 2026-09-28. Check referenced fil
 ## reference
 
 - [Planning package](reference_cloud_agent_plans.md) — canonical scope, architecture, backlog, costs and sprint plan paths; verify before use.
+
+- [Shared legal runtime handoff](reference_shared_legal_runtime.md) — separate service repository, saved state and remaining legal/platform gates.
