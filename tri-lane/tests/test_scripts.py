@@ -376,6 +376,68 @@ class Log(unittest.TestCase):
             Path.home = real
             shutil.rmtree(home)
 
+    def test_session_model_resolves_an_alias_to_its_full_id_key(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ll", SCRIPTS / "lane-log.py")
+        ll = importlib.util.module_from_spec(spec); spec.loader.exec_module(ll)
+        home = Path(tempfile.mkdtemp()); (home / ".claude").mkdir()
+        (home / ".claude" / "settings.json").write_text(json.dumps({"model": "opus", "modelSettings": {"claude-opus-5-5": {"effortLevel": "high"}, "claude-fable-5-1": {"effortLevel": "xhigh"}}}))
+        real = Path.home
+        Path.home = staticmethod(lambda: home)
+        try:
+            self.assertEqual(ll.session_model(), {"model": "opus", "effort": "high"})
+        finally:
+            Path.home = real
+            shutil.rmtree(home)
+
+    def _transcripts(self, home, turns, sub_turns=()):
+        """Main-session and subagent transcripts for self.repo under a fake HOME; turns are (iso, model, effort, output_tokens)."""
+        import re as _re
+        proj = home / ".claude" / "projects" / _re.sub(r"[^A-Za-z0-9]", "-", str(self.repo.resolve()))
+        (proj / "s1" / "subagents").mkdir(parents=True, exist_ok=True)
+        def line(t):
+            return json.dumps({"type": "assistant", "timestamp": t[0], "effort": t[2], "message": {"model": t[1], "usage": {"input_tokens": 1, "output_tokens": t[3]}}}) + "\n"
+        (proj / "s1.jsonl").write_text("".join(line(t) for t in turns))
+        (proj / "s1" / "subagents" / "agent-a.jsonl").write_text("".join(line(t) for t in sub_turns))
+
+    def test_remeasure_takes_main_session_model_and_effort_from_transcripts(self):
+        home = Path(tempfile.mkdtemp())
+        try:
+            self._transcripts(home, [("2026-10-01T10:05:00Z", "claude-opus-5-5", "medium", 300), ("2026-10-01T10:20:00Z", "claude-opus-5-5", "high", 100)],
+                              sub_turns=[("2026-10-01T10:10:00Z", "claude-haiku-5-5", "low", 5000)])
+            base = {"arm": "tri-lane", "project": str(self.repo.resolve()), "started_at": "2026-10-01T10:00:00+00:00", "ended_at": "2026-10-01T11:00:00+00:00", "claude": {"billable_tokens": 7}}
+            rows = [{**base, "task": "a", "model": "opus", "effort": None, "model_source": "settings"},
+                    {**base, "task": "b", "model": "claude-test", "effort": "max", "model_source": "flag"},
+                    {**base, "task": "c", "model": "opus", "effort": None, "started_at": "2026-09-01T10:00:00+00:00", "ended_at": "2026-09-01T11:00:00+00:00"}]
+            self.log.write_text("".join(json.dumps(r) + "\n" for r in rows))
+            rc, out, err = run([SCRIPTS / "lane-log.py", "--log", self.log, "remeasure"], cwd=self.repo, env=dict(ENV, HOME=str(home)))
+            self.assertEqual(rc, 0, err)
+            a, b, c = [json.loads(x) for x in self.log.read_text().splitlines()]
+            self.assertEqual((a["model"], a["effort"], a["model_share"], a["model_source"]), ("claude-opus-5-5", "medium", 0.75, "transcript"))
+            self.assertEqual((a["model_configured"], a["effort_configured"], a["claude"]["billable_tokens"]), ("opus", None, 7))
+            self.assertEqual((b["model"], b["effort"]), ("claude-test", "max"))  # a flag is never overridden
+            self.assertNotIn("model_source", c)  # no transcript survives for that window: untouched
+            self.assertTrue(self.log.with_suffix(".jsonl.bak").exists())
+            self.assertEqual(json.loads(out)["logs"][str(self.log)]["measured"], 1)
+        finally:
+            shutil.rmtree(home)
+
+    def test_end_records_the_transcript_model_over_settings(self):
+        home = Path(tempfile.mkdtemp()); (home / ".claude").mkdir()
+        try:
+            (home / ".claude" / "settings.json").write_text(json.dumps({"model": "opus", "modelSettings": {"claude-opus-5-5": {"effortLevel": "high"}}}))
+            env = dict(ENV, HOME=str(home))
+            rc, out, err = run([SCRIPTS / "lane-log.py", "--log", self.log, "start", "--task", "z", "--arm", "manual"], cwd=self.repo, env=env)
+            self.assertEqual((rc, json.loads(out)["effort"]), (0, "high"), err)
+            from datetime import datetime, timezone
+            self._transcripts(home, [(datetime.now(timezone.utc).isoformat(), "claude-opus-5-5", "medium", 50)])
+            rc, out, err = run([SCRIPTS / "lane-log.py", "--log", self.log, "end", "--task", "z", "--route", "manual", "--status", "complete"], cwd=self.repo, env=env)
+            self.assertEqual(rc, 0, err)
+            row = json.loads(self.log.read_text().splitlines()[-1])
+            self.assertEqual((row["model"], row["effort"], row["model_source"], row["effort_configured"]), ("claude-opus-5-5", "medium", "transcript", "high"))
+        finally:
+            shutil.rmtree(home)
+
     def test_backfilled_rows_do_not_enter_the_rule(self):
         self.ll("start", "--task", "a", "--arm", "manual", "--model", "m1", "--effort", "e")
         self.ll("end", "--task", "a", "--route", "manual", "--status", "complete")
