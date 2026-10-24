@@ -44,6 +44,8 @@ Classify the change by risk level:
 
 ### Step 3: Generate Test Plan
 
+Each test case has exactly one expected result. Exit criteria are pass/fail: all P1 cases pass, no open P1/P2 bugs, diff-coverage gate met. Test data setup is automated.
+
 For each changed area, produce:
 
 **Functional Tests**
