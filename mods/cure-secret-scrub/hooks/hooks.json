@@ -1,4 +1,0 @@
-{
-  "description": "cure-secret-scrub hooks module",
-  "modules": ["./register.ts"]
-}

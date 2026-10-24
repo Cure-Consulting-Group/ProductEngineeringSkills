@@ -57,7 +57,7 @@
     {
       "name": "cure-policy-guard",
       "source": "./mods/cure-policy-guard",
-      "description": "Mod: refuses file writes that break a written Cure house rule unless you override; overrides are recorded.",
+      "description": "Mod: refuses writes and Bash/WebFetch calls that break a written Cure house rule (cron, PHI and minors' data, AI vendors, credentials, state ownership) unless you override; overrides are recorded.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -125,36 +125,6 @@
       ]
     },
     {
-      "name": "cure-secret-scrub",
-      "source": "./mods/cure-secret-scrub",
-      "description": "Mod: redacts API keys, private keys, service account secrets, and tokens from Read, Grep, and Bash outputs. Adds /secret-scrub.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "security",
-        "secrets",
-        "redaction"
-      ]
-    },
-    {
-      "name": "cure-llm-ledger",
-      "source": "./mods/cure-llm-ledger",
-      "description": "Mod: per-turn LLM token and dollar cost ledger attributed by repo, branch, and model. Adds /ledger.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "finops",
-        "llmops",
-        "cost-tracking"
-      ]
-    },
-    {
       "name": "cure-cite-check",
       "source": "./mods/cure-cite-check",
       "description": "Mod: checks file:line citations in Claude's answers against the session's repositories and toasts the stale ones; never edits the answer. Adds /cite-check.",
@@ -167,36 +137,6 @@
         "verification",
         "citations",
         "quality"
-      ]
-    },
-    {
-      "name": "cure-claim-guard",
-      "source": "./mods/cure-claim-guard",
-      "description": "Mod: enforces multi-machine state file ownership rules in shared repos (DistrictZero state-targets.md). Adds /claims.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "coordination",
-        "multi-machine",
-        "guardrails"
-      ]
-    },
-    {
-      "name": "cure-ci-preview",
-      "source": "./mods/cure-ci-preview",
-      "description": "Mod: pre-push GitHub Actions CI runner time and cost estimator. Warns when commits mix doc notes with code. Adds /ci-preview.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "ci-cd",
-        "github-actions",
-        "finops"
       ]
     },
     {
@@ -215,22 +155,6 @@
       ]
     },
     {
-      "name": "cure-egress-guard",
-      "source": "./mods/cure-egress-guard",
-      "description": "Mod: prevents unauthorized outbound data transmission to external AI vendor endpoints in sensitive repos (PHI, minors). Adds /egress-guard.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "security",
-        "egress",
-        "compliance",
-        "phi"
-      ]
-    },
-    {
       "name": "cure-rules-band",
       "source": "./mods/cure-rules-band",
       "description": "Mod: shows the house rules of the repository the session is in, above the prompt; nothing for a repo with none. Adds /rules.",
@@ -243,21 +167,6 @@
         "hud",
         "rules",
         "interface"
-      ]
-    },
-    {
-      "name": "cure-handoff",
-      "source": "./mods/cure-handoff",
-      "description": "Mod: drafts structured STATE.md handoff entries from git commits, branch status, and working tree diffs. Adds /handoff.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "handoff",
-        "workflow",
-        "productivity"
       ]
     },
     {

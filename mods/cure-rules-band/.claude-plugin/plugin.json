@@ -1,6 +1,6 @@
 {
   "name": "cure-rules-band",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shows the house rules of the repository the session is in, in a band above the prompt; nothing for a repo with none. /rules gives the detail, /rules hide dismisses it.",
   "author": {
     "name": "Cure Consulting Group"
