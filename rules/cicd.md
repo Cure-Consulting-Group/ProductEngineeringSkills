@@ -1,5 +1,7 @@
 ---
-globs: ".github/workflows/**,**/.github/workflows/**"
+paths:
+  - ".github/workflows/**"
+  - "**/.github/workflows/**"
 ---
 
 # CI/CD Standards — Cure Consulting Group

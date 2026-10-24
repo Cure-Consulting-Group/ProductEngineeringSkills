@@ -1,5 +1,8 @@
 ---
-globs: "**/*.tf,**/*.tfvars,**/terraform/**"
+paths:
+  - "**/*.tf"
+  - "**/*.tfvars"
+  - "**/terraform/**"
 ---
 
 # Terraform / IaC Standards — Cure Consulting Group

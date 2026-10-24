@@ -1,5 +1,8 @@
 ---
-globs: "**/Dockerfile*,**/docker-compose*,**/.dockerignore"
+paths:
+  - "**/Dockerfile*"
+  - "**/docker-compose*"
+  - "**/.dockerignore"
 ---
 
 # Docker Standards — Cure Consulting Group

@@ -7,8 +7,10 @@ into a throwaway git workspace as `.agents/plugins/cure/`, and runs the two free
 workspace without it). No model turn is spent. The plugin is not installed globally, but `agy` runs with your real HOME and may write its own session/log files under ~/.gemini.
 
 Asserts: every exported skill appears as `cure:<name>`, every exported persona appears in
-/agents. Skips cleanly (exit 0, status "skipped") when agy is not installed or not signed in,
-which is the normal state on CI runners.
+/agents, and `agy plugin validate --json` reports no rule errors or warnings. Skips cleanly
+(exit 0, status "skipped") when agy is not installed or not signed in, which is the normal state
+on CI runners. With --plugin-dir, a static rules check runs first and needs no agy: every
+`trigger: glob` rule must carry a non-empty `globs` string (fails with exit 1 otherwise).
 
 Usage:
   python3 scripts/antigravity-smoke.py
@@ -19,6 +21,7 @@ Exit codes: 0 pass or skipped, 1 skills/agents missing, 2 export failed or agy e
 """
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -38,6 +41,33 @@ def agy_slash(cmd: str, ws: Path) -> dict:
     return json.loads(lines[-1])
 
 
+def empty_glob_rules(plugin: Path) -> list:
+    """Exported `trigger: glob` rules whose `globs` is missing or empty: agy never applies them."""
+    bad = []
+    for f in sorted((plugin / "rules").glob("*.md")) if (plugin / "rules").is_dir() else []:
+        m = re.match(r"^---\n(.*?)\n---", f.read_text(encoding="utf-8"), re.S)
+        fm = m.group(1) if m else ""
+        if re.search(r"^trigger:\s*glob\s*$", fm, re.M):
+            g = re.search(r"^globs?:\s*(.*)$", fm, re.M)
+            if not g or g.group(1).strip().strip("\"'").strip() == "":
+                bad.append(f.name)
+    return bad
+
+
+def validate_rules(plugin: Path) -> dict:
+    """Zero-model `agy plugin validate --json`; returns the rule-file errors and warnings."""
+    p = subprocess.run(["agy", "plugin", "validate", str(plugin), "--json"], capture_output=True, text=True, timeout=180)
+    try:
+        findings = json.loads(p.stdout).get("findings") or []
+    except ValueError:
+        return {"error": (p.stderr or p.stdout).strip()[-300:]}
+    serious = [f for f in findings if f.get("severity") in ("error", "warning")]
+    return {"warnings": sum(f.get("severity") == "warning" for f in findings),
+            "errors": sum(f.get("severity") == "error" for f in findings),
+            "rule_findings": [f"{f.get('file')}: {f.get('message')}" for f in serious
+                              if str(f.get("file", "")).startswith("rules/")]}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Zero-model Antigravity listing smoke test for the exported plugin.")
     ap.add_argument("--plugin-dir", help="use an existing export instead of building one")
@@ -51,11 +81,17 @@ def main() -> int:
             print(json.dumps(result, indent=2))
         else:
             print(f"antigravity smoke: {result['status']}" + (f" ({result['reason']})" if result.get("reason") else ""))
-            for k in ("skills_expected", "skills_listed", "missing_skills", "agents_listed", "missing_agents", "agy_version"):
+            for k in ("empty_glob_rules", "skills_expected", "skills_listed", "missing_skills", "agents_listed",
+                      "missing_agents", "validate", "agy_version"):
                 if k in result:
                     print(f"  {k}: {result[k]}")
         return code
 
+    if a.plugin_dir:
+        result["empty_glob_rules"] = empty_glob_rules(Path(a.plugin_dir).resolve())
+        if result["empty_glob_rules"]:
+            result.update(status="fail", reason="exported glob rule(s) with empty globs never apply in agy")
+            return done(1)
     if not shutil.which("agy"):
         result["reason"] = "agy not on PATH"
         return done(0)
@@ -90,7 +126,9 @@ def main() -> int:
         agents = {l.strip() for l in ag.get("response", "").splitlines() if l.strip()}
         want_agents = sorted(d.name for d in (plugin / "agents").iterdir()) if (plugin / "agents").is_dir() else []
         missing_agents = [n for n in want_agents if n not in agents]
-        result.update(status="pass" if not missing and not missing_agents else "fail",
+        result["validate"] = validate_rules(plugin)
+        bad_rules = result["validate"].get("rule_findings") or result["validate"].get("error")
+        result.update(status="pass" if not missing and not missing_agents and not bad_rules else "fail",
                       skills_expected=len(expected), skills_listed=len(expected) - len(missing), missing_skills=missing,
                       agents_listed=len(want_agents) - len(missing_agents), missing_agents=missing_agents,
                       model_turns=sk.get("num_turns", 0) + ag.get("num_turns", 0))

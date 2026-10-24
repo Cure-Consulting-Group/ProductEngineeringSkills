@@ -1,5 +1,7 @@
 ---
-globs: "**/*.sql,**/migrations/**"
+paths:
+  - "**/*.sql"
+  - "**/migrations/**"
 ---
 
 # SQL Standards — Cure Consulting Group

@@ -1,5 +1,6 @@
 ---
-globs: "**/*.rs"
+paths:
+  - "**/*.rs"
 ---
 
 # Rust Standards — Cure Consulting Group
