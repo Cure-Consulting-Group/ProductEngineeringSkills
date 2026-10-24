@@ -94,6 +94,7 @@ jobs:
         # hooks/cure_guard.py and is exercised here with real hook-shaped payloads.
         run: |
           python3 hooks/test_cure_guard.py
+          python3 scripts/test_export_antigravity.py
           if grep -n -E 'CLAUDE_TOOL_(INPUT|NAME)' hooks/hooks.json tri-lane/hooks/hooks.json; then
             echo "a hooks.json reads CLAUDE_TOOL_INPUT/CLAUDE_TOOL_NAME — not real variables; hook input arrives on stdin"; exit 1
           fi
@@ -187,6 +188,7 @@ jobs:
           assert d["skills"] == want_skills, f"exported {d['skills']} of {want_skills} skills"
           assert d["agents"] == want_agents, f"exported {d['agents']} of {want_agents} personas"
           assert d["injections_remaining"] == 0, "inline !`cmd` survived the export"
+          assert all((d.get("rule_globs") or {"_": "n/a"}).values()), f"empty rule globs: {d.get('rule_globs')}"
           import os, re
           rules_dir = os.path.join(os.environ["RUNNER_TEMP"], "agy", "cure", "rules")
           for rf in sorted(glob.glob(os.path.join(rules_dir, "*.md"))):
