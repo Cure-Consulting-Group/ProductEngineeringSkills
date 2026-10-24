@@ -1,75 +1,110 @@
-import type { On } from 'claude-code'
+import type { $ as Engine, Register } from 'claude-code'
 
+import type { Stats, Tracked } from '../types'
 import {
-  DEFAULT_MAX_CONCURRENT,
+  capFrom,
+  denyText,
   evaluateModelRouting,
   formatBudgetReport,
-  type BudgetStats,
+  reconcile,
+  routeFrom,
 } from './budget'
 
-const BUDGET_STATE_KEY = 'cure-agent-budget-stats'
+/** 0.1.0 kept a machine-global count here; it never reset and filled the cap with ghosts. */
+const LEGACY_STORE_KEY = 'cure-agent-budget-stats'
 
-export function register(on: On) {
+const ACTIVE = { plugin: 'cure-agent-budget', key: 'active' } as const
+const STATS = { plugin: 'cure-agent-budget', key: 'stats' } as const
+const NO_STATS: Stats = { spawned: 0, denied: 0, routed: 0 }
+
+type $ = Engine
+
+async function listed($: $): Promise<Map<string, string> | undefined> {
+  try {
+    const rows = await $.agent.list()
+    return new Map(rows.map(r => [r.id, String(r.status)]))
+  } catch {
+    return undefined
+  }
+}
+
+async function active($: $): Promise<Tracked[]> {
+  const { value = [] } = await $.state.get(ACTIVE)
+  const live = reconcile(value, await listed($))
+  if (live.length !== value.length) await $.state.set(ACTIVE, live)
+  return live
+}
+
+async function bump($: $, field: keyof Stats): Promise<void> {
+  const { value = NO_STATS } = await $.state.get(STATS)
+  await $.state.set(STATS, { ...value, [field]: value[field] + 1 })
+}
+
+export const register: Register = (on, options) => {
+  const cap = capFrom(options.maxConcurrent)
+  const route = routeFrom(options.routeResearchTo)
+
   on('session.start', async ($, e, next) => {
+    await $.store.delete(LEGACY_STORE_KEY).catch(() => undefined)
+    // A new session starts empty; a hot reload keeps the agents the engine still runs.
+    const { value = [] } = await $.state.get(ACTIVE)
+    const rows = await listed($)
+    await $.state.set(ACTIVE, rows ? reconcile(value, rows) : [])
     await $.command.register({
       name: 'agents-budget',
-      description: 'Show active subagent count, concurrency caps, and routing savings for this session',
+      description: 'Show running subagents, the concurrency cap and routing for this session',
     })
     return next(e)
   })
 
-  on('command.run', { command: 'agents-budget' }, async $ => {
-    const stats = ((await $.store.get(BUDGET_STATE_KEY)) as BudgetStats | undefined) ?? {
-      activeCount: 0,
-      maxLimit: DEFAULT_MAX_CONCURRENT,
-      cumulativeSpawned: 0,
-      downRoutedCount: 0,
-    }
-    return { text: formatBudgetReport(stats) }
+  on('session.end', async ($, e, next) => {
+    await $.state.set(ACTIVE, [])
+    return next(e)
   })
 
-  on('tool.call', async ($, e, next) => {
-    if (String(e.tool) !== 'Agent') return next(e)
+  on('command.run', { command: 'agents-budget' }, async $ => {
+    const { value: stats = NO_STATS } = await $.state.get(STATS)
+    return { text: formatBudgetReport({ active: await active($), cap, route, ...stats }) }
+  })
 
-    const stats = ((await $.store.get(BUDGET_STATE_KEY)) as BudgetStats | undefined) ?? {
-      activeCount: 0,
-      maxLimit: DEFAULT_MAX_CONCURRENT,
-      cumulativeSpawned: 0,
-      downRoutedCount: 0,
+  on('agent.spawn', async ($, e, next) => {
+    // Workflow scripts and teammates govern their own fan-out; a resume reuses its slot.
+    if (e.workflow || e.isTeammate) return next(e)
+
+    const running = await active($)
+    if (!e.resume && cap > 0 && running.length >= cap) {
+      await bump($, 'denied')
+      return { deny: denyText(running.length, cap) }
     }
 
-    if (stats.activeCount >= stats.maxLimit) {
-      return {
-        deny: `cure-agent-budget: Maximum concurrent subagents (${stats.maxLimit}) reached. Wait for existing subagents to complete.`,
-      }
+    const decision = evaluateModelRouting({
+      route,
+      description: e.description,
+      prompt: e.prompt,
+      model: e.model,
+      parentModel: e.parentModel,
+      isFork: e.fork,
+    })
+    const answer = await next(decision.model ? { ...e, model: decision.model } : e)
+    if (answer.deny !== undefined || !answer.agentId) return answer
+
+    const id = answer.agentId
+    const now = await $.clock.now()
+    const { value = [] } = await $.state.get(ACTIVE)
+    await $.state.set(ACTIVE, [...value.filter(t => t.id !== id), { id, description: e.description, startedAt: now }].slice(-200))
+    if (!e.resume) await bump($, 'spawned')
+    if (decision.model) {
+      await bump($, 'routed')
+      $.ui.toast(`cure-agent-budget: '${e.description}' → ${decision.model}`)
     }
+    return answer
+  })
 
-    stats.activeCount += 1
-    stats.cumulativeSpawned += 1
-
-    const role = typeof e.description === 'string' ? e.description : typeof e.role === 'string' ? e.role : ''
-    const prompt = typeof e.prompt === 'string' ? e.prompt : ''
-    const model = typeof e.model === 'string' ? e.model : ''
-
-    const decision = evaluateModelRouting({ role, prompt, currentModel: model })
-    let eventToPass = e
-    if (decision.shouldRoute && decision.newModel) {
-      stats.downRoutedCount += 1
-      eventToPass = { ...e, model: decision.newModel }
-      $.ui.toast(`cure-agent-budget: Routed subagent '${role || 'research'}' to Sonnet`)
+  on('turn.complete', async ($, e, next) => {
+    if (e.agentId !== undefined) {
+      const { value = [] } = await $.state.get(ACTIVE)
+      if (value.some(t => t.id === e.agentId)) await $.state.set(ACTIVE, value.filter(t => t.id !== e.agentId))
     }
-
-    await $.store.set(BUDGET_STATE_KEY, stats)
-
-    try {
-      const answer = await next(eventToPass)
-      return answer
-    } finally {
-      const current = ((await $.store.get(BUDGET_STATE_KEY)) as BudgetStats | undefined) ?? stats
-      if (current.activeCount > 0) {
-        current.activeCount -= 1
-        await $.store.set(BUDGET_STATE_KEY, current)
-      }
-    }
+    return next(e)
   })
 }

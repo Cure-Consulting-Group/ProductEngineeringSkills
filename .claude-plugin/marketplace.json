@@ -157,7 +157,7 @@
     {
       "name": "cure-cite-check",
       "source": "./mods/cure-cite-check",
-      "description": "Mod: verifies code line citations (file:line) in assistant answers against disk, flagging stale lines. Adds /cite-check.",
+      "description": "Mod: checks file:line citations in Claude's answers against the session's repositories and toasts the stale ones; never edits the answer. Adds /cite-check.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -202,7 +202,7 @@
     {
       "name": "cure-agent-budget",
       "source": "./mods/cure-agent-budget",
-      "description": "Mod: enforces subagent fan-out concurrency caps and auto-routes read-only research subagents to cost-effective models. Adds /agents-budget.",
+      "description": "Mod: caps how many subagents one session runs at once, tracked by agent id from spawn to completion; optional research routing to a model alias, off by default. Adds /agents-budget.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
