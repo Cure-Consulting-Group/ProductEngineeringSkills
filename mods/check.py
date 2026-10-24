@@ -24,8 +24,8 @@ import sys
 MODS = pathlib.Path(__file__).resolve().parent
 ROOT = MODS.parent
 RETIRED_ID = re.compile(
-    r'\b(?:claude-instant[\w.-]*|claude-2[\w.-]*|claude-3[\w.-]*|claude-(?:sonnet|opus|haiku)-4[\w.-]*'
-    r'|gpt-3\.5[\w.-]*|gpt-4o[\w.-]*|gpt-4-turbo[\w.-]*|gpt-4\b|gemini-1\.\d[\w.-]*|gemini-2\.\d[\w.-]*)'
+    r'\b(?:claude-instant[\w.-]*|claude-2[\w.-]*|claude-3[\w.-]*|claude-(?:sonnet|opus|haiku)-4[\w.-]*'  # retired-id-ok (the pattern itself)
+    r'|gpt-3\.5[\w.-]*|gpt-4o[\w.-]*|gpt-4-turbo[\w.-]*|gpt-4\b|gemini-1\.\d[\w.-]*|gemini-2\.\d[\w.-]*)'  # retired-id-ok (the pattern itself)
 )
 SCAN_SUFFIXES = {'.ts', '.tsx', '.js', '.json', '.md', '.html', '.py', '.sh', '.yml', '.yaml', '.txt'}
 

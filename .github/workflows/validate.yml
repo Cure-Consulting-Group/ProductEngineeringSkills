@@ -96,6 +96,7 @@ jobs:
           python3 hooks/test_cure_guard.py
           python3 scripts/test_export_antigravity.py
           node bootstrap/scripts/sync-deny-rules.mjs --check   # bootstrap's deny list = repo settings.json
+          python3 mods/check.py --no-claude   # static mods gate: count, marketplace parity, shared-code drift, retired IDs
           if grep -n -E 'CLAUDE_TOOL_(INPUT|NAME)' hooks/hooks.json tri-lane/hooks/hooks.json; then
             echo "a hooks.json reads CLAUDE_TOOL_INPUT/CLAUDE_TOOL_NAME — not real variables; hook input arrives on stdin"; exit 1
           fi
@@ -286,15 +287,9 @@ jobs:
           node-version: "22"
       - name: Install Claude Code (pinned)
         run: npm install -g @anthropic-ai/claude-code@2.1.310
-      - name: claude plugin validate --strict (main plugin, tri-lane, every mod)
+      - name: claude plugin validate --strict (main plugin, tri-lane)
         run: |
           claude plugin validate --strict .
           claude plugin validate --strict ./tri-lane
-          for d in mods/*/; do [ -f "$d.claude-plugin/plugin.json" ] && claude plugin validate --strict "$d"; done
-      - name: claude plugin test (every mod)
-        run: |
-          for d in mods/*/; do
-            [ -f "$d.claude-plugin/plugin.json" ] || continue
-            ls "$d"hooks/*.test.ts* "$d"*.test.ts* >/dev/null 2>&1 || { echo "::error::$d has no tests"; exit 1; }
-            (cd "$d" && claude plugin test .)
-          done
+      - name: Mods gate (count, marketplace parity, shared-code drift, retired IDs, every mod's tests + validate)
+        run: python3 mods/check.py --require-claude
