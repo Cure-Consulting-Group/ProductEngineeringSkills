@@ -95,6 +95,7 @@ jobs:
         run: |
           python3 hooks/test_cure_guard.py
           python3 scripts/test_export_antigravity.py
+          node bootstrap/scripts/sync-deny-rules.mjs --check   # bootstrap's deny list = repo settings.json
           if grep -n -E 'CLAUDE_TOOL_(INPUT|NAME)' hooks/hooks.json tri-lane/hooks/hooks.json; then
             echo "a hooks.json reads CLAUDE_TOOL_INPUT/CLAUDE_TOOL_NAME — not real variables; hook input arrives on stdin"; exit 1
           fi

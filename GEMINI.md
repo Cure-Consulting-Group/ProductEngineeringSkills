@@ -14,11 +14,11 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## Repository Structure
 
-- `skills/{domain}/{name}/SKILL.md`: 103 skills organized by domain. Domains: engineering (40), platform (11), product (11), business (14), finance (4), marketing (6), security (4), legal (1), tax (12).
+- `skills/{domain}/{name}/SKILL.md`: 106 skills organized by domain. Domains: engineering (40), platform (11), product (11), business (14), finance (4), marketing (6), security (4), legal (1), tax (12).
 - `skills/{domain}/{name}/scripts/`: Optional bundled Python stdlib scripts (zero pip). See `docs/SCRIPTS_CONVENTION.md`.
 - `agents/`: 41 custom agents (subagent definitions in Markdown).
 - `personas/`: 4 cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant).
-- `hooks/hooks.json`: Multi-layer automated enforcement (command and prompt hooks — 9 event types).
+- `hooks/hooks.json`: Multi-layer automated enforcement (command hooks only — 6 event types).
 - `rules/`: 11 path-specific coding standards (Android, iOS, Web, Firebase, Python, Go, Rust, SQL, Docker, Terraform, CI/CD).
 - `claude-commands/`: Legacy Markdown format for backwards compatibility.
 - `.claude-plugin/plugin.json`: Plugin manifest and metadata.
@@ -44,7 +44,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
   5. Run `python3 scripts/generate-overview.py` to refresh `docs/OVERVIEW.md`.
 - **Bundled Scripts**: Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`.
 - **Adding a Persona**: Create `personas/{name}.md` with frontmatter (`name`, `description`, `type: persona`). Reference only existing skills/agents — never invent names.
-- **Versioning**: Bump version in `.claude-plugin/plugin.json` (Major/Minor/Patch). Current version: **6.0.3**.
+- **Versioning**: Bump version in `.claude-plugin/plugin.json` (Major/Minor/Patch). Current version: **7.13.0**.
 - **Standards Enforcement**: Follow patterns in `rules/*.md` strictly.
 
 ## Tech Stack Defaults

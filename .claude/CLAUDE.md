@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 106 production-grade skills (organized into 9 domain folders), 41 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, LSP server configs, an opt-in MCP template, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 106 production-grade skills (organized into 9 domain folders), 41 custom agents, 4 personas (cross-domain engagement archetypes), command hooks (deterministic Stop check, Bash/edit safety guard, skill security guard), LSP server configs, an opt-in MCP template, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 **What a plugin install actually delivers** (Wave 7): skills, agents, hooks and LSP config. It cannot deliver permissions (plugin `settings.json` applies only `agent` and `subagentStatusLine`), rules, or personas; settings and rules reach a project only through the npm postinstall or cure-infra-bootstrap, and `hooks/cure_guard.py` is the safety layer every consumer gets. This dev file lives at `.claude/CLAUDE.md` because a plugin-root CLAUDE.md is never loaded and fails `claude plugin validate --strict`.
 
@@ -19,13 +19,13 @@ machine, offer to run it.
 
 ```
 .claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
-skills/{domain}/{name}/SKILL.md — 103 skills, organized by domain folder
+skills/{domain}/{name}/SKILL.md — 106 skills, organized by domain folder
                                  Domains: engineering (40), platform (11), product (11), business (14),
-                                 finance (4), marketing (6), security (4), legal (1), tax (12)
+                                 finance (4), marketing (6), security (4), legal (4), tax (12)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
 agents/*.md                    — 41 specialized subagents with tool/skill bindings
 personas/*.md                  — Cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant); documentation, nothing loads them
-hooks/hooks.json               — Multi-layer hooks (command + prompt) across 9 event types incl. Stop quality gate, ConfigChange audit, skill security guard
+hooks/hooks.json               — Command hooks across 6 event types (no prompt hooks, no model calls): deterministic Stop check, post-compaction standards re-injection, Bash/edit safety guard, skill security guard, failure triage
 rules/*.md                     — 11 path-specific coding standards (`paths:` frontmatter; delivered by npm/bootstrap, not the plugin)
 .mcp.json.example              — Opt-in MCP server template (GitHub, Sentry, Firestore, PostgreSQL); see docs/MCP-SETUP.md. NOT auto-loaded — needs per-project secrets.
 .lsp.json                      — LSP server configurations (TypeScript, Python/Pyright)
@@ -75,7 +75,7 @@ mods/*/                        — Claude Code mods (TypeScript function hooks, 
 
 The library's biggest token cost is fixed overhead multiplied across every session and agent spawn in every consuming project. Rules:
 
-- **Trigger text is budgeted.** Combined `description` + `when_to_use` per skill: target ≤350 chars (audit warns above 350, flags at 500). All 80 skills compete for the session skill-listing budget (~1% of model context by default); skill-heavy consuming projects can raise `skillListingBudgetFraction` — see `docs/CONSUMING-PROJECTS.md`.
+- **Trigger text is budgeted.** Combined `description` + `when_to_use` per skill: target ≤350 chars (audit warns above 350, flags at 500). All 106 skills compete for the session skill-listing budget (~1% of model context by default); skill-heavy consuming projects can raise `skillListingBudgetFraction` — see `docs/CONSUMING-PROJECTS.md`.
 - **Agents preload at most ~300 lines of skills.** Anything more becomes an on-demand body reference ("invoke `/x` when needed"). The audit flags preloads >800 lines.
 - **Don't pin `model:` or `effort:` without measured evidence.** Agents and skills inherit the session model and effort; a blanket `model:` pin silently downgrades them. Opus 5.5 defaults to `medium` effort, which matches Opus 5 at `high`, and thinks more per turn at a given level. The Wave 5 sweep (2026-09-23) found `high` bought no recall on reviewer tasks at equal cost, so the 14 carried-over `effort: high` pins were removed. Add one back only with an eval showing the gain.
 - **Heavy analysis skills fork.** Use `context: fork` so their exploration doesn't bloat the main conversation.
