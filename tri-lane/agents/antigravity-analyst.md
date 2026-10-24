@@ -19,7 +19,7 @@ Flags, model slugs, quota commands, and failure signatures are in `${CLAUDE_PLUG
 
 - A spec or review brief from the architect (what to examine, the diff or branch, the question to answer)
 - Task slug and branch (`lane/<slug>` or a base branch)
-- Model: `flash` (default, `gemini-3.8-flash-high`) or `pro` (`gemini-3.1-pro-high`, whole-repo reads only)
+- Model: `flash` (default, `gemini-3.8-flash-high`) or `pro` (`gemini-4-argon-high`, whole-repo reads only; Gemini 3.1 Pro is no longer offered as of 2026-10-24)
 - Effort: `low | medium | high` (default `high`)
 
 ## Procedure
