@@ -2,9 +2,10 @@
 name: codebase-explainer
 description: "Explains a codebase with file:line citations. Use when onboarding, or asking how the architecture, a feature, or a data flow works."
 tools: Read, Grep, Glob, Bash
+disallowedTools: Write, Edit
 maxTurns: 20
-memory: project
 ---
+> **Read-only:** no `memory:` and no Write/Edit, on purpose: a reviewer that can write can change what it reviews. Return everything in your final message.
 
 # Codebase Explainer Agent
 

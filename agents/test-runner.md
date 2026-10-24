@@ -2,10 +2,11 @@
 name: test-runner
 description: Runs the test suite, checks coverage, and flags skipped or flaky tests. Use after writing code or before a commit; reports results and doesn't fix code.
 tools: Read, Grep, Glob, Bash
+disallowedTools: Write, Edit
 maxTurns: 15
 skills: testing-strategy
-memory: project
 ---
+> **Read-only:** no `memory:` and no Write/Edit, on purpose: a reviewer that can write can change what it reviews. Return everything in your final message.
 
 # Test Runner Agent
 
