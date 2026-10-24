@@ -186,12 +186,14 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { TraceExporter } from "@google-cloud/opentelemetry-cloud-trace-exporter";
 import { resourceFromAttributes } from "@opentelemetry/resources"; // SDK 2.x: the Resource class is no longer exported
+// Pin the 2.x line (@opentelemetry/sdk-node 0.2xx, resources ^2): the Cloud Trace exporter 3.1.0 peers on
+// OTel 2.x, and SDK 3.0 (2026-10-20) removed sdk-trace-base. Re-check the exporter's peers before upgrading.
 
 const sdk = new NodeSDK({
   resource: resourceFromAttributes({
     "service.name": process.env.SERVICE_NAME || "unknown",
     "service.version": process.env.SERVICE_VERSION || "0.0.0",
-    "deployment.environment": process.env.NODE_ENV || "development",
+    "deployment.environment.name": process.env.NODE_ENV || "development", // semconv: replaces deployment.environment
   }),
   traceExporter: new TraceExporter(),
   instrumentations: [getNodeAutoInstrumentations({
@@ -216,10 +218,10 @@ export async function processPayment(orderId: string, amount: number) {
       "payment.currency": "usd",
     });
     try {
-      const charge = await stripe.charges.create({ amount, currency: "usd" });
-      span.setAttributes({ "payment.charge_id": charge.id, "payment.status": charge.status });
+      const intent = await stripe.paymentIntents.create({ amount, currency: "usd" });
+      span.setAttributes({ "payment.intent_id": intent.id, "payment.status": intent.status });
       span.setStatus({ code: SpanStatusCode.OK });
-      return charge;
+      return intent;
     } catch (error) {
       span.setStatus({ code: SpanStatusCode.ERROR, message: String(error) });
       span.recordException(error as Error);
@@ -345,7 +347,7 @@ func loadDashboard() async throws -> Dashboard {
 
 ### Web: Sentry + Web Vitals + Next.js Instrumentation
 ```typescript
-// lib/sentry-client.ts
+// instrumentation-client.ts — Sentry's client init file for Next.js (docs.sentry.io, @sentry/nextjs v11)
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
@@ -353,12 +355,24 @@ Sentry.init({
   environment: process.env.NEXT_PUBLIC_ENVIRONMENT,
   release: process.env.NEXT_PUBLIC_APP_VERSION,
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-  profilesSampleRate: 0.1,
+  // v11 removed profilesSampleRate; session profiling needs browserProfilingIntegration()
+  profileSessionSampleRate: 0.1,
+  profileLifecycle: "trace",
+  // v11 replaced sendDefaultPii with dataCollection, which now defaults to collecting cookies,
+  // user info, and HTTP bodies. Cure products carry PII/PHI: opt out explicitly.
+  dataCollection: {
+    userInfo: false,
+    cookies: false,
+    httpBodies: [],
+    databaseQueryData: false,
+    genAI: { inputs: false, outputs: false },
+  },
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   integrations: [
     Sentry.replayIntegration(), // keep the default masking: Cure products carry PII/PHI
     Sentry.browserTracingIntegration(),
+    Sentry.browserProfilingIntegration(),
     Sentry.feedbackIntegration({ colorScheme: "system" }),
   ],
   beforeSend(event) {

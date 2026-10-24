@@ -9,6 +9,8 @@ trigger:
     - "download Stitch project"
     - "import designs"
 
+# get_screen_code / get_screen_image are stitch-mcp proxy tools; on Google's hosted
+# server use get_screen + download_file (html_code.name, screenshot.name).
 steps:
   - id: resolve_project_id
     agent: stitch-design
