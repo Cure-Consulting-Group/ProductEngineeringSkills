@@ -3,6 +3,8 @@ name: merger-modeling
 description: "Models M&A accretion/dilution: pro-forma EPS, deal mix, purchase price allocation. Use when judging an acquisition's financial impact on the buyer, including synergies."
 when_to_use: "NOT for standalone valuation of the target (use dcf-modeling or comps-analysis) or startup fundraising dilution (use investor-reporting)."
 argument-hint: "[acquirer-and-target]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Merger Modeling (Accretion/Dilution)

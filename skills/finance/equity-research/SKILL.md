@@ -3,6 +3,8 @@ name: equity-research
 description: "Analyzes a public company from 10-K/10-Q filings and earnings calls. Use when digesting earnings, reading SEC filings, or drafting a buy/hold/sell thesis with catalysts."
 when_to_use: "NOT for building the valuation model itself (use dcf-modeling or comps-analysis) or private-company diligence."
 argument-hint: "[company-or-ticker]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Equity Research Analysis

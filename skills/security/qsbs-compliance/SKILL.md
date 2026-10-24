@@ -6,6 +6,8 @@ argument-hint: "[entity-or-product]"
 allowed-tools: ["Read", "Grep", "Glob"]
 disallowed-tools: Write Edit
 context: fork
+metadata:
+  verified: 2026-10-24
 ---
 
 # QSBS Compliance Tracker
@@ -24,8 +26,9 @@ context: fork
 IRC §1202 Qualified Small Business Stock compliance monitoring. QSBS excludes gain up to a per-issuer cap (the greater of a dollar cap or 10× basis) per shareholder — but qualification is fragile. A single disqualifying event can void the exclusion for affected issuances.
 
 **Two regimes — the issuance date decides which applies** (OBBBA, P.L. 119-21;
-verified 2026-09-23, Grant Thornton and *The Tax Adviser* Nov 2025 OBBBA §1202
-analyses; reconcile with `tax/irc-lookup/reference/obbba-changes.md`):
+re-verified 2026-10-24 against 26 U.S.C. §1202(a)(5)-(6), (b)(4)-(5), (d)(1) (LII text,
+amended through 2025-07-04) and *The Tax Adviser* Nov 2025 for the 28% rate; reconcile with
+`tax/irc-lookup/reference/obbba-changes.md`):
 
 | | Stock issued **on or before 2025-07-04** | Stock issued **after 2025-07-04** |
 |---|---|---|

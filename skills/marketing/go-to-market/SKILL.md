@@ -3,6 +3,8 @@ name: go-to-market
 description: "Writes launch plans: positioning, messaging, channels, launch phases. Use when launching a product, entering a new market, or planning a major feature release."
 when_to_use: "NOT for post-launch growth (growth-engineering), content (product-marketing), market sizing (market-research), or tier pricing (saas-financial-model)."
 argument-hint: "[product-name]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Go-to-Market Plan

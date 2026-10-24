@@ -4,6 +4,8 @@ description: "Extracts every RFP/RFQ requirement into a compliance matrix. Use w
 when_to_use: "NOT for first-pass screening (use solicitation-triage), the go/no-go (use bid-decision), or drafting the response (use proposal-generator)."
 argument-hint: "[solicitation-number]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(mkdir -p 00-source/extracted)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # RFP Evaluation
