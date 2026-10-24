@@ -99,6 +99,7 @@ def build_rules(t):
         rules.append((rel, re.compile(r"(?<=With )\d+(?=\s+skills\b)"), str(sk), "with N skills"))
         rules.append((rel, re.compile(r"(?<=Custom Agents \()\d+(?=\))"), str(ag), "Custom Agents (N) heading"))
         rules.append((rel, re.compile(r"(?<=the )\d+(?=\s+agents\b)"), str(ag), "the N agents"))
+        rules.append((rel, re.compile(r"\b\d+(?=\s+custom\s+agents\b)"), str(ag), "N custom agents"))
         rules.append((rel, re.compile(r"\b\d+(?=\s+rules, \d+ output styles)"), str(t["rules"]), "N rules idiom"))
         rules.append((rel, re.compile(r"(?<=rules, )\d+(?=\s+output styles)"), str(t["output_styles"]), "N output styles idiom"))
         rules.append((rel, re.compile(r"(?<=agents, )\d+(?=\s+personas\b)"), str(pe), "agents, N personas idiom"))

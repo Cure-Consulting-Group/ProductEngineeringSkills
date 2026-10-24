@@ -16,14 +16,13 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 - `skills/{domain}/{name}/SKILL.md`: 103 skills organized by domain. Domains: engineering (40), platform (11), product (11), business (14), finance (4), marketing (6), security (4), legal (1), tax (12).
 - `skills/{domain}/{name}/scripts/`: Optional bundled Python stdlib scripts (zero pip). See `docs/SCRIPTS_CONVENTION.md`.
-- `agents/`: 39 custom subagent definitions in Markdown.
+- `agents/`: 41 custom agents (subagent definitions in Markdown).
 - `personas/`: 4 cross-domain engagement archetypes (tech-lead, product-lead, engagement-pm, solo-consultant).
-- `hooks/hooks.json`: Multi-layer automated enforcement (command, prompt, agent — 12 event types).
+- `hooks/hooks.json`: Multi-layer automated enforcement (command and prompt hooks — 9 event types).
 - `rules/`: 11 path-specific coding standards (Android, iOS, Web, Firebase, Python, Go, Rust, SQL, Docker, Terraform, CI/CD).
-- `output-styles/`: 9 custom formatting styles (PRD, code, financial, audit, API spec, ADR, runbook, test plan, alerts).
 - `claude-commands/`: Legacy Markdown format for backwards compatibility.
 - `.claude-plugin/plugin.json`: Plugin manifest and metadata.
-- `.mcp.json` & `.lsp.json`: Pre-configured MCP and LSP server settings.
+- `.mcp.json.example` & `.lsp.json`: an opt-in MCP template (needs per-project secrets) and LSP server settings.
 - `marketplace.json`: Plugin marketplace manifest for distribution.
 
 ## Operational Workflows
@@ -40,7 +39,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 - **Adding a Skill**:
   1. Create `skills/{domain}/{name}/SKILL.md`. Domain is one of: engineering, platform, product, business, finance, marketing, security, legal, tax.
   2. Include YAML frontmatter: `name`, `description`, `argument-hint`.
-  3. Set `allowed-tools: ["Read", "Grep", "Glob"]` if read-only; set `disable-model-invocation: true` if destructive/sensitive.
+  3. To make a skill read-only, set `disallowed-tools: Write Edit Bash` — `allowed-tools` only pre-approves tools in Claude Code and restricts nothing, and runtimes enforce it differently. Set `disable-model-invocation: true` if destructive/sensitive.
   4. Sync to `claude-commands/`.
   5. Run `python3 scripts/generate-overview.py` to refresh `docs/OVERVIEW.md`.
 - **Bundled Scripts**: Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`.
