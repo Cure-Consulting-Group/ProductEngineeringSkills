@@ -1,7 +1,9 @@
 # Adopt the Cure skill library in a project
 
 Copy-paste setup for any Cure project that wants the shared skills, agents,
-rules, and hooks. ~2 minutes, one time. Updates are then a single command.
+and hooks. ~2 minutes, one time. Updates are then a single command. Rules and
+deny rules need one extra step (npm or bootstrap): see
+[What each install path delivers](#what-each-install-path-delivers).
 
 > **Access:** the library lives in the **private** repo
 > `Cure-Consulting-Group/ProductEngineeringSkills`. You need to be a member of
@@ -27,8 +29,10 @@ per machine; it's shared across all your projects.
 /plugin install cure-product-engineering@cure
 ```
 
-You now have all 103 skills, 40 agents, 4 personas, 11 rules, 9 output styles,
-and the hooks. Invoke any skill with `/cure-product-engineering:<skill>`, e.g.:
+You now have every skill and agent, the plugin hooks (including the
+`cure_guard.py` safety guard), and the LSP configs. You do **not** yet have the
+deny rules, the path-specific rules, or the personas: a plugin cannot ship
+them (table below). Invoke any skill with `/cure-product-engineering:<skill>`, e.g.:
 
 ```
 /cure-product-engineering:sdlc
@@ -37,11 +41,40 @@ and the hooks. Invoke any skill with `/cure-product-engineering:<skill>`, e.g.:
 
 Agents auto-delegate based on the task, or list them with `/agents`.
 
+### What each install path delivers
+
+Checked against the Claude Code plugin docs on 2026-10-24. Plugin settings apply
+only the `agent` and `subagentStatusLine` keys; everything else in a plugin's
+`settings.json` is dropped. `rules/` is not a plugin component (only `.claude/rules`
+and `~/.claude/rules` load). Nothing loads `personas/`.
+
+| Surface | Plugin install (`/plugin install`) | npm vendoring (`npm i -D ...`) | `cure-infra-bootstrap` |
+|---|---|---|---|
+| Skills, agents | yes | yes (`.claude/skills`, flattened; `.claude/agents`) | the ones the manifest lists |
+| Hooks (`hooks/hooks.json`) | yes | copied to `.claude/hooks/` as reference only: Claude Code reads project hooks from `settings.json`, and the commands need `${CLAUDE_PLUGIN_ROOT}` | its own generated reminders |
+| Deny rules (repo `settings.json`, 35 rules) | **no** | merged into `.claude/settings.json` (union; other keys untouched; idempotent) | written into `.claude/settings.json` at init |
+| Path rules (`rules/*.md`) | **no** | copied to `.claude/rules/` | the ones the manifest lists |
+| Personas (`personas/*.md`) | **no**: documentation only | copied as documentation | no |
+| Output styles | not declared in `plugin.json`; don't rely on them | copied | no |
+| MCP servers | no: `.mcp.json.example` is an opt-in template ([MCP-SETUP.md](MCP-SETUP.md)) | template copied, not activated | no |
+| `.claude/loop.md`, `.claude/workflows/` | provisioned at session start, only in opted-in projects (below) | copied | no |
+
+**Safety on the plugin path.** With no deny rules, the plugin's PreToolUse guard
+(`hooks/cure_guard.py`) is the only safety layer a plugin-only consumer gets. It
+blocks: recursive deletes of root, home or the current directory; `mkfs`; `dd` to a
+disk; fork bombs; force-push to `main`/`master` (`--force`, `-f`,
+`--force-with-lease`, a `+main` refspec, or a bare force-push while on main);
+`git reset --hard`; `git clean -f`; `DROP TABLE|DATABASE|SCHEMA` and `TRUNCATE`
+outside a migration; `terraform`/`tofu` destroy and `apply -destroy`;
+`kubectl delete namespace`; and hand edits to `.env*`, lock files, credential
+files and `*.tfstate`. It fails open: if Python is missing, nothing is blocked.
+For the full deny list as a hard permission layer, also vendor via npm or bootstrap.
+
 ## Step 3 — Verify
 
 ```
 /help          # skills appear under the cure-product-engineering: namespace
-/agents        # the 40 agents are listed
+/agents        # the cure-product-engineering agents are listed
 ```
 
 ## Step 4 — Update (the seamless part)
@@ -77,12 +110,19 @@ block skips `/plugin marketplace add` — only the one-time
 No re-vendoring, no file copying, no merge conflicts. Updates arrive only when
 the maintainers bump the version, so you never get surprised mid-task.
 
-On first session start after install, the plugin self-provisions two
-project-scoped files that plugins cannot ship natively: `.claude/loop.md`
-(the Cure maintenance loop — run bare `/loop`) and `.claude/workflows/`
-(`/cure-code-audit`, `/cure-release-check`, `/cure-migration-sweep`).
-Copy-if-missing only: your local edits are never overwritten, and nothing is
-written outside a project (requires `.claude/` or `.git` in the cwd).
+**Opt-in provisioning.** At session start the plugin can copy two project-scoped
+files that plugins cannot ship natively: `.claude/loop.md` (the Cure maintenance
+loop: run bare `/loop`) and `.claude/workflows/` (`/cure-code-audit`,
+`/cure-release-check`, `/cure-migration-sweep`). Since v7.14 it does this only in
+a project that opts in with one of:
+
+- a `.cure/` directory at the project root (`mkdir .cure`),
+- a `claude.manifest.json` (written by `cure-infra-bootstrap`), or
+- a `CLAUDE.md` or `.claude/CLAUDE.md` that names "Cure Consulting Group" or
+  `cure-product-engineering` (the block below does).
+
+Personal and open-source repos under a user-scope install get nothing written.
+Copy-if-missing only: your local edits are never overwritten.
 
 ---
 
@@ -107,7 +147,10 @@ npm install --save-dev @cure-consulting-group/product-engineering-skills
 ```
 
 The postinstall copies skills into `./.claude/` (skip-if-exists, won't clobber
-local edits). To refresh: `CURE_SKILLS_FORCE=1 npm rebuild` — **review the diff
+local edits). One exception: if `.claude/settings.json` already exists, the
+library's deny rules are merged into its `permissions.deny` (union, other keys
+untouched, a second run adds nothing). An unparseable settings file is left alone
+with a warning. To refresh: `CURE_SKILLS_FORCE=1 npm rebuild` — **review the diff
 before committing**. Prefer the marketplace path unless you specifically need
 in-tree files. See [DISTRIBUTION.md](DISTRIBUTION.md) for the full comparison.
 
@@ -166,7 +209,7 @@ This project uses the shared Cure skill library (private plugin).
 ## Skill-listing budget (token economy)
 
 Claude Code caps the per-session skill listing at roughly 1% of model context by
-default. With this library's 103 skills installed alongside a project's own
+default. With this library's 106 skills installed alongside a project's own
 skills, trigger text past the budget gets truncated — those skills stop being
 auto-discoverable (explicit `/name` invocation still works).
 
@@ -228,7 +271,7 @@ python3 scripts/codex-smoke.py   # from a library checkout: throwaway CODEX_HOME
 
 ### Skill-listing budget: set it
 
-Codex budgets the skill catalog at 2% of context by default. With 103 skills
+Codex budgets the skill catalog at 2% of context by default. With 106 skills
 that cuts every description to about 110 characters, which usually drops the "Use when…" clause.
 Measured: 6,000 tokens gives about 130 characters, and ≥8,000 gives the full text (longest description today is 344 chars).
 Explicit values are **capped at 10,000** (documented), so asking for 12–15k gets you 10k.

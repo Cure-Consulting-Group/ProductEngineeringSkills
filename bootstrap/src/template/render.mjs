@@ -10,6 +10,15 @@ const EJS_OPTIONS = Object.freeze({ rmWhitespace: false, strict: true, _with: fa
 
 const cache = new Map();
 
+// Deny rules are generated from the library's root settings.json by
+// scripts/sync-deny-rules.mjs (the npm package ships without the repo root).
+// No `model` key is ever rendered: a pin silently downgrades every session.
+let denyRulesCache = null;
+export function denyRules() {
+  denyRulesCache ??= Object.freeze(JSON.parse(readFileSync(resolve(TEMPLATES_DIR, "deny-rules.json"), "utf8")));
+  return denyRulesCache;
+}
+
 function compile(name) {
   const cached = cache.get(name);
   if (cached) return cached;
@@ -35,6 +44,7 @@ export function buildContext(manifest) {
     agents: manifest.agents ?? { active: [] },
     hooks: manifest.hooks ?? { preCommit: [], postFeature: [], prePR: [] },
     stack: manifest.project.stack ?? [],
+    denyRules: denyRules(),
     activeCompliance: Object.entries(manifest.compliance)
       .filter(([, v]) => v === true)
       .map(([k]) => k),

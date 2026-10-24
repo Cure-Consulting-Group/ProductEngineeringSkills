@@ -29,7 +29,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "sync:deny": "node scripts/sync-deny-rules.mjs"
   },
   "dependencies": {
     "ajv": "^8.17.1",

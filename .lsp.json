@@ -1,7 +1,11 @@
 {
   "typescript": {
     "command": "npx",
-    "args": ["typescript-language-server", "--stdio"],
+    "args": [
+      "-y",
+      "typescript-language-server@6.0.2",
+      "--stdio"
+    ],
     "extensionToLanguage": {
       ".ts": "typescript",
       ".tsx": "typescriptreact",
@@ -22,7 +26,12 @@
   },
   "python": {
     "command": "npx",
-    "args": ["pyright-langserver", "--stdio"],
+    "args": [
+      "-y",
+      "--package=pyright@1.1.414",
+      "pyright-langserver",
+      "--stdio"
+    ],
     "extensionToLanguage": {
       ".py": "python",
       ".pyi": "python"
