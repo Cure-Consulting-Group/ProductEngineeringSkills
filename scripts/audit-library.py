@@ -761,6 +761,77 @@ def flat_name_conflicts():
     return mismatches, duplicates
 
 
+# --- Wave 7 delivery gates (T74, T76, T80, T81, T84). Hard-fail, no score effect:
+# each one is a defect that shipped while every structural score read 9.99.
+TRIGGER_STRICT_RE = re.compile(r"\buse (when|for|this|to|on|before|after)\b", re.I)
+TRIGGER_STRICT_WINDOW = 100
+RETIRED_MODEL_RE = re.compile(
+    r"\b(claude-instant[\w.-]*|claude-2(?:\.\d)?\b|claude-3[\w.-]*|gpt-3\.5[\w.-]*|gpt-4o[\w.-]*|gpt-4-turbo"
+    r"|gemini-1\.\d[\w.-]*|gemini-2\.\d[\w.-]*)", re.I)
+RETIRED_SCAN_DIRS = ("skills", "agents", "mods", "hooks", "bootstrap/templates", "tri-lane/skills",
+                     "tri-lane/agents", "rules", "design")
+
+
+def rule_globs_issue(text):
+    """Claude Code reads only `paths` in a rule; `globs:` makes it load unconditionally (T76)."""
+    fm = text.split("---")[1] if text.startswith("---") and text.count("---") >= 2 else ""
+    if re.search(r"^globs?\s*:", fm, re.M):
+        return "uses `globs:`, which Claude Code ignores (the rule loads in every session); use a `paths:` list (T76)"
+    return None
+
+
+def retired_model_hits(text):
+    """Retired model IDs on lines not marked `retired-id-ok` (T74)."""
+    return [(i, m.group(0)) for i, line in enumerate(text.splitlines(), 1)
+            if "retired-id-ok" not in line for m in RETIRED_MODEL_RE.finditer(line)]
+
+
+def trigger_late(desc):
+    """True when no 'Use when/for/…' starts within the first TRIGGER_STRICT_WINDOW chars (T81)."""
+    return bool(desc) and not TRIGGER_STRICT_RE.search(desc[:TRIGGER_STRICT_WINDOW])
+
+
+def bare_bash_with_web(allowed):
+    """Unrestricted Bash pre-approved alongside web access: a prompt injection in fetched
+    content can run any command without a prompt (T80)."""
+    toks = re.findall(r"[A-Za-z]+(?:\([^)]*\))?", allowed if isinstance(allowed, str) else " ".join(map(str, allowed or [])))
+    return "Bash" in toks and any(t in ("WebFetch", "WebSearch") for t in toks)
+
+
+def wave7_failures():
+    fails = []
+    for r in sorted((ROOT / "rules").glob("*.md")):
+        msg = rule_globs_issue(r.read_text(encoding="utf-8"))
+        if msg:
+            fails.append((str(r.relative_to(ROOT)), msg))
+    for d in RETIRED_SCAN_DIRS:
+        base = ROOT / d
+        if not base.exists():
+            continue
+        for f in base.rglob("*"):
+            if not f.is_file() or "node_modules" in f.parts or f.suffix not in (".md", ".ts", ".tsx", ".js", ".mjs", ".json", ".py", ".html", ".ejs", ".yaml", ".yml"):
+                continue
+            for line, hit in retired_model_hits(f.read_text(encoding="utf-8", errors="replace")):
+                fails.append((f"{f.relative_to(ROOT)}:{line}", f"retired model ID `{hit}` (mark the line `retired-id-ok` if it is deliberately historical) (T74)"))
+    for sk in sorted(SKILLS_DIR.rglob("SKILL.md")):
+        fm, _ = parse_frontmatter(sk.read_text(encoding="utf-8", errors="replace"))
+        if trigger_late(fm.get("description", "")):
+            fails.append((str(sk.relative_to(ROOT)), f"no 'Use when/for…' trigger within the first {TRIGGER_STRICT_WINDOW} chars of description (T81)"))
+        if bare_bash_with_web(fm.get("allowed-tools", "")):
+            fails.append((str(sk.relative_to(ROOT)), "allowed-tools pre-approves unrestricted Bash with WebFetch/WebSearch; scope Bash to the commands used (T80)"))
+    claude_md = ROOT / ".claude" / "CLAUDE.md"
+    documented = {}
+    if claude_md.exists():
+        for m in re.finditer(r"^\|\s*\*\*([a-z0-9-]+)\*\*\s*\|[^|\n]*\|([^|\n]*)\|", claude_md.read_text(encoding="utf-8"), re.M):
+            documented[m.group(1)] = m.group(2)
+    for a in sorted(AGENTS_DIR.glob("*.md")):
+        fm, _ = parse_frontmatter(a.read_text(encoding="utf-8", errors="replace"))
+        tools_doc = documented.get(fm.get("name", a.stem), "")
+        if fm.get("memory") and re.search(r"read-only|no write", tools_doc, re.I):
+            fails.append((str(a.relative_to(ROOT)), "has `memory:` (which grants Write/Edit) but CLAUDE.md documents it as read-only (T84)"))
+    return fails
+
+
 def self_test():
     """T52 regression fixtures. Each BAD fixture must trip its lint; the GOOD
     fixture must trip none. Returns a process exit code."""
@@ -851,6 +922,17 @@ def self_test():
     late = "x" * 120 + " Use when y"
     expect("trigger/late", not DESC_TRIGGER_RE.search(late[:DESC_TRIGGER_WINDOW]), True)
     expect("trigger/early", not DESC_TRIGGER_RE.search("Does x. Use when y."[:DESC_TRIGGER_WINDOW]), False)
+    # 7. Wave 7 delivery gates
+    expect("w7/rule-globs", rule_globs_issue('---\nglobs: "**/*.py"\n---\nx') is not None, True)
+    expect("w7/rule-paths", rule_globs_issue('---\npaths:\n  - "**/*.py"\n---\nx') is None, True)
+    expect("w7/retired-id", bool(retired_model_hits("model: claude-3-5-sonnet")), True)
+    expect("w7/retired-id-ok", bool(retired_model_hits("model: claude-3-5-sonnet  <!-- retired-id-ok -->")), False)
+    expect("w7/current-id", bool(retired_model_hits("model: claude-opus-5-5 or claude-sonnet-5-5")), False)
+    expect("w7/trigger-late", trigger_late("x" * 101 + " Use when y."), True)
+    expect("w7/trigger-early", trigger_late("Does x. Use when y."), False)
+    expect("w7/bash-web", bare_bash_with_web("Read Bash WebFetch"), True)
+    expect("w7/bash-scoped-web", bare_bash_with_web("Read Bash(ls:*) Bash(sed -n:*) WebFetch"), False)
+    expect("w7/bash-no-web", bare_bash_with_web(["Read", "Bash"]), False)
 
     for f in failures:
         print(f"SELF-TEST FAIL: {f}", file=sys.stderr)
@@ -955,6 +1037,11 @@ def main():
         print(f"FAIL: skills/{{{','.join(unlisted)}}} not in plugin.json `skills` array — "
               f"the plugin loader scans one level deep, so these domains will not load "
               f"in consuming projects", file=sys.stderr)
+        fail = True
+    w7 = wave7_failures()
+    for path, msg in w7:
+        print(f"FAIL: {path}: {msg}", file=sys.stderr)
+    if w7:
         fail = True
     if args.fail_under is not None and mean < args.fail_under:
         print(f"FAIL: library mean {mean} < {args.fail_under}", file=sys.stderr); fail = True
