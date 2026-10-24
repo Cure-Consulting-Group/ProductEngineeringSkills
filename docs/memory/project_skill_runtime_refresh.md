@@ -1,7 +1,7 @@
 ---
 type: project
 date: 2026-10-23
-status: proposed
+status: resolved
 ---
 
 # Skill runtime refresh
@@ -21,3 +21,5 @@ package-loading tests and real installs, and between structural checks and behav
 Recheck the referenced files, installed runtimes, and official documentation before using
 these findings to plan or implement changes. This is a recorded audit and proposed follow-up,
 not a blanket certification of domain advice or a completed refresh.
+
+**Resolved 2026-10-24 by Wave 7 (v7.14.0):** every proposed item shipped (T79, T82, T83, T85, T86); see BACKLOG.md Wave 7 for measured results.

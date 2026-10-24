@@ -1,10 +1,12 @@
 # STATE — machine setup and current library state
 
-Read this on any machine that has this repo checked out. `CLAUDE.md` points here.
+Read this on any machine that has this repo checked out. `.claude/CLAUDE.md` points here.
 
 ## Every machine: install the library into Codex and Antigravity
 
-Claude Code needs nothing: it installs from the `cure` marketplace and auto-updates.
+Claude Code installs from the `cure` marketplace, but **auto-update is off by default for
+third-party marketplaces**: turn it on per machine in `/plugin` → Marketplaces, or run
+`claude plugin update cure-product-engineering@cure` after each release.
 Codex and Antigravity install **snapshots**, so they fall behind until refreshed.
 
 **Run on a new machine, and again after every library release:**
@@ -35,10 +37,13 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 
 | | |
 |---|---|
-| Library version | 7.13.0 — manifest verified 2026-10-23; 106 skills, 41 agents, 4 personas |
-| Last wave | Wave 5 — tri-runtime (Opus 5.5 / Codex / Antigravity); see BACKLOG.md |
-| Machines verified with `install-runtimes.sh` | primary Mac (codex 0.163.0, agy 1.4.5) — v7.13.0, 2026-10-23. Real installs: Codex 104 listed + 2 hidden; Antigravity 106 skills / 4 agents at `~/.gemini/config/plugins/cure`. `agy plugin validate` warns that 7 glob rules (cicd, docker, go, python, rust, sql, terraform) export with `globs: ""` and never apply: the exporter drops scalar-string `globs` from source rules |
-| Open owner decisions | none (all Wave 5 items resolved 2026-09-23) |
+| Library version | 7.14.0 — Wave 7, 2026-10-24; 106 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
+| Last wave | Wave 7 — truth in delivery (T71–T87 done, T88 deferred, T89–T91 new); see BACKLOG.md |
+| Plugins in this repo | cure-product-engineering 7.14.0; cure-tri-lane 1.16.0; 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 |
+| Runtimes on the primary Mac (2026-10-24) | Claude Code 2.1.306 (2.1.310 available); codex 0.163.0 (0.164.0 available); agy 1.4.7 |
+| Machines verified with `install-runtimes.sh` | primary Mac — v7.13.0, 2026-10-23 (codex 0.163.0, agy 1.4.5). Re-run after the Wave 7 PR merges: the real Antigravity install still carries the 7 empty-globs rules until then |
+| Vetted-mods local patches | cc-pr-tracker 0.3.1-cure.1 (clear merged PRs; upstream PR prepared, not opened); secret-redactor 1.0.0-cure.1 (failed-Bash result shape). Originals in `../vetted-mods-backups/` |
+| Open owner decisions | Upstream cc-pr-tracker PR (public action, needs rebase onto upstream 0.6.0); Level5 audio-retention flag (from Wave 6) |
 
 ## Runtime architecture audit — 2026-10-22
 
@@ -59,7 +64,9 @@ that installer or refresh real installations.
 | Verification dates | 73 skills record 2026-09-23, three record 2026-09-28, and 30 have no `metadata.verified` date. A missing date is an evidence gap, not proof the content is wrong. |
 | Native Claude eval suite | 43 cases cover 35 of 106 skills; structural validation passes. Current behavior across all skills and runtimes remains unproven. |
 
-### Follow-up work (proposed, not started)
+### Follow-up work — resolved by Wave 7 (2026-10-24)
+
+Items 1–5 shipped as T79, T83, T82, T82 and T85; item 6 was done 2026-10-23. Kept below as the record.
 
 1. Update [engagement-automation](skills/platform/engagement-automation/SKILL.md): it says
    Antigravity has no session loop or cloud routine and routes scheduling to external

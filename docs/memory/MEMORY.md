@@ -13,7 +13,7 @@ Index only; detail lives in topic files. Seeded 2026-09-28. Check referenced fil
 ## project
 
 - [Cloud product agents](project_cloud_product_agents.md) — shared platform, HoopTrace pilot, conditional Initiated Recruiting integration and current planning artifact pointers.
-- [Skill runtime refresh](project_skill_runtime_refresh.md) — October 22 audit found compatible packaging but stale platform guidance and incomplete behavioral evidence; findings and proposed follow-up saved in STATE.md, implementation not started.
+- [Skill runtime refresh](project_skill_runtime_refresh.md) — October 22 audit found compatible packaging but stale platform guidance and incomplete behavioral evidence; findings saved in STATE.md; resolved by Wave 7 (v7.14.0) on 2026-10-24.
 
 ## reference
 

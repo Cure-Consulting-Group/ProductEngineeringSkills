@@ -1,6 +1,6 @@
 # BACKLOG
 
-Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates. Wave 5 (2026-09-23, open) is the Opus 5.5 re-evaluation: every skill made to route, run, and stay correct in Claude Code, Codex, and Antigravity. Wave 6 (2026-09-28) builds the legal domain to a measured standard: NY-first research and doctrine, a read-only legal analyst, and a validated bar-style benchmark. Wave 7 (2026-10-24, scoped) is truth in delivery: what a plugin install actually gives consumers, mods that work in use rather than only in tests, and runtimes measured current.
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates. Wave 5 (2026-09-23, open) is the Opus 5.5 re-evaluation: every skill made to route, run, and stay correct in Claude Code, Codex, and Antigravity. Wave 6 (2026-09-28) builds the legal domain to a measured standard: NY-first research and doctrine, a read-only legal analyst, and a validated bar-style benchmark. Wave 7 (2026-10-24, done in v7.14.0 except T88) is truth in delivery: what a plugin install actually gives consumers, mods that work in use rather than only in tests, and runtimes measured current.
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
 
@@ -8,7 +8,49 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 
 # Wave 7 (2026-10-24) — Truth in delivery: what consumers get, mods that work, runtimes that are current
 
-**Status:** in progress. Owner approved every recommendation, D1–D8, on 2026-10-24 ("proceed with all recommended fixes"). D1 is done: `cure-agent-budget@cure` was disabled in `~/.claude/settings.json` on 2026-10-24. Evidence: `docs/evaluations/2026-10-24/EVALUATION.md` (five read-only reviews with file:line evidence; key claims re-checked by hand).
+**Execution status (2026-10-24, branch `feat/wave-7`, release v7.14.0):** T71–T87 done; T88 deferred as planned. Every gate below was run on the integrated branch, not on the track branches alone.
+
+| Ticket | Status | Result |
+|---|---|---|
+| T71 | ✅ Done | **cure-agent-budget 0.2.0:** tracks each subagent by id from `agent.spawn` to its completion, in session state. Session start deletes the old machine-wide counter, which held 3 ghost agents on 2026-10-24. The model rewrite to `claude-3-5-sonnet` is gone (it had hit 23 of 357 spawns); routing is now an opt-in `routeResearchTo` setting, off by default. The cap is a `maxConcurrent` setting (default 8). **cure-cite-check 0.2.0:** resolves paths against the session root, its git toplevel and the repos it touched; it never edits the answer; its stale list is capped. False flags: 97.8% → 0% on this repo's last 50 answers, and 77.8% → 10.5% across all projects (the remainder are files on another worktree's branch). |
+| T72 | ✅ Done | **Subprocesses per Bash call:** 0 across all cure mods (2 mods assert this in tests). **Guard asks:** time out after 60 s and deny. **spend-band:** gh timeout 25 s, one fetch per machine, dismissible. **Prices:** cache-band reads `$.session.usage().cost`. **rules-band:** never calls git on render and stays silent for unknown repos. **Config:** userConfig everywhere. |
+| T73 | ✅ Done | **15 → 9 mods.** Dropped llm-ledger, ci-preview, handoff and secret-scrub (D6). policy-guard 0.4.0 absorbs egress-guard (AI-vendor host matched as a whole name) and claim-guard (exact host). **Shared code:** one repo table and one git module under `mods/shared/`, vendored into each mod by `vendor.py --check`, because a mod can't import outside its own folder. **Events:** `prompt.attachment`, `session.receive` and `prompt.edit` are all in the published event reference. |
+| T74 | ✅ Done | **`mods/check.py`** checks mod count, marketplace parity, shared-code drift, retired model IDs, and every mod's tests and validation. The static half runs in the required `validate` job, the full half in the `plugin-cli` job. **Audit:** fails on retired IDs anywhere we ship. **Install scripts:** read `marketplace.json`, surface errors, exit non-zero; `--retired` removes the dropped mods. **Tests:** 160 across 9 mods. |
+| T75 | ✅ Local, ⏸ upstream | **Installed:** cc-pr-tracker `0.3.1-cure.1`, with a `dropDone` setting (keep / after 10 minutes / immediately), `/pr-clear`, a "clear done (N)" button, and no polling of done PRs. **Tests:** 60/60; strict validate passes. **Backups:** `vetted-mods-backups/`. **Upstream PR not opened:** auto mode blocked the public fork and PR (Create Public Surface). The patches and PR text are in `vetted-mods-backups/cc-pr-tracker-upstream/`. Upstream is now 0.6.0 and added `stopWhenDone` in 0.5.0, so the PR needs a rebase. **Owner decision.** |
+| T76 | ✅ Done | **Rules:** all 11 use `paths:` lists. **Exporter:** accepts scalar or list `paths`/`globs`/`glob` and raises `ExportError` on an empty glob rule; 12 tests. **agy validate:** 7 warnings → 0. **Gates:** the audit fails on `globs:`; CI asserts no exported rule has empty globs. **Still open:** a live check that a Swift repo doesn't load go.md. |
+| T77 | ✅ Done | **Hooks:** 9 events → 6, with 0 prompt hooks and 0 model calls. **Compaction:** standards re-injection runs on `SessionStart:compact`; verified live after `/compact`. **Stop:** a deterministic check (~80 ms), silent for /loop, routines, SDK/CI, and a second stop. **Also:** failure triage emits `additionalContext`; telemetry reads `tool_name` from stdin; provisioning is opt-in (`.cure/`, manifest, or a CLAUDE.md naming Cure); the false positives are fixed; the tri-lane sandbox guard uses `onFailure: "block"`. |
+| T78 | ✅ Done | **Guard:** now blocks force-push to main (`-f`, `--force`, `--force-with-lease`, `+main`), `reset --hard`, `clean -f`, DROP/TRUNCATE outside migrations, `terraform destroy` and `kubectl delete ns`. Blocking `git push -f origin main` was verified live. Tests: 33 → 109. **npm:** merges deny rules into an existing settings.json. **Bootstrap 0.4.0:** no model pin; deny list generated from `settings.json` and drift-checked in CI. **setup.sh:** writes an object-shaped `enabledPlugins`. **MCP:** official Firebase server, pinned versions, `DSN` for DBHub (`DB_URL` was never read). **LSP:** pinned. |
+| T79 | ✅ Done | **SOW terms:** single source in legal-doc-scaffold (D8). **engagement-automation:** Antigravity `/schedule` (conversation-scoped) plus sidecar Automations, Codex app Automations and `codex cloud exec`, Claude desktop tasks. **Stale facts:** gcr.io, Firebase AI Logic, the Node 20/22/24 lines, Play API 36, Xcode 26. **`metadata.verified`:** missing on 30 skills → 0, each verified against sources. Notable: QSBS state table rebuilt (IL, OR decoupled); OpenTelemetry JS 3.0 (stay on 2.x for Cloud Trace); Sentry v11; Opsgenie end of support; Stitch MCP tools rebuilt from the live `tools/list`. |
+| T80 | ✅ Done | **Bash scoping:** the 7 business skills pre-approve only the commands they run. **Untrusted input:** 13 skills gain the clause. feature-audit gets `Bash(git log:*)`. **Auditor checklist:** PASS. **Gate:** the audit fails on bare Bash pre-approved with web access. |
+| T81 | ✅ Done | **106/106 descriptions** start with a verb, and "Use when/for…" ends by char 100 (the audit hard-fails otherwise). 60 descriptions changed. **Single owners:** Firestore modeling, IRC cite checks, live-bill budgets, CWV thresholds, Stripe review. |
+| T82 | ✅ Done | **Strict validate passes:** the dev CLAUDE.md moved to `.claude/CLAUDE.md`. **plugin-cli job** (pinned Claude Code 2.1.310): validate plus the mods gate. **Codex:** pinned 0.164.0, and a SKIP now fails; `runtime-latest.yml` tracks @latest weekly. **Drift:** weekly cron with a 10-minute cap (D5). **Actions:** all SHA-pinned; `permissions:` set. **Hook gates:** cover tri-lane. |
+| T83 | ✅ Done | **sync-metadata:** covers CLAUDE, README, GEMINI, AGENT-GUIDE and CONSUMING-PROJECTS, with the idioms that had drifted, domain counts, and hook-event and mod counts. **README:** rewritten to what ships. **Other docs:** CLAUDE.md agent tables show effective tools; GEMINI drops the read-only `allowed-tools` advice; MAINTENANCE gets the weekly cadence and the truth about auto-update; AUTHORING gets current models and the measured Codex cut. **Personas:** documented as documentation (D7). |
+| T84 | ✅ Done | **Memory (D3):** 15 reviewers and auditors lose `memory:` and gain `disallowedTools: Write, Edit`. **Worktree isolation:** removed from project-bootstrapper and release-coordinator. **Reviewer split:** code-reviewer gives findings, pr-reviewer the merge verdict, deployment-validator owns GO/NO-GO. **Pins and preloads:** cure-advisor `effort: high` dropped (no measured gain); tax-analyst preload 312 → 199 lines. |
+| T85 | ✅ Done | **Cases:** 18 new (9 risk, 9 routing), for 61 cases across 47 skills; no LLM graders. **Calibration:** reads the sweep's per-skill Δ. **Sweep:** SWEEP_RESULT |
+| T86 | ✅ Done | **Platform facts:** `docs/evaluations/2026-10-24/platform-facts.md`. **Codex measured:** on 272k-context models, signed out or in CI, descriptions are cut at 101–105 chars. **agy:** honors `disable-model-invocation`. **Tri-lane 1.16.0:** a default moved only where its canary passed: implementation → gpt-6-luna, risk and wide → gpt-6.1-sol, whole-repo → gemini-4-argon-high. Review stays on gpt-5.6-luna (gpt-6-luna scored 0.863); codex-implementer runs the routed slug. |
+| T87 | ✅ Done | **Rules:** all 11 refreshed with dated sources. The Go floor is 1.26+, not the ticket's 1.25, which is no longer supported; Node images use node:24. **Output styles:** deleted (D4); the 3 lines worth keeping moved into sdlc, incident-response and qa-engineer. api-specification contradicted api-architect, and financial-analysis had a logic error. |
+| T88 | ⏳ Deferred | As planned. |
+
+**Deviations from the plan:**
+1. **One release (v7.14.0) instead of three.** The new gates pass only once every track has landed, and deleting `output-styles/` needs the new sync-metadata.
+2. **The Stop gate is a single command hook, not a pre-check in front of a prompt hook.** Hooks in a group run in parallel, so a command can't gate a prompt.
+3. **The ConfigChange hook was deleted:** its output reached no one.
+4. **agent-budget's cap defaults to 8, not 4.**
+5. **refactor-assistant keeps worktree isolation**, now documented.
+6. **The sidecar path is `~/.gemini/config/sidecars/`,** as the Antigravity docs give it.
+7. **Fixes outside the tickets:**
+   - vetted-mods `secret-redactor` 1.0.0-cure.1 rebuilt failed Bash results as a bare string, causing "expected object, received string". It now keeps core's result object.
+   - OVERVIEW now reads the standalone `.lsp.json` and the MCP template.
+   - Tri-lane's codex-implementer runs the routed model slug.
+
+**New findings, ticketed below:** T89 (bootstrap hooks never load), T90 (tighten the trigger window), T91 (pending canaries and live checks).
+
+**Owner items:**
+- Restart Claude Code to load cc-pr-tracker 0.3.1-cure.1 and the secret-redactor patch.
+- Decide on the upstream cc-pr-tracker PR (public).
+- Merge the Wave 7 PR.
+- PR #87 is superseded by it; PR #86 is included in it.
+- Still open from Wave 6: the Level5 audio-retention flag.
 
 Captured 2026-10-24 from an owner request: "do some more research to ensure all of our skills, tools, hooks, agents are all top notch. even our mods… we love this mod but have no way to clear these merged PRs."
 
@@ -344,6 +386,46 @@ Order: T71 first (actively harmful), then T76 (one field fixes two runtimes), th
 - **Portability:** a claude.ai/Skills-API export that keeps only the portable keys and folds `when_to_use` into `description`.
 
 **Effort:** L.
+
+
+## T89 — Bootstrap writes hooks Claude Code never loads (found during T78)
+
+**Scope:** `bootstrap/` generates `.claude/hooks/hooks.json` in consuming projects. Claude Code reads project hooks only from the `hooks` key of `.claude/settings.json` (or `settings.local.json`). Any `{"reminder": …}` lines those hooks print reach neither Claude nor the user. Either move the generated hooks into the settings `hooks` key, with output on a channel Claude reads (`additionalContext` on SessionStart/UserPromptSubmit), or stop generating them.
+
+**Acceptance:**
+- In a freshly bootstrapped project, `/hooks` lists the generated hooks.
+- Their output is visible in a live session.
+- A bootstrap test asserts the location.
+
+**Effort:** S.
+
+## T90 — Tighten the trigger window to 85 characters (found during T86)
+
+**Why:** Codex 0.163 cuts descriptions at 101–105 chars on 272k-context models, when signed out, and in CI. A trigger that ends at char 100 can lose the words after "Use when". At the 272k default, only 63 of 104 descriptions keep two or more words after it.
+
+**Scope:**
+- Move `TRIGGER_STRICT_WINDOW` from 100 to 85.
+- Rewrite the descriptions that fail: 39 at 90, 57 at 80.
+- Re-measure with `codex debug prompt-input` first; the window may move with the default model.
+
+**Acceptance:** at least 2 trigger words survive the measured cut for every skill.
+
+**Effort:** M.
+
+## T91 — Pending canaries and live checks from Wave 7
+
+**Canaries:**
+- gpt-6.1-sol on the spec-gap fixtures; this decides `impl-underspecified`.
+- gpt-6-luna review at `high`; this decides `review-default`.
+- `--repeat 3` on every new tri-lane default (n=1 can't separate models).
+
+**Live checks** (each was covered by unit tests only):
+- A Swift repo doesn't load go.md (T76).
+- Five parallel subagents with "audit" in their descriptions run on the session model under agent-budget 0.2.0 (T71).
+- The policy-guard ask timeout against the real hook budget (T72).
+- A /loop iteration never triggers the Stop nudge (T77).
+
+**Effort:** S each.
 
 ---
 
