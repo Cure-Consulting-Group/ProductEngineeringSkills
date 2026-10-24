@@ -8,8 +8,8 @@ does load, at a gitignored path (default dist/antigravity/cure/), never committe
   plugin.json                     {"name": "cure", ...}
   skills/<name>/                  whole skill dir (SKILL.md, reference(s)/, scripts/, assets/, ...)
   agents/<persona>/agent.md       personas as agy custom agents (frontmatter: name, description, skills)
-  rules/cure-rule-<x>.md          path rules, `trigger: glob` + `globs`
-  rules/cure-style-<x>.md         output styles, `trigger: model_decision`
+  rules/cure-rule-<x>.md          path rules, `trigger: glob` + one comma-separated `globs` string
+                                  (from `paths:`/`globs:`/`glob:`, list or scalar; empty -> ExportError)
   EXPORT-MANIFEST.json            source SHA, library version, counts, rewrite totals
 
 SKILL.md transforms: fold `when_to_use` into `description` (description text stays first);
@@ -24,7 +24,7 @@ Usage:
   python3 scripts/export-antigravity.py                   # build into dist/antigravity/cure
   python3 scripts/export-antigravity.py --json            # build, machine-readable summary
   python3 scripts/export-antigravity.py --check-collisions # build + refuse on name clashes in $HOME
-  python3 scripts/export-antigravity.py --install         # build + collisions + agy plugin validate/install
+  python3 scripts/export-antigravity.py --install         # build + collisions + agy plugin validate --strict/install
   HOME=/tmp/agy-home python3 scripts/export-antigravity.py --install   # throwaway home
 
 Exit codes: 0 ok, 1 an invariant or collision check failed, 2 bad input / agy missing on --install.
@@ -48,6 +48,7 @@ NON_TRAVELLING = ("docs", "rules", "shared", "agents", "hooks")
 INJECT = re.compile(r"!`([^`\n]+)`")
 INJECT_NOTE = re.compile(r"Values are injected inline below;[^\n]*?(?:run the shown commands instead\.|\n[^\n]*?instead\.)")
 REPO_REF = re.compile(r"(?<![\w/.:-])((?:\.\./)*)((?:%s)/[\w./-]*\w)" % "|".join(NON_TRAVELLING))
+GLOB_KEYS = ("paths", "globs", "glob")  # Claude Code reads only `paths`; agy reads `globs`/`glob`
 RULE_FILE_MAX = 24_000     # agy per-file cap (bytes), from the builtin agy-customizations guide
 RULES_TOKEN_BUDGET = 20_000  # agy aggregate rules budget (tokens); estimated at 4 bytes/token
 
@@ -208,30 +209,78 @@ def export_personas(out: Path, skill_names: set) -> int:
     return n
 
 
+def split_patterns(s: str) -> list:
+    """Split a comma-separated pattern string on commas outside `{...}` braces."""
+    parts, depth, cur = [], 0, ""
+    for ch in s:
+        depth += (ch == "{") - (ch == "}")
+        if ch == "," and depth == 0:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    return [unquote(x) for x in parts + [cur] if unquote(x)]
+
+
+def unquote(s: str) -> str:
+    s = s.strip()
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in "\"'":
+        s = s[1:-1]
+    return s.strip()
+
+
+def expand_braces(pat: str) -> list:
+    """`**/*.{ts,tsx}` -> [`**/*.ts`, `**/*.tsx`]. agy takes one comma-separated string, so a comma
+    inside braces would be read as a pattern separator; expand instead."""
+    m = re.search(r"\{([^{}]*)\}", pat)
+    if not m:
+        return [pat]
+    return [x for alt in m.group(1).split(",") for x in expand_braces(pat[:m.start()] + alt.strip() + pat[m.end():])]
+
+
+def field_patterns(lines: list) -> list:
+    """Patterns from one `paths`/`globs`/`glob` field: a block list, a flow list `[a, b]`, or a
+    (comma-separated) scalar string. Claude Code accepts the list and the comma-separated string."""
+    first = lines[0].split(":", 1)[1].strip()
+    if not first:
+        items = [re.match(r"^\s*-\s*(.*?)\s*$", l) for l in lines[1:]]
+        return [unquote(m.group(1)) for m in items if m and unquote(m.group(1))]
+    if first.startswith("["):
+        return split_patterns(" ".join([first] + [l.strip() for l in lines[1:]]).strip()[1:-1])
+    return split_patterns(scalar(lines))
+
+
+def rule_globs(fm: str, where: str) -> list:
+    """Every glob a rule declares under `paths` (Claude Code's key), `globs` or `glob`, brace-expanded
+    and de-duplicated. A path rule with no patterns never applies in agy and loads unconditionally in
+    Claude Code, so it is an error, not a warning."""
+    fields = {k: v for k, v in parse_fields(fm)}
+    pats = []
+    for key in GLOB_KEYS:
+        if key in fields:
+            for p in field_patterns(fields[key]):
+                for x in expand_braces(p):
+                    if x and x not in pats:
+                        pats.append(x)
+    if not pats:
+        raise ExportError(f"{where}: rule has no glob patterns; add a `paths:` YAML list "
+                          "(a glob rule with empty globs never applies in agy)")
+    bad = [x for x in pats if "," in x]
+    if bad:
+        raise ExportError(f"{where}: pattern(s) {bad} contain a comma, which agy's comma-separated globs cannot carry")
+    return pats
+
+
 def export_rules(out: Path) -> dict:
     rd = out / "rules"
     rd.mkdir()
-    written, total = 0, 0
+    written, total, rule_map = 0, 0, {}
     for p in sorted((REPO / "rules").glob("*.md")):
         fm, body = split_frontmatter(p.read_text(encoding="utf-8"), str(p))
-        globs = re.findall(r'^\s*-\s*"?([^"\n]+?)"?\s*$', fm, re.M)
+        globs = rule_map[p.stem] = rule_globs(fm, str(p))
         text = (f"---\ntrigger: glob\ndescription: {json.dumps('Cure standards for ' + p.stem + ' files')}\n"
-                f"globs: {json.dumps(','.join(globs))}\n---\n" + body)
+                f"globs: {json.dumps(', '.join(globs))}\n---\n" + body)
         (rd / f"cure-rule-{p.stem}.md").write_text(text, encoding="utf-8")
-        written += 1
-        total += len(text.encode())
-    for p in sorted((REPO / "output-styles").glob("*/output-style.md")):
-        raw = p.read_text(encoding="utf-8")
-        if raw.startswith("---\n"):
-            fm, body = split_frontmatter(raw, str(p))
-            desc = scalar(dict((k, v) for k, v in parse_fields(fm)).get("description", ["description:"]))
-        else:
-            body = raw
-            lead = [l for l in raw.splitlines() if l.strip() and not l.startswith("#")]
-            desc = lead[0].rstrip(":") if lead else p.parent.name
-        text = (f"---\ntrigger: model_decision\ndescription: {json.dumps('Output style: ' + desc, ensure_ascii=False)}\n"
-                "---\n" + body)
-        (rd / f"cure-style-{p.parent.name}.md").write_text(text, encoding="utf-8")
         written += 1
         total += len(text.encode())
     big = [f.name for f in rd.iterdir() if f.stat().st_size > RULE_FILE_MAX]
@@ -239,7 +288,7 @@ def export_rules(out: Path) -> dict:
         raise ExportError(f"rule files over {RULE_FILE_MAX} bytes: {big}")
     if total // 4 > RULES_TOKEN_BUDGET:
         raise ExportError(f"rules total ~{total // 4} tokens exceeds the {RULES_TOKEN_BUDGET}-token agy budget")
-    return {"rules": written, "rules_bytes": total}
+    return {"rules": written, "rules_bytes": total, "rule_globs": rule_map}
 
 
 def git_sha() -> str:
@@ -324,11 +373,31 @@ def agy(args: list, timeout: int = 180) -> tuple:
     return p.returncode, (p.stdout + p.stderr).strip()
 
 
+def validate_plugin(out: Path) -> dict:
+    """`agy plugin validate --strict --json`: fails on any error or warning. Rule findings are listed
+    separately because a glob rule warning means the rule silently never applies."""
+    p = subprocess.run(["agy", "plugin", "validate", str(out), "--strict", "--json"],
+                       capture_output=True, text=True, timeout=180)
+    try:
+        findings = json.loads(p.stdout).get("findings") or []
+    except ValueError:
+        findings = None
+    res = {"exit": p.returncode, "output": (p.stdout + p.stderr).strip()[-2000:]}
+    if findings is not None:
+        res["output"] = p.stderr.strip()[-500:] or "ok"
+        res["counts"] = {s: sum(f.get("severity") == s for f in findings) for s in ("error", "warning", "note")}
+        res["rule_findings"] = [f for f in findings if str(f.get("file", "")).startswith("rules/")
+                                and f.get("severity") in ("error", "warning")]
+        res["findings"] = [f for f in findings if f.get("severity") in ("error", "warning")][:50]
+    res["ok"] = p.returncode == 0 and not res.get("rule_findings")
+    return res
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Export the skill library as a flat Antigravity plugin and optionally install it.")
     ap.add_argument("--out", default=str(REPO / "dist" / "antigravity" / PLUGIN_NAME), help="output dir (default dist/antigravity/cure, gitignored)")
     ap.add_argument("--check-collisions", action="store_true", help="refuse if a skill/agent name already exists under $HOME/.gemini")
-    ap.add_argument("--install", action="store_true", help="build, check collisions, then `agy plugin validate` + `agy plugin install` (uses $HOME)")
+    ap.add_argument("--install", action="store_true", help="build, check collisions, then `agy plugin validate --strict --json` (any warning fails) + `agy plugin install` (uses $HOME)")
     ap.add_argument("--json", action="store_true", help="machine-readable summary on stdout")
     a = ap.parse_args()
     out = Path(a.out).expanduser().resolve()
@@ -348,9 +417,8 @@ def main() -> int:
             print("error: agy not on PATH", file=sys.stderr)
             return 2
         try:
-            vrc, vout = agy(["plugin", "validate", str(out)])
-            summary["validate"] = {"exit": vrc, "output": vout[-2000:]}
-            if vrc == 0:
+            summary["validate"] = validate_plugin(out)
+            if summary["validate"]["ok"]:
                 irc, iout = agy(["plugin", "install", str(out)])
                 summary["install"] = {"exit": irc, "output": iout[-2000:]}
                 rc = 0 if irc == 0 else 1
@@ -368,6 +436,8 @@ def main() -> int:
               f"runtime notes {summary['guardrail_notes_added']}")
         for c in summary.get("collisions", []):
             print(f"  COLLISION {c['name']} already at {c['existing']}")
+        for f in summary.get("validate", {}).get("findings", []):
+            print(f"  agy validate {f.get('severity')}: {f.get('file')}: {f.get('message')}")
         for k in ("validate", "install"):
             if k in summary:
                 print(f"  agy plugin {k}: exit {summary[k]['exit']}\n    " + summary[k]["output"].replace("\n", "\n    ")[:1500])
