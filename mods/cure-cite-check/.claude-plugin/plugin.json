@@ -1,6 +1,15 @@
 {
   "name": "cure-cite-check",
-  "version": "0.1.0",
-  "description": "Verifies file:line code citations in assistant answers against disk, flagging missing files and out-of-range line numbers. Adds /cite-check.",
-  "author": { "name": "Cure Consulting Group" }
+  "version": "0.2.0",
+  "description": "Checks file:line citations in Claude's answers against disk, resolved against the session's git toplevel and the files it touched, and toasts the stale ones. Never edits the answer. Adds /cite-check.",
+  "author": { "name": "Cure Consulting Group" },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "noteToClaude": {
+      "type": "boolean",
+      "title": "Tell Claude about stale citations",
+      "description": "Besides the toast, add a note Claude reads on its next turn listing the stale citations.",
+      "default": false
+    }
+  }
 }

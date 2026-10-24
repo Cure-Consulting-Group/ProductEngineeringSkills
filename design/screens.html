@@ -1105,7 +1105,7 @@
           <div class="terminal-content" id="ledger-term-content">
 <span class="c-dim"># Real-time ledger append after Turn 4:</span>
 ╭─ <span class="c-bold">LLM LEDGER: Turn 4 · ProductEngineeringSkills/main</span> ──────────────────────╮
-│  Model:          <span class="c-blue">claude-3-5-sonnet-20241022</span>                                  │
+│  Model:          <span class="c-blue">claude-sonnet-5-5</span>                                           │
 │  Input Tokens:   1,420 unprompted + 42,190 cached (<span class="c-green">96.7% cache hit rate</span>)   │
 │  Output Tokens:  480 completion tokens                                       │
 │  Turn Cost:      <span class="c-green">$0.0214</span> USD                                                  │
@@ -1786,7 +1786,7 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
         lbl.style.color = 'var(--c-blue)';
         box.innerHTML = `<span class="c-dim"># Real-time ledger append after Turn 4:</span>
 ╭─ <span class="c-bold">LLM LEDGER: Turn 4 · ProductEngineeringSkills/main</span> ──────────────────────╮
-│  Model:          <span class="c-blue">claude-3-5-sonnet-20241022</span>                                  │
+│  Model:          <span class="c-blue">claude-sonnet-5-5</span>                                           │
 │  Input Tokens:   1,420 unprompted + 42,190 cached (<span class="c-green">96.7% cache hit rate</span>)   │
 │  Output Tokens:  480 completion tokens                                       │
 │  Turn Cost:      <span class="c-green">$0.0214</span> USD                                                  │
@@ -1800,9 +1800,9 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
 │  Repository:  Cure-Consulting-Group/ProductEngineeringSkills          │
 │  Branch:      main · Session Turns: 12                               │
 ├──────────────────────────────────────────────────────────────────────┤
-│  claude-3-5-sonnet:  12 turns · 18,240 in · 5,120 out · $0.2412       │
-│  claude-3-5-haiku:    4 turns ·  6,100 in · 1,420 out · $0.0145       │
-│  claude-3-opus:       1 turn  ·  2,400 in ·   850 out · $0.0990       │
+│  claude-sonnet-5-5:  12 turns · 18,240 in · 5,120 out · $0.2412       │
+│  claude-haiku-5-5:    4 turns ·  6,100 in · 1,420 out · $0.0145       │
+│  claude-opus-5-5:     1 turn  ·  2,400 in ·   850 out · $0.0990       │
 ├──────────────────────────────────────────────────────────────────────┤
 │  Session Total:      <span class="c-green">$0.3547</span> (Saved $1.42 via prompt cache)          │
 │  Persisted Ledger:   ~/.claude/ledger.jsonl (atomic append)          │
@@ -1817,7 +1817,7 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
   "repo": "ProductEngineeringSkills",
   "branch": "main",
   "turn": 4,
-  "model": "claude-3-5-sonnet-20241022",
+  "model": "claude-sonnet-5-5",
   "input_tokens": 1420,
   "cache_read_tokens": 42190,
   "cache_write_tokens": 0,
@@ -1949,7 +1949,7 @@ Subagent Report: "All 42 MVI unit tests passing. Authentication refactoring is c
         box.innerHTML = `<span class="c-dim">agent: Calling Agent(task="Read codebase and summarize API interfaces", model="opus")</span>
 <div style="border-left:3px solid var(--c-green); padding:6px 10px; background:var(--c-green-bg); margin:6px 0;">
   <span class="c-green c-bold">⚡ cure-agent-budget: Cost Optimization Applied</span><br>
-  <span class="c-dim">Task classified as read-only research. Auto-routed from <strong>claude-3-opus</strong> to <strong>claude-3-5-sonnet</strong>.</span><br>
+  <span class="c-dim">Research subagent, opt-in routing on: sent from an <strong>opus</strong> session to the <strong>sonnet</strong> alias.</span><br>
   <span class="c-dim">Cost savings: ~80% ($0.06/1K output tokens).</span>
 </div>`;
       } else if (st === 'cmd') {

@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { bandText, daysInMonth, parseUsage, reportText, summarize, warningText, type UsageItem } from './spend'
+import { bandText, compact, daysInMonth, parseUsage, reportText, summarize, warningText, type UsageItem } from './spend'
 
 const item = (over: Partial<UsageItem>): UsageItem => ({
   date: '2026-10-05T00:00:00Z',
@@ -120,6 +120,9 @@ const billing = (items: UsageItem[]) => (_$: any, e: any) => {
 test('/spend reports the month from gh, and asks for the right month', async ($, on) => {
   mock.clock(on, { now: NOON_OCT_5.getTime() })
   mock.env(on, {})
+  mock.store(on, {})
+  on('ui.status', () => ({ value: undefined }))
+  on('ui.invalidate', () => ({ value: undefined }))
   const calls: string[][] = []
   on('process.run', (_$: any, e: any) => {
     calls.push(e.argv ?? e.args ?? e)
@@ -136,6 +139,9 @@ test('/spend reports the month from gh, and asks for the right month', async ($,
 test('the org and allowance come from the environment', async ($, on) => {
   mock.clock(on, { now: NOON_OCT_5.getTime() })
   mock.env(on, { CURE_SPEND_ORG: 'Other-Org', CURE_SPEND_ALLOWANCE: '1000' })
+  mock.store(on, {})
+  on('ui.status', () => ({ value: undefined }))
+  on('ui.invalidate', () => ({ value: undefined }))
   on('process.run', billing([item({ grossAmount: 45 })]))
   const r = await $.command.run({ command: 'spend' })
   expect(r.text).toMatch(/GitHub spend for Other-Org/)
@@ -145,6 +151,9 @@ test('the org and allowance come from the environment', async ($, on) => {
 test('when gh fails, /spend says why instead of showing numbers', async ($, on) => {
   mock.clock(on, { now: NOON_OCT_5.getTime() })
   mock.env(on, { CURE_SPEND_ORG: 'Broken-Org' })
+  mock.store(on, {})
+  on('ui.status', () => ({ value: undefined }))
+  on('ui.invalidate', () => ({ value: undefined }))
   on('process.run', () => ({ value: { exitCode: 1, stdout: '', stderr: 'gh: Not Found (HTTP 404)\n' } }))
   const r = await $.command.run({ command: 'spend' })
   // Whether or not an earlier fetch succeeded, the failure is named.
@@ -154,6 +163,9 @@ test('when gh fails, /spend says why instead of showing numbers', async ($, on) 
 test('the refresh timer starts at session start and is cancelled at session end', async ($, on) => {
   const clock = mock.clock(on, { now: NOON_OCT_5.getTime() })
   mock.env(on, {})
+  mock.store(on, {})
+  on('ui.status', () => ({ value: undefined }))
+  on('ui.invalidate', () => ({ value: undefined }))
   let fetches = 0
   on('process.run', (_$: any, e: any) => {
     fetches += 1
@@ -162,8 +174,6 @@ test('the refresh timer starts at session start and is cancelled at session end'
   on('command.register', () => ({ value: undefined }))
   on('session.start', (_$: any, e: any) => ({ cwd: e.cwd }))
   on('session.end', () => ({ sessionId: 'test' }))
-  on('ui.status', () => ({ value: undefined }))
-  on('ui.invalidate', () => ({ value: undefined }))
   await $.session.start({ cwd: '/repo', surface: null, isInteractive: false })
   // Two refresh periods pass: the timer fetches on each.
   await clock.advance(31 * 60 * 1000)
@@ -172,4 +182,72 @@ test('the refresh timer starts at session start and is cancelled at session end'
   await clock.advance(60 * 60 * 1000)
   expect(whileRunning).toBeGreaterThanOrEqual(2)
   expect(fetches).toBe(whileRunning)
+})
+
+// ── T72: one fetch per machine, a bounded gh call, a dismissible warning ──
+
+function engineFor(on: any, items: UsageItem[], store: Record<string, unknown> = {}) {
+  const runs: any[] = []
+  const status: Array<string | undefined> = []
+  mock.env(on, {})
+  mock.store(on, store)
+  on('process.run', (_$: any, e: any) => (runs.push(e), billing(items)(_$, e)))
+  on('command.register', () => ({ value: undefined }))
+  on('session.start', (_$: any, e: any) => ({ cwd: e.cwd }))
+  on('ui.status', (_$: any, e: any) => (status.push(e.text), { value: undefined }))
+  on('ui.invalidate', () => ({ value: undefined }))
+  return { runs, status }
+}
+
+test('the gh call stays under the 30 s process cap', async ($, on) => {
+  mock.clock(on, { now: NOON_OCT_5.getTime() })
+  const w = engineFor(on, [item({ grossAmount: 1 })])
+  await $.command.run({ command: 'spend' })
+  expect(w.runs[0].init.timeoutMs).toBeLessThanOrEqual(30_000)
+})
+
+test('a session started while the machine copy is fresh does not call gh', async ($, on) => {
+  const clock = mock.clock(on, { now: NOON_OCT_5.getTime() })
+  const fetchedAt = NOON_OCT_5.getTime() - 5 * 60 * 1000
+  const items = [item({ grossAmount: 7 })]
+  const w = engineFor(on, items, { billing: { org: 'Cure-Consulting-Group', month: '2026-10', fetchedAt, items } })
+  await $.session.start({ cwd: '/repo', surface: null, isInteractive: false })
+  await clock.settle()
+  expect(w.runs.length).toBe(0)
+  const r = await $.command.run({ command: 'spend' }) // /spend wants a copy under a minute old
+  expect(r.text).toMatch(/Actions this month {3}\$7\.00/)
+  expect(w.runs.length).toBe(1)
+})
+
+test('/spend dismiss hides the pace warning, and it stays hidden on refresh', async ($, on) => {
+  mock.clock(on, { now: NOON_OCT_5.getTime() })
+  // $100 a day for four days: well over the $300 included.
+  const w = engineFor(on, ['01', '02', '03', '04'].map(d => item({ date: `2026-10-${d}T00:00:00Z`, grossAmount: 100 })))
+  await $.command.run({ command: 'spend' })
+  expect(w.status.at(-1)).toMatch(/headed for/)
+  const r = await $.command.run({ command: 'spend', args: 'dismiss' } as any)
+  expect(r.text).toMatch(/hidden until 2026-10/)
+  expect(w.status.at(-1)).toBeUndefined()
+  await $.command.run({ command: 'spend' })
+  expect(w.status.at(-1)).toBeUndefined()
+  await $.command.run({ command: 'spend', args: 'show' } as any)
+  expect(w.status.at(-1)).toMatch(/headed for/)
+})
+
+test('org and allowance from userConfig', { options: { org: 'Cfg-Org', allowanceUsd: 5000 } }, async ($, on) => {
+  mock.clock(on, { now: NOON_OCT_5.getTime() })
+  engineFor(on, [item({ grossAmount: 45 })])
+  const r = await $.command.run({ command: 'spend' })
+  expect(r.text).toMatch(/GitHub spend for Cfg-Org/)
+  expect(r.text).toMatch(/plan covers \$5000\.00/)
+})
+
+test('compact folds items to one per day, product and repository', () => {
+  const rows = compact([
+    item({ grossAmount: 1, netAmount: 0.5, sku: 'a' }),
+    item({ grossAmount: 2, netAmount: 1, sku: 'b' }),
+    item({ grossAmount: 4, repositoryName: 'Other' }),
+  ])
+  expect(rows.length).toBe(2)
+  expect(rows[0].grossAmount).toBe(3)
 })

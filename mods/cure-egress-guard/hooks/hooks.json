@@ -1,4 +1,0 @@
-{
-  "description": "cure-egress-guard hooks module",
-  "modules": ["./register.ts"]
-}

@@ -132,3 +132,23 @@ test('an image over the inline limit is captioned, not sent', async ($, on) => {
   expect((await ui.findAll({ type: 'Text' })).map(el => el.text)).toEqual(['[Image #1] 680×336 · 3.0 MB, too large to draw'])
   expect(reads).toEqual([])
 })
+
+test('the pixel cache is pruned when the turn that carried the image ends', async ($, on) => {
+  world(on, ['1.png'])
+  const mount = () => $.ui.mount({ plugin: 'cure-image-viewer', surface: 'terminal', component: 'AbovePrompt', props: bandProps as never })
+  await $.prompt.submit({ text: '[Image #1]' } as never)
+  await (await mount()).findAll({ type: 'Image' })
+  await $.turn.complete({ turnId: 't1', reason: 'done' } as never)
+  // Sent again in a later turn: read from disk again, because the old bytes were dropped.
+  await $.prompt.submit({ text: '[Image #1] again' } as never)
+  await (await mount()).findAll({ type: 'Image' })
+  expect(reads).toEqual([`${DIR}/1.png`, `${DIR}/1.png`])
+})
+
+test('the image folder can come from userConfig', { options: { imageDir: '/elsewhere' } }, async ($, on) => {
+  world(on, ['1.png'])
+  await $.prompt.submit({ text: '[Image #1]' } as never)
+  const ui = await $.ui.mount({ plugin: 'cure-image-viewer', surface: 'terminal', component: 'AbovePrompt', props: bandProps as never })
+  // Only /elsewhere is searched, and the file is in the default folder.
+  expect((await ui.findAll({ type: 'Text' })).map(el => el.text)).toEqual(['[Image #1] not found on disk'])
+})
