@@ -4,6 +4,8 @@ description: "Reviews public-sector contract terms: liability, IP, termination, 
 when_to_use: "NOT for commercial MSAs or NDAs (the contract-reviewer agent under Claude Code, or a general contract review)."
 argument-hint: "[solicitation-or-contract-name]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Public Sector Contracting
@@ -105,7 +107,7 @@ Check limits **and** endorsements. Both can be hard.
 | Auto Liability | \$1M CSL | Owned, hired, and non-owned |
 | Workers' Comp / Disability | Statutory | State-specific forms; exemption filings if no employees |
 
-Also check: carrier rating floor (commonly A.M. Best A or better), state licensing, waiver of subrogation, notice-of-cancellation period, and who absorbs deductibles.
+Also check: carrier rating floor (commonly A.M. Best A-:VII or A:VII or better, e.g. New Haven CT and Santa Ana CA forms, checked 2026-10-24), state licensing, waiver of subrogation, notice-of-cancellation period, and who absorbs deductibles.
 
 **Get written quotes before the go/no-go decision.** Insurance must typically be in force *before work begins*, and failure to maintain it is grounds for suspension or termination. An unobtainable endorsement is a hard stop, and discovering it in week three of a bid is a self-inflicted wound.
 

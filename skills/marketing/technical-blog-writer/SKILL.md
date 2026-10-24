@@ -3,6 +3,8 @@ name: technical-blog-writer
 description: "Writes one engineering blog post for non-technical readers, with analogies and visuals. Use when turning a scaling, cost, or reliability win into a publishable post."
 when_to_use: "NOT for a multi-post content program (technical-content-strategist agent), SEO plans (seo-content-engine), or social posts (product-marketing)."
 argument-hint: "[topic-or-title]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Technical Blog Writer Skill

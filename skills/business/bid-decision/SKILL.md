@@ -4,6 +4,8 @@ description: "Makes the bid/no-bid call: kill criteria, weighted scorecard, win 
 when_to_use: "NOT for first-pass screening of portal alerts (use solicitation-triage)."
 argument-hint: "[solicitation-number]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Bash(date:*)", "Write", "Edit", "WebSearch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Bid Decision

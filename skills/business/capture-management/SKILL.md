@@ -4,6 +4,8 @@ description: "Builds a public-sector pipeline: target profile, sourcing, pre-RFP
 when_to_use: "NOT for screening one specific solicitation (use solicitation-triage) or the go/no-go on it (use bid-decision)."
 argument-hint: "[market-or-agency]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Write", "Edit", "WebSearch", "WebFetch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Capture Management
@@ -101,7 +103,7 @@ New entrants face a circular barrier: you need public-sector references to win p
 |---|---|---|
 | **Subcontract to a prime** | Immediate | Fastest route to citable past performance. Actively pursue primes bidding work you can support |
 | **Small/simple contracts first** | 3–9 mo | Micro-purchases, small local agencies, single-department work |
-| **Set-aside certifications** | 3–12 mo | State/local MBE/WBE/SDVOB; federal 8(a)/HUBZone/WOSB are SBA-run and their rules have changed recently — confirm current program status before relying on one |
+| **Set-aside certifications** | 3–12 mo | State/local MBE/WBE/SDVOB; federal 8(a)/HUBZone/WOSB are SBA-run and their rules have changed recently (e.g. SBA suspended 1,091 8(a) firms in Jan 2026 after an audit document call and admitted 65 new firms in 2025; SBA release 2026-01-28, checked 2026-10-24) — confirm current program status before relying on one |
 | **Teaming or joint venture** | Per pursuit | Combine your technical depth with a partner's qualifications. Must be arranged before submission |
 | **Adjacent-sector references** | Immediate | Nonprofit, healthcare, education work sometimes accepted where "public sector" is defined loosely |
 | **Cooperative/master contract vehicles** | 6–18 mo | High effort, high leverage — you compete in a smaller pool afterward |

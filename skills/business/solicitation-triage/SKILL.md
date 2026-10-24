@@ -4,6 +4,8 @@ description: "Screens public-sector solicitations and portal alert batches to a 
 when_to_use: "NOT for extracting requirements from a promoted RFP (use rfp-evaluation) or the resourced go/no-go (use bid-decision)."
 argument-hint: "[solicitation-or-batch]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Bash(date:*)", "Bash(mkdir -p 00-source/extracted)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Solicitation Triage

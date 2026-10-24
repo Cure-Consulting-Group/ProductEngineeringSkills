@@ -3,6 +3,8 @@ name: comps-analysis
 description: "Values a company against trading peers with EV/Revenue, EV/EBITDA, and P/E multiples. Use when benchmarking valuation multiples or pricing a company off public comparables."
 when_to_use: "NOT for intrinsic value (use dcf-modeling), M&A accretion (use merger-modeling), or startup rounds and SAFEs (use investor-reporting)."
 argument-hint: "[company-or-sector]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Comparable Company Analysis (Comps)
