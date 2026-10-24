@@ -1,4 +1,4 @@
-import type { On } from 'claude-code'
+import type { Register } from 'claude-code'
 
 import { addedText, check, dependencyNames, parentDirs, targetPath, type Violation } from './rules'
 
@@ -25,8 +25,15 @@ type Override = { at: string; rule: string; path: string; repo: string }
 
 const REFUSE = 'Refuse the write'
 const ALLOW = 'Allow this once (logged)'
+const DEFAULT_ASK_SECONDS = 60
 
-export function register(on: On) {
+/** Repository per directory, so git runs once per folder a session writes in, not per write. */
+const repoCache = new Map<string, { repo: string; root: string }>()
+
+export const register: Register = (on, options) => {
+  repoCache.clear()
+  const askMs = askTimeoutMs(options.askTimeoutSeconds)
+
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'policy-guard',
@@ -60,21 +67,45 @@ export function register(on: On) {
     if (violations.length === 0) return next(e)
 
     const summary = violations.map(v => `[${v.rule}] ${v.reason}`).join('\n')
-    let answer: string
-    try {
-      answer = await $.ui.ask(
-        `cure-policy-guard: this ${String(e.tool)} to ${shortPath(path)} breaks a house rule:\n${summary}\nAllow it anyway?`,
-        { options: [REFUSE, ALLOW], header: 'House rule' },
-      )
-    } catch {
-      return { deny: denial(violations, 'nobody could be asked to override it') }
-    }
+    const answer = await askWithin(
+      $,
+      `cure-policy-guard: this ${String(e.tool)} to ${shortPath(path)} breaks a house rule:\n${summary}\nAllow it anyway?`,
+      { options: [REFUSE, ALLOW], header: 'House rule' },
+      askMs,
+    )
+    if (answer === undefined) return { deny: denial(violations, 'nobody could be asked to override it') }
+    if (answer === TIMED_OUT) return { deny: denial(violations, `nobody answered within ${Math.round(askMs / 1000)}s`) }
     if (answer !== ALLOW) return { deny: denial(violations, 'the user refused it') }
 
     await recordOverride($, violations, path, repo)
     $.ui.log(`cure-policy-guard: override recorded for ${violations.map(v => v.rule).join(', ')} on ${shortPath(path)}`)
     return next(e)
+  }).catch(($, e, next) => (next.called ? next(e) : { deny: `cure-policy-guard could not check this ${String(e.tool)} (${next.error.kind}), so it was refused. Retry once; if it fails again, ask the user.` }))
+}
+
+const TIMED_OUT = '\u0000timed out'
+
+function askTimeoutMs(seconds: unknown): number {
+  const n = typeof seconds === 'number' && Number.isFinite(seconds) ? seconds : DEFAULT_ASK_SECONDS
+  return Math.min(600, Math.max(5, n)) * 1000
+}
+
+/**
+ * `$.ui.ask` raced against a clock, so an unattended session or a /loop never
+ * stalls on a question: resolves the answer, TIMED_OUT, or undefined when the
+ * question was dismissed or nobody can be asked (`-p`). The wait stays inside a
+ * `$` call, so it does not count against the hook's own time limit.
+ */
+async function askWithin($: any, question: string, opts: unknown, ms: number): Promise<string | undefined> {
+  let timer: { cancel: () => void } | undefined
+  const clock = new Promise<string>(resolve => {
+    timer = $.clock.after(ms, () => resolve(TIMED_OUT))
   })
+  try {
+    return await Promise.race([$.ui.ask(question, opts).catch(() => undefined), clock])
+  } finally {
+    timer?.cancel()
+  }
 }
 
 function denial(violations: Violation[], why: string): string {
@@ -101,12 +132,17 @@ async function locateRepo($: any, path: string): Promise<{ repo: string; root: s
   try {
     const dir = await firstExistingDir($, path)
     if (!dir) return { repo: '', root: '' }
-    const common = await $.process.run(['git', '-C', dir, 'rev-parse', '--path-format=absolute', '--git-common-dir'])
-    const top = await $.process.run(['git', '-C', dir, 'rev-parse', '--show-toplevel'])
-    if (common.exitCode !== 0 || top.exitCode !== 0) return { repo: '', root: '' }
-    const commonDir = common.stdout.trim().replace(/\/$/, '')
+    const hit = repoCache.get(dir)
+    if (hit) return hit
+    // One git call answers both: the common dir (names the main checkout, also from a worktree) and the toplevel.
+    const res = await $.process.run(['git', '-C', dir, 'rev-parse', '--path-format=absolute', '--git-common-dir', '--show-toplevel'], { timeoutMs: 5000 })
+    const [common = '', top = ''] = res.exitCode === 0 ? res.stdout.trim().split('\n') : []
+    const commonDir = common.trim().replace(/\/$/, '')
     const repoDir = commonDir.endsWith('/.git') ? commonDir.slice(0, -5) : commonDir
-    return { repo: repoDir.split('/').pop() ?? '', root: top.stdout.trim() }
+    const found = commonDir ? { repo: repoDir.split('/').pop() ?? '', root: top.trim() } : { repo: '', root: '' }
+    repoCache.set(dir, found)
+    if (repoCache.size > 200) repoCache.delete(repoCache.keys().next().value as string)
+    return found
   } catch {
     return { repo: '', root: '' }
   }

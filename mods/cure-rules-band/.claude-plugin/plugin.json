@@ -1,6 +1,9 @@
 {
   "name": "cure-rules-band",
-  "version": "0.1.0",
-  "description": "Displays repository house rules and legal/architectural constraints in a HUD banner above the prompt. Adds /rules.",
-  "author": { "name": "Cure Consulting Group" }
+  "version": "0.2.0",
+  "description": "Shows the house rules of the repository the session is in, in a band above the prompt; nothing for a repo with none. /rules gives the detail, /rules hide dismisses it.",
+  "author": {
+    "name": "Cure Consulting Group"
+  },
+  "types": "./types/index.d.ts"
 }

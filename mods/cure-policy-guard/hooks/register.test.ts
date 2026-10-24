@@ -164,3 +164,42 @@ test('an Edit that only removes a violation goes through', async ($, on) => {
   const r = await $.tool.call({ tool: 'Edit', file_path: '/repo/.github/workflows/ci.yml', old_string: '  schedule:\n', new_string: '' })
   expect(r.result).toBe('written')
 })
+
+// ── T72: a question nobody answers, and git once per folder ────────────────
+
+test('an unanswered question denies the write after the ask timeout', async ($, on) => {
+  stubRepo(on)
+  const clock = mock.clock(on, { now: 0 })
+  on('tool.call', (_$: any, e: any) => (e.tool === 'AskUserQuestion' ? new Promise(() => {}) : { result: 'written' }))
+  const pending = $.tool.call(WORKFLOW)
+  await clock.advance(59_000)
+  let settled = false
+  void pending.then(() => (settled = true))
+  await clock.settle()
+  expect(settled).toBe(false)
+  await clock.advance(1_000)
+  const r: any = await pending
+  expect(r.deny).toMatch(/nobody answered within 60s/)
+})
+
+test('the ask timeout is userConfig', { options: { askTimeoutSeconds: 10 } }, async ($, on) => {
+  stubRepo(on)
+  const clock = mock.clock(on, { now: 0 })
+  on('tool.call', (_$: any, e: any) => (e.tool === 'AskUserQuestion' ? new Promise(() => {}) : { result: 'written' }))
+  const pending = $.tool.call(WORKFLOW)
+  await clock.advance(10_000)
+  const r: any = await pending
+  expect(r.deny).toMatch(/within 10s/)
+})
+
+test('git runs once per folder, with one call, however many writes land there', async ($, on) => {
+  const runs: string[][] = []
+  on('fs.exists', (_$: any, e: any) => ({ value: e.path === '/repo/src' }))
+  on('process.run', (_$: any, e: any) => {
+    runs.push([...e.argv])
+    return { value: { exitCode: 0, stdout: '/repo/.git\n/repo\n', stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }
+  })
+  on('tool.call', () => ({ result: 'written' }))
+  for (let i = 0; i < 5; i++) await $.tool.call({ tool: 'Write', file_path: `/repo/src/f${i}.ts`, content: 'export const a = 1' })
+  expect(runs.length).toBe(1)
+})

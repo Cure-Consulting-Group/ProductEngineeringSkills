@@ -1,6 +1,16 @@
 {
   "name": "cure-policy-guard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Refuses file writes that break a written Cure house rule (no cron in workflows, Vertex-only Gemini in Level5, no new AI vendors in minors' repos, no hard-coded credentials) unless the person overrides; every override is recorded. /policy-guard lists them.",
-  "author": { "name": "Cure Consulting Group" }
+  "author": {
+    "name": "Cure Consulting Group"
+  },
+  "userConfig": {
+    "askTimeoutSeconds": {
+      "type": "number",
+      "title": "Override question timeout (seconds)",
+      "description": "How long the override question waits before the write is refused, so an unattended session or /loop never stalls. 5 to 600.",
+      "default": 60
+    }
+  }
 }

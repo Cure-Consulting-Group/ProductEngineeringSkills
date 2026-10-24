@@ -22,7 +22,8 @@ import { MAX_ROWS, MAX_SHOWN, caption, cellBox, fitsInline, imageDirs, imageIds,
  * go inline and is captioned instead.
  *
  * Setting, as an environment variable:
- *   CURE_IMAGE_DIR  the folder to read `<N>.png` from, when the default is wrong
+ *   userConfig `imageDir` (or CURE_IMAGE_DIR, which overrides it): the folder to
+ *   read `<N>.png` from, when the default is wrong
  */
 
 const draft = atom({ plugin: 'cure-image-viewer', key: 'draft' } as const, [] as Pasted[])
@@ -30,9 +31,16 @@ const sent = atom({ plugin: 'cure-image-viewer', key: 'sent' } as const, [] as P
 
 let dirs: string[] | undefined
 // Base64 of each picture by path. Kept out of $.state: megabytes that every state read would copy.
+// Pruned when the turn that carried the pictures ends, and never more than MAX_HELD.
 const pixels = new Map<string, string>()
+const MAX_HELD = 8
+let configuredDir = ''
 
-export const register: Register = on => {
+export const register: Register = (on, options) => {
+  configuredDir = typeof options.imageDir === 'string' ? options.imageDir.trim() : ''
+  pixels.clear()
+  dirs = undefined
+
   on('prompt.edit', async ($, e, next) => {
     const box = await next(e)
     const ids = imageIds(box.text)
@@ -52,7 +60,11 @@ export const register: Register = on => {
   })
 
   on('turn.complete', async ($, e, next) => {
-    await update($, sent, () => [])
+    if (e.agentId === undefined) {
+      await update($, sent, () => [])
+      const keep = new Set((await read($, draft)).map(image => image.path))
+      for (const path of [...pixels.keys()]) if (!keep.has(path)) pixels.delete(path)
+    }
     return next(e)
   })
 
@@ -111,6 +123,7 @@ async function bytesOf($: EngineInterface, path: string): Promise<string | undef
   try {
     const { base64 } = await $.fs.read(path, { as: 'bytes' })
     pixels.set(path, base64)
+    while (pixels.size > MAX_HELD) pixels.delete(pixels.keys().next().value as string)
     return base64
   } catch {
     return undefined
@@ -118,7 +131,7 @@ async function bytesOf($: EngineInterface, path: string): Promise<string | undef
 }
 
 async function candidateDirs($: EngineInterface): Promise<string[]> {
-  const override = await $.env.get('CURE_IMAGE_DIR')
+  const override = (await $.env.get('CURE_IMAGE_DIR')) || configuredDir
   if (override) return [override]
   if (dirs) return dirs
   const uid = (await $.process.run(['id', '-u'])).stdout.trim()

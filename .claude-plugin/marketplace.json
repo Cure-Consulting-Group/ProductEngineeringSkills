@@ -85,7 +85,7 @@
     {
       "name": "cure-spend-band",
       "source": "./mods/cure-spend-band",
-      "description": "Mod: today's GitHub Actions spend beside the spinner, a pace warning, and /spend.",
+      "description": "Mod: today's GitHub Actions spend beside the spinner, a dismissible pace warning, and /spend. One gh fetch per machine every 15 minutes.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -233,7 +233,7 @@
     {
       "name": "cure-rules-band",
       "source": "./mods/cure-rules-band",
-      "description": "Mod: displays repository house rules and legal/architectural constraints in a HUD banner above the prompt. Adds /rules.",
+      "description": "Mod: shows the house rules of the repository the session is in, above the prompt; nothing for a repo with none. Adds /rules.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
