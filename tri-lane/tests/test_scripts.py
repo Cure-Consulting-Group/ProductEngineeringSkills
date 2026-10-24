@@ -134,13 +134,14 @@ class Route(unittest.TestCase):
         return json.loads(out)
 
     def test_routine_goes_to_luna(self):
+        # canary 2026-10-24: gpt-6-luna@medium passed impl-spec-service 9/9
         r = self.s("--role", "implement", "--kind", "impl")
-        self.assertEqual(r["lane"], "gpt-5.6-luna")
+        self.assertEqual(r["lane"], "gpt-6-luna")
         self.assertEqual(r["effort"], "medium")
 
     def test_risk_goes_to_sol_max(self):
         r = self.s("--role", "implement", "--kind", "android", "--risk", "payments")
-        self.assertEqual((r["lane"], r["effort"]), ("gpt-5.6-sol", "max"))
+        self.assertEqual((r["lane"], r["effort"]), ("gpt-6.1-sol", "max"))
 
     def test_terminal_work_suggests_astra_in_shadow(self):
         r = self.s("--role", "implement", "--kind", "ci")
@@ -149,20 +150,37 @@ class Route(unittest.TestCase):
 
     def test_escalation_on_attempts(self):
         self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--attempt", "2")["effort"], "xhigh")
+        self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--attempt", "2")["lane"], "gpt-6.1-sol")
         self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--attempt", "3")["effort"], "ultra")
 
     def test_reviews_and_system(self):
-        # measured 2026-09-06: Luna@medium is the default reviewer for non-risk work; Sol keeps risk-flagged reviews
+        # measured 2026-09-06: Luna@medium is the default reviewer for non-risk work; Sol keeps risk-flagged reviews.
+        # canary 2026-10-24: gpt-6-luna missed 3 of 11 planted bugs, so the non-risk reviewer stays on gpt-5.6-luna;
+        # gpt-6.1-sol scored 1.0 on the same fixture and takes the risk-flagged reviews.
         self.assertEqual(self.s("--role", "review", "--kind", "impl")["lane"], "gpt-5.6-luna")
-        self.assertEqual(self.s("--role", "review", "--kind", "impl", "--risk", "payments")["lane"], "gpt-5.6-sol")
+        self.assertEqual(self.s("--role", "review", "--kind", "impl", "--risk", "payments")["lane"], "gpt-6.1-sol")
         self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--risk", "underspecified")["lane"], "gpt-5.6-sol")
         self.assertEqual(self.s("--role", "system-review")["lane"], "gemini-3.8-flash-high")
-        self.assertEqual(self.s("--role", "whole-repo")["lane"], "gemini-3.1-pro-high")
+        # gemini-3.1-pro is no longer offered by agy (agy models, 2026-10-24); Gemini 4 Argon replaces it
+        self.assertEqual(self.s("--role", "whole-repo")["lane"], "gemini-4-argon-high")
 
     def test_table_has_dates_and_sources(self):
         t = json.loads((ROOT / "skills" / "tri-lane" / "models.json").read_text())
         self.assertRegex(t["updated"], r"^\d{4}-\d{2}-\d{2}$")
         self.assertTrue(all(r.get("basis") for r in t["rules"]))
+
+    def test_table_names_only_offered_models(self):
+        # 2026-10-24 catalogs: `codex debug models` and `agy models`. A slug the CLIs no longer offer
+        # fails at dispatch, so a retired model must leave the table, not linger as a default.
+        offered = {"gpt-6.1-sol", "gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
+                   "gemini-4-argon-low", "gemini-4-argon-medium", "gemini-4-argon-high",
+                   "gemini-3.8-flash-low", "gemini-3.8-flash-medium", "gemini-3.8-flash-high"}
+        t = json.loads((ROOT / "skills" / "tri-lane" / "models.json").read_text())
+        lanes = [r["lane"] for r in t["rules"]] + [e["lane"] for e in t["escalation"].values()]
+        lanes += [a["lane"] for r in t["rules"] for a in r.get("alternatives", [])]
+        self.assertEqual([l for l in lanes if l not in offered], [])
+        # GPT-6 Luna has no ultra rung (codex debug models); no rule may ask for it
+        self.assertFalse([r["id"] for r in t["rules"] if r["lane"] == "gpt-6-luna" and r["effort"] == "ultra"])
 
 
 class Report(unittest.TestCase):

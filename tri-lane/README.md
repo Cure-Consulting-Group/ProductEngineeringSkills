@@ -1,6 +1,6 @@
 # cure-tri-lane
 
-Opt-in multi-vendor orchestration for Cure Consulting Group engagements. A Claude Code session acts as architect; Codex (GPT-5.6 Luna/Sol) implements spec-determined work and audits correctness; Antigravity (Gemini 3.8 Flash) reviews systems, security rules, infra, and CI and verifies in a browser; a fresh-context Claude advisor gives the final verdict. Every lane runs in its own git worktree and returns a machine-checkable report.
+Opt-in multi-vendor orchestration for Cure Consulting Group engagements. A Claude Code session acts as architect; Codex (GPT-6 Luna, GPT-6.1 Sol, and GPT-5.6 Luna/Sol where a canary hasn't cleared the newer model) implements spec-determined work and audits correctness; Antigravity (Gemini 3.8 Flash; Gemini 4 Argon for whole-repo reads) reviews systems, security rules, infra, and CI and verifies in a browser; a fresh-context Claude advisor gives the final verdict. Every lane runs in its own git worktree and returns a machine-checkable report.
 
 This plugin is independent of `cure-product-engineering`. Installing it changes nothing for machines that do not have it; the library keeps working exactly as before.
 
