@@ -26,7 +26,7 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 | T82 | ✅ Done | **Strict validate passes:** the dev CLAUDE.md moved to `.claude/CLAUDE.md`. **plugin-cli job** (pinned Claude Code 2.1.310): validate plus the mods gate. **Codex:** pinned 0.164.0, and a SKIP now fails; `runtime-latest.yml` tracks @latest weekly. **Drift:** weekly cron with a 10-minute cap (D5). **Actions:** all SHA-pinned; `permissions:` set. **Hook gates:** cover tri-lane. |
 | T83 | ✅ Done | **sync-metadata:** covers CLAUDE, README, GEMINI, AGENT-GUIDE and CONSUMING-PROJECTS, with the idioms that had drifted, domain counts, and hook-event and mod counts. **README:** rewritten to what ships. **Other docs:** CLAUDE.md agent tables show effective tools; GEMINI drops the read-only `allowed-tools` advice; MAINTENANCE gets the weekly cadence and the truth about auto-update; AUTHORING gets current models and the measured Codex cut. **Personas:** documented as documentation (D7). |
 | T84 | ✅ Done | **Memory (D3):** 15 reviewers and auditors lose `memory:` and gain `disallowedTools: Write, Edit`. **Worktree isolation:** removed from project-bootstrapper and release-coordinator. **Reviewer split:** code-reviewer gives findings, pr-reviewer the merge verdict, deployment-validator owns GO/NO-GO. **Pins and preloads:** cure-advisor `effort: high` dropped (no measured gain); tax-analyst preload 312 → 199 lines. |
-| T85 | ✅ Done | **Cases:** 18 new (9 risk, 9 routing), for 61 cases across 47 skills; no LLM graders. **Calibration:** reads the sweep's per-skill Δ. **Sweep:** SWEEP_RESULT |
+| T85 | ✅ Done | **Cases:** 18 new (9 risk, 9 routing), for 61 cases across 47 skills; no LLM graders. **Calibration:** reads the sweep's per-skill Δ. **Sweep:** first n≥3 with/without sweep, 2026-10-24: 34 cases, 204 runs, **\$68.58**, mean Δ **+0.01**. Clear gains: cure-infra-bootstrap +0.83, compliance-architect +0.33, engagement-automation +0.33, incident-response +0.17. Δ≈0 (→ T88): sdlc, design-studio, product-manager, project-manager, firebase-architect, database-architect, finops, performance-review. Negative: public-sector-contracting −0.25, legal-doctrine −0.22, security-review −0.17, legal-research −0.17, qsbs/data-migration/nextjs-scaffold −0.08 (→ T92). Audit calibration now caps 14 skills at 8.0; library mean 9.99 → **9.81**, the first measured score. `evals/RESULTS.md`, `evals/results/2026-10-24-1526-skill.json`. | |
 | T86 | ✅ Done | **Platform facts:** `docs/evaluations/2026-10-24/platform-facts.md`. **Codex measured:** on 272k-context models, signed out or in CI, descriptions are cut at 101–105 chars. **agy:** honors `disable-model-invocation`. **Tri-lane 1.16.0:** a default moved only where its canary passed: implementation → gpt-6-luna, risk and wide → gpt-6.1-sol, whole-repo → gemini-4-argon-high. Review stays on gpt-5.6-luna (gpt-6-luna scored 0.863); codex-implementer runs the routed slug. |
 | T87 | ✅ Done | **Rules:** all 11 refreshed with dated sources. The Go floor is 1.26+, not the ticket's 1.25, which is no longer supported; Node images use node:24. **Output styles:** deleted (D4); the 3 lines worth keeping moved into sdlc, incident-response and qa-engineer. api-specification contradicted api-architect, and financial-analysis had a logic error. |
 | T88 | ⏳ Deferred | As planned. |
@@ -43,7 +43,7 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
    - OVERVIEW now reads the standalone `.lsp.json` and the MCP template.
    - Tri-lane's codex-implementer runs the routed model slug.
 
-**New findings, ticketed below:** T89 (bootstrap hooks never load), T90 (tighten the trigger window), T91 (pending canaries and live checks).
+**New findings, ticketed below:** T89 (bootstrap hooks never load), T90 (tighten the trigger window), T91 (pending canaries and live checks), T92 (calibrate the negative-Δ eval cases).
 
 **Owner items:**
 - Restart Claude Code to load cc-pr-tracker 0.3.1-cure.1 and the secret-redactor patch.
@@ -426,6 +426,20 @@ Order: T71 first (actively harmful), then T76 (one field fixes two runtimes), th
 - A /loop iteration never triggers the Stop nudge (T77).
 
 **Effort:** S each.
+
+
+## T92 — Calibrate the negative-Δ eval cases (found by the T85 sweep)
+
+**Why:** in the first sweep, seven skills scored lower *with* the skill than without it. Most of these cases are new, and their graders were never checked against a real reply.
+
+**Scope:**
+- Re-run each negative case with `--runs 1 --ablation none --keep-temp` and read both arms' replies.
+- Decide whether the grader or the skill is wrong, then fix that one. Start with public-sector-contracting (an uncalibrated "non-appropriation" regex), `route-security-review-prelaunch` (with-arm 0.00: the result regex failed), and the legal pair.
+- Re-run the sweep for those skills.
+
+**Acceptance:** no skill below Δ −0.05 unless the regression is confirmed and ticketed against the skill.
+
+**Effort:** M.
 
 ---
 

@@ -38,7 +38,7 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 | | |
 |---|---|
 | Library version | 7.14.0 — Wave 7, 2026-10-24; 106 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
-| Last wave | Wave 7 — truth in delivery (T71–T87 done, T88 deferred, T89–T91 new); see BACKLOG.md |
+| Last wave | Wave 7 — truth in delivery (T71–T87 done, T88 deferred, T89–T92 new); first measured eval sweep: mean Δ +0.01, audit 9.81; see BACKLOG.md |
 | Plugins in this repo | cure-product-engineering 7.14.0; cure-tri-lane 1.16.0; 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 |
 | Runtimes on the primary Mac (2026-10-24) | Claude Code 2.1.306 (2.1.310 available); codex 0.163.0 (0.164.0 available); agy 1.4.7 |
 | Machines verified with `install-runtimes.sh` | primary Mac — v7.13.0, 2026-10-23 (codex 0.163.0, agy 1.4.5). Re-run after the Wave 7 PR merges: the real Antigravity install still carries the 7 empty-globs rules until then |
