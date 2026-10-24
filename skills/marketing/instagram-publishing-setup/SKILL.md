@@ -1,6 +1,6 @@
 ---
 name: instagram-publishing-setup
-description: "Sets up programmatic Instagram publishing: Meta app, tester role, token, media hosting, scheduler. Use when posting to Instagram from code or stuck on Insufficient Developer Role or a media_publish 400."
+description: "Sets up programmatic Instagram publishing: Meta app, tester role, token, scheduler. Use when posting to Instagram from code, hosting its media, or stuck on Insufficient Developer Role or a media_publish 400."
 when_to_use: "NOT for captions or content strategy (product-marketing), Stories, carousels, or accounts you don't own."
 argument-hint: "[brand-name] [gcp-project-id]"
 metadata:

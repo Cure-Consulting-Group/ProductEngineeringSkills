@@ -1,7 +1,7 @@
 ---
 name: stitch-design
 description: "Generates, syncs, and audits UI screens through Google Stitch MCP. Use when the user names Stitch or DESIGN.md, or the repo has a .stitch/ folder: screen generation, token export, design-drift audits."
-when_to_use: "NOT for design without Stitch (design-studio), HIG/M3 specs (product-design), or platform UI (ios/android/web-design-expert)."
+when_to_use: "NOT for non-Stitch design (design-studio), HIG/M3 specs (product-design), platform UI (ios-design-expert, android-design-expert, web-design-expert)."
 argument-hint: "[screen-or-feature-description]"
 metadata:
   requires-tools: [stitch-mcp]

@@ -1,7 +1,7 @@
 ---
 name: infrastructure-scaffold
-description: "Generates Firebase, GCP, Vercel, and Docker configs with dev/staging/prod separation and cost guards. Use when setting up hosting, Cloud Run, Functions, secrets, environments, or budgets for a project."
-when_to_use: "NOT for Firestore schema/rules design (use firebase-architect), CI workflows (use ci-cd-pipeline), or Terraform modules (follow rules/terraform.md)."
+description: "Generates Firebase, GCP, Vercel, and Docker configs per environment. Use when setting up hosting, Cloud Run, Functions, environments, or a Dockerfile for a project."
+when_to_use: "NOT for Firestore schema/rules (firebase-architect), CI workflows (ci-cd-pipeline), Terraform modules (rules/terraform.md), or budgets on a live bill (finops)."
 argument-hint: "[project-name]"
 ---
 

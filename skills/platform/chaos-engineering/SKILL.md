@@ -1,6 +1,6 @@
 ---
 name: chaos-engineering
-description: "Designs resilience tests: failure-mode catalogs, game days, fault injection, degradation audits. Use when planning a game day, testing fallbacks, or adding chaos tests to CI on Firebase/GCP."
+description: "Designs resilience tests: failure-mode catalogs, game days, fault injection. Use when planning a game day, testing fallbacks, auditing degradation, or adding chaos tests to CI on Firebase/GCP."
 when_to_use: "NOT for DR plans and backups (use disaster-recovery), live incidents (use incident-response), or load testing (use performance-review)."
 argument-hint: "[service-or-project]"
 context: fork

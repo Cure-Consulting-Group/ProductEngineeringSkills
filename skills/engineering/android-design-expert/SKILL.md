@@ -1,6 +1,6 @@
 ---
 name: android-design-expert
-description: "Material Design 3 guidance for Android screens and components. Use when designing or reviewing Compose UI for dynamic color, adaptive layouts, navigation, motion, or M3 Expressive."
+description: "Applies Material Design 3 to Android screens and components. Use when designing or reviewing Compose UI for dynamic color, adaptive layouts, navigation, motion, or M3 Expressive."
 when_to_use: "NOT for scaffolding feature code (android-feature-scaffold), cross-platform specs (product-design), or full brand/design-system work (design-studio)."
 argument-hint: "[screen-or-component-name]"
 metadata:

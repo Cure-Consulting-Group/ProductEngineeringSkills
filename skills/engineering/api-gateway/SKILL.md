@@ -1,6 +1,6 @@
 ---
 name: api-gateway
-description: "Designs API gateway and BFF layers: middleware order, aggregation, auth, GraphQL federation. Use when adding a gateway, a mobile/web BFF, or federating GraphQL subgraphs."
+description: "Designs API gateway and BFF layers: middleware order, aggregation, auth, federation. Use when adding a gateway, a mobile/web BFF, or federating GraphQL subgraphs."
 when_to_use: "NOT for endpoint contracts, error format, rate-limit numbers, or versioning policy (use api-architect); NOT for dashboards and alerting (use observability)."
 argument-hint: "[api-or-project]"
 metadata:

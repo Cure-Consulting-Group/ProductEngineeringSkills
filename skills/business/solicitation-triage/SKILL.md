@@ -3,7 +3,7 @@ name: solicitation-triage
 description: "Screens public-sector solicitations and portal alert batches to a verdict in under an hour. Use when a new RFP, RFQ, bid notice, or weekly bid-portal feed arrives."
 when_to_use: "NOT for extracting requirements from a promoted RFP (use rfp-evaluation) or the resourced go/no-go (use bid-decision)."
 argument-hint: "[solicitation-or-batch]"
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
+allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Bash(date:*)", "Bash(mkdir -p 00-source/extracted)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]
 ---
 
 # Solicitation Triage

@@ -1,9 +1,9 @@
 ---
 name: rfp-evaluation
-description: "Extracts every requirement from an RFP/RFQ into a compliance matrix and maps the rubric to effort. Use when a solicitation has passed triage and you need what it requires."
+description: "Extracts every RFP/RFQ requirement into a compliance matrix. Use when a solicitation has passed triage and you need what it requires and how its rubric maps to effort."
 when_to_use: "NOT for first-pass screening (use solicitation-triage), the go/no-go (use bid-decision), or drafting the response (use proposal-generator)."
 argument-hint: "[solicitation-number]"
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
+allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(mkdir -p 00-source/extracted)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]
 ---
 
 # RFP Evaluation

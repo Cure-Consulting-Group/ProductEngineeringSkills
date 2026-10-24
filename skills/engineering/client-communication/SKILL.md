@@ -1,6 +1,6 @@
 ---
 name: client-communication
-description: "Drafts client-facing status emails, risk escalations, executive summaries, and sprint demo scripts. Use when writing a weekly client update, escalating a blocker, or preparing a stakeholder demo or QBR."
+description: "Drafts client status emails, risk escalations, executive summaries, and demo scripts. Use when writing a weekly client update, escalating a blocker, or preparing a stakeholder demo or QBR."
 when_to_use: "NOT for sprint planning, RACI, or internal risk registers (use project-manager). NOT for end-of-engagement handoff packages (use client-handoff)."
 argument-hint: "[sprint-or-milestone]"
 metadata:

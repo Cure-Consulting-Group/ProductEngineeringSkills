@@ -1,6 +1,6 @@
 ---
 name: engineering-cost-model
-description: "Estimates internal build cost: developer hours, cloud and service spend, maintenance, build-vs-buy. Use when asking what a feature or product will cost or take to build."
+description: "Estimates internal build cost: dev hours, cloud spend, maintenance, build-vs-buy. Use when asking what a feature or product will cost or take to build."
 when_to_use: "NOT for bid-committed estimates with confidence ranges (use technical-estimation), client SOW pricing (use proposal-generator), or cutting an existing cloud bill (use finops)."
 argument-hint: "[project-name]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]

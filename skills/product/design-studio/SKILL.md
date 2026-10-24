@@ -1,7 +1,7 @@
 ---
 name: design-studio
-description: "Full design studio: brand, UX architecture, screens, design systems, assets. Use for any design assignment, from idea, sketch, PRD, or existing app to screens and hand-off."
-when_to_use: "NOT for UI code alone (ios/android/web-design-expert), Storybook governance (design-system), a one-screen spec or review (product-design), or Stitch."
+description: "Designs whole products: brand, UX flows, multi-screen designs, tokens, assets. Use when designing a new app, product, or flow, or redesigning from a PRD, sketch, or existing app."
+when_to_use: "NOT for one-screen specs (product-design), platform UI (ios-design-expert, android-design-expert, web-design-expert), Storybook (design-system), or Stitch (stitch-design)."
 argument-hint: "[assignment or brand/product name]"
 ---
 

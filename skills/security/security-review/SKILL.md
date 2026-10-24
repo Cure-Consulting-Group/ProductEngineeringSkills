@@ -1,7 +1,7 @@
 ---
 name: security-review
-description: "Security review or audit of code, APIs, mobile apps, LLM features, and Firebase/cloud config, mapped to OWASP. Use when asked to check security, find vulnerabilities, or review before launch or after adding auth, payments, or PII."
-when_to_use: "NOT for compliance frameworks (use compliance-architect) or WCAG (use accessibility-audit)."
+description: "Finds OWASP vulnerabilities in code, APIs, mobile apps, LLM features, and Firebase config. Use when asked to check security, before launch, or after adding auth, payments, or PII."
+when_to_use: "NOT for HIPAA/GDPR/PCI design (compliance-architect), leaked-key scans (env-secrets-manager), WCAG (accessibility-audit), or building Stripe (stripe-integration)."
 argument-hint: "[target-system]"
 allowed-tools: ["Read", "Grep", "Glob"]
 context: fork
@@ -113,7 +113,8 @@ before use; name the risk in words.
 
 **Firebase specifics.** Rules tested in the emulator (`@firebase/rules-unit-testing`); Storage rules
 validate `contentType` and `size`; callable/HTTP functions validate input and check `context.auth`/
-`request.auth`; App Check enforced on Firestore, Storage, Functions, and Vertex AI in Firebase; email
+`request.auth`; App Check enforced on Firestore, Storage, Functions, and Firebase AI Logic (formerly Vertex AI in
+Firebase; firebase.google.com/docs/ai-logic/app-check); email
 enumeration protection on; no service-account JSON in client bundles or repos.
 
 ## Step 4: Severity and Report

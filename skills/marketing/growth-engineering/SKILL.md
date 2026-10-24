@@ -1,6 +1,6 @@
 ---
 name: growth-engineering
-description: "Builds growth systems past activation. Use when improving retention loops, referrals, lifecycle messaging, PLG paywalls and trials, or cohort retention."
+description: "Designs retention, referral, lifecycle, and trial/paywall systems. Use when improving retention, adding referrals, setting upgrade triggers, or reading cohort curves."
 when_to_use: "NOT for first-run onboarding (customer-onboarding), experiment stats (ab-test-analyst agent), or launch plans (go-to-market)."
 argument-hint: "[metric-or-feature]"
 ---
