@@ -56,12 +56,12 @@ def build_rules(t):
     rules = []
 
     # --- Version: plugin-version mentions only (parenthetical or trailing) ---
-    for rel in ["hooks/hooks.json", "CLAUDE.md", "README.md", ".claude-plugin/marketplace.json"]:
+    for rel in ["hooks/hooks.json", ".claude/CLAUDE.md", "README.md", ".claude-plugin/marketplace.json"]:
         rules.append((rel, re.compile(r"\(v\d+\.\d+\.\d+\)"), f"(v{v})", "version (parenthetical)"))
         rules.append((rel, re.compile(r"\bv\d+\.\d+\.\d+\b(?=\s*[\)\.—,])"), f"v{v}", "version token"))
 
     # --- Version: CLAUDE.md "Current version: **X.Y.Z**" line ---
-    rules.append(("CLAUDE.md", re.compile(r"(?<=Current version: \*\*)\d+\.\d+\.\d+(?=\*\*)"), v, "version (current-version line)"))
+    rules.append((".claude/CLAUDE.md", re.compile(r"(?<=Current version: \*\*)\d+\.\d+\.\d+(?=\*\*)"), v, "version (current-version line)"))
 
     # --- CONFIG files: count = total, safe to blanket-replace ---
     for rel in ["hooks/hooks.json", ".claude-plugin/marketplace.json",
@@ -72,7 +72,7 @@ def build_rules(t):
         rules.append((rel, re.compile(r"\b\d+(?=\s+personas\b)"), str(pe), "persona count"))
 
     # --- PROSE files: total-count idioms only (never bare "N skills") ---
-    for rel in ["CLAUDE.md", "README.md", "docs/OVERVIEW.md"]:
+    for rel in [".claude/CLAUDE.md", "README.md", "docs/OVERVIEW.md"]:
         # "75 production-grade skills", "80 skills (domain-organized)", "library — 80 skills"
         rules.append((rel, re.compile(r"\b\d+(?=\s+production-grade\s+skills\b)"), str(sk), "total skills idiom"))
         rules.append((rel, re.compile(r"\b\d+(?=\s+skills\s+\(domain-organized\))"), str(sk), "total skills idiom"))

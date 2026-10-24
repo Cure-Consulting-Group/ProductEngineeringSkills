@@ -79,13 +79,16 @@ def main():
     ap.add_argument("--json", action="store_true", help="print a JSON report")
     ap.add_argument("--keep", action="store_true", help="keep the temporary CODEX_HOME and print its path")
     ap.add_argument("--codex", default="codex", help="codex binary (default: codex on PATH)")
+    ap.add_argument("--require", action="store_true",
+                    help="fail (exit 1) instead of SKIP when codex is not installed; CI uses this so a skip can't pass as green")
     args = ap.parse_args()
 
     codex = shutil.which(args.codex)
     if not codex:
-        msg = "SKIP: codex CLI not installed; Codex smoke test not run."
-        print(json.dumps({"status": "skip", "reason": msg}) if args.json else msg)
-        return 0
+        status = "fail" if args.require else "skip"
+        msg = f"{status.upper()}: codex CLI not installed; Codex smoke test not run."
+        print(json.dumps({"status": status, "reason": msg}) if args.json else msg)
+        return 1 if args.require else 0
 
     report = {"status": "fail", "codex": None, "listed": 0, "expected": 0,
               "dropped": [], "unexpected": [], "hidden_leaked": [], "hooks": None, "errors": []}
