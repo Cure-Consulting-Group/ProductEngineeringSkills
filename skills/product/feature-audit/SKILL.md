@@ -6,6 +6,8 @@ argument-hint: "[feature-name]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(git log:*)", "Bash(ls:*)"]
 context: fork
 disallowed-tools: Write Edit
+metadata:
+  verified: 2026-10-24
 ---
 
 # Feature Audit

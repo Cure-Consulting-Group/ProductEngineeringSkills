@@ -3,6 +3,8 @@ name: product-manager
 description: "Prioritizes and sets product direction: RICE, OKRs, roadmaps, feature briefs. Use when asked to prioritize a backlog, write OKRs, build a roadmap, or write a one-page brief."
 when_to_use: "NOT for PRDs or stories (sdlc), sprint execution (project-manager), market sizing (market-research), or capacity audits (roadmap-strategist)."
 argument-hint: "[product-or-feature-name]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Product Manager

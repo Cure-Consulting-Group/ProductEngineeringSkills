@@ -401,8 +401,9 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "app:create_app()"]
 ```
 
-### docker-compose.yml (Local Development)
+### compose.yaml (Local Development)
 ```yaml
+# compose.yaml is the Compose spec's preferred file name (docker-compose.yml still loads).
 # No top-level `version:` — the Compose Specification ignores it and warns.
 services:
   app:

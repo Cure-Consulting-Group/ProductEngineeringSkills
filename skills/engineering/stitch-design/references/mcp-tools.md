@@ -1,6 +1,6 @@
 # Stitch MCP Tool Schemas
 
-Complete reference for all tools exposed by the `stitch-mcp` proxy (`@_davideast/stitch-mcp`). Pinned to `0.9.0` (latest on npm, verified 2026-09-23): it is an individual-maintained package that runs with your Google credentials, so bump the pin deliberately after reading its changelog.
+Reference for the tools exposed by Google's hosted Stitch MCP server and by the community `stitch-mcp` proxy (`@_davideast/stitch-mcp`). Pinned to `0.9.0` (still latest on npm, last published 2026-05-28; checked 2026-10-24): it is an individual-maintained package that runs with your Google credentials, so bump the pin deliberately after reading its changelog.
 
 ## Namespace Discovery
 
@@ -10,7 +10,7 @@ Before calling any tool, run `list_tools` to find the Stitch MCP prefix. The pre
 
 ## Virtual Tools (Custom Proxy Tools)
 
-These tools are implemented by the stitch-mcp proxy and combine multiple API calls for convenience.
+These tools exist only in the stitch-mcp proxy — Google's hosted server doesn't expose them (use `get_screen` + `download_file` there). They are implemented by the proxy and combine multiple API calls for convenience.
 
 ### `build_site`
 
@@ -103,206 +103,41 @@ Retrieves a screen and downloads its screenshot image as base64.
 
 ## Upstream Stitch MCP Tools
 
-These tools are proxied directly from the Stitch API.
+These tools come from Google's hosted server (`https://stitch.googleapis.com/mcp`) and pass through the proxy unchanged. Schemas below are from the server's live `tools/list`, checked 2026-10-24; Google changes them without notice, so re-read the schema your client shows before relying on an argument. IDs are bare (`4044680601076201931`) where the argument is `projectId`, and resource names (`projects/{id}`, `projects/{id}/screens/{screen}`, `assets/{id}`) where it is `name`.
 
-### `list_projects`
-
-Lists all Stitch projects accessible to the authenticated user.
-
-**Input Schema:**
-
-| Parameter | Type | Required | Description |
+| Tool | Required arguments | Optional | Returns / notes |
 |---|---|---|---|
-| `filter` | string | No | Filter string (e.g., `"view=owned"` for user-owned projects) |
+| `list_projects` | — | `filter`: `view=owned` (default) or `view=shared` | Projects with `name` (`projects/{id}`), title, theme |
+| `get_project` | `name` (`projects/{id}`) | — | Project metadata, design theme, and screen instances (needed by `apply_design_system`) |
+| `create_project` | — | `title` | New project |
+| `delete_project` | `name` | — | Irreversible; confirm with the user first |
+| `list_screens` | `projectId` | — | Screens with `html_code.name` and `screenshot.name` file references |
+| `get_screen` | `name` (`projects/{p}/screens/{s}`) | — | Screen metadata and file references |
+| `download_file` | `name` (`projects/{p}/files/{f}`, from `html_code.name` / `screenshot.name`) | — | `html` for HTML files; base64 `image` + `image_metadata` for screenshots. Use this, not `download_url` (needs credentials, returns a JSON wrapper) |
+| `generate_screen_from_text` | `projectId`, `prompt` | `designSystem` (asset ID `assets/{id}`, **not** DESIGN.md text), `deviceType` (`MOBILE`, `DESKTOP`, `TABLET`, `AGNOSTIC`), `modelId` (`GEMINI_3_8_FLASH`, `GEMINI_3_5_FLASH_LITE`) | Takes minutes. On timeout don't retry; poll `get_screen` every 30 s, up to 10 times. Relay any `output_components` suggestions to the user |
+| `edit_screens` | `projectId`, `selectedScreenIds` (array, bare IDs), `prompt` | `deviceType`, `modelId` | Targeted edits; prefer over regeneration |
+| `generate_variants` | `projectId`, `selectedScreenIds`, `prompt`, `variantOptions` | `variantOptions.variantCount` 1–5 (default 3), `creativeRange` `REFINE`/`EXPLORE`/`REIMAGINE`, `aspects` (`LAYOUT`, `COLOR_SCHEME`, `IMAGES`, `TEXT_FONT`, `TEXT_CONTENT`) | Explore alternatives of existing screens |
+| `list_design_systems` | — | `projectId` (empty = global) | Design-system asset IDs |
+| `create_design_system` | `designSystem` (`displayName`, `theme`: `colorMode`, `headlineFont`, `bodyFont`, `roundness`, `customColor`) | `projectId`, `theme.designMd`, `typography`, `spacing`, override colors | Follow with `update_design_system` to apply it |
+| `update_design_system` | `name` (`assets/{id}`), `projectId`, `designSystem` | — | Changes a project's theme |
+| `upload_design_md` | `projectId`, `designMdBase64` (valid UTF-8) | — | Follow immediately with `create_design_system_from_design_md` |
+| `create_design_system_from_design_md` | `projectId`, `selectedScreenInstance` (from the upload) | `deviceType` | Turns an uploaded DESIGN.md into a Stitch design system |
+| `apply_design_system` | `projectId`, `selectedScreenInstances` (from `get_project`), `assetId` (bare) | — | Restyles the chosen screens with that design system |
 
-**Output:** Array of project objects with `name` (path format: `projects/{id}`), `title`, `description`, `designTheme`, and metadata.
+There is no `extract_design_system` tool on the hosted server: build DESIGN.md from screen HTML (`download_file`) plus the project theme (`get_project`, `list_design_systems`).
 
-**Example Call:**
+**Example — generate with an existing design system:**
 ```json
 {
-  "tool": "list_projects",
+  "tool": "generate_screen_from_text",
   "arguments": {
-    "filter": "view=owned"
+    "projectId": "4044680601076201931",
+    "prompt": "A modern checkout page with order summary, payment form, and a green 'Complete Purchase' CTA. Palette: primary #00A859 ...",
+    "designSystem": "assets/15996705518239280238",
+    "deviceType": "MOBILE"
   }
 }
 ```
-
-**When to use:** Discovering project IDs when the user provides a project name or URL instead of a numeric ID.
-
----
-
-### `list_screens`
-
-Lists all screens within a Stitch project.
-
-**Input Schema:**
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `projectId` | string | Yes | Stitch project ID (numeric only, not the full path) |
-
-**Output:** Array of screen objects with `name`, `title`, `width`, `height`, `deviceType`, and asset URLs.
-
-**Example Call:**
-```json
-{
-  "tool": "list_screens",
-  "arguments": {
-    "projectId": "13534454087919359824"
-  }
-}
-```
-
-**When to use:** Enumerating screens for sync or audit workflows. Always call this before iterating over screens.
-
----
-
-### `get_screen`
-
-Retrieves complete screen metadata including asset download URLs.
-
-**Input Schema:**
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `projectId` | string | Yes | Project ID (numeric) |
-| `screenId` | string | Yes | Screen ID (numeric) |
-
-**Output:** Full screen object including:
-- `screenshot.downloadUrl` — URL to download the screen image
-- `htmlCode.downloadUrl` — URL to download the HTML source
-- `width`, `height` — Screen dimensions
-- `deviceType` — Target device type
-- `title` — Screen title
-
-**Example Call:**
-```json
-{
-  "tool": "get_screen",
-  "arguments": {
-    "projectId": "13534454087919359824",
-    "screenId": "abc123"
-  }
-}
-```
-
-**When to use:** When you need full screen metadata (dimensions, device type) alongside the code. For code-only retrieval, prefer `get_screen_code`.
-
----
-
-### `generate_screen` / `generate_screen_from_text`
-
-Generates a new screen from a natural language prompt.
-
-**Input Schema:**
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `projectId` | string | Yes | Project ID to add the screen to |
-| `prompt` | string | Yes | Natural language description of the desired screen |
-| `designSystem` | string | No | DESIGN.md content to apply during generation |
-| `width` | number | No | Screen width in pixels (default: 1440 for web, 390 for mobile) |
-| `height` | number | No | Screen height in pixels |
-| `deviceType` | string | No | Target device (`desktop`, `mobile`, `tablet`) |
-
-**Output:** Screen object with the generated screen's ID, title, and asset URLs.
-
-**Example Call:**
-```json
-{
-  "tool": "generate_screen",
-  "arguments": {
-    "projectId": "13534454087919359824",
-    "prompt": "A modern checkout page with order summary, payment form with card inputs, and a green 'Complete Purchase' CTA button. Clean white background with subtle gray card containers.",
-    "designSystem": "# Design System: Example App\n## Color Palette\n- Primary: #00A859...",
-    "deviceType": "mobile"
-  }
-}
-```
-
-**When to use:** Creating new screens. Always enhance the prompt using the Prompt Enhancement Protocol (SKILL.md Section 4) before calling this tool.
-
----
-
-### `edit_screen` / `edit_screens`
-
-Modifies an existing screen based on natural language instructions.
-
-**Input Schema:**
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `projectId` | string | Yes | Project ID |
-| `screenId` | string | Yes | Screen ID to edit |
-| `prompt` | string | Yes | Edit instructions in natural language |
-
-**Output:** Updated screen object.
-
-**Example Call:**
-```json
-{
-  "tool": "edit_screen",
-  "arguments": {
-    "projectId": "13534454087919359824",
-    "screenId": "abc123",
-    "prompt": "Change the header background to dark navy (#1B2A4A) and make the CTA button gold (#C9A84C)"
-  }
-}
-```
-
-**When to use:** Iterative refinement of existing screens. Prefer this over regeneration for targeted changes — it preserves the existing design context.
-
----
-
-### `extract_design_system`
-
-Extracts a design system specification from an existing Stitch project's screens.
-
-**Input Schema:**
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `projectId` | string | Yes | Project ID to analyze |
-
-**Output:** Markdown-formatted design system document with colors, typography, spacing, and component patterns extracted from the project's screens.
-
-**Example Call:**
-```json
-{
-  "tool": "extract_design_system",
-  "arguments": {
-    "projectId": "13534454087919359824"
-  }
-}
-```
-
-**When to use:** Bootstrapping a DESIGN.md from an existing Stitch project. Run this first, then refine the output into a proper DESIGN.md seed.
-
----
-
-### `get_project`
-
-Retrieves full project metadata including design theme configuration.
-
-**Input Schema:**
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `name` | string | Yes | Project name in path format: `projects/{id}` |
-
-**Output:** Project object with `designTheme` (color mode, fonts, roundness, custom colors), description, and device type preferences.
-
-**Example Call:**
-```json
-{
-  "tool": "get_project",
-  "arguments": {
-    "name": "projects/13534454087919359824"
-  }
-}
-```
-
-**When to use:** Extracting project-level design theme settings. Use when creating or updating DESIGN.md from project metadata.
 
 ---
 

@@ -3,6 +3,8 @@ name: self-improving-memory
 description: "Curates agent auto-memory (MEMORY.md plus user/feedback/project/reference entries). Use when seeding memory for a new engagement, auditing or consolidating it, or checking for stale entries."
 when_to_use: "NOT for CLAUDE.md/AGENTS.md project identity (use project-bootstrap or cure-infra-bootstrap). NOT for code-derivable facts."
 argument-hint: "[bootstrap | audit | detect-patterns | health-check]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Self-Improving Memory
@@ -17,10 +19,13 @@ index (bootstrap). Never delete or merge entries without confirmation.
 | Runtime | Location |
 |---|---|
 | Claude Code | `~/.claude/projects/<project>/memory/` — `<project>` is derived from the git repo path (e.g. `-Volumes-CureVault-projects-Acme`), shared by all worktrees; `autoMemoryDirectory` in settings overrides it. `MEMORY.md` is the index; topic files (`feedback_*.md`, `project_*.md`) load on demand. |
-| Codex, Antigravity | No Claude auto-memory. Keep the same files in the repo at `docs/memory/` (or a gitignored `.agents/memory/` for private notes) and add one line to `AGENTS.md` / `GEMINI.md`: "Read docs/memory/MEMORY.md at session start." Confirm your runtime version has no native memory feature that should be used instead. |
+| Codex | Native local memories exist but are off by default (`[features] memories = true` in `config.toml`; stored in `~/.codex/memories/`), machine-local, and OpenAI says to keep required guidance in `AGENTS.md` or checked-in docs (Codex memories docs, checked 2026-10-24). For engagement memory, keep the same files in the repo at `docs/memory/` (or a gitignored `.agents/memory/`) and add one line to `AGENTS.md`: "Read docs/memory/MEMORY.md at session start." |
+| Antigravity | No native memory feature confirmed (confirm before use). Use the same `docs/memory/` files and the same line in `GEMINI.md` / the workspace rules. |
 
 Only the first **200 lines or 25KB** of `MEMORY.md` load at session start (Claude Code); anything
-past that is silently dropped, which is why the index stays one line per entry.
+past that is dropped, which is why the index stays one line per entry. Claude Code now reminds Claude
+near the limit and returns an error on a write that crosses it (code.claude.com/docs/en/memory,
+checked 2026-10-24).
 
 ## Pre-Processing (Auto-Context)
 

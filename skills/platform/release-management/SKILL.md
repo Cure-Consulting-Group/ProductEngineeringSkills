@@ -3,6 +3,8 @@ name: release-management
 description: "Plans mobile and web releases: versions, staged rollouts, rollback, changelogs. Use when cutting a release, shipping to Play or the App Store, planning a rollout or rollback, or store listings (ASO)."
 when_to_use: "NOT for executing the cut: bump, changelog, tag (release-coordinator agent), CI workflows (ci-cd-pipeline), or live incidents (incident-response)."
 argument-hint: "[platform-or-version]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Release Management

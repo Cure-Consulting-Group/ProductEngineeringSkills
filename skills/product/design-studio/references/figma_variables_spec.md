@@ -1,5 +1,8 @@
 # Figma REST API Variables & Component Specification
 
+## Access
+The Variables REST API is Enterprise-only: reading needs an Enterprise org member with view access (`file_variables:read`); writing needs a Full seat with edit access to the file (`file_variables:write`); guests can't use it (developers.figma.com/docs/rest-api/variables, checked 2026-10-24). On other plans, `figma_sync.py --apply` will fail; sync through a Figma plugin instead.
+
 ## Authentication & Headers
 All requests to the Figma REST API require:
 ```http

@@ -4,6 +4,8 @@ description: "Builds a portfolio technology radar (Adopt/Trial/Assess/Hold). Use
 when_to_use: "NOT for the product registry itself (portfolio-registry), dependency CVE audits (dependency-auditor agent), or one project's ADR (sdlc)."
 argument-hint: "[portfolio-or-domain]"
 context: fork
+metadata:
+  verified: 2026-10-24
 ---
 
 # Technology Radar

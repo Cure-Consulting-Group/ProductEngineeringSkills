@@ -32,7 +32,8 @@ and any client ESG commitment or reporting obligation (CSRD, customer questionna
 
 1. **Carbon intensity — where and when.** Region choice dominates everything else for cloud
    workloads. Use the provider's published per-region data, not memory: GCP publishes grid carbon
-   intensity and carbon-free-energy % per region (cloud.google.com/sustainability/region-carbon);
+   intensity and carbon-free-energy % per region (cloud.google.com/sustainability/region-carbon — 2025
+   data, checked 2026-10-24);
    AWS and Azure publish less granular data. Time-shift deferrable batch work to low-intensity
    windows with the Green Software Foundation Carbon Aware SDK or a forecast from Electricity Maps
    / WattTime. Latency, data-residency, and compliance constraints override carbon — say so when
@@ -71,11 +72,15 @@ SCI = ((E × I) + M) per R
 ```
 
 - **E:** prefer the provider's carbon tool (GCP Carbon Footprint, AWS Customer Carbon Footprint
-  Tool, Azure Emissions Impact Dashboard) — note they report monthly with a lag and use
-  market- or location-based methods; state which. Otherwise estimate from vCPU-hours × per-vCPU
+  Tool, Azure carbon optimization in the portal or the Emissions Impact Dashboard) — note they
+  report monthly with a lag and use market- or location-based methods; state which. AWS CCFT
+  shows both methods since 2025-06, added Scope 3 in 2025-10, and since 2025-12 publishes a
+  month's data by the 15th–21st of the next month (AWS What's New and CCFT release notes,
+  checked 2026-10-24). Otherwise estimate from vCPU-hours × per-vCPU
   power coefficients (Cloud Carbon Footprint's published coefficients) and label it an estimate.
-- **I:** Electricity Maps or WattTime APIs for real-time/forecast (both need an API key; confirm
-  the current Electricity Maps API host and version in its docs before use), provider annual
+- **I:** Electricity Maps or WattTime APIs for real-time/forecast (both need an API key;
+  Electricity Maps is `https://api.electricitymaps.com/v3/…` with an `auth-token` header —
+  portal.electricitymaps.com/docs, checked 2026-10-24), provider annual
   averages as fallback.
 - **M:** GSF Impact Framework or Cloud Carbon Footprint embodied-emissions coefficients.
 - Report SCI per feature by tagging resources per service and allocating proportionally.

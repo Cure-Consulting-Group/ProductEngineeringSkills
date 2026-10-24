@@ -4,6 +4,8 @@ description: "Creates and maintains PORTFOLIO.md, the registry of every product,
 when_to_use: "NOT for the tech Adopt/Trial/Hold radar itself (technology-radar) or financial runway models (burn-rate-tracker)."
 argument-hint: "[portfolio-or-product]"
 context: fork
+metadata:
+  verified: 2026-10-24
 ---
 
 # Portfolio Registry

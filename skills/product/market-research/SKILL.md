@@ -4,6 +4,8 @@ description: "Researches markets with sources: TAM/SAM/SOM, competitors, ICP, pr
 when_to_use: "NOT for launch planning (go-to-market), messaging (product-marketing), or tracking competitor features (competitive-intel agent)."
 argument-hint: "[market-or-product]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch", "WebFetch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Market Research

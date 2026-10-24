@@ -10,6 +10,8 @@ trigger:
     - "vibe design"
     - "build a page"
 
+# get_screen_code / get_screen_image are stitch-mcp proxy tools; on Google's hosted
+# server use get_screen + download_file (html_code.name, screenshot.name).
 steps:
   - id: load_design_md
     agent: stitch-design
@@ -37,11 +39,12 @@ steps:
     agent: stitch-design
     tool: stitch-mcp
     inputs:
-      tool_name: "generate_screen"
+      tool_name: "generate_screen_from_text"
       arguments:
         projectId: "${resolve_project.project_id}"
+        # DESIGN.md content goes in the prompt; designSystem takes a Stitch
+        # asset ID (assets/<id>), not DESIGN.md text (tools/list, 2026-10-24).
         prompt: "${enhance_prompt.enhanced_prompt}"
-        designSystem: "${load_design_md.design_system}"
     outputs:
       screen_id: "string"
       screen_title: "string"
