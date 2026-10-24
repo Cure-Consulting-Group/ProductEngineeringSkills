@@ -220,3 +220,10 @@ test('a subagent answer is not checked', async ($, on) => {
   await $.turn.complete({ ...answer('`src/a.ts:50`'), agentId: 'a1' })
   expect(w.toasts).toEqual([])
 })
+
+test('a Bash call spawns no process here (T72: at most 1 per Bash call across all mods)', async ($, on) => {
+  const w = world(on, {})
+  await $.session.start({ cwd: '/repo/sub', surface: 'terminal', isInteractive: true })
+  for (const command of ['ls', 'cd /repo && git status', 'npm test']) await $.tool.call({ tool: 'Bash', command } as any)
+  expect(w.runs.length).toBe(0)
+})
