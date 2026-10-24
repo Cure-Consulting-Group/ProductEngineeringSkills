@@ -10,7 +10,6 @@ does load, at a gitignored path (default dist/antigravity/cure/), never committe
   agents/<persona>/agent.md       personas as agy custom agents (frontmatter: name, description, skills)
   rules/cure-rule-<x>.md          path rules, `trigger: glob` + one comma-separated `globs` string
                                   (from `paths:`/`globs:`/`glob:`, list or scalar; empty -> ExportError)
-  rules/cure-style-<x>.md         output styles, `trigger: model_decision`
   EXPORT-MANIFEST.json            source SHA, library version, counts, rewrite totals
 
 SKILL.md transforms: fold `when_to_use` into `description` (description text stays first);
@@ -282,20 +281,6 @@ def export_rules(out: Path) -> dict:
         text = (f"---\ntrigger: glob\ndescription: {json.dumps('Cure standards for ' + p.stem + ' files')}\n"
                 f"globs: {json.dumps(', '.join(globs))}\n---\n" + body)
         (rd / f"cure-rule-{p.stem}.md").write_text(text, encoding="utf-8")
-        written += 1
-        total += len(text.encode())
-    for p in sorted((REPO / "output-styles").glob("*/output-style.md")):
-        raw = p.read_text(encoding="utf-8")
-        if raw.startswith("---\n"):
-            fm, body = split_frontmatter(raw, str(p))
-            desc = scalar(dict((k, v) for k, v in parse_fields(fm)).get("description", ["description:"]))
-        else:
-            body = raw
-            lead = [l for l in raw.splitlines() if l.strip() and not l.startswith("#")]
-            desc = lead[0].rstrip(":") if lead else p.parent.name
-        text = (f"---\ntrigger: model_decision\ndescription: {json.dumps('Output style: ' + desc, ensure_ascii=False)}\n"
-                "---\n" + body)
-        (rd / f"cure-style-{p.parent.name}.md").write_text(text, encoding="utf-8")
         written += 1
         total += len(text.encode())
     big = [f.name for f in rd.iterdir() if f.stat().st_size > RULE_FILE_MAX]
