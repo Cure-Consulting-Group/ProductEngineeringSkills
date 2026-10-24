@@ -8,13 +8,13 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 
 # Wave 7 (2026-10-24) — Truth in delivery: what consumers get, mods that work, runtimes that are current
 
-**Status:** scoped, not started. Evidence: `docs/evaluations/2026-10-24/EVALUATION.md` (five read-only reviews with file:line evidence; key claims re-checked by hand).
+**Status:** in progress. Owner approved every recommendation, D1–D8, on 2026-10-24 ("proceed with all recommended fixes"). D1 is done: `cure-agent-budget@cure` was disabled in `~/.claude/settings.json` on 2026-10-24. Evidence: `docs/evaluations/2026-10-24/EVALUATION.md` (five read-only reviews with file:line evidence; key claims re-checked by hand).
 
 Captured 2026-10-24 from an owner request: "do some more research to ensure all of our skills, tools, hooks, agents are all top notch. even our mods… we love this mod but have no way to clear these merged PRs."
 
 **Framing.** The audit scores 9.99, and the structure deserves it. The defects in this wave sit where the audit can't see. First, what a plugin install actually delivers: no permissions, no rules, no personas. Second, hooks whose output Claude never reads. Third, mods that are broken in use while their tests pass. Fourth, facts in skills that are wrong or contradict each other. Every ticket's acceptance test is behavioural: a live session, a probe, or a test that fails before the fix. A structural score passing is not acceptance.
 
-## Owner decisions (block only the tickets named)
+## Owner decisions (all resolved 2026-10-24: each recommendation adopted)
 
 | # | Decision | Recommendation | Blocks |
 |---|---|---|---|
