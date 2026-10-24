@@ -12,8 +12,10 @@ out-of-scope and assumptions are explicit, prices trace to a cost basis, and the
 follows the Cure defaults below. Deliver the requested document only; match length to the need,
 no filler sections or restated summaries.
 
-This skill **owns Cure's commercial terms** — payment schedule, rate structure, warranty, IP,
-termination. engineering-cost-model and technical-estimation supply the cost basis and link here.
+This skill **owns Cure's commercial structure** — payment schedule, rate structure, warranty.
+Contract terms (liability, termination, payment terms, IP, confidentiality) come from
+`legal-doc-scaffold` Step 4. engineering-cost-model and technical-estimation supply the cost
+basis and link here.
 
 ## Pre-Processing (Auto-Context)
 
@@ -189,40 +191,23 @@ Key person risk:
 
 ## Step 7: Terms and Conditions
 
-```
-IP Ownership:
-  - All custom code becomes client property upon final payment
-  - Cure retains right to use general methodologies and frameworks
-  - Open-source components remain under their respective licenses
-  - Pre-existing Cure IP (if any) is licensed, not transferred — listed in exhibit
+Contract terms have one source: the **Cure Consulting SOW Positions** in `legal-doc-scaffold`
+(Step 4, owner-approved 2026-09-23). Link or copy them from there; don't restate them here, so a
+proposal never contradicts the SOW. Headline positions, for orientation only:
+liability capped at fees paid under the SOW in the prior 12 months, no consequential damages;
+either party may terminate on 30 days' notice; milestone-based or net-30 payment, with late fees
+and the right to pause work after 15 days overdue; client owns deliverables on full payment.
 
+This skill adds only the proposal-level items `legal-doc-scaffold` doesn't cover:
+
+```
 Warranty:
-  - 30-day warranty period after go-live
-  - Covers defects against agreed requirements (not new features)
-  - Bug fixes during warranty: included at no additional cost
-  - Extended warranty available via retainer agreement
-
-Liability:
-  - Liability capped at total contract value
-  - No liability for third-party service outages (cloud providers, APIs)
-  - No consequential damages (lost revenue, lost data beyond direct contract value)
-
-Confidentiality:
-  - Mutual NDA in effect for duration of engagement + 2 years
-  - Client data never shared, used for training, or retained after engagement
-  - Cure may list client name in portfolio (unless client opts out)
-
-Termination:
-  - Either party may terminate with 14 days written notice
-  - Client pays for all work completed through termination date
-  - Cure delivers all work-in-progress and documentation upon termination
-  - No kill fees for remaining milestones
-
-Payment terms:
-  - Net 15 from invoice date
-  - Late payment: 1.5%/month after 30 days
-  - Work pauses if payment is 30+ days overdue
+  - 30-day warranty period after go-live, included in the final milestone (not billed)
+  - Covers defects against agreed requirements, not new features
+  - Extended support available via retainer (see client-handoff for SLA options)
 ```
+
+Any term a client asks to change goes to counsel, per `legal-doc-scaffold`.
 
 ## Step 8: SOW Template Generation
 
@@ -275,7 +260,7 @@ Changes to scope require a written Change Order signed by both parties.
 Change Orders will include: description, impact to timeline, impact to cost.
 
 ## 8. Terms
-[Reference Master Services Agreement or include inline terms from Section 7]
+[Reference the Master Services Agreement, or include the `legal-doc-scaffold` Step 4 SOW positions inline, plus the Step 7 warranty]
 
 ---
 
@@ -290,7 +275,7 @@ Date:                                Date:
 
 ## Cross-References
 
-- `/legal-doc-scaffold` — terms of service, NDA, and privacy policy templates
+- `/legal-doc-scaffold` — the single source for SOW contract terms (Step 4), plus ToS, NDA, and privacy policy templates
 - `/engineering-cost-model` — detailed cost estimation for pricing proposals
 - `/project-manager` — sprint planning and delivery methodology
 - `/client-communication` — stakeholder communication during engagement

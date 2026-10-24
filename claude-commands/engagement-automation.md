@@ -1,22 +1,37 @@
 # Engagement Automation
 
-Pick the right recurring-execution mechanism before wiring anything. Claude Code has five, and most automation failures come from using the wrong one: a session loop for work that must survive laptop sleep, a cloud routine for something CI already does deterministically, or unattended write-access nobody scoped.
+Pick the right recurring-execution mechanism before wiring anything. Claude Code has six, and most automation failures come from using the wrong one: a session loop for work that must survive laptop sleep, a cloud routine for something CI already does deterministically, or unattended write-access nobody scoped.
 
 This skill covers **harness-level** automation — Claude Code running Cure's skills on a schedule or trigger. For designing the AI workflow *inside* a product, use the `agent-workflow-designer` skill.
 
 **Done** when each task has one Automation Plan (Step 5) with an exact invocation, a budget cap, a durable delivery target, and a liveness owner.
 
-**Other runtimes.** `/loop`, `/schedule` routines, and `.claude/loop.md` are Claude Code features. Codex CLI and Antigravity (agy) have no session loop or cloud routine: run them headless (`codex exec …`, `agy -p …`) from CI cron or a system scheduler instead. Both can load plugin hooks, but Cure's `hooks/hooks.json` assumes Claude Code's environment — don't reuse it there. These runtimes change monthly; confirm before use against `docs/evaluations/2026-09-23/platform-facts.md` in the plugin repo.
+**Other runtimes** (checked 2026-10-24; these change monthly, so confirm before use):
+- **Antigravity (agy)** has `/schedule`: one-shot timers and recurring five-field cron. They are
+  conversation-scoped ("timers and schedules belong to the conversation that created them"), so
+  they stop with that conversation, like `/loop`. For persistent schedules use an Automation: a
+  sidecar whose `sidecar.json` sets `"builtin": "schedule"` with a cron expression and a command,
+  under `~/.gemini/config/sidecars/<id>/`. It survives restarts and starts a fresh agent
+  conversation on each run. Sources: antigravity.google/docs/commands/schedule,
+  antigravity.google/docs/sidecars.
+- **Codex** Automations (scheduled tasks) run in the ChatGPT desktop app (locally, while the app is
+  open) or on the web (no local folders). "Codex CLI doesn't provide the Scheduled management
+  interface" (learn.chatgpt.com/docs/automations). Headless options for CI cron or a system
+  scheduler: `codex exec …` (stable), or `codex cloud exec` to submit a Codex Cloud task
+  (experimental in codex-cli 0.163.0).
+- Both can load plugin hooks, but Cure's `hooks/hooks.json` assumes Claude Code's environment —
+  don't reuse it there. Background: `docs/evaluations/2026-09-23/platform-facts.md` in the plugin repo.
 
 ## Step 1: Classify the Mechanism
 
-Five mechanisms. Pick exactly one per task.
+Six mechanisms. Pick exactly one per task.
 
 | Mechanism | Runs where | Trigger | Survives laptop close? | Best for |
 |-----------|-----------|---------|------------------------|----------|
 | **`/loop` (fixed interval)** | Your session | Timer (`/loop 30m …`) | No | Poll-and-react within a working session: babysit CI, watch a deploy |
 | **`/loop` (self-paced)** | Your session | Model picks its own cadence | No | Goal-driven iteration with a stop condition ("keep fixing until tests green") |
-| **Cloud routine (`/schedule`)** | Anthropic infra | Cron, API call, or GitHub webhook | Yes | Weekly audits, monthly reports, PR-triggered reviews — no machine required |
+| **Cloud routine (`/schedule`)** | Anthropic infra (fresh clone) | Cron (≥1h), API call, or GitHub webhook | Yes | Weekly audits, monthly reports, PR-triggered reviews — no machine required |
+| **Desktop scheduled task** | Your machine, Claude Desktop app | Hourly/daily/weekly or custom cron | No: runs only while the app is open and the machine awake; one catch-up run on wake | Recurring work that needs local files, tools, or MCP config files |
 | **CI cron (GitHub Actions)** | CI runner | Cron | Yes | Deterministic checks that need no LLM judgment (lint, license scan, `npm audit`) |
 | **Hook** | Your session | Harness event (Stop, PreToolUse, ConfigChange…) | n/a | Enforcement at the moment of action, not on a clock |
 
@@ -30,7 +45,9 @@ Is it deterministic (no LLM judgment needed)?
    ├── Yes → hook
    └── No
       Must it run when no one is at the machine?
-      ├── Yes → cloud routine
+      ├── Yes → needs local files or tools, and the machine stays on?
+      │        ├── Yes → Desktop scheduled task
+      │        └── No  → cloud routine
       └── No
          Is there a checkable goal it iterates toward?
          ├── Yes → /loop self-paced (model stops itself when done)
@@ -50,13 +67,19 @@ Is it deterministic (no LLM judgment needed)?
 ### /loop — session-scoped
 
 ```
-/loop 30m /cure-product-engineering:burn-rate-tracker     # fixed interval
-/loop keep the test suite green until I say stop          # self-paced, goal-driven
-/loop                                                     # bare: runs the project maintenance loop
+/loop 10m check this PR's CI and summarize new review comments   # fixed interval
+/loop keep the test suite green until I say stop                  # self-paced, goal-driven
+/loop                                                             # bare: runs the project maintenance loop
 ```
 
 - Bare `/loop` uses `.claude/loop.md` if present (Cure projects get a standard one vendored at install — deps, lint drift, TODO decay, coverage regression).
-- Recurring loops expire after **7 days**; re-arm with `--resume` or a fresh `/loop`.
+- Use `/loop` for minutes-to-hours polling. Monthly or weekly work (a burn-rate review, a
+  dependency audit) belongs in a cloud routine or Desktop scheduled task, not a session loop.
+- Recurring loops expire after **7 days**: they fire once more, then delete themselves. To keep
+  one going, cancel and recreate it before then, or move it to a Desktop or cloud task.
+- `claude --resume` / `--continue` restores fixed-interval tasks that haven't expired (no catch-up
+  for missed runs). It does not restore a self-paced `/loop` or an expired task: run `/loop` again.
+  Source: code.claude.com/docs/en/scheduled-tasks (Limitations), checked 2026-10-24.
 - Scheduled fires only run skills Claude may auto-invoke: **never** set `disable-model-invocation: true` on a skill meant to be looped. To keep a loopable skill out of the `/` menu, use `user-invocable: false` instead.
 
 ### Cloud routine — /schedule
@@ -70,6 +93,19 @@ Is it deterministic (no LLM judgment needed)?
 - Always set the per-routine token limit and daily run cap — an uncapped routine that retries is an open-ended bill.
 - Interactively-authenticated MCP servers are absent in headless runs — don't build a routine around one.
 - See `docs/AUTOMATION.md` in the plugin repo for copy-paste recipes.
+
+### Desktop scheduled task
+
+In Claude Desktop's **Code** tab → **Scheduled** → **New task**, with **Only on this computer** on
+and a local folder picked; or ask any Desktop session ("run the dependency audit every weekday at
+9am"). Each run starts a fresh session; the prompt lives at `~/.claude/scheduled-tasks/<name>/SKILL.md`.
+
+- Runs only while the app is open and the machine awake; a missed run gets one catch-up run on
+  wake, so put a time guard in the prompt when timing matters.
+- Permission mode is set per task. In Manual mode an unapproved tool stalls the run until someone
+  answers — do a **Run now** first and always-allow what it needs.
+- Turn on **Worktree** in the Edit form so a run doesn't act on uncommitted changes.
+- Source: code.claude.com/docs/en/desktop-scheduled-tasks, checked 2026-10-24.
 
 ### CI cron
 
@@ -97,9 +133,9 @@ Produce an **Automation Plan** for each task:
 
 ```
 AUTOMATION PLAN — [task]
-Mechanism:    [loop-fixed | loop-self-paced | routine | ci-cron | hook]
+Mechanism:    [loop-fixed | loop-self-paced | routine | desktop-task | ci-cron | hook]
 Trigger:      [interval / cron / event]
-Invocation:   [exact /loop or /schedule command, or workflow file path]
+Invocation:   [exact /loop or /schedule command, Desktop task name, or workflow file path]
 Write access: [none | scoped to X — justification]
 Budget:       [tokens per run, runs per day cap]
 Delivery:     [issue / PR comment / report file path]

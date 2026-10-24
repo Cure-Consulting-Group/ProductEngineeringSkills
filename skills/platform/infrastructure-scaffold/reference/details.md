@@ -198,7 +198,9 @@ spec:
       containerConcurrency: 80
       timeoutSeconds: 300
       containers:
-        - image: gcr.io/PROJECT_ID/PROJECT_NAME-api:latest
+        # Artifact Registry, pinned tag or digest (never :latest). Container Registry (gcr.io)
+        # stopped accepting writes 2025-03-18 — docs.cloud.google.com/artifact-registry/docs/transition/transition-from-gcr
+        - image: REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/PROJECT_NAME-api:GIT_SHA
           ports:
             - containerPort: 8080
           resources:

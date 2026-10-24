@@ -113,7 +113,8 @@ before use; name the risk in words.
 
 **Firebase specifics.** Rules tested in the emulator (`@firebase/rules-unit-testing`); Storage rules
 validate `contentType` and `size`; callable/HTTP functions validate input and check `context.auth`/
-`request.auth`; App Check enforced on Firestore, Storage, Functions, and Vertex AI in Firebase; email
+`request.auth`; App Check enforced on Firestore, Storage, Functions, and Firebase AI Logic (formerly Vertex AI in
+Firebase; firebase.google.com/docs/ai-logic/app-check); email
 enumeration protection on; no service-account JSON in client bundles or repos.
 
 ## Step 4: Severity and Report

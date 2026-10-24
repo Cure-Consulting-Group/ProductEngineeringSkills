@@ -65,6 +65,15 @@ awaiting translation.
 
 ## Step 4: Release Checklist (gotchas only — the model knows the generic list)
 
+**Store SDK floors** (checked 2026-10-24; both stores raise them yearly, so confirm before use):
+- **Google Play:** since 2026-08-31, new apps and updates must target Android 16 (API 36) or
+  higher (Wear OS and Automotive: API 35; TV and XR: API 34); an extension to 2026-11-01 can be
+  requested in Play Console. Existing apps below API 35 stop reaching new users on newer Android
+  versions. Source: developer.android.com/google/play/requirements/target-sdk.
+- **App Store:** since 2026-04-28, uploads must be built with Xcode 26 or later against an
+  iOS/iPadOS/tvOS/visionOS/watchOS 26 SDK; since 2026-09-09, iOS and iPadOS apps must have a
+  deployment target of iOS 13 or later. Source: developer.apple.com/news/upcoming-requirements.
+
 **Android:** archive the R8 mapping file; include a baseline profile; update the Data safety form
 when data collection changed; the base module's compressed per-device download must stay under
 Play's 200 MB cap (move extras to Play Feature/Asset Delivery). Rollout: 1% day 0 → 5% day 1

@@ -70,7 +70,7 @@ Mark with `<!-- ATTORNEY REVIEW: reason -->` at minimum: governing law and venue
 
 ## Step 4: Cure Consulting SOW Positions
 
-**Cure defaults (approved by the owner, 2026-09-23).** Starting positions, not legal advice: liability, IP, and governing-law clauses in any draft still carry `<!-- ATTORNEY REVIEW -->` markers.
+**Cure defaults (approved by the owner, 2026-09-23).** This list is the single source for Cure's SOW contract terms; `proposal-generator` links here rather than restating them. Starting positions, not legal advice: liability, IP, and governing-law clauses in any draft still carry `<!-- ATTORNEY REVIEW -->` markers.
 
 Starting positions for Cure as the service provider — note any the client asks to change for counsel:
 - **Scope:** explicit in-scope and out-of-scope lists; anything not listed is a change order.
