@@ -1,7 +1,7 @@
 ---
 name: qsbs-compliance
 description: "Checks IRC §1202 QSBS qualification for C-corps under both OBBBA regimes. Use when an equity event, entity change, asset growth, or revenue mix could affect QSBS, or for an annual QSBS health check."
-when_to_use: "NOT for other tax positions (use irc-lookup or tax-analyst agent) or HIPAA/GDPR/PCI (use compliance-architect)."
+when_to_use: "NOT for QSBS planning or §1045 rollovers (tax-strategies), other positions (irc-lookup, tax-analyst agent), or HIPAA/GDPR/PCI (compliance-architect)."
 argument-hint: "[entity-or-product]"
 allowed-tools: ["Read", "Grep", "Glob"]
 disallowed-tools: Write Edit

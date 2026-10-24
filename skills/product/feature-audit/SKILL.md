@@ -1,6 +1,6 @@
 ---
 name: feature-audit
-description: "Post-ship completeness audit of one feature. Use after finishing a feature or before marking a PR ready, to find missing tests, wiring, error handling, a11y, and analytics."
+description: "Audits one shipped feature for completeness. Use after finishing a feature or before marking a PR ready, to find missing tests, wiring, error handling, a11y, and analytics."
 when_to_use: "NOT for in-progress diff review (code-reviewer agent), full OWASP audits (security-review), or WCAG audits (accessibility-audit)."
 argument-hint: "[feature-name]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(git log:*)", "Bash(ls:*)"]

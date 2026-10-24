@@ -1,6 +1,6 @@
 ---
 name: data-migration
-description: "Plans and runs data migrations: ETL, backfills, dual-write, zero-downtime cutover, rollback. Use when moving or reshaping existing data across databases, Firestore, or legacy systems."
+description: "Plans and runs data migrations: ETL, backfills, dual-write, cutover, rollback. Use when moving or reshaping existing data across databases, Firestore, or legacy systems without downtime."
 when_to_use: "NOT for schema, index, or engine selection (use database-architect) or checking a single migration file (migration-validator agent)."
 argument-hint: "[source-to-target]"
 metadata:

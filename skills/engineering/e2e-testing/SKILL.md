@@ -1,6 +1,6 @@
 ---
 name: e2e-testing
-description: "Writes E2E test suites (Playwright, Compose/Espresso, XCUITest) with page objects and CI wiring. Use when adding E2E, smoke, or visual regression tests for a user flow or fixing flaky E2E tests."
+description: "Writes E2E suites (Playwright, Compose, XCUITest) with page objects and CI wiring. Use when adding E2E, smoke, or visual regression tests for a user flow, or fixing flaky E2E tests."
 when_to_use: "NOT for test strategy, coverage, or retry policy (use testing-strategy). NOT for test users (use test-accounts) or UAT sign-off (use uat)."
 argument-hint: "[feature-or-flow]"
 metadata:

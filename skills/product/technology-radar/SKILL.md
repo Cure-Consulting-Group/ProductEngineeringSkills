@@ -1,6 +1,6 @@
 ---
 name: technology-radar
-description: "Builds and maintains a portfolio technology radar (Adopt/Trial/Assess/Hold) with migration plans. Use when choosing or retiring a technology, running a quarterly tech review, or planning a migration off Hold tech."
+description: "Builds a portfolio technology radar (Adopt/Trial/Assess/Hold). Use when choosing or retiring a technology, running a quarterly tech review, or planning a migration off Hold tech."
 when_to_use: "NOT for the product registry itself (portfolio-registry), dependency CVE audits (dependency-auditor agent), or one project's ADR (sdlc)."
 argument-hint: "[portfolio-or-domain]"
 context: fork

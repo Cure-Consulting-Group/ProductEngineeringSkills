@@ -1,6 +1,6 @@
 ---
 name: disaster-recovery
-description: "Designs disaster recovery plans: RTO/RPO tiers, Firestore and Cloud SQL backups, failover, DR drills. Use when planning backups, multi-region failover, or a DR test before launch or an audit."
+description: "Designs DR plans: RTO/RPO tiers, backups, failover, drills. Use when planning Firestore or Cloud SQL backups, multi-region failover, or a DR test before launch or an audit."
 when_to_use: "NOT for handling a live incident (use incident-response) or chaos experiments (use chaos-engineering)."
 argument-hint: "[project-or-service]"
 context: fork

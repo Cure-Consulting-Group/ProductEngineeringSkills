@@ -1,6 +1,6 @@
 ---
 name: observability
-description: "Sets up logging, tracing, SLOs, burn-rate alerts, and dashboards (Crashlytics, Sentry, Datadog, GCP). Use when adding monitoring to a service, defining SLOs, or fixing noisy or missing alerts."
+description: "Sets up logs, traces, SLOs, and alerts (Sentry, Crashlytics, Datadog, GCP). Use when adding monitoring, defining SLOs, or fixing noisy or missing alerts."
 when_to_use: "NOT for incident runbooks or post-mortems (use incident-response) or DORA delivery metrics (use dora-metrics)."
 argument-hint: "[project-or-service]"
 context: fork

@@ -1,6 +1,6 @@
 ---
 name: public-sector-contracting
-description: "Reviews government contract terms: liability, IP, termination, non-appropriation, insurance. Use when reading a municipal, state, or federal contract form or choosing exceptions."
+description: "Reviews public-sector contract terms: liability, IP, termination, non-appropriation. Use when reading a municipal, state, or federal contract form or its insurance terms, or choosing exceptions."
 when_to_use: "NOT for commercial MSAs or NDAs (the contract-reviewer agent under Claude Code, or a general contract review)."
 argument-hint: "[solicitation-or-contract-name]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]

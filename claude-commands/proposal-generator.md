@@ -276,7 +276,8 @@ Date:                                Date:
 ## Cross-References
 
 - `/legal-doc-scaffold` — the single source for SOW contract terms (Step 4), plus ToS, NDA, and privacy policy templates
-- `/engineering-cost-model` — detailed cost estimation for pricing proposals
+- `/engineering-cost-model` — internal cost estimation for pricing proposals
+- `/technical-estimation` — bid-grade estimates with ranges, for any price held under contract or bid
 - `/project-manager` — sprint planning and delivery methodology
 - `/client-communication` — stakeholder communication during engagement
 - `/sdlc` — SDLC artifacts referenced in technical approach section

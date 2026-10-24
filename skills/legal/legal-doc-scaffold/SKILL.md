@@ -1,6 +1,6 @@
 ---
 name: legal-doc-scaffold
-description: "Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy for attorney review. Use when a product or engagement needs a starting draft built from a required-clause checklist and compliance flags."
+description: "Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy. Use when a product or engagement needs a starting draft for attorney review, from a required-clause checklist."
 when_to_use: "NOT for reviewing a received contract (use contract-reviewer agent) or consent-flow design (use compliance-architect)."
 argument-hint: "[company-or-product]"
 disable-model-invocation: true

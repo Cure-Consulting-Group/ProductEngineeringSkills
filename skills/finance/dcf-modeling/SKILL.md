@@ -1,6 +1,6 @@
 ---
 name: dcf-modeling
-description: "Builds a discounted cash flow valuation: unlevered FCF, WACC, terminal value, equity bridge. Use when estimating intrinsic value or a per-share price from projected cash flows."
+description: "Builds DCF valuations: unlevered FCF, WACC, terminal value, equity bridge. Use when estimating intrinsic value or a per-share price from projected cash flows."
 when_to_use: "NOT for peer multiples (use comps-analysis) or pre-revenue startup rounds (use investor-reporting and fundraising-materials)."
 argument-hint: "[company-or-ticker]"
 ---

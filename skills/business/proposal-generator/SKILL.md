@@ -1,7 +1,7 @@
 ---
 name: proposal-generator
 description: "Drafts consulting proposals and SOWs: scope, milestones, pricing, payment terms. Use when writing a client proposal, a statement of work, or a change order for Cure."
-when_to_use: "NOT for internal cost estimates (use engineering-cost-model) or screening public-sector solicitations (use solicitation-triage, then rfp-evaluation)."
+when_to_use: "NOT for internal cost estimates (engineering-cost-model), bid-grade estimates with ranges (technical-estimation), or screening solicitations (solicitation-triage, then rfp-evaluation)."
 argument-hint: "[project-name]"
 disable-model-invocation: true
 metadata:
@@ -286,7 +286,8 @@ Date:                                Date:
 ## Cross-References
 
 - `/legal-doc-scaffold` — the single source for SOW contract terms (Step 4), plus ToS, NDA, and privacy policy templates
-- `/engineering-cost-model` — detailed cost estimation for pricing proposals
+- `/engineering-cost-model` — internal cost estimation for pricing proposals
+- `/technical-estimation` — bid-grade estimates with ranges, for any price held under contract or bid
 - `/project-manager` — sprint planning and delivery methodology
 - `/client-communication` — stakeholder communication during engagement
 - `/sdlc` — SDLC artifacts referenced in technical approach section

@@ -1,6 +1,6 @@
 ---
 name: bid-decision
-description: "Makes the bid/no-bid call on a solicitation: kill criteria, weighted scorecard, win odds, bid cost. Use when deciding whether to commit to a proposal or a pursuit is drifting."
+description: "Makes the bid/no-bid call: kill criteria, weighted scorecard, win odds, bid cost. Use when deciding whether to commit to a proposal, or when a pursuit is drifting."
 when_to_use: "NOT for first-pass screening of portal alerts (use solicitation-triage)."
 argument-hint: "[solicitation-number]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Bash(date:*)", "Write", "Edit", "WebSearch"]

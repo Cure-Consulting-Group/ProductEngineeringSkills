@@ -1,6 +1,6 @@
 ---
 name: ios-design-expert
-description: "Apple HIG design guidance for iOS/iPadOS screens and components. Use when designing or reviewing SwiftUI UI for Liquid Glass, navigation, tab bars, Dynamic Type, SF Symbols, or widgets."
+description: "Applies Apple HIG to iOS/iPadOS screens and components. Use when designing or reviewing SwiftUI UI for Liquid Glass, navigation, tab bars, Dynamic Type, SF Symbols, or widgets."
 when_to_use: "NOT for code scaffolding (ios-architect), HIG+M3 specs (product-design), or brand/design systems (design-studio)."
 argument-hint: "[screen-or-component-name]"
 metadata:

@@ -1,6 +1,6 @@
 ---
 name: notification-architect
-description: "Designs notification systems: push (FCM/APNs/web), in-app, transactional email, SMS, and preferences. Use when adding push notifications, notification preferences, email deliverability, or multi-channel dispatch."
+description: "Designs push (FCM/APNs/web), in-app, email, and SMS notifications. Use when adding push, notification preferences, email deliverability, or multi-channel dispatch."
 when_to_use: "NOT for lifecycle or growth campaigns and experiments (use growth-engineering) or onboarding sequence content (use customer-onboarding)."
 argument-hint: "[notification-type-or-project]"
 metadata:

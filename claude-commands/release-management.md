@@ -7,6 +7,8 @@ Match length to the need; no filler sections.
 
 This skill owns the **Cure branch and release policy**; `ci-cd-pipeline` and
 `infrastructure-scaffold` implement it and link here rather than restating it.
+It plans the release; the `release-coordinator` agent (Claude Code) executes a cut — version
+bump, changelog, tag — against this plan and confirms before tagging or publishing.
 
 ## Branch and release policy (Cure standard)
 
@@ -106,7 +108,7 @@ Two outputs, deliberately different:
 - Android vitals bad-behavior thresholds: user-perceived crash rate 1.09%, ANR 0.47%. Cure
   targets: crash < 0.5%, ANR < 0.2%.
 - iOS: crash rate < 1% of sessions (target < 0.3%); watch hangs, terminations, disk writes.
-- Web: JS error rate < 0.1% of page loads; Core Web Vitals LCP < 2.5 s, INP < 200 ms, CLS < 0.1.
+- Web: JS error rate < 0.1% of page loads; Core Web Vitals within the `performance-review` budgets.
 - Alerts: crash > 2× baseline after rollout start → page on-call; > 3× → auto-halt; rating
   drop > 0.2 stars in 48 h → product team.
 

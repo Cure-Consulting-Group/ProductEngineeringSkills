@@ -1,6 +1,6 @@
 ---
 name: ai-feature-builder
-description: "Builds user-facing LLM features: client wrapper, prompts, streaming UX, fallbacks, kill switch. Use when adding chat, summarization, extraction, or generation to an app."
+description: "Builds user-facing LLM features: client wrapper, prompts, streaming UX, kill switch. Use when adding chat, summarization, extraction, or generation to an app, with fallbacks."
 when_to_use: "NOT for RAG (rag-architect), agent internals (agent-designer), pattern choice (agent-workflow-designer), or evals/cost/routing (llmops). PHI: pair with compliance-architect."
 argument-hint: "[ai-feature-name]"
 metadata:

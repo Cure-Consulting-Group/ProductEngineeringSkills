@@ -1,6 +1,6 @@
 ---
 name: accessibility-audit
-description: "WCAG 2.2 AA audit of Android, iOS, and web UI with severity-ranked findings. Use when checking accessibility, a11y, screen reader support, touch targets, or contrast before a release or after a complaint."
+description: "Audits Android, iOS, and web UI against WCAG 2.2 AA, findings ranked by severity. Use when checking accessibility, screen readers, touch targets, or contrast before a release or after a complaint."
 when_to_use: "NOT for security audits (use security-review) or visual design work (use design-studio)."
 argument-hint: "[feature-or-screen]"
 allowed-tools: ["Read", "Grep", "Glob"]

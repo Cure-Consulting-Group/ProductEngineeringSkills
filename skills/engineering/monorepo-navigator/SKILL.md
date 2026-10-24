@@ -1,6 +1,6 @@
 ---
 name: monorepo-navigator
-description: "Diagnoses and speeds up JS/TS and polyglot monorepos (pnpm, Turborepo, Nx, Bazel). Use when joining, creating, or fixing a monorepo: slow CI, cache misses, dependency drift, package boundaries, or extracting a package."
+description: "Speeds up and fixes monorepos (pnpm, Turborepo, Nx, Bazel). Use when CI is slow, caches miss, or dependencies drift, or when joining, creating, or extracting a package from one."
 when_to_use: "NOT for runtime composition of independently deployed frontends (use micro-frontends) or single-package repos."
 argument-hint: "[repo-path-or-task]"
 metadata:

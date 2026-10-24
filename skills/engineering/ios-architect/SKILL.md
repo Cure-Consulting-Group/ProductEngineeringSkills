@@ -1,6 +1,6 @@
 ---
 name: ios-architect
-description: "Scaffolds iOS features in Swift/SwiftUI with Clean Architecture, MVVM, and Swift 6 concurrency. Use when creating a new iOS feature, view model, repository, or StoreKit 2 flow."
+description: "Scaffolds Swift/SwiftUI iOS features: Clean Architecture, MVVM, Swift 6 concurrency. Use when creating a new iOS feature, view model, repository, or StoreKit 2 flow."
 when_to_use: "NOT for Apple HIG design guidance (ios-design-expert) or Core Data/SwiftData schema design (database-architect)."
 argument-hint: "[feature-name]"
 metadata:

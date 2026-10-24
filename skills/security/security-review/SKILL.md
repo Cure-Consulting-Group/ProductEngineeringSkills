@@ -1,7 +1,7 @@
 ---
 name: security-review
-description: "Security review or audit of code, APIs, mobile apps, LLM features, and Firebase/cloud config, mapped to OWASP. Use when asked to check security, find vulnerabilities, or review before launch or after adding auth, payments, or PII."
-when_to_use: "NOT for compliance frameworks (use compliance-architect) or WCAG (use accessibility-audit)."
+description: "Finds OWASP vulnerabilities in code, APIs, mobile apps, LLM features, and Firebase config. Use when asked to check security, before launch, or after adding auth, payments, or PII."
+when_to_use: "NOT for HIPAA/GDPR/PCI design (compliance-architect), leaked-key scans (env-secrets-manager), WCAG (accessibility-audit), or building Stripe (stripe-integration)."
 argument-hint: "[target-system]"
 allowed-tools: ["Read", "Grep", "Glob"]
 context: fork
