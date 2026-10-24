@@ -7,7 +7,7 @@ Modes:
   prompt         UserPromptSubmit  destructive-intent nudge (plain stdout reaches Claude here)
   edit           PreToolUse Edit|Write|MultiEdit|NotebookEdit  protected-file guard
   skill-content  PreToolUse Edit|Write|...  static scan of skill/agent/persona content
-  bash           PreToolUse Bash   destructive-command guard
+  bash           PreToolUse Bash   destructive-command guard (incl. the settings.json deny rules)
   telemetry      PreToolUse Skill  skill-usage log (~/.cure/telemetry)
   session-start  SessionStart startup  telemetry + opt-in provisioning (.claude/loop.md, workflows)
   failure        PostToolUseFailure  telemetry with the real tool_name + deterministic Bash triage
@@ -30,7 +30,9 @@ Stdlib only. Regression tests: python3 hooks/test_cure_guard.py
 import json
 import os
 import re
+import shlex
 import shutil
+import subprocess
 import sys
 import time
 
@@ -77,6 +79,15 @@ BASH_PATTERNS = [
     re.compile(r"\bdd\b[^\n]*\bof=/dev/(disk|sd|nvme|hd|rdisk)"),
     re.compile(r":\(\)\s*\{\s*:\|:&\s*\};:"),  # fork bomb
 ]
+# Ported from settings.json deny rules (T78): a plugin cannot ship permissions, so this
+# guard is the only layer consumers get. Parsed per shell segment, not substring-matched.
+CMD_WRAPPERS = {"sudo", "env", "time", "nice", "nohup", "command", "exec", "timeout", "gtimeout",
+                "caffeinate", "doas"}
+PROTECTED_BRANCHES = {"main", "master"}
+DESTRUCTIVE_SQL = re.compile(
+    r"\b(DROP\s+(TABLE|DATABASE|SCHEMA)|TRUNCATE\s+(TABLE\s+)?(ONLY\s+)?[A-Za-z_\"`])", re.I)
+SQL_EXEMPT_PROGS = {"git", "grep", "egrep", "fgrep", "rg", "ag", "ack", "truncate"}
+MIGRATION_CTX = re.compile(r"migrat|db/migrate|alembic|flyway|liquibase", re.I)
 
 # Whole words only: "swipe" must not read as "wipe".
 DESTRUCTIVE_PROMPT = re.compile(
@@ -224,12 +235,136 @@ def mode_skill_content(d):
                 "@skill-security-auditor before merging.")
 
 
+def segments(cmd):
+    """Split a shell command on unquoted ; & | and newlines (heredoc bodies become their
+    own segments, so SQL in `psql <<EOF` is still seen). Quote state is tracked so a
+    commit message that mentions `git reset --hard` stays inside its git segment."""
+    out, buf, quote, i = [], [], None, 0
+    while i < len(cmd):
+        c = cmd[i]
+        if quote:
+            if c == "\\" and quote == '"' and i + 1 < len(cmd):
+                buf.append(cmd[i:i + 2])
+                i += 2
+                continue
+            if c == quote:
+                quote = None
+            buf.append(c)
+        elif c in "\"'":
+            quote = c
+            buf.append(c)
+        elif c == "\\" and i + 1 < len(cmd):
+            buf.append(cmd[i:i + 2])
+            i += 2
+            continue
+        elif c in ";&|\n":
+            out.append("".join(buf))
+            buf = []
+        else:
+            buf.append(c)
+        i += 1
+    out.append("".join(buf))
+    return [s.strip() for s in out if s.strip()]
+
+
+def words(seg):
+    try:
+        toks = shlex.split(seg, comments=False)
+    except ValueError:
+        toks = seg.split()
+    i = 0
+    while i < len(toks):  # strip VAR=x prefixes and wrappers: sudo, env, time, nice ...
+        t = toks[i]
+        if re.match(r"^[A-Za-z_]\w*=", t):
+            i += 1
+        elif t.rsplit("/", 1)[-1] in CMD_WRAPPERS:
+            i += 1
+            while i < len(toks) and (toks[i].startswith("-") or re.match(r"^\d+(\.\d+)?[smhd]?$", toks[i])):
+                i += 1
+        else:
+            break
+    toks = toks[i:]
+    if toks:
+        toks[0] = toks[0].rsplit("/", 1)[-1]
+    return toks
+
+
+def git_sub(toks):
+    """(subcommand, args) for a git invocation, skipping global options."""
+    i = 1
+    while i < len(toks):
+        t = toks[i]
+        if t in ("-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"):
+            i += 2
+        elif t.startswith("-"):
+            i += 1
+        else:
+            return t, toks[i + 1:]
+    return "", []
+
+
+def current_branch(cwd):
+    try:
+        p = subprocess.run(["git", "-C", cwd, "branch", "--show-current"], capture_output=True,
+                           text=True, timeout=2)
+        return p.stdout.strip()
+    except Exception:
+        return ""
+
+
+def check_git(sub, args, cwd):
+    if sub == "reset" and "--hard" in args:
+        return ("git reset --hard discards uncommitted work. Stash or commit first "
+                "(git stash), or run it yourself if you mean it.")
+    if sub == "clean" and any(a == "--force" or re.match(r"^-[a-zA-Z]*f", a) for a in args):
+        return "git clean -f deletes untracked files for good. Preview with git clean -n, then run it yourself."
+    if sub == "push":
+        force = any(a in ("--force", "--force-with-lease", "--force-if-includes") or
+                    a.startswith("--force-with-lease=") or re.match(r"^-[a-zA-Z]*f[a-zA-Z]*$", a)
+                    for a in args)
+        positional = [a for a in args if not a.startswith("-")]
+        refspecs = positional[1:]
+        force = force or any(r.startswith("+") for r in refspecs)
+        if not force:
+            return None
+        if "--all" in args or "--mirror" in args:
+            return "Force-pushing --all/--mirror rewrites protected branches. Do it yourself if intended."
+        dests = [re.sub(r"^refs/heads/", "", r.lstrip("+").split(":")[-1]) for r in refspecs]
+        if not refspecs:
+            dests = [current_branch(cwd)]
+        if any(b in PROTECTED_BRANCHES for b in dests):
+            return ("Force-push to a protected branch (main/master) rewrites shared history. "
+                    "Push a new branch and open a PR instead.")
+    return None
+
+
 def mode_bash(d):
     cmd = tool_input(d).get("command") or ""
     flat = re.sub(r"[\"']", "", cmd)  # `rm -rf "/"` must not slip past on quoting
     for pat in BASH_PATTERNS:
         if pat.search(flat):
             block("Dangerous system command detected.")
+    cwd = project_dir(d)
+    in_migration = bool(MIGRATION_CTX.search(cmd))
+    for seg in segments(cmd):
+        toks = words(seg)
+        if not toks:
+            continue
+        prog = toks[0]
+        if prog == "git":
+            msg = check_git(*git_sub(toks), cwd)
+            if msg:
+                block(msg)
+        elif prog in ("terraform", "tofu", "terragrunt") and (
+                "destroy" in toks or ("apply" in toks and any(t in ("-destroy", "--destroy") for t in toks))):
+            block("terraform destroy tears down real infrastructure. Run it yourself after reviewing the plan.")
+        elif prog == "kubectl" and "delete" in toks and any(
+                t in ("namespace", "namespaces", "ns") or t.startswith(("namespace/", "namespaces/", "ns/"))
+                for t in toks[toks.index("delete") + 1:]):
+            block("kubectl delete namespace removes everything in it. Run it yourself if intended.")
+        if prog not in SQL_EXEMPT_PROGS and not in_migration and DESTRUCTIVE_SQL.search(re.sub(r"[\"']", "", seg)):
+            block("DROP/TRUNCATE outside a migration destroys data. Write a reviewed, reversible "
+                  "migration instead, or run it yourself.")
 
 
 def mode_telemetry(d):

@@ -79,6 +79,41 @@ CASES = [
     ("bash", "not json", 0, "malformed input fails open"),
     ("bash", "", 0, "empty input fails open"),
     ("prompt", {"prompt": "please wipe the staging db"}, 0, "prompt mode never blocks"),
+    # T78: settings.json deny rules ported into the guard (a plugin can't ship permissions)
+    ("bash", tool(command="git push -f origin main"), 2, "force-push -f to main blocked (consumer probe)"),
+    ("bash", tool(command="git push --force origin master"), 2, "force-push --force to master blocked"),
+    ("bash", tool(command="git push --force-with-lease origin HEAD:main"), 2, "force-with-lease HEAD:main blocked"),
+    ("bash", tool(command="git push origin +main"), 2, "+refspec force to main blocked"),
+    ("bash", tool(command="git -C repo push -fu origin refs/heads/main"), 2, "global opts + -fu cluster blocked"),
+    ("bash", tool(command="cd app && sudo git push --force origin main"), 2, "chained + sudo force-push blocked"),
+    ("bash", tool(command="git push --force --all"), 2, "force-push --all blocked"),
+    ("bash", tool(command="git push -f origin feature/login"), 0, "force-push to a feature branch allowed"),
+    ("bash", tool(command="git push origin main"), 0, "normal push to main allowed"),
+    ("bash", tool(command="git reset --hard HEAD~1"), 2, "git reset --hard blocked"),
+    ("bash", tool(command="git reset --soft HEAD~1"), 0, "git reset --soft allowed"),
+    ("bash", tool(command="git clean -fdx"), 2, "git clean -fdx blocked"),
+    ("bash", tool(command="git clean -xf"), 2, "git clean -xf blocked"),
+    ("bash", tool(command="git clean -n"), 0, "git clean -n (dry run) allowed"),
+    ("bash", tool(command='git commit -m "guard now blocks git reset --hard and DROP TABLE"'), 0,
+     "commit message mentioning the rules allowed"),
+    ("bash", tool(command="git commit -m \"$(cat <<'EOF'\nfix: block terraform destroy\n\nand git push -f origin main\nEOF\n)\""), 0,
+     "heredoc commit message mentioning the rules allowed"),
+    ("bash", tool(command='psql "$DATABASE_URL" -c "DROP TABLE users"'), 2, "psql DROP TABLE blocked"),
+    ("bash", tool(command="echo 'truncate table sessions;' | psql"), 2, "piped TRUNCATE TABLE blocked"),
+    ("bash", tool(command="psql <<SQL\nDROP DATABASE prod;\nSQL"), 2, "heredoc DROP DATABASE blocked"),
+    ("bash", tool(command="mysql -e 'TRUNCATE orders'"), 2, "bare TRUNCATE <table> blocked"),
+    ("bash", tool(command="echo 'DROP TABLE legacy;' > db/migrations/0042_drop_legacy.sql"), 0,
+     "DROP written into a migration allowed"),
+    ("bash", tool(command="npx prisma migrate deploy"), 0, "migration runner allowed"),
+    ("bash", tool(command='grep -rn "DROP TABLE" src/'), 0, "grep for DROP TABLE allowed"),
+    ("bash", tool(command="truncate -s 0 app.log"), 0, "coreutils truncate allowed"),
+    ("bash", tool(command="terraform destroy -auto-approve"), 2, "terraform destroy blocked"),
+    ("bash", tool(command="terraform apply -destroy"), 2, "terraform apply -destroy blocked"),
+    ("bash", tool(command="tofu destroy"), 2, "tofu destroy blocked"),
+    ("bash", tool(command="terraform plan -out tf.plan"), 0, "terraform plan allowed"),
+    ("bash", tool(command="kubectl delete namespace staging"), 2, "kubectl delete namespace blocked"),
+    ("bash", tool(command="kubectl delete ns/staging"), 2, "kubectl delete ns/<name> blocked"),
+    ("bash", tool(command="kubectl delete pod web-1 -n staging"), 0, "kubectl delete pod -n allowed"),
 ]
 
 # (mode, payload, substring expected in stdout or None for silent, label)
@@ -263,6 +298,14 @@ def main():
         rows = [json.loads(line) for line in open(log)] if os.path.exists(log) else []
         failed += check("failure       telemetry detail carries the real tool_name",
                         any(r.get("event") == "tool_failure" and r.get("detail") == "WebFetch" for r in rows))
+    with tempfile.TemporaryDirectory() as repo:
+        git = ["git", "-C", repo]
+        subprocess.run(git + ["init", "-q", "-b", "main"], capture_output=True)
+        code, _ = run("bash", {"tool_input": {"command": "git push -f"}, "cwd": repo})
+        failed += check("bash          bare git push -f while on main blocked", code == 2)
+        subprocess.run(git + ["checkout", "-q", "-b", "feature/x"], capture_output=True)
+        code, _ = run("bash", {"tool_input": {"command": "git push -f"}, "cwd": repo})
+        failed += check("bash          bare git push -f on a feature branch allowed", code == 0)
     with tempfile.TemporaryDirectory() as tmp:
         failed += stop_cases(tmp)
     with tempfile.TemporaryDirectory() as tmp:

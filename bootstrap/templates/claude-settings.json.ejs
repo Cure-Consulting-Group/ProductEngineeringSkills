@@ -1,6 +1,5 @@
 {
-  "$generated": "by @cure-consulting-group/claude-bootstrap; project-local overrides belong in .claude/settings.local.json",
-  "model": "claude-opus-4-7",
+  "$generated": "by @cure-consulting-group/claude-bootstrap; deny rules come from the Cure library settings.json (templates/deny-rules.json); project-local overrides belong in .claude/settings.local.json",
   "permissions": {
     "allow": [
       "Bash(npm test*)",
@@ -9,16 +8,6 @@
       "Bash(git diff*)",
       "Bash(git log*)"
     ],
-    "deny": [
-      "Bash(rm -rf*)",
-      "Bash(git push --force*)",
-      "Bash(git reset --hard*)"
-    ]
-  },
-  "project": {
-    "name": "<%= ctx.project.name %>",
-    "type": "<%= ctx.project.type %>",
-    "phase": "<%= ctx.project.phase %>",
-    "skillsRepoVersion": "<%= ctx.bootstrap.skillsRepoVersion %>"
+    "deny": <%- JSON.stringify(ctx.denyRules, null, 2).replace(/\n/g, "\n    ") %>
   }
 }
