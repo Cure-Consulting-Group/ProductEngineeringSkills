@@ -436,6 +436,7 @@ Order: T71 first (actively harmful), then T76 (one field fixes two runtimes), th
 - Re-run each negative case with `--runs 1 --ablation none --keep-temp` and read both arms' replies.
 - Decide whether the grader or the skill is wrong, then fix that one. Start with public-sector-contracting (an uncalibrated "non-appropriation" regex), `route-security-review-prelaunch` (with-arm 0.00: the result regex failed), and the legal pair.
 - Re-run the sweep for those skills.
+- **Already found:** `route-security-review-prelaunch` first ran in an empty sandbox, so the model rightly asked for the code. With the code inline (fixed 2026-10-24) Opus 5.5 still reviewed it **without invoking security-review** (0 of 5 runs). That's a real routing gap, the Wave 5 "skips skills on task prompts" pattern. The reply regex is also too narrow (the review was correct but never said "IDOR"/"OWASP"). Measure routing on natural prompts across the top skills before deciding between description, `paths`, or hook nudges.
 
 **Acceptance:** no skill below Δ −0.05 unless the regression is confirmed and ticketed against the skill.
 
