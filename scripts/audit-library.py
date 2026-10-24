@@ -684,6 +684,11 @@ def eval_deltas():
     if not files:
         return {}
     res = json.loads(files[-1].read_text())
+    # plugin-evals/sweep.py (T85) records per-skill deltas over n>=3 runs; prefer them.
+    sd = {k: v["delta"] for k, v in (res.get("skill_deltas") or {}).items()
+          if v.get("delta") is not None and v.get("n_min", 0) >= 3}
+    if sd:
+        return sd
     by_task = {}
     for k, v in res.get("summary", {}).items():
         task, _backend, arm = k.split("|")

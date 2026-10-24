@@ -209,6 +209,11 @@ def skill_deltas(results):
     """on-vs-off pass-rate delta per skill, from a skill-mode results dict."""
     if not results or results.get("mode") != "skill":
         return {}
+    # plugin-evals/sweep.py (T85) writes per-skill deltas directly; prefer them.
+    sd = {k: v["delta"] for k, v in (results.get("skill_deltas") or {}).items()
+          if v.get("delta") is not None and v.get("n_min", 0) >= 3}
+    if sd:
+        return sd
     by_task = {}
     for k, v in results["summary"].items():
         task, backend, arm = k.split("|")
