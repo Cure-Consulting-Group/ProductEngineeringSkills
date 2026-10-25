@@ -1,9 +1,11 @@
 ---
 name: legal-doc-scaffold
-description: "Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy for attorney review. Use when a product or engagement needs a starting draft built from a required-clause checklist and compliance flags."
+description: "Drafts first-pass ToS, privacy policy, SOW, NDA, DPA, EULA, and refund policy. Use when a product or engagement needs a starting draft for attorney review, from a required-clause checklist."
 when_to_use: "NOT for reviewing a received contract (use contract-reviewer agent) or consent-flow design (use compliance-architect)."
 argument-hint: "[company-or-product]"
 disable-model-invocation: true
+metadata:
+  verified: 2026-10-24
 ---
 
 # Legal Document Scaffold
@@ -43,9 +45,9 @@ Apply every row that matches; each becomes a section or an `<!-- ATTORNEY REVIEW
 |---|---|
 | Any personal data | Privacy policy: categories, purposes, processors, retention, rights, contact |
 | California residents | CCPA/CPRA: notice at collection, right to know/delete/correct, opt-out of sale/sharing, sensitive-data limits |
-| Other US states | About 20 states have comprehensive privacy laws in force (IAPP tracker; confirm the current list before use): draft rights and opt-outs to the strictest applicable state, and flag universal opt-out signals (GPC) |
+| Other US states | About 20 states have comprehensive privacy laws in force and a few more take effect in 2027 (IAPP state tracker, updated 2026-09-08, and trackers citing it; checked 2026-10-24; confirm the current list before use): draft rights and opt-outs to the strictest applicable state, and flag universal opt-out signals (GPC) |
 | EU/UK users | GDPR/UK GDPR: lawful basis per purpose, data-subject rights, transfers mechanism; DPA with each processor |
-| Users under 13 | COPPA: collection is allowed only with verifiable parental consent — a separate consent before disclosing to third parties, a written retention policy, and a written security program (2025 amendments). Don't draft a consent flow here; `compliance-architect` owns that design. The policy must describe what's collected from children, parental rights, and the consent method |
+| Users under 13 | COPPA: collection is allowed only with verifiable parental consent — a separate consent before disclosing to third parties, a written retention policy that is published in the online notice, and a written security program (2025 amendments, 16 CFR 312.8 and 312.10; compliance required from 2026-04-22; checked 2026-10-24). Don't draft a consent flow here; `compliance-architect` owns that design. The policy must describe what's collected from children, parental rights, and the consent method |
 | Health or fitness data outside HIPAA | FTC Health Breach Notification Rule (health apps), Washington My Health My Data Act, and similar state consumer-health laws: explicit consent and a separate consumer-health privacy policy |
 | Covered entity or business associate | HIPAA: route to compliance-architect for the BAA and safeguards; the public privacy policy is not a HIPAA notice |
 | Payments | Name the processor (Stripe); card data never touches our servers; refund terms |
@@ -70,7 +72,7 @@ Mark with `<!-- ATTORNEY REVIEW: reason -->` at minimum: governing law and venue
 
 ## Step 4: Cure Consulting SOW Positions
 
-**Cure defaults (approved by the owner, 2026-09-23).** Starting positions, not legal advice: liability, IP, and governing-law clauses in any draft still carry `<!-- ATTORNEY REVIEW -->` markers.
+**Cure defaults (approved by the owner, 2026-09-23).** This list is the single source for Cure's SOW contract terms; `proposal-generator` links here rather than restating them. Starting positions, not legal advice: liability, IP, and governing-law clauses in any draft still carry `<!-- ATTORNEY REVIEW -->` markers.
 
 Starting positions for Cure as the service provider — note any the client asks to change for counsel:
 - **Scope:** explicit in-scope and out-of-scope lists; anything not listed is a change order.

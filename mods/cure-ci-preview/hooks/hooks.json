@@ -1,4 +1,0 @@
-{
-  "description": "cure-ci-preview hooks module",
-  "modules": ["./register.ts"]
-}

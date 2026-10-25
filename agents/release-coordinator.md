@@ -4,7 +4,6 @@ description: "Runs a release: version bump, changelog, validation, tag, rollback
 tools: Read, Grep, Glob, Bash, Edit
 maxTurns: 20
 memory: project
-isolation: worktree
 ---
 
 # Release Coordinator Agent

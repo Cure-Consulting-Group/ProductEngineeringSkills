@@ -95,7 +95,7 @@ test('past the TTL the cache is cold and the next message re-caches everything i
   expect(view(s, T0 + TTL_MS['5m'] - 1).kind).toBe('warm')
   const v = view(s, T0 + TTL_MS['5m'])
   expect(v).toEqual({ kind: 'cold', tokens: 27_000 })
-  expect(bandText(v)).toBe('cache ○ cold · next message re-caches 27k tokens (~$0.10 fee)')
+  expect(bandText(v)).toBe('cache ○ cold · next message re-caches 27k tokens')
 })
 
 test('formatting', async () => {
@@ -114,7 +114,7 @@ test('the report names the TTL source and, when cold, the write rate', async () 
   const s = warm('5m')
   expect(reportText(EMPTY, T0, 'x')).toMatch(/no model response yet/)
   expect(reportText(s, T0 + 1000, 'CURE_CACHE_TTL')).toMatch(/TTL assumed {11}5m \(CURE_CACHE_TTL\)/)
-  expect(reportText(s, T0 + TTL_MS['5m'], 'x')).toMatch(/27k tokens, all at the cache-write rate \(~\$0.10 fee\)/)
+  expect(reportText(s, T0 + TTL_MS['5m'], 'x')).toMatch(/27k tokens, all at the cache-write rate$/m)
 })
 
 // ── the hooks, end to end ──────────────────────────────────────────────────
@@ -163,7 +163,7 @@ for (const surface of ['terminal', 'desktop'] as const) {
     await clock.advance(50 * 60_000)
     expect(await text()).toBe('cache ● 1h ███░░░░░░░░░░░░░ 10m left · hit 0% · misses 0')
     await clock.advance(10 * 60_000)
-    expect(await text()).toBe('cache ○ cold · next message re-caches 82k tokens (~$0.31 fee)')
+    expect(await text()).toBe('cache ○ cold · next message re-caches 82k tokens')
   })
 }
 
@@ -197,4 +197,25 @@ test('CURE_CACHE_TTL overrides the inferred TTL', async ($, on) => {
   const r = await $.command.run({ command: 'cache' } as never)
   expect(r.text).toMatch(/cache ● 5m/)
   expect(r.text).toMatch(/5m \(CURE_CACHE_TTL\)/)
+})
+
+test('/cache shows the session cost the engine reports, with no price table of its own', async ($, on) => {
+  mock.clock(on, { now: T0 })
+  mock.env(on, {})
+  on('session.usage', () => ({ value: { ...subscription().value, cost: { usd: 4.2 } } }))
+  on('turn.step', respond(usage({ cache_creation_input_tokens: 80_000 })) as never)
+  await step($, 0)
+  const r = await $.command.run({ command: 'cache' } as never)
+  expect(r.text).toMatch(/Session cost so far {3}\$4\.20 \(as \/cost reports it\)/)
+  expect(r.text).not.toMatch(/fee/)
+})
+
+test('userConfig ttl overrides the inferred TTL', { options: { ttl: '5m' } }, async ($, on) => {
+  mock.clock(on, { now: T0 })
+  mock.env(on, {})
+  on('session.usage', subscription)
+  on('turn.step', respond(usage({ cache_creation_input_tokens: 80_000 })) as never)
+  await step($, 0)
+  const r = await $.command.run({ command: 'cache' } as never)
+  expect(r.text).toMatch(/5m \(userConfig ttl\)/)
 })

@@ -11,23 +11,9 @@ import {
   type PullInfo,
 } from './lanes'
 
-type ProcessResult = { exitCode: number; stdout: string; stderr: string }
-type ProcessInit = { timeoutMs?: number }
+import { git, run, type GitResult } from './shared/git'
 
-const failedProcess = (): ProcessResult => ({ exitCode: 1, stdout: '', stderr: 'process failed' })
-
-async function run($: any, argv: string[], init?: ProcessInit): Promise<ProcessResult> {
-  try {
-    const result = await $.process.run(argv, init)
-    return {
-      exitCode: typeof result?.exitCode === 'number' ? result.exitCode : 1,
-      stdout: typeof result?.stdout === 'string' ? result.stdout : '',
-      stderr: typeof result?.stderr === 'string' ? result.stderr : '',
-    }
-  } catch {
-    return failedProcess()
-  }
-}
+const GH_TIMEOUT_MS = 15_000
 
 const parseBranches = (stdout: string): string[] =>
   stdout
@@ -48,107 +34,87 @@ export function register(on: On) {
   })
 
   on('command.run', { command: 'lanes' }, async $ => {
-    const lanes: LaneInfo[] = []
-    const seenBranches = new Set<string>()
     const notes: string[] = []
     const addNote = (note: string) => {
       if (!notes.includes(note)) notes.push(note)
     }
+    // Every git call names the repository the session is rooted in, never the shell's cwd.
+    const root = await $.session.root()
 
-    const mergedRes = await run($, ['git', 'branch', '--merged', 'origin/HEAD', '--list', 'lane/*'])
+    // Round 1, in parallel: everything that does not depend on another answer.
+    const [mergedRes, wtRes, brRes, pullRes, remoteRes] = await Promise.all([
+      git($, root, ['branch', '--merged', 'origin/HEAD', '--list', 'lane/*']),
+      git($, root, ['worktree', 'list', '--porcelain']),
+      git($, root, ['branch', '--list', 'lane/*']),
+      run($, ['gh', 'pr', 'list', '--state', 'open', '--limit', '30', '--json', 'number,headRefName,title,mergeStateStatus,statusCheckRollup'], GH_TIMEOUT_MS),
+      git($, root, ['remote', 'get-url', 'origin']),
+    ])
+
     const mergedBranches = new Set<string>()
-    if (mergedRes.exitCode === 0) {
-      for (const branch of parseBranches(mergedRes.stdout)) mergedBranches.add(branch)
-    } else {
-      addNote('could not verify merged state (origin/HEAD unset)')
-    }
+    if (mergedRes.exitCode === 0) for (const branch of parseBranches(mergedRes.stdout)) mergedBranches.add(branch)
+    else addNote('could not verify merged state (origin/HEAD unset)')
 
-    const makeLane = async (branch: string, path: string, dirtyCount: number): Promise<LaneInfo> => {
-      let commitsAhead = 0
-      const aheadRes = await run($, ['git', 'rev-list', '--count', `origin/HEAD..${branch}`])
-      if (aheadRes.exitCode === 0) {
-        commitsAhead = parseInt(aheadRes.stdout.trim(), 10) || 0
-      } else {
-        addNote('lane commit counts: could not verify')
-      }
-
-      return {
-        name: branch.replace(/^lane\//, ''),
-        branch,
-        path,
-        commitsAhead,
-        dirtyCount,
-        windowStatus: mergedBranches.has(branch) ? 'merged' : 'active',
-        merged: mergedBranches.has(branch),
-        salvageOf: salvageOf(branch),
-      }
-    }
-
-    const wtRes = await run($, ['git', 'worktree', 'list', '--porcelain'])
+    const targets: Array<{ branch: string; path: string; hasWorktree: boolean }> = []
+    const seenBranches = new Set<string>()
     if (wtRes.exitCode === 0) {
-      const entries = parseWorktreeList(wtRes.stdout)
-      for (const entry of entries) {
+      for (const entry of parseWorktreeList(wtRes.stdout)) {
         if (!entry.branch || !entry.branch.startsWith('lane/')) continue
         seenBranches.add(entry.branch)
-
-        let dirty = 0
-        const statusRes = await run($, ['git', '-C', entry.path, 'status', '--porcelain'])
-        if (statusRes.exitCode === 0) {
-          dirty = statusRes.stdout.split('\n').filter(line => line.trim().length > 0).length
-        } else {
-          addNote('worktree status: could not verify')
-        }
-
-        lanes.push(await makeLane(entry.branch, entry.path, dirty))
+        targets.push({ branch: entry.branch, path: entry.path, hasWorktree: true })
       }
     } else {
       addNote('worktrees: could not verify')
     }
-
-    const brRes = await run($, ['git', 'branch', '--list', 'lane/*'])
     if (brRes.exitCode === 0) {
       for (const branch of parseBranches(brRes.stdout)) {
-        if (seenBranches.has(branch)) continue
-        lanes.push(await makeLane(branch, '(no worktree)', 0))
+        if (!seenBranches.has(branch)) targets.push({ branch, path: '(no worktree)', hasWorktree: false })
       }
     } else {
       addNote('lane branches: could not verify')
     }
 
-    const foldedLanes = foldSalvage(lanes)
-    let pulls: PullInfo[] = []
-    const pullRes = await run($, [
-      'gh',
-      'pr',
-      'list',
-      '--state',
-      'open',
-      '--limit',
-      '30',
-      '--json',
-      'number,headRefName,title,mergeStateStatus,statusCheckRollup',
-    ], { timeoutMs: 15_000 })
+    // Round 2, in parallel: per lane, its commits ahead and (with a worktree) its dirty files.
+    const repo = remoteRes.exitCode === 0 ? parseGitHubRemote(remoteRes.stdout) : null
+    const queueQuery = repo && pullRes.exitCode === 0
+      ? `{repository(owner:"${repo.owner}",name:"${repo.repo}"){mergeQueue{entries(first:20){nodes{position pullRequest{number}}}}}}`
+      : undefined
+    const [perLane, queueRes] = await Promise.all([
+      Promise.all(
+        targets.map(t =>
+          Promise.all([
+            git($, root, ['rev-list', '--count', `origin/HEAD..${t.branch}`]),
+            t.hasWorktree ? git($, t.path, ['status', '--porcelain']) : Promise.resolve<GitResult>({ exitCode: 0, stdout: '', stderr: '' }),
+          ]),
+        ),
+      ),
+      queueQuery ? run($, ['gh', 'api', 'graphql', '-f', `query=${queueQuery}`], GH_TIMEOUT_MS) : Promise.resolve(undefined),
+    ])
 
+    const lanes: LaneInfo[] = targets.map((t, i) => {
+      const [aheadRes, statusRes] = perLane[i]
+      if (aheadRes.exitCode !== 0) addNote('lane commit counts: could not verify')
+      if (statusRes.exitCode !== 0) addNote('worktree status: could not verify')
+      return {
+        name: t.branch.replace(/^lane\//, ''),
+        branch: t.branch,
+        path: t.path,
+        commitsAhead: aheadRes.exitCode === 0 ? parseInt(aheadRes.stdout.trim(), 10) || 0 : 0,
+        dirtyCount: statusRes.exitCode === 0 ? statusRes.stdout.split('\n').filter(line => line.trim().length > 0).length : 0,
+        windowStatus: mergedBranches.has(t.branch) ? 'merged' : 'active',
+        merged: mergedBranches.has(t.branch),
+        salvageOf: salvageOf(t.branch),
+      }
+    })
+
+    let pulls: PullInfo[] = []
     if (pullRes.exitCode !== 0) {
       addNote('pull requests: could not verify (gh unavailable)')
     } else {
       pulls = parsePullList(pullRes.stdout)
-
-      const remoteRes = await run($, ['git', 'remote', 'get-url', 'origin'])
-      const repo = remoteRes.exitCode === 0 ? parseGitHubRemote(remoteRes.stdout) : null
-      if (repo) {
-        const query = `{repository(owner:"${repo.owner}",name:"${repo.repo}"){mergeQueue{entries(first:20){nodes{position pullRequest{number}}}}}}`
-        const queueRes = await run($, ['gh', 'api', 'graphql', '-f', `query=${query}`], { timeoutMs: 15_000 })
-        if (queueRes.exitCode === 0) {
-          applyQueuePositions(pulls, queueRes.stdout)
-        } else {
-          addNote('merge queue: could not verify')
-        }
-      } else {
-        addNote('merge queue: could not verify')
-      }
+      if (queueRes && queueRes.exitCode === 0) applyQueuePositions(pulls, queueRes.stdout)
+      else addNote('merge queue: could not verify')
     }
 
-    return { text: formatLaneBoard(foldedLanes, pulls, notes) }
+    return { text: formatLaneBoard(foldSalvage(lanes), pulls, notes) }
   })
 }

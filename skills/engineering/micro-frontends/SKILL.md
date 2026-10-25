@@ -1,6 +1,6 @@
 ---
 name: micro-frontends
-description: "Decides whether and how to split a web frontend into independently deployed apps. Use when teams block each other's releases, or when weighing Vercel microfrontends, multi-zones, or module federation."
+description: "Decides whether and how to split a web frontend into independent apps. Use when teams block each other's releases, or weighing Vercel microfrontends, multi-zones, or module federation."
 when_to_use: "NOT for monorepo tooling or caching (monorepo-navigator) or a single Next.js feature (nextjs-feature-scaffold)."
 argument-hint: "[project-or-architecture]"
 metadata:

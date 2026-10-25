@@ -1,6 +1,6 @@
 ---
 name: test-accounts
-description: "QA test accounts: personas, receivable QA emails, seed/reset scripts, env-guarded credentials. Use when setting up test users, seed data, QA email addresses, or test-account teardown."
+description: "Sets up QA test accounts, personas, seed/reset scripts, and env-guarded credentials. Use when setting up test users, seed data, receivable QA email addresses, or test-account teardown."
 when_to_use: "NOT for test strategy or coverage (use testing-strategy), E2E tests (use e2e-testing), or production secrets (use env-secrets-manager)."
 argument-hint: "[project-or-feature]"
 metadata:

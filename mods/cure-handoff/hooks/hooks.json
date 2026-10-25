@@ -1,4 +1,0 @@
-{
-  "description": "cure-handoff hooks module",
-  "modules": ["./register.ts"]
-}

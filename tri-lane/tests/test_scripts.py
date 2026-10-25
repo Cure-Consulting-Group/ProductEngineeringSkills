@@ -134,13 +134,14 @@ class Route(unittest.TestCase):
         return json.loads(out)
 
     def test_routine_goes_to_luna(self):
+        # canary 2026-10-24: gpt-6-luna@medium passed impl-spec-service 9/9
         r = self.s("--role", "implement", "--kind", "impl")
-        self.assertEqual(r["lane"], "gpt-5.6-luna")
+        self.assertEqual(r["lane"], "gpt-6-luna")
         self.assertEqual(r["effort"], "medium")
 
     def test_risk_goes_to_sol_max(self):
         r = self.s("--role", "implement", "--kind", "android", "--risk", "payments")
-        self.assertEqual((r["lane"], r["effort"]), ("gpt-5.6-sol", "max"))
+        self.assertEqual((r["lane"], r["effort"]), ("gpt-6.1-sol", "max"))
 
     def test_terminal_work_suggests_astra_in_shadow(self):
         r = self.s("--role", "implement", "--kind", "ci")
@@ -149,20 +150,37 @@ class Route(unittest.TestCase):
 
     def test_escalation_on_attempts(self):
         self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--attempt", "2")["effort"], "xhigh")
+        self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--attempt", "2")["lane"], "gpt-6.1-sol")
         self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--attempt", "3")["effort"], "ultra")
 
     def test_reviews_and_system(self):
-        # measured 2026-09-06: Luna@medium is the default reviewer for non-risk work; Sol keeps risk-flagged reviews
+        # measured 2026-09-06: Luna@medium is the default reviewer for non-risk work; Sol keeps risk-flagged reviews.
+        # canary 2026-10-24: gpt-6-luna missed 3 of 11 planted bugs, so the non-risk reviewer stays on gpt-5.6-luna;
+        # gpt-6.1-sol scored 1.0 on the same fixture and takes the risk-flagged reviews.
         self.assertEqual(self.s("--role", "review", "--kind", "impl")["lane"], "gpt-5.6-luna")
-        self.assertEqual(self.s("--role", "review", "--kind", "impl", "--risk", "payments")["lane"], "gpt-5.6-sol")
+        self.assertEqual(self.s("--role", "review", "--kind", "impl", "--risk", "payments")["lane"], "gpt-6.1-sol")
         self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--risk", "underspecified")["lane"], "gpt-5.6-sol")
         self.assertEqual(self.s("--role", "system-review")["lane"], "gemini-3.8-flash-high")
-        self.assertEqual(self.s("--role", "whole-repo")["lane"], "gemini-3.1-pro-high")
+        # gemini-3.1-pro is no longer offered by agy (agy models, 2026-10-24); Gemini 4 Argon replaces it
+        self.assertEqual(self.s("--role", "whole-repo")["lane"], "gemini-4-argon-high")
 
     def test_table_has_dates_and_sources(self):
         t = json.loads((ROOT / "skills" / "tri-lane" / "models.json").read_text())
         self.assertRegex(t["updated"], r"^\d{4}-\d{2}-\d{2}$")
         self.assertTrue(all(r.get("basis") for r in t["rules"]))
+
+    def test_table_names_only_offered_models(self):
+        # 2026-10-24 catalogs: `codex debug models` and `agy models`. A slug the CLIs no longer offer
+        # fails at dispatch, so a retired model must leave the table, not linger as a default.
+        offered = {"gpt-6.1-sol", "gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
+                   "gemini-4-argon-low", "gemini-4-argon-medium", "gemini-4-argon-high",
+                   "gemini-3.8-flash-low", "gemini-3.8-flash-medium", "gemini-3.8-flash-high"}
+        t = json.loads((ROOT / "skills" / "tri-lane" / "models.json").read_text())
+        lanes = [r["lane"] for r in t["rules"]] + [e["lane"] for e in t["escalation"].values()]
+        lanes += [a["lane"] for r in t["rules"] for a in r.get("alternatives", [])]
+        self.assertEqual([l for l in lanes if l not in offered], [])
+        # GPT-6 Luna has no ultra rung (codex debug models); no rule may ask for it
+        self.assertFalse([r["id"] for r in t["rules"] if r["lane"] == "gpt-6-luna" and r["effort"] == "ultra"])
 
 
 class Report(unittest.TestCase):
@@ -374,6 +392,68 @@ class Log(unittest.TestCase):
             self.assertEqual(ll.session_model(), {"model": "claude-fable-5-1[1m]", "effort": "xhigh"})
         finally:
             Path.home = real
+            shutil.rmtree(home)
+
+    def test_session_model_resolves_an_alias_to_its_full_id_key(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("ll", SCRIPTS / "lane-log.py")
+        ll = importlib.util.module_from_spec(spec); spec.loader.exec_module(ll)
+        home = Path(tempfile.mkdtemp()); (home / ".claude").mkdir()
+        (home / ".claude" / "settings.json").write_text(json.dumps({"model": "opus", "modelSettings": {"claude-opus-5-5": {"effortLevel": "high"}, "claude-fable-5-1": {"effortLevel": "xhigh"}}}))
+        real = Path.home
+        Path.home = staticmethod(lambda: home)
+        try:
+            self.assertEqual(ll.session_model(), {"model": "opus", "effort": "high"})
+        finally:
+            Path.home = real
+            shutil.rmtree(home)
+
+    def _transcripts(self, home, turns, sub_turns=()):
+        """Main-session and subagent transcripts for self.repo under a fake HOME; turns are (iso, model, effort, output_tokens)."""
+        import re as _re
+        proj = home / ".claude" / "projects" / _re.sub(r"[^A-Za-z0-9]", "-", str(self.repo.resolve()))
+        (proj / "s1" / "subagents").mkdir(parents=True, exist_ok=True)
+        def line(t):
+            return json.dumps({"type": "assistant", "timestamp": t[0], "effort": t[2], "message": {"model": t[1], "usage": {"input_tokens": 1, "output_tokens": t[3]}}}) + "\n"
+        (proj / "s1.jsonl").write_text("".join(line(t) for t in turns))
+        (proj / "s1" / "subagents" / "agent-a.jsonl").write_text("".join(line(t) for t in sub_turns))
+
+    def test_remeasure_takes_main_session_model_and_effort_from_transcripts(self):
+        home = Path(tempfile.mkdtemp())
+        try:
+            self._transcripts(home, [("2026-10-01T10:05:00Z", "claude-opus-5-5", "medium", 300), ("2026-10-01T10:20:00Z", "claude-opus-5-5", "high", 100)],
+                              sub_turns=[("2026-10-01T10:10:00Z", "claude-haiku-5-5", "low", 5000)])
+            base = {"arm": "tri-lane", "project": str(self.repo.resolve()), "started_at": "2026-10-01T10:00:00+00:00", "ended_at": "2026-10-01T11:00:00+00:00", "claude": {"billable_tokens": 7}}
+            rows = [{**base, "task": "a", "model": "opus", "effort": None, "model_source": "settings"},
+                    {**base, "task": "b", "model": "claude-test", "effort": "max", "model_source": "flag"},
+                    {**base, "task": "c", "model": "opus", "effort": None, "started_at": "2026-09-01T10:00:00+00:00", "ended_at": "2026-09-01T11:00:00+00:00"}]
+            self.log.write_text("".join(json.dumps(r) + "\n" for r in rows))
+            rc, out, err = run([SCRIPTS / "lane-log.py", "--log", self.log, "remeasure"], cwd=self.repo, env=dict(ENV, HOME=str(home)))
+            self.assertEqual(rc, 0, err)
+            a, b, c = [json.loads(x) for x in self.log.read_text().splitlines()]
+            self.assertEqual((a["model"], a["effort"], a["model_share"], a["model_source"]), ("claude-opus-5-5", "medium", 0.75, "transcript"))
+            self.assertEqual((a["model_configured"], a["effort_configured"], a["claude"]["billable_tokens"]), ("opus", None, 7))
+            self.assertEqual((b["model"], b["effort"]), ("claude-test", "max"))  # a flag is never overridden
+            self.assertNotIn("model_source", c)  # no transcript survives for that window: untouched
+            self.assertTrue(self.log.with_suffix(".jsonl.bak").exists())
+            self.assertEqual(json.loads(out)["logs"][str(self.log)]["measured"], 1)
+        finally:
+            shutil.rmtree(home)
+
+    def test_end_records_the_transcript_model_over_settings(self):
+        home = Path(tempfile.mkdtemp()); (home / ".claude").mkdir()
+        try:
+            (home / ".claude" / "settings.json").write_text(json.dumps({"model": "opus", "modelSettings": {"claude-opus-5-5": {"effortLevel": "high"}}}))
+            env = dict(ENV, HOME=str(home))
+            rc, out, err = run([SCRIPTS / "lane-log.py", "--log", self.log, "start", "--task", "z", "--arm", "manual"], cwd=self.repo, env=env)
+            self.assertEqual((rc, json.loads(out)["effort"]), (0, "high"), err)
+            from datetime import datetime, timezone
+            self._transcripts(home, [(datetime.now(timezone.utc).isoformat(), "claude-opus-5-5", "medium", 50)])
+            rc, out, err = run([SCRIPTS / "lane-log.py", "--log", self.log, "end", "--task", "z", "--route", "manual", "--status", "complete"], cwd=self.repo, env=env)
+            self.assertEqual(rc, 0, err)
+            row = json.loads(self.log.read_text().splitlines()[-1])
+            self.assertEqual((row["model"], row["effort"], row["model_source"], row["effort_configured"]), ("claude-opus-5-5", "medium", "transcript", "high"))
+        finally:
             shutil.rmtree(home)
 
     def test_backfilled_rows_do_not_enter_the_rule(self):

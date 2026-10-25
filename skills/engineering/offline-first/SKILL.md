@@ -1,6 +1,6 @@
 ---
 name: offline-first
-description: "Offline-first design for Android, iOS, and web: local storage, sync, conflicts. Use when an app must work without network, queue writes, resolve sync conflicts, or show optimistic UI."
+description: "Designs offline-first Android, iOS, and web apps: local storage, sync, conflicts. Use when an app must work without network, queue writes, resolve sync conflicts, or show optimistic UI."
 when_to_use: "NOT for server schema design (use database-architect), Firestore modeling/rules (use firebase-architect), or push (use notification-architect)."
 argument-hint: "[feature-or-project]"
 metadata:

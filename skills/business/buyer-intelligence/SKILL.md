@@ -3,7 +3,9 @@ name: buyer-intelligence
 description: "Builds a buyer, incumbent, and renewal-date database from declined bids and award notices. Use when a bid is declined, a sole source or award notice appears, or building a buyer dossier."
 when_to_use: "NOT for screening a live solicitation (use solicitation-triage)."
 argument-hint: "[buyer-or-notice]"
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch", "WebFetch"]
+allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Bash(date:*)", "Write", "Edit", "WebSearch", "WebFetch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Buyer Intelligence

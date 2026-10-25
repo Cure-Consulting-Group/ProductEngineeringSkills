@@ -1,6 +1,6 @@
 ---
 name: llmops
-description: "Runs LLM features in production: evals, prompt versioning, cost, caching, model routing, monitoring. Use when an AI feature needs eval gates, spend control, or a model/prompt rollout."
+description: "Runs LLM features in production: evals, prompt versions, cost, caching, routing. Use when an AI feature needs eval gates, spend control, or a model or prompt rollout."
 when_to_use: "NOT for building the feature or its client/guardrail code (use ai-feature-builder), retrieval quality (use rag-architect), or agent design (use agent-designer)."
 argument-hint: "[ai-feature-or-pipeline]"
 metadata:

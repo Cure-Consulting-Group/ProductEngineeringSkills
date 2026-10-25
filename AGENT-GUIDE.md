@@ -1,6 +1,6 @@
 # Agent & Skill Usage Guide
 
-How to structure prompts to get maximum value from the 81 skills, 39 agents, 4 personas, and 3 workflows in the Cure Consulting Group plugin.
+How to structure prompts to get maximum value from the 106 skills, 41 agents, 4 personas, and 3 workflows in the Cure Consulting Group plugin.
 
 ## How It Works
 

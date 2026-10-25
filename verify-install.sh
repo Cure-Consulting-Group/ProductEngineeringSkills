@@ -72,7 +72,7 @@ else
   fail "No agents found under .claude/agents/"
 fi
 
-for sub in personas rules output-styles hooks; do
+for sub in personas rules hooks; do
   if [ -d "$CLAUDE_DIR/$sub" ] && [ -n "$(ls -A "$CLAUDE_DIR/$sub" 2>/dev/null)" ]; then
     COUNT=$(find "$CLAUDE_DIR/$sub" -type f | wc -l | tr -d ' ')
     ok ".claude/$sub/ present ($COUNT files)"

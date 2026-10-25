@@ -1,9 +1,11 @@
 ---
 name: market-research
-description: "Sourced market research: TAM/SAM/SOM, competitors, ICP, pricing, go/no-go. Use when sizing a market, profiling competitors or buyers, or deciding whether to enter."
+description: "Researches markets with sources: TAM/SAM/SOM, competitors, ICP, pricing, go/no-go. Use when sizing a market, profiling competitors or buyers, or deciding whether to enter."
 when_to_use: "NOT for launch planning (go-to-market), messaging (product-marketing), or tracking competitor features (competitive-intel agent)."
 argument-hint: "[market-or-product]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch", "WebFetch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Market Research

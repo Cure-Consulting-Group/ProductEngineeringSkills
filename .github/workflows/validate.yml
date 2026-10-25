@@ -13,6 +13,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -22,9 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
 
@@ -91,8 +94,11 @@ jobs:
         # hooks/cure_guard.py and is exercised here with real hook-shaped payloads.
         run: |
           python3 hooks/test_cure_guard.py
-          if grep -n 'CLAUDE_TOOL_INPUT' hooks/hooks.json; then
-            echo "hooks.json reads CLAUDE_TOOL_INPUT — not a real variable; hook input arrives on stdin"; exit 1
+          python3 scripts/test_export_antigravity.py
+          node bootstrap/scripts/sync-deny-rules.mjs --check   # bootstrap's deny list = repo settings.json
+          python3 mods/check.py --no-claude   # static mods gate: count, marketplace parity, shared-code drift, retired IDs
+          if grep -n -E 'CLAUDE_TOOL_(INPUT|NAME)' hooks/hooks.json tri-lane/hooks/hooks.json; then
+            echo "a hooks.json reads CLAUDE_TOOL_INPUT/CLAUDE_TOOL_NAME — not real variables; hook input arrives on stdin"; exit 1
           fi
 
       - name: type:prompt hooks only on low-frequency events, with timeouts
@@ -107,9 +113,9 @@ jobs:
           python3 - <<'PY'
           import json, sys
           ALLOWED_EVENTS = {"Stop", "PostToolUseFailure"}
-          d = json.load(open("hooks/hooks.json"))
           bad = []
-          for ev, groups in d.get("hooks", {}).items():
+          for path in ("hooks/hooks.json", "tri-lane/hooks/hooks.json"):
+           for ev, groups in json.load(open(path)).get("hooks", {}).items():
               for g in groups:
                   for h in g.get("hooks", []):
                       if h.get("type") != "prompt":
@@ -135,9 +141,9 @@ jobs:
           import json, re, sys
           LIFECYCLE = {"SessionStart", "PreCompact", "PostCompact"}
           NET = re.compile(r"\b(npm (outdated|audit|install|ci)|npx |pip |curl |wget |gh |git (fetch|pull|push))\b")
-          d = json.load(open("hooks/hooks.json"))
           bad = []
-          for ev, groups in d.get("hooks", {}).items():
+          for path in ("hooks/hooks.json", "tri-lane/hooks/hooks.json"):
+           for ev, groups in json.load(open(path)).get("hooks", {}).items():
               if ev not in LIFECYCLE: continue
               for g in groups:
                   for h in g.get("hooks", []):
@@ -164,10 +170,12 @@ jobs:
 
       - name: Codex install smoke (zero model calls)
         # `codex debug prompt-input` needs no auth. CLI pinned so a Codex release can't
-        # silently change what CI measures; without codex on PATH the script SKIPs (exit 0).
+        # silently change what CI measures (runtime-latest.yml tracks @latest weekly).
+        # Wave 7 (T82): an install failure or a SKIP fails this step; a green log means
+        # Codex actually listed the skills.
         run: |
-          npm install -g @openai/codex@0.155.0 >/dev/null 2>&1 || echo "codex install failed; smoke will SKIP"
-          python3 scripts/codex-smoke.py
+          npm install -g @openai/codex@0.164.0
+          python3 scripts/codex-smoke.py --require
 
       - name: Antigravity export (flat agy plugin, built and discarded, never committed)
         run: |
@@ -182,6 +190,14 @@ jobs:
           assert d["skills"] == want_skills, f"exported {d['skills']} of {want_skills} skills"
           assert d["agents"] == want_agents, f"exported {d['agents']} of {want_agents} personas"
           assert d["injections_remaining"] == 0, "inline !`cmd` survived the export"
+          assert all((d.get("rule_globs") or {"_": "n/a"}).values()), f"empty rule globs: {d.get('rule_globs')}"
+          import os, re
+          rules_dir = os.path.join(os.environ["RUNNER_TEMP"], "agy", "cure", "rules")
+          for rf in sorted(glob.glob(os.path.join(rules_dir, "*.md"))):
+              head = open(rf).read().split("---")[1] if open(rf).read().startswith("---") else ""
+              if re.search(r"^trigger:\s*glob\s*$", head, re.M):
+                  m = re.search(r'^globs?:\s*"?([^"\n]*)"?\s*$', head, re.M)
+                  assert m and m.group(1).strip(), f"{os.path.basename(rf)}: glob rule exported with no patterns (agy never applies it)"
           print(f"agy export ok: {d['skills']} skills, {d['agents']} agents, {d['rules']} rules, "
                 f"{d['injections_rewritten']} injections rewritten, {d['repo_refs_rewritten']} repo refs -> GitHub")
           EOF
@@ -257,3 +273,23 @@ jobs:
               print("MANIFEST SCHEMA ERRORS:", *errs, sep="\n  "); sys.exit(1)
           print("plugin + marketplace manifest schema OK")
           PY
+
+  plugin-cli:
+    # Wave 7 (T82/T74): Claude Code's own validator on every plugin we ship, plus each
+    # mod's test suite. Separate from the required `validate` job until it has proven
+    # stable on runners (the CLI is pinned; neither command needs an account).
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+      - name: Install Claude Code (pinned)
+        run: npm install -g @anthropic-ai/claude-code@2.1.310
+      - name: claude plugin validate --strict (main plugin, tri-lane)
+        run: |
+          claude plugin validate --strict .
+          claude plugin validate --strict ./tri-lane
+      - name: Mods gate (count, marketplace parity, shared-code drift, retired IDs, every mod's tests + validate)
+        run: python3 mods/check.py --require-claude

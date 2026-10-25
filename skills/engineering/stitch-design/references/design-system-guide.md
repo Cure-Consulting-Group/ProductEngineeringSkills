@@ -74,8 +74,10 @@ To create a DESIGN.md from an existing Stitch project:
 
 ```
 1. Call list_projects to find the project by name
-2. Call extract_design_system with the project ID
-   → Returns a raw design system document
+2. Call get_project (theme) and list_design_systems, then list_screens and
+   download_file on each screen's html_code.name
+   → Raw theme + HTML to mine for tokens (the hosted server has no
+     extract_design_system tool; checked 2026-10-24)
 3. Review the output for completeness
 4. Restructure into the DESIGN.md schema above
 5. Add any missing sections (motion, locale notes)
@@ -85,8 +87,9 @@ To create a DESIGN.md from an existing Stitch project:
 To extract from a non-Stitch website URL:
 
 ```
-1. Call generate_screen with the URL as reference
-2. Call get_screen_code on the generated screen
+1. Call generate_screen_from_text with the URL as reference in the prompt
+2. Call get_screen, then download_file on its html_code.name
+   (proxy: get_screen_code)
 3. Parse the HTML/CSS for color values, fonts, spacing
 4. Synthesize into DESIGN.md format manually
 ```

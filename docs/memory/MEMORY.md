@@ -13,6 +13,11 @@ Index only; detail lives in topic files. Seeded 2026-09-28. Check referenced fil
 ## project
 
 - [Cloud product agents](project_cloud_product_agents.md) — shared platform, HoopTrace pilot, conditional Initiated Recruiting integration and current planning artifact pointers.
+- [Skill runtime refresh](project_skill_runtime_refresh.md) — October 22 audit found compatible packaging but stale platform guidance and incomplete behavioral evidence; findings saved in STATE.md; resolved by Wave 7 (v7.14.0) on 2026-10-24.
+
+## handoffs
+
+- [Wave 7 close-out brief](../handoffs/2026-10-25-agy-wave-7-closeout.md) — **Antigravity: if asked to finish Wave 7, follow this brief exactly**: CodeQL fix, T89, T90 on local branch `wave7/agy-closeout`; no push, merge, installs or version bump.
 
 ## reference
 

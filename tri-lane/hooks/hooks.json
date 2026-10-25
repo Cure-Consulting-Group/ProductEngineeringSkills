@@ -1,5 +1,5 @@
 {
-  "description": "cure-tri-lane hooks: a PreToolUse guard that refuses lane commands running unsandboxed (command-type, no network, fails open), and a SessionStart line listing benchmark defect windows that need a check (local file read, silent when none, fails open). Loads only where this plugin is installed.",
+  "description": "cure-tri-lane hooks: a PreToolUse guard that refuses lane commands running unsandboxed (command-type, no network; onFailure: block, so if the guard cannot run, times out or crashes, the Bash call is blocked rather than let an unsandboxed lane through; needs Claude Code 2.1.295+), and a SessionStart line listing benchmark defect windows that need a check (local file read, silent when none, fails open). Loads only where this plugin is installed.",
   "hooks": {
     "PreToolUse": [
       {
@@ -8,7 +8,8 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-lane-command.py\"",
-            "timeout": 5
+            "timeout": 5,
+            "onFailure": "block"
           }
         ]
       }

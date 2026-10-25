@@ -1,6 +1,6 @@
 ---
 name: interview-system-designer
-description: "Designs engineering interview loops: stages, rubrics, question banks, AI-use policy, debrief rules. Use when hiring engineers or fixing a loop with poor pass or accept rates."
+description: "Designs engineering interview loops: stages, rubrics, question banks, AI-use policy. Use when hiring engineers, setting debrief rules, or fixing a loop with poor pass or accept rates."
 when_to_use: "NOT for sourcing, comp benchmarking, non-engineering roles, or reviews of current employees. performance-review is system performance, not HR."
 argument-hint: "[role: senior-ic | em | staff | new-grad | contractor]"
 context: fork

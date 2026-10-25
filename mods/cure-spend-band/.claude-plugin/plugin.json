@@ -1,6 +1,28 @@
 {
   "name": "cure-spend-band",
-  "version": "0.2.0",
-  "description": "Shows today's GitHub Actions spend beside the spinner, warns under the prompt when the month is on pace to exceed the plan's included usage, and adds /spend. Reads billing through your logged-in gh CLI every 15 minutes.",
-  "author": { "name": "Cure Consulting Group" }
+  "version": "0.3.0",
+  "description": "Shows today's GitHub Actions spend beside the spinner, warns under the prompt when the month is on pace to exceed the plan's included usage, and adds /spend. One gh fetch per machine every 15 minutes, kept in the machine store.",
+  "author": {
+    "name": "Cure Consulting Group"
+  },
+  "userConfig": {
+    "org": {
+      "type": "string",
+      "title": "GitHub organization",
+      "description": "The organization whose billing is read. CURE_SPEND_ORG overrides it.",
+      "default": "Cure-Consulting-Group"
+    },
+    "allowanceUsd": {
+      "type": "number",
+      "title": "Included Actions usage (USD/month)",
+      "description": "The plan's monthly included Actions usage. CURE_SPEND_ALLOWANCE overrides it.",
+      "default": 300
+    },
+    "paceWarning": {
+      "type": "boolean",
+      "title": "Pace warning line",
+      "description": "Show the warning under the prompt when the month is on pace to exceed the allowance. /spend dismiss hides it for the month.",
+      "default": true
+    }
+  }
 }

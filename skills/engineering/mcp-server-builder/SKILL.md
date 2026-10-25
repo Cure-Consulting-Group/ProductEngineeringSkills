@@ -1,6 +1,6 @@
 ---
 name: mcp-server-builder
-description: "Designs and builds MCP (Model Context Protocol) servers: tool schemas, resources, transports, auth. Use when building an MCP server, wrapping an API as MCP tools, or migrating one to a new SDK/spec."
+description: "Designs and builds MCP servers: tool schemas, resources, transports, auth. Use when building a Model Context Protocol server, wrapping an API as MCP tools, or migrating to a new SDK/spec."
 when_to_use: "NOT for consuming an existing MCP server (edit the client config), public REST/GraphQL design (use api-architect), or agent design (use agent-designer)."
 argument-hint: "[server-name]"
 metadata:

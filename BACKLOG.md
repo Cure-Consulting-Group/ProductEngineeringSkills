@@ -1,10 +1,449 @@
 # BACKLOG
 
-Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates. Wave 5 (2026-09-23, open) is the Opus 5.5 re-evaluation: every skill made to route, run, and stay correct in Claude Code, Codex, and Antigravity. Wave 6 (2026-09-28) builds the legal domain to a measured standard: NY-first research and doctrine, a read-only legal analyst, and a validated bar-style benchmark.
+Internal improvement backlog, organized in waves. Wave 1 (2026-04-29, resolved) came from a comparative evaluation against `alirezarezvani/claude-skills`. Wave 2 (2026-07-11, resolved) aligned the library with Claude Code's continuous-execution layer (loops, routines, workflows, hooks). Wave 2.5 (2026-07-13, open) makes the library consumable from Gemini CLI and Antigravity via the Agent Skills open standard — motivated by real engagements falling back to Gemini when Claude credits run out. Wave 3 (2026-08-13, open) is the quarterly re-evaluation (originally due October 2026, pulled forward): evidence over conformance — eval harness, fleet drift control, parallel-agent operating model, and Codex as a third runtime. Wave 4 (2026-09-13, scoped) instruments Tri-Lane so its pre-registered benchmark rule can return a verdict — automatic logging at the worktree lifecycle, persisted verification evidence, a backfill of the first 142 production tasks, and the Section 5 gates. Wave 5 (2026-09-23, open) is the Opus 5.5 re-evaluation: every skill made to route, run, and stay correct in Claude Code, Codex, and Antigravity. Wave 6 (2026-09-28) builds the legal domain to a measured standard: NY-first research and doctrine, a read-only legal analyst, and a validated bar-style benchmark. Wave 7 (2026-10-24, done in v7.14.0 except T88) is truth in delivery: what a plugin install actually gives consumers, mods that work in use rather than only in tests, and runtimes measured current.
 
 This repo is **internal-only** — not for public distribution, no marketplace. Tickets reflect that constraint.
 
 ---
+
+# Wave 7 (2026-10-24) — Truth in delivery: what consumers get, mods that work, runtimes that are current
+
+**Execution status (2026-10-24, branch `feat/wave-7`, release v7.14.0):** T71–T87 done; T88 deferred as planned. Every gate below was run on the integrated branch, not on the track branches alone.
+
+| Ticket | Status | Result |
+|---|---|---|
+| T71 | ✅ Done | **cure-agent-budget 0.2.0:** tracks each subagent by id from `agent.spawn` to its completion, in session state. Session start deletes the old machine-wide counter, which held 3 ghost agents on 2026-10-24. The model rewrite to `claude-3-5-sonnet` is gone (it had hit 23 of 357 spawns); routing is now an opt-in `routeResearchTo` setting, off by default. The cap is a `maxConcurrent` setting (default 8). **cure-cite-check 0.2.0:** resolves paths against the session root, its git toplevel and the repos it touched; it never edits the answer; its stale list is capped. False flags: 97.8% → 0% on this repo's last 50 answers, and 77.8% → 10.5% across all projects (the remainder are files on another worktree's branch). |
+| T72 | ✅ Done | **Subprocesses per Bash call:** 0 across all cure mods (2 mods assert this in tests). **Guard asks:** time out after 60 s and deny. **spend-band:** gh timeout 25 s, one fetch per machine, dismissible. **Prices:** cache-band reads `$.session.usage().cost`. **rules-band:** never calls git on render and stays silent for unknown repos. **Config:** userConfig everywhere. |
+| T73 | ✅ Done | **15 → 9 mods.** Dropped llm-ledger, ci-preview, handoff and secret-scrub (D6). policy-guard 0.4.0 absorbs egress-guard (AI-vendor host matched as a whole name) and claim-guard (exact host). **Shared code:** one repo table and one git module under `mods/shared/`, vendored into each mod by `vendor.py --check`, because a mod can't import outside its own folder. **Events:** `prompt.attachment`, `session.receive` and `prompt.edit` are all in the published event reference. |
+| T74 | ✅ Done | **`mods/check.py`** checks mod count, marketplace parity, shared-code drift, retired model IDs, and every mod's tests and validation. The static half runs in the required `validate` job, the full half in the `plugin-cli` job. **Audit:** fails on retired IDs anywhere we ship. **Install scripts:** read `marketplace.json`, surface errors, exit non-zero; `--retired` removes the dropped mods. **Tests:** 160 across 9 mods. |
+| T75 | ✅ Local, ⏸ upstream | **Installed:** cc-pr-tracker `0.3.1-cure.1`, with a `dropDone` setting (keep / after 10 minutes / immediately), `/pr-clear`, a "clear done (N)" button, and no polling of done PRs. **Tests:** 60/60; strict validate passes. **Backups:** `vetted-mods-backups/`. **Upstream PR not opened:** auto mode blocked the public fork and PR (Create Public Surface). The patches and PR text are in `vetted-mods-backups/cc-pr-tracker-upstream/`. Upstream is now 0.6.0 and added `stopWhenDone` in 0.5.0, so the PR needs a rebase. **Owner decision.** |
+| T76 | ✅ Done | **Rules:** all 11 use `paths:` lists. **Exporter:** accepts scalar or list `paths`/`globs`/`glob` and raises `ExportError` on an empty glob rule; 12 tests. **agy validate:** 7 warnings → 0. **Gates:** the audit fails on `globs:`; CI asserts no exported rule has empty globs. **Still open:** a live check that a Swift repo doesn't load go.md. |
+| T77 | ✅ Done | **Hooks:** 9 events → 6, with 0 prompt hooks and 0 model calls. **Compaction:** standards re-injection runs on `SessionStart:compact`; verified live after `/compact`. **Stop:** a deterministic check (~80 ms), silent for /loop, routines, SDK/CI, and a second stop. **Also:** failure triage emits `additionalContext`; telemetry reads `tool_name` from stdin; provisioning is opt-in (`.cure/`, manifest, or a CLAUDE.md naming Cure); the false positives are fixed; the tri-lane sandbox guard uses `onFailure: "block"`. |
+| T78 | ✅ Done | **Guard:** now blocks force-push to main (`-f`, `--force`, `--force-with-lease`, `+main`), `reset --hard`, `clean -f`, DROP/TRUNCATE outside migrations, `terraform destroy` and `kubectl delete ns`. Blocking `git push -f origin main` was verified live. Tests: 33 → 109. **npm:** merges deny rules into an existing settings.json. **Bootstrap 0.4.0:** no model pin; deny list generated from `settings.json` and drift-checked in CI. **setup.sh:** writes an object-shaped `enabledPlugins`. **MCP:** official Firebase server, pinned versions, `DSN` for DBHub (`DB_URL` was never read). **LSP:** pinned. |
+| T79 | ✅ Done | **SOW terms:** single source in legal-doc-scaffold (D8). **engagement-automation:** Antigravity `/schedule` (conversation-scoped) plus sidecar Automations, Codex app Automations and `codex cloud exec`, Claude desktop tasks. **Stale facts:** gcr.io, Firebase AI Logic, the Node 20/22/24 lines, Play API 36, Xcode 26. **`metadata.verified`:** missing on 30 skills → 0, each verified against sources. Notable: QSBS state table rebuilt (IL, OR decoupled); OpenTelemetry JS 3.0 (stay on 2.x for Cloud Trace); Sentry v11; Opsgenie end of support; Stitch MCP tools rebuilt from the live `tools/list`. |
+| T80 | ✅ Done | **Bash scoping:** the 7 business skills pre-approve only the commands they run. **Untrusted input:** 13 skills gain the clause. feature-audit gets `Bash(git log:*)`. **Auditor checklist:** PASS. **Gate:** the audit fails on bare Bash pre-approved with web access. |
+| T81 | ✅ Done | **106/106 descriptions** start with a verb, and "Use when/for…" ends by char 100 (the audit hard-fails otherwise). 60 descriptions changed. **Single owners:** Firestore modeling, IRC cite checks, live-bill budgets, CWV thresholds, Stripe review. |
+| T82 | ✅ Done | **Strict validate passes:** the dev CLAUDE.md moved to `.claude/CLAUDE.md`. **plugin-cli job** (pinned Claude Code 2.1.310): validate plus the mods gate. **Codex:** pinned 0.164.0, and a SKIP now fails; `runtime-latest.yml` tracks @latest weekly. **Drift:** weekly cron with a 10-minute cap (D5). **Actions:** all SHA-pinned; `permissions:` set. **Hook gates:** cover tri-lane. |
+| T83 | ✅ Done | **sync-metadata:** covers CLAUDE, README, GEMINI, AGENT-GUIDE and CONSUMING-PROJECTS, with the idioms that had drifted, domain counts, and hook-event and mod counts. **README:** rewritten to what ships. **Other docs:** CLAUDE.md agent tables show effective tools; GEMINI drops the read-only `allowed-tools` advice; MAINTENANCE gets the weekly cadence and the truth about auto-update; AUTHORING gets current models and the measured Codex cut. **Personas:** documented as documentation (D7). |
+| T84 | ✅ Done | **Memory (D3):** 15 reviewers and auditors lose `memory:` and gain `disallowedTools: Write, Edit`. **Worktree isolation:** removed from project-bootstrapper and release-coordinator. **Reviewer split:** code-reviewer gives findings, pr-reviewer the merge verdict, deployment-validator owns GO/NO-GO. **Pins and preloads:** cure-advisor `effort: high` dropped (no measured gain); tax-analyst preload 312 → 199 lines. |
+| T85 | ✅ Done | **Cases:** 18 new (9 risk, 9 routing), for 61 cases across 47 skills; no LLM graders. **Calibration:** reads the sweep's per-skill Δ. **Sweep:** first n≥3 with/without sweep, 2026-10-24: 34 cases, 204 runs, **\$68.58**, mean Δ **+0.01**. Clear gains: cure-infra-bootstrap +0.83, compliance-architect +0.33, engagement-automation +0.33, incident-response +0.17. Δ≈0 (→ T88): sdlc, design-studio, product-manager, project-manager, firebase-architect, database-architect, finops, performance-review. Negative: public-sector-contracting −0.25, legal-doctrine −0.22, security-review −0.17, legal-research −0.17, qsbs/data-migration/nextjs-scaffold −0.08 (→ T92). Audit calibration now caps 14 skills at 8.0; library mean 9.99 → **9.81**, the first measured score. `evals/RESULTS.md`, `evals/results/2026-10-24-1526-skill.json`. | |
+| T86 | ✅ Done | **Platform facts:** `docs/evaluations/2026-10-24/platform-facts.md`. **Codex measured:** on 272k-context models, signed out or in CI, descriptions are cut at 101–105 chars. **agy:** honors `disable-model-invocation`. **Tri-lane 1.16.0:** a default moved only where its canary passed: implementation → gpt-6-luna, risk and wide → gpt-6.1-sol, whole-repo → gemini-4-argon-high. Review stays on gpt-5.6-luna (gpt-6-luna scored 0.863); codex-implementer runs the routed slug. |
+| T87 | ✅ Done | **Rules:** all 11 refreshed with dated sources. The Go floor is 1.26+, not the ticket's 1.25, which is no longer supported; Node images use node:24. **Output styles:** deleted (D4); the 3 lines worth keeping moved into sdlc, incident-response and qa-engineer. api-specification contradicted api-architect, and financial-analysis had a logic error. |
+| T88 | ⏳ Deferred | As planned. |
+
+**Deviations from the plan:**
+1. **One release (v7.14.0) instead of three.** The new gates pass only once every track has landed, and deleting `output-styles/` needs the new sync-metadata.
+2. **The Stop gate is a single command hook, not a pre-check in front of a prompt hook.** Hooks in a group run in parallel, so a command can't gate a prompt.
+3. **The ConfigChange hook was deleted:** its output reached no one.
+4. **agent-budget's cap defaults to 8, not 4.**
+5. **refactor-assistant keeps worktree isolation**, now documented.
+6. **The sidecar path is `~/.gemini/config/sidecars/`,** as the Antigravity docs give it.
+7. **Fixes outside the tickets:**
+   - vetted-mods `secret-redactor` 1.0.0-cure.1 rebuilt failed Bash results as a bare string, causing "expected object, received string". It now keeps core's result object.
+   - OVERVIEW now reads the standalone `.lsp.json` and the MCP template.
+   - Tri-lane's codex-implementer runs the routed model slug.
+
+**New findings, ticketed below:** T89 (bootstrap hooks never load), T90 (tighten the trigger window), T91 (pending canaries and live checks), T92 (calibrate the negative-Δ eval cases).
+
+**Owner items:**
+- Restart Claude Code to load cc-pr-tracker 0.3.1-cure.1 and the secret-redactor patch.
+- Decide on the upstream cc-pr-tracker PR (public).
+- Merge the Wave 7 PR.
+- PR #87 is superseded by it; PR #86 is included in it.
+- Still open from Wave 6: the Level5 audio-retention flag.
+
+Captured 2026-10-24 from an owner request: "do some more research to ensure all of our skills, tools, hooks, agents are all top notch. even our mods… we love this mod but have no way to clear these merged PRs."
+
+**Framing.** The audit scores 9.99, and the structure deserves it. The defects in this wave sit where the audit can't see. First, what a plugin install actually delivers: no permissions, no rules, no personas. Second, hooks whose output Claude never reads. Third, mods that are broken in use while their tests pass. Fourth, facts in skills that are wrong or contradict each other. Every ticket's acceptance test is behavioural: a live session, a probe, or a test that fails before the fix. A structural score passing is not acceptance.
+
+## Owner decisions (all resolved 2026-10-24: each recommendation adopted)
+
+| # | Decision | Recommendation | Blocks |
+|---|---|---|---|
+| D1 | Disable `cure-agent-budget@cure` until T71 lands? | Yes. It is denying spawns and down-routing to a retired model now | — (immediate) |
+| D2 | cc-pr-tracker: open an upstream PR under the owner's GitHub account, or patch locally only? | Upstream PR, plus a local `0.3.1-cure.1` pin in vetted-mods until it merges | T75 |
+| D3 | Reviewer/auditor agents with `memory:`: drop memory (truly read-only), or keep it and document that they write `.claude/agent-memory/`? | Drop memory on reviewers and auditors; keep it on builders | T84 |
+| D4 | Output styles: fold into skill references and delete, or fix the layout and frontmatter? | Fold and delete (nothing references them) | T87 |
+| D5 | nightly-drift: restore the cron, or document it as manual? | Restore the cron with a hard timeout (it runs in CI, so it can't block a session) | T82 |
+| D6 | Mods to drop: llm-ledger, ci-preview, handoff, and one of secret-scrub / secret-redactor | Drop all three; keep secret-redactor (vetted, wider coverage) | T73 |
+| D7 | Personas: build a loader (e.g. one `persona` skill that loads `personas/<name>.md`), or label them as docs? | Label as docs now; a loader only if an engagement asks | T83 |
+| D8 | SOW terms: adopt legal-doc-scaffold's owner-approved 2026-09-23 terms everywhere? | Yes | T79 |
+
+## Release plan
+
+| Release | Tickets | Theme |
+|---|---|---|
+| mods (per-mod bumps) | T71 → T72 → T73 → T74; T75 in vetted-mods | Stop the harm, then hygiene, consolidation, CI |
+| v7.14.0 | T76, T77, T78, T84 | What consumers actually get: rules, hooks, safety, agents |
+| v7.15.0 | T79, T80, T81, T87 | Skill and rule content: correct, safe, routable, current |
+| v7.16.0 | T82, T83, T85, T86 | Validation, docs truth, evals, runtime currency |
+| later | T88 | Depth and portability |
+
+Order: T71 first (actively harmful), then T76 (one field fixes two runtimes), then the rest by release.
+
+## T71 — Fix the two harmful mods: agent-budget and cite-check
+
+**Scope:**
+- **cure-agent-budget:**
+  - Track agents by id from spawn to completion, in session-scoped `$.state`. Never use the machine-global `$.store` for live counts.
+  - Reset the stuck store entry.
+  - Remove the model rewrite. If it's kept at all, it becomes an opt-in `userConfig` that uses the `sonnet` alias, never a full ID.
+  - Expose the cap as `userConfig`.
+- **cure-cite-check:**
+  - Resolve cited paths against the git toplevel of the session root and the files the session has recently read.
+  - Stop rewriting the answer; use a toast or a context note instead.
+  - Cap `recentStale` at 200.
+  - Stop the regex from matching `host.tld:port`.
+  - Stop reading whole files on every step.
+
+**Why:**
+- agent-budget denied a spawn with 2 real agents running (its store showed 3 active), and it has sent 23 of 357 spawns to `claude-3-5-sonnet`.
+- cite-check flags 112 of 155 citations, 72% of them false positives.
+
+**Acceptance:**
+- A test that fails before the fix: spawn, end the session without completion, start a new session, and the count is 0.
+- A test asserting no `claude-3` ID appears anywhere in mods.
+- Live: 5 parallel agents with "audit" in their descriptions all run on the session model.
+- cite-check's false-positive rate is below 5% on this repo's last 50 answers.
+
+**Effort:** M.
+
+## T72 — Mod hygiene across all 15
+
+**Scope:**
+- **Session state:** move per-session counters to `$.state` in secret-scrub, cite-check, llm-ledger and agent-budget. Cap every stored array at 200, as policy-guard already does.
+- **Hot path:** cache the repo root per directory in egress-guard, policy-guard and rules-band, so git isn't spawned per call or per render.
+- **spend-band:** set `timeoutMs` to 30s or less. Fetch once per machine into `$.store` with `fetchedAt`, not once per session. Make its status line dismissible.
+- **Guard asks:** race each guard's `$.ui.ask` against a 60s clock and deny on timeout, so unattended sessions and /loop never stall.
+- **Paths:** resolve repo and path from the edited file or the command's directory, never the session cwd. Affects egress, ci-preview, claim, cite-check, rules-band and lane-board.
+- **Prices:** replace hardcoded prices and model IDs with `$.session.usage().cost`. Affects cache-band and llm-ledger.
+- **Config:** add `userConfig` where a mod has env vars or hardcoded values.
+- **Fixes:** ci-preview's `slice(3)` off-by-one, if the mod survives D6.
+
+**Acceptance:**
+- Every Bash call adds at most 1 subprocess across all mods, measured.
+- No hook exceeds 2s on this repo.
+- `claude plugin test` is green with new tests covering store bounds and ask timeouts.
+
+**Effort:** M.
+
+## T73 — Consolidate and prune mods (D6)
+
+**Scope:**
+- **Drop:** llm-ledger (token-ledger covers it, and `/ledger` collides), ci-preview, handoff, and secret-scrub.
+- **One guard host:** policy-guard takes over egress-guard's Bash/WebFetch rule family and claim-guard's ownership rules. One protected-repo table lives in `mods/shared/rules.ts` (today there are 3 copies); rules-band displays that table and shows nothing for unknown repos.
+- **Shared git module** for lane-board and lane-verifier, with git calls run in parallel via `Promise.all`.
+- **Undocumented events:** confirm `prompt.attachment`, `session.receive` and `prompt.edit` exist on 2.1.310, or replace them with documented ones.
+
+**Acceptance:**
+- 10 or fewer mods.
+- No duplicated pattern or repo table, checked by grep.
+- Every hooked event appears in the documented event list.
+
+**Effort:** M.
+
+## T74 — Bring mods into the release system
+
+**Scope:**
+- **CI:** a `mods` job in `validate.yml` runs `claude plugin test` and `claude plugin validate --strict` on each `mods/*`.
+- **Audit:** `audit-library.py` fails on retired model IDs (`claude-3`, `claude-sonnet-4`, `gpt-4`, `gemini-2`) anywhere in the repo, and counts mods.
+- **Install scripts:** install-all and uninstall-all read `marketplace.json`, surface errors, and exit non-zero on failure.
+- **Docs:** fix mods/README (the "These five" text and the test counts). Fix PLAN.md, which references nonexistent APIs, and `design/screens.html`, which has stale model IDs.
+- **Tracking:** STATE.md gets a mods row.
+
+**Acceptance:** CI fails on a planted retired ID and on a failing mod test.
+
+**Effort:** S.
+
+## T75 — cc-pr-tracker: clear merged PRs (D2)
+
+**Scope** (in `vetted-mods`; design in EVALUATION §8):
+- **`dropDone` userConfig:** "keep until stopped" (the default) | "after 10 minutes" | "immediately".
+- **`doneAt`** stamped after the merge alert fires.
+- **Done PRs are no longer polled.**
+- **A sweep** runs on restore and when config changes.
+- **`clearDone()`** behind a "clear done (N)" button on done rows, plus a `/pr-clear` command.
+- **README:** update the three lines that describe the limitation.
+- **Tests:** 8 new ones, listed in the design.
+
+**Delivery:** an upstream PR to sezaakgun/cc-pr-tracker. Until it merges, pin a local `0.3.1-cure.1` in vetted-mods with "pending upstream #N" in PINS.md.
+
+**Acceptance:**
+- In a live session, three merged PRs are cleared by one `/pr-clear`.
+- "after 10 minutes" drops them on schedule.
+- No `gh` call is made for done PRs, verified from the poll log.
+
+**Effort:** S–M.
+
+## T76 — Rules: `globs:` → `paths:`, exporter and gates
+
+**Scope:**
+- **Rules:** convert `rules/{cicd,docker,go,python,rust,sql,terraform}.md` to a `paths:` YAML list.
+- **Exporter:** `export-antigravity.py export_rules()` accepts scalar or list `paths`, `globs` and `glob`. It emits one comma-separated `globs` string and raises `ExportError` on an empty glob rule. `--install` runs `agy plugin validate --strict --json`.
+- **Audit:** fails on `globs:` in `rules/`.
+- **CI:** asserts no exported rule has empty `globs` (agy is absent on runners).
+
+**Why:** Claude Code reads only `paths`, so these seven rules load unconditionally (about 264 lines per session in vendored consumers). The exporter writes `globs: ""`, so they never apply in agy.
+
+**Acceptance:**
+- `agy plugin validate` has 0 warnings.
+- A live Claude session in a Swift repo doesn't load go.md (checked with `/memory` or InstructionsLoaded).
+- The exporter fails on a planted empty rule.
+
+**Effort:** S.
+
+## T77 — Hooks that do nothing, or cost too much
+
+**Scope:**
+- **Compaction re-injection:** move the PreCompact standards re-injection to `SessionStart` with matcher `compact`. Delete the PostCompact and SubagentStop echoes, or emit them through a channel Claude reads.
+- **PostToolUseFailure prompt hook:** drop it, or rewrite it as a command hook emitting `additionalContext`.
+- **Stop gate:** add a deterministic command pre-check that exits ok when `stop_hook_active` is true or `session_crons` is non-empty. Only then ask the model.
+- **Telemetry:** fix `CLAUDE_TOOL_NAME` by reading `tool_name` from stdin.
+- **git-status hook:** remove it (Claude Code already injects gitStatus), or give it `timeout: 5`.
+- **SessionStart provisioning:** gate it behind an opt-in marker, e.g. a `.cure/` dir or a CLAUDE.md naming Cure.
+- **Guard false positives:** fix the `wipe` substring, `src/secrets/` and `src/agents/`.
+- **Tri-lane sandbox guard:** add `onFailure: "block"`.
+- **CI hook gates:** extend them to `tri-lane/hooks` and `mods/*`.
+
+**Acceptance:**
+- A live compaction shows the standards in context afterwards.
+- A /loop iteration never runs the Stop prompt hook (proved from the debug log).
+- Telemetry `detail` carries real tool names.
+- Guard tests cover each false positive.
+
+**Effort:** M.
+
+## T78 — Consumer safety: what a plugin can't ship
+
+**Scope:**
+- **Guard coverage:** port the high-value deny rules into `cure_guard.py bash`: force-push (`--force`, `-f`), `reset --hard`, `clean -f`, DROP/TRUNCATE outside migrations, `terraform destroy`, `kubectl delete namespace`. Add tests for each.
+- **Distribution docs:** document in CONSUMING-PROJECTS that settings.json, rules and personas reach consumers only through npm or bootstrap.
+- **npm path:** merge deny rules into an existing settings.json, instead of skipping it when one exists.
+- **Bootstrap template:** drop the `claude-opus-4-7` pin and the `project` key, and generate the deny list from the repo's settings.json.
+- **setup.sh:** fix the `enabledPlugins` object shape and the stale counts.
+- **`.mcp.json.example`:** use the official `firebase-tools mcp`, pin every `npx` package, and confirm the dbhub env var and GitHub MCP auth.
+- **`.lsp.json`:** pin its `npx` packages.
+- **Marketplace text:** stop claiming MCP.
+
+**Acceptance:**
+- A guard probe blocks `git push -f origin main` in a consumer project.
+- A bootstrapped project has no `model` key.
+- `setup.sh` is idempotent on an existing object-shaped settings file.
+
+**Effort:** M.
+
+## T79 — Skill correctness (D8)
+
+**Scope:**
+- **SOW terms:** legal-doc-scaffold becomes the single source for SOW terms. Delete proposal-generator's conflicting Terms block (`:201-237`) and link to it instead. Conflicts: liability cap, 14 vs 30 days' termination, Net 15 vs net-30.
+- **engagement-automation:16:**
+  - Antigravity: `/schedule` timers and cron are conversation-scoped; sidecar Automations persist.
+  - Codex: Automations run in the app or on the web; `codex cloud exec` is the headless option.
+  - Add desktop scheduled tasks.
+  - Fix the 30-minute burn-rate `/loop` example.
+  - Verify `--resume` re-arm.
+- **Stale facts:** gcr.io → Artifact Registry with a pinned tag; "Vertex AI in Firebase" → Firebase AI Logic; the Node 20 lines in firebase-architect and design-system; the Play target-API and App Store SDK deadlines in release-management.
+- **Currency pass:** verify all 30 skills without `metadata.verified` and add the date. qsbs-compliance only needs its inline date promoted to frontmatter.
+
+**Acceptance:**
+- One SOW term set across the library, checked by grep.
+- Every fact changed above is cited.
+- 0 skills without `metadata.verified`.
+
+**Effort:** M.
+
+## T80 — Skill security: untrusted input and no-prompt Bash
+
+**Scope:**
+- **Bash scoping:** narrow `allowed-tools` Bash in the 7 business skills to `Bash(ls:*) Bash(sed -n:*) Bash(date:*) Bash(pdftotext:*)`.
+- **Untrusted-input clause** (AUTHORING §3):
+  - public-sector-contracting, bid-decision, capture-management, technical-estimation;
+  - tax-preparation, deductions-and-credits, audit-risk-substantiation;
+  - equity-research, comps-analysis, dcf-modeling;
+  - qsbs-compliance, accessibility-audit, feature-audit.
+- **feature-audit:** either remove its `git log` context or allow `Bash(git log:*)`.
+- **Gate:** run skill-security-auditor on the diff.
+
+**Acceptance:**
+- The auditor returns PASS.
+- The audit flags any skill that pre-approves bare `Bash` together with WebFetch or WebSearch.
+
+**Effort:** S.
+
+## T81 — Skill routing: triggers and ownership
+
+**Scope:**
+- **Rewrites:** apply the 15 trigger rewrites in EVALUATION §6 (from the skills review).
+- **Trigger position:** move the trigger to ≤100 chars in the 7 skills at the 100–111 edge.
+- **Verb first:** start every description with a verb.
+- **Single owners:** Firestore modeling (firebase-architect), IRC cite checks (irc-lookup), budgets on a live bill (finops), CWV thresholds (performance-review). Add NOT-for clauses both ways.
+- **Stripe review:** add a disambiguation line across stripe-integration, security-review and compliance-architect.
+- **Missing pointer:** proposal-generator → technical-estimation for bid-grade estimates.
+- **Names:** replace the `ios/android/web-design-expert` shorthand with real skill names.
+- **Agent overlap:** release-management vs release-coordinator.
+
+**Acceptance:**
+- The trigger-routing evals (T85) pass on the rewritten skills.
+- The audit fails a trigger past 100 chars.
+
+**Effort:** S.
+
+## T82 — CI and validation that can fail (D5)
+
+**Scope:**
+- **`claude plugin validate --strict`** runs on the main plugin and tri-lane. To make it pass, move the dev CLAUDE.md to `.claude/CLAUDE.md`, add the README install line and an icon.
+- **Codex:** pin 0.164.0, install without `|| echo`, and treat a smoke SKIP as a failure on the pinned job. Add a weekly job against `@latest` that reports SKIP and FAIL separately.
+- **nightly-drift:** restore its cron (D5), or correct MAINTENANCE.md:12 and the workflow header.
+- **Our own workflows:** apply `rules/cicd.md`, i.e. SHA-pinned actions and a `permissions:` block.
+
+**Acceptance:**
+- A green run proves validate --strict passes.
+- A planted SKIP fails the pinned job.
+
+**Effort:** S.
+
+## T83 — Docs that tell the truth (D7)
+
+**Scope:**
+- **sync-metadata coverage:** extend `sync-metadata.py` to README, GEMINI.md, AGENT-GUIDE.md, CONSUMING-PROJECTS.md, setup.sh, the plugin-evals README and the CLAUDE.md agent tables (7 agents are missing today).
+- **Fix the stale figures:** 103/80/81 skills, 30/39/40 agents, "9 event types" (33 exist), "MCP server configs", GEMINI's 6.0.3 and its read-only `allowed-tools` advice.
+- **AUTHORING.md:** current model names; the 110-char rule re-stated from T86's measurement; the GPT-6 Astra guidance (router-style SKILL.md, completion defined up front, no over-constraint).
+- **Personas:** label them as documentation (D7).
+
+**Acceptance:**
+- `sync-metadata --check` fails on a planted wrong count in each covered file.
+
+**Effort:** M.
+
+## T84 — Agents (D3)
+
+**Scope:**
+- **Memory (D3):** remove `memory:` from code-reviewer, accessibility-checker, brand-guardian, ux-researcher, contract-reviewer, legal-compliance and test-runner, or document that they write. Make the CLAUDE.md tool column match the effective tools.
+- **Worktree isolation:** remove `isolation: worktree` from project-bootstrapper and release-coordinator.
+- **Reviewer split:** code-reviewer handles a file set or uncommitted work and gives no verdict. pr-reviewer handles a branch vs its base and gives a merge verdict. qa-engineer's "ship" call defers to deployment-validator's GO/NO-GO.
+- **Pins and preloads:** drop cure-advisor's `effort: high` unless BENCHMARK.md shows a gain. Trim tax-analyst's preload to ≤300 lines.
+
+**Acceptance:**
+- The effective tool list for every "read-only" agent in a live session contains no Write or Edit.
+- The audit checks that `memory:` agents aren't documented as read-only.
+
+**Effort:** S.
+
+## T85 — Evals where the risk is
+
+**Scope:**
+- **New cases:** security-review, compliance-architect, qsbs-compliance, data-migration, tax-preparation/return-review, public-sector-contracting, engagement-automation, cure-infra-bootstrap, one code generator (nextjs-feature-scaffold), plus routing cases for T81.
+- **Δ sweep:** run with and without the skill at n≥3 on the top 20 skills by traffic.
+- **Harness:** add the git ≥2.31 precondition, `--max-cost-usd` and `--trust-plugin` in CI.
+
+**Acceptance:**
+- RESULTS.md carries an n≥3 Δ per covered skill.
+- Skills with Δ≈0 are listed for T88.
+
+**Effort:** L.
+
+## T86 — Runtime currency
+
+**Scope:**
+- **Platform facts:** write `docs/evaluations/2026-10-24/platform-facts.md` from the two facts reviews.
+- **Codex re-measure** on 0.164 with gpt-6.1-sol via `codex debug prompt-input`: listing budget, `skill_search` effect, silent shortening.
+- **agy re-measure** on 1.4.6+: `disable-model-invocation`, persona `skills:` scoping, glob rules after T76.
+- **Tri-lane models:** update `models.json` and `lanes.md` (GPT-6 Luna/Sol, 6.1 Sol; Gemini 4 Argon replaces 3.1 Pro). Run the canary before changing defaults.
+- **Machine:** `claude update` to 2.1.310+, and rerun `install-runtimes.sh`.
+
+**Acceptance:**
+- Every runtime claim in AUTHORING and STATE cites a measurement dated on or after 2026-10-24.
+
+**Effort:** M.
+
+## T87 — Rules and output styles currency (D4)
+
+**Scope:**
+- **Refresh the rules:**
+  - ios: Swift 6 strict concurrency, `@Observable`, Swift Testing.
+  - web: Next 16 async APIs and Cache Components, Tailwind v4; narrow `**/*.js`.
+  - android: `@Serializable` routes, K2/KSP, version catalogs.
+  - go: 1.25.
+  - rust: edition 2024.
+  - terraform: `use_lockfile`; no `-target` in production.
+  - docker: node:24, `compose.yaml`.
+  - python: uv, `[dependency-groups]`, ruff.
+  - sql: identity or UUIDv7.
+- **Output styles (D4):** fold them into skill references and delete them, or flatten them with `name`, `description` and `keep-coding-instructions: true` and verify in `/output-style`.
+
+**Acceptance:** each rule has a dated `verified` note, and no rule contradicts the skill that owns its topic.
+
+**Effort:** M.
+
+## T88 — Depth and portability (later)
+
+**Scope:**
+- **Finance:** merge the four finance skills (equity-research, comps-analysis, dcf-modeling, merger-modeling) into one Cure valuation skill with a worked private-studio example, or prune them on T85 data.
+- **technical-blog-writer:** rewrite it to house format, or fold it into the technical-content-strategist agent.
+- **Compaction risk:** move output contracts to the top of interview-system-designer, solicitation-triage and env-secrets-manager.
+- **incident-response:** reconsider `context: fork`, since a live outage is interactive.
+- **Scripts:** add a PERT/Monte-Carlo script to technical-estimation, `--json` to the two design-studio scripts, one path-placeholder convention, and a smoke test that goes past `--help`.
+- **Portability:** a claude.ai/Skills-API export that keeps only the portable keys and folds `when_to_use` into `description`.
+
+**Effort:** L.
+
+
+## T89 — Bootstrap writes hooks Claude Code never loads (found during T78)
+
+**Scope:** `bootstrap/` generates `.claude/hooks/hooks.json` in consuming projects. Claude Code reads project hooks only from the `hooks` key of `.claude/settings.json` (or `settings.local.json`). Any `{"reminder": …}` lines those hooks print reach neither Claude nor the user. Either move the generated hooks into the settings `hooks` key, with output on a channel Claude reads (`additionalContext` on SessionStart/UserPromptSubmit), or stop generating them.
+
+**Acceptance:**
+- In a freshly bootstrapped project, `/hooks` lists the generated hooks.
+- Their output is visible in a live session.
+- A bootstrap test asserts the location.
+
+**Effort:** S.
+
+## T90 — Tighten the trigger window to 85 characters (found during T86)
+
+**Why:** Codex 0.163 cuts descriptions at 101–105 chars on 272k-context models, when signed out, and in CI. A trigger that ends at char 100 can lose the words after "Use when". At the 272k default, only 63 of 104 descriptions keep two or more words after it.
+
+**Scope:**
+- Move `TRIGGER_STRICT_WINDOW` from 100 to 85.
+- Rewrite the descriptions that fail: 39 at 90, 57 at 80.
+- Re-measure with `codex debug prompt-input` first; the window may move with the default model.
+
+**Acceptance:** at least 2 trigger words survive the measured cut for every skill.
+
+**Effort:** M.
+
+## T91 — Pending canaries and live checks from Wave 7
+
+**Canaries:**
+- gpt-6.1-sol on the spec-gap fixtures; this decides `impl-underspecified`.
+- gpt-6-luna review at `high`; this decides `review-default`.
+- `--repeat 3` on every new tri-lane default (n=1 can't separate models).
+
+**Live checks** (each was covered by unit tests only):
+- A Swift repo doesn't load go.md (T76).
+- Five parallel subagents with "audit" in their descriptions run on the session model under agent-budget 0.2.0 (T71).
+- The policy-guard ask timeout against the real hook budget (T72).
+- A /loop iteration never triggers the Stop nudge (T77).
+
+**Effort:** S each.
+
+
+## T92 — Calibrate the negative-Δ eval cases (found by the T85 sweep)
+
+**Why:** in the first sweep, seven skills scored lower *with* the skill than without it. Most of these cases are new, and their graders were never checked against a real reply.
+
+**Scope:**
+- Re-run each negative case with `--runs 1 --ablation none --keep-temp` and read both arms' replies.
+- Decide whether the grader or the skill is wrong, then fix that one. Start with public-sector-contracting (an uncalibrated "non-appropriation" regex), `route-security-review-prelaunch` (with-arm 0.00: the result regex failed), and the legal pair.
+- Re-run the sweep for those skills.
+- **Already found:** `route-security-review-prelaunch` first ran in an empty sandbox, so the model rightly asked for the code. With the code inline (fixed 2026-10-24) Opus 5.5 still reviewed it **without invoking security-review** (0 of 5 runs). That's a real routing gap, the Wave 5 "skips skills on task prompts" pattern. The reply regex is also too narrow (the review was correct but never said "IDOR"/"OWASP"). Measure routing on natural prompts across the top skills before deciding between description, `paths`, or hook nudges.
+
+**Acceptance:** no skill below Δ −0.05 unless the regression is confirmed and ticketed against the skill.
+
+**Effort:** M.
+
+---
+
 
 # Wave 6.1 (2026-09-28) — Legal practice references for the portfolio
 

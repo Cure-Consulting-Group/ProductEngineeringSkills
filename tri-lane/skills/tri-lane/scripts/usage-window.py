@@ -39,6 +39,17 @@ def project_slug(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "-", str(Path(path).resolve()))
 
 
+def session_key(f: Path, d: dict) -> str | None:
+    """`model@effort` for a main-session assistant turn (each turn records both, 2026-10); None for a subagent turn,
+    whose model and effort are the lane's, not the session's. Older transcripts without `effort` give `model@None`."""
+    if d.get("isSidechain") or "subagents" in f.parts:
+        return None
+    m = (d.get("message") or {}).get("model")
+    if not m or m.startswith("<"):
+        return None
+    return f"{m}@{d.get('effort') or 'None'}"
+
+
 def claude_usage(project: str, since: datetime, until: datetime) -> dict:
     home = Path.home() / ".claude" / "projects"
     candidates = [home / project_slug(project)]
@@ -48,6 +59,7 @@ def claude_usage(project: str, since: datetime, until: datetime) -> dict:
     tot = {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0}
     msgs = 0
     models: dict = {}
+    sessions: dict = {}
     files = 0
     for root in candidates:
         if not root.exists():
@@ -85,10 +97,14 @@ def claude_usage(project: str, since: datetime, until: datetime) -> dict:
                     tot["thinking_tokens"] += int(((u.get("output_tokens_details") or {}).get("thinking_tokens")) or 0)
                     m = (d.get("message") or {}).get("model") or "unknown"
                     models[m] = models.get(m, 0) + int(u.get("output_tokens") or 0)
+                    sk = session_key(f, d)
+                    if sk:
+                        sessions[sk] = sessions.get(sk, 0) + int(u.get("output_tokens") or 0)
     tot["billable_tokens"] = tot["input_tokens"] + tot["cache_creation_input_tokens"] + tot["output_tokens"]
     tot["messages"] = msgs
     tot["files_scanned"] = files
     tot["output_tokens_by_model"] = models
+    tot["output_tokens_by_session_model_effort"] = sessions
     return tot
 
 
@@ -119,7 +135,7 @@ def claude_usage_multi(project: str, windows: list, agent: str | None = None) ->
     """One pass over the project's transcripts; returns one usage dict per (since, until) window, in order.
     A message inside several windows is counted in each (overlap is the caller's to flag). `agent` restricts
     the scan to subagent transcripts for that agent (e.g. cure-advisor) so a per-review cost can be measured."""
-    tots = [{"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0, "messages": 0, "files_scanned": 0, "output_tokens_by_model": {}} for _ in windows]
+    tots = [{"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0, "thinking_tokens": 0, "messages": 0, "files_scanned": 0, "output_tokens_by_model": {}, "output_tokens_by_session_model_effort": {}} for _ in windows]
     if not windows:
         return tots
     lo = min(w[0] for w in windows)
@@ -147,6 +163,7 @@ def claude_usage_multi(project: str, windows: list, agent: str | None = None) ->
                 except Exception:
                     continue
                 u = (d.get("message") or {}).get("usage") or {}
+                sk = session_key(f, d)
                 for i, (since, until) in enumerate(windows):
                     if since <= t <= until:
                         touched.add(i)
@@ -157,6 +174,9 @@ def claude_usage_multi(project: str, windows: list, agent: str | None = None) ->
                         tt["thinking_tokens"] += int(((u.get("output_tokens_details") or {}).get("thinking_tokens")) or 0)
                         m = (d.get("message") or {}).get("model") or "unknown"
                         tt["output_tokens_by_model"][m] = tt["output_tokens_by_model"].get(m, 0) + int(u.get("output_tokens") or 0)
+                        if sk:
+                            se = tt["output_tokens_by_session_model_effort"]
+                            se[sk] = se.get(sk, 0) + int(u.get("output_tokens") or 0)
         for i in touched:
             tots[i]["files_scanned"] += 1
     for tt in tots:

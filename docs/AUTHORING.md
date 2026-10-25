@@ -1,10 +1,11 @@
-# AUTHORING — How a Cure skill is written (Wave 5 standard, 2026-09-23)
+# AUTHORING — How a Cure skill is written (Wave 5 standard, 2026-09-23; runtime facts updated Wave 7, 2026-10-24)
 
 One SKILL.md is loaded by three runtimes: **Claude Code** (plugin), **Codex** (plugin, reads
 `name` + `description` only), and **Antigravity** (flat plugin export, reads `name` +
 `description`, honors `disable-model-invocation`). It is read by frontier models (Opus 5.5,
-GPT-5.6, Gemini 3.x) that already know textbook engineering and business. Evidence for every
-rule below: `docs/evaluations/2026-09-23/platform-facts.md`.
+GPT-6.1 Sol / GPT-6 Luna, Gemini 4 Argon / 3.8 Flash) that already know textbook engineering and
+business. Evidence for every rule below: `docs/evaluations/2026-10-24/platform-facts.md` (current)
+and `docs/evaluations/2026-09-23/platform-facts.md` (Wave 5 baseline).
 
 A skill earns its context only by adding what the model does not reliably do unprompted:
 **Cure decisions and defaults, non-obvious gotchas, facts newer than training, a deterministic
@@ -23,9 +24,12 @@ metadata:
 ---
 ```
 
-- **`description` is the trigger in every runtime.** First sentence ≤100 chars says *what*;
-  the "Use when…" clause must start within the first **110 chars** (Codex truncates there at
-  our library size). Third person, concrete key terms a user would type. ≤300 chars.
+- **`description` is the trigger in every runtime.** Start with a verb that says *what*; the
+  "Use when/for…" phrase must **end by char 100** (the audit hard-fails otherwise; a bare "when"
+  doesn't count) and should start by about char 85. Measured 2026-10-24 on Codex 0.163: on a
+  272k-context model, signed out, or in CI, Codex cuts every description mid-word at 101–105
+  chars with no ellipsis; only gpt-6.1-sol signed in (500k context) shows them in full. Third
+  person, concrete key terms a user would type. ≤300 chars.
 - **`when_to_use` is Claude-only.** Use it only for disambiguation ("NOT for… use X"). Never
   put the only trigger there. Combined description + when_to_use ≤350 chars.
 - **`metadata.verified`**: the date someone last checked the skill's versions, prices, laws,
@@ -64,6 +68,10 @@ Keep the house format — Step 1 (Classify), Step 2 (Gather Context), Step 3+ �
   the Step-1 classification calls for building. A review, question, or live incident gets
   findings or an answer, not scaffolding. Title such sections `## Code/Artifact Generation`
   with a first line stating when they apply — never "(Required)".
+- **Router, not recipe.** Keep the root SKILL.md a short router to its references, define
+  completion up front, and avoid over-specific step lists and mandatory stop-for-review points;
+  GPT-6 Astra-class models follow over-constrained skills to the letter and get worse
+  (OpenAI, https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
 - **No verification scaffolding.** Delete "double-check", "re-verify before responding", "use a
   subagent to verify", "include a final verification step". Opus 5 verifies on its own; the
   instructions cause over-verification (Anthropic, Opus 5 prompting guide). Keep *domain*

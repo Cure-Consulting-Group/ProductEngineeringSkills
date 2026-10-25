@@ -9,7 +9,7 @@
     {
       "name": "cure-product-engineering",
       "source": ".",
-      "description": "Complete product engineering skill library — 106 skills (domain-organized), 41 agents (engineering, product, marketing, business, data, security), 4 personas (cross-domain engagement archetypes), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering, bundled stdlib Python tooling, MCP + LSP servers. Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
+      "description": "Complete product engineering skill library — 106 skills (domain-organized), 41 agents (engineering, product, marketing, business, data, security), 4 personas (cross-domain engagement archetypes), 11 rules, 9 output styles, multi-layer hooks with agent auto-triggering, bundled stdlib Python tooling, LSP server configs (MCP is an opt-in template, not shipped). Standards for Android, iOS, Web, Firebase, Python, Go, Rust, Docker, Terraform, and cloud infrastructure.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -57,7 +57,7 @@
     {
       "name": "cure-policy-guard",
       "source": "./mods/cure-policy-guard",
-      "description": "Mod: refuses file writes that break a written Cure house rule unless you override; overrides are recorded.",
+      "description": "Mod: refuses writes and Bash/WebFetch calls that break a written Cure house rule (cron, PHI and minors' data, AI vendors, credentials, state ownership) unless you override; overrides are recorded.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -85,7 +85,7 @@
     {
       "name": "cure-spend-band",
       "source": "./mods/cure-spend-band",
-      "description": "Mod: today's GitHub Actions spend beside the spinner, a pace warning, and /spend.",
+      "description": "Mod: today's GitHub Actions spend beside the spinner, a dismissible pace warning, and /spend. One gh fetch per machine every 15 minutes.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -125,39 +125,9 @@
       ]
     },
     {
-      "name": "cure-secret-scrub",
-      "source": "./mods/cure-secret-scrub",
-      "description": "Mod: redacts API keys, private keys, service account secrets, and tokens from Read, Grep, and Bash outputs. Adds /secret-scrub.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "security",
-        "secrets",
-        "redaction"
-      ]
-    },
-    {
-      "name": "cure-llm-ledger",
-      "source": "./mods/cure-llm-ledger",
-      "description": "Mod: per-turn LLM token and dollar cost ledger attributed by repo, branch, and model. Adds /ledger.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "finops",
-        "llmops",
-        "cost-tracking"
-      ]
-    },
-    {
       "name": "cure-cite-check",
       "source": "./mods/cure-cite-check",
-      "description": "Mod: verifies code line citations (file:line) in assistant answers against disk, flagging stale lines. Adds /cite-check.",
+      "description": "Mod: checks file:line citations in Claude's answers against the session's repositories and toasts the stale ones; never edits the answer. Adds /cite-check.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -170,39 +140,9 @@
       ]
     },
     {
-      "name": "cure-claim-guard",
-      "source": "./mods/cure-claim-guard",
-      "description": "Mod: enforces multi-machine state file ownership rules in shared repos (DistrictZero state-targets.md). Adds /claims.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "coordination",
-        "multi-machine",
-        "guardrails"
-      ]
-    },
-    {
-      "name": "cure-ci-preview",
-      "source": "./mods/cure-ci-preview",
-      "description": "Mod: pre-push GitHub Actions CI runner time and cost estimator. Warns when commits mix doc notes with code. Adds /ci-preview.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "ci-cd",
-        "github-actions",
-        "finops"
-      ]
-    },
-    {
       "name": "cure-agent-budget",
       "source": "./mods/cure-agent-budget",
-      "description": "Mod: enforces subagent fan-out concurrency caps and auto-routes read-only research subagents to cost-effective models. Adds /agents-budget.",
+      "description": "Mod: caps how many subagents one session runs at once, tracked by agent id from spawn to completion; optional research routing to a model alias, off by default. Adds /agents-budget.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -215,25 +155,9 @@
       ]
     },
     {
-      "name": "cure-egress-guard",
-      "source": "./mods/cure-egress-guard",
-      "description": "Mod: prevents unauthorized outbound data transmission to external AI vendor endpoints in sensitive repos (PHI, minors). Adds /egress-guard.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "security",
-        "egress",
-        "compliance",
-        "phi"
-      ]
-    },
-    {
       "name": "cure-rules-band",
       "source": "./mods/cure-rules-band",
-      "description": "Mod: displays repository house rules and legal/architectural constraints in a HUD banner above the prompt. Adds /rules.",
+      "description": "Mod: shows the house rules of the repository the session is in, above the prompt; nothing for a repo with none. Adds /rules.",
       "author": {
         "name": "Cure Consulting Group",
         "url": "https://github.com/Cure-Consulting-Group"
@@ -243,21 +167,6 @@
         "hud",
         "rules",
         "interface"
-      ]
-    },
-    {
-      "name": "cure-handoff",
-      "source": "./mods/cure-handoff",
-      "description": "Mod: drafts structured STATE.md handoff entries from git commits, branch status, and working tree diffs. Adds /handoff.",
-      "author": {
-        "name": "Cure Consulting Group",
-        "url": "https://github.com/Cure-Consulting-Group"
-      },
-      "keywords": [
-        "mod",
-        "handoff",
-        "workflow",
-        "productivity"
       ]
     },
     {

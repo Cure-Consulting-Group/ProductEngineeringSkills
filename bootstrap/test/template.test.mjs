@@ -1,6 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderTemplate, TEMPLATE_FILES } from "../src/template/render.mjs";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { renderTemplate, TEMPLATE_FILES, denyRules } from "../src/template/render.mjs";
 import { createManifest } from "../src/manifest/index.mjs";
 import { parseBlocks } from "../src/blocks/index.mjs";
 
@@ -68,13 +71,25 @@ test("STATE.md template renders header block", () => {
   assert.match(out, /v5\.0\.0/);
 });
 
-test("settings.json template renders parseable JSON", () => {
+test("settings.json template renders parseable JSON with no model pin and no project key", () => {
   const m = createManifest(baseInput);
   const out = renderTemplate("claude-settings.json.ejs", m);
   const parsed = JSON.parse(out);
-  assert.equal(parsed.project.name, "vendly-web");
-  assert.equal(parsed.project.skillsRepoVersion, "5.0.0");
+  assert.equal(parsed.model, undefined, "a model pin downgrades every bootstrapped session");
+  assert.equal(parsed.project, undefined, "`project` is not a Claude Code settings key");
   assert.ok(parsed.permissions.deny.length > 0);
+});
+
+test("settings.json deny list is generated from the library settings.json", () => {
+  const m = createManifest(baseInput);
+  const parsed = JSON.parse(renderTemplate("claude-settings.json.ejs", m));
+  assert.deepEqual(parsed.permissions.deny, [...denyRules()]);
+  const repoSettings = resolve(dirname(fileURLToPath(import.meta.url)), "../../settings.json");
+  if (existsSync(repoSettings)) {
+    const want = JSON.parse(readFileSync(repoSettings, "utf8")).permissions.deny;
+    assert.deepEqual(parsed.permissions.deny, want,
+      "templates/deny-rules.json drifted from settings.json: run node scripts/sync-deny-rules.mjs");
+  }
 });
 
 test("TEMPLATE_FILES lists known mappings", () => {

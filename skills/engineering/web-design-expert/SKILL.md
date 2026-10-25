@@ -1,7 +1,7 @@
 ---
 name: web-design-expert
-description: "Web UI design guidance: responsive layout, tokens, Tailwind v4, dark mode, motion. Use when designing or reviewing pages and components for layout, CSS architecture, theming, or Core Web Vitals impact."
-when_to_use: "NOT for feature code (nextjs-feature-scaffold), brand systems (design-studio), or Storybook (design-system)."
+description: "Guides web UI design: responsive layout, tokens, Tailwind v4, dark mode, motion. Use when designing or reviewing pages and components for layout, CSS architecture, or theming."
+when_to_use: "NOT for feature code (nextjs-feature-scaffold), brand systems (design-studio), Storybook (design-system), or Core Web Vitals budgets (performance-review)."
 argument-hint: "[page-or-component-name]"
 metadata:
   verified: 2026-09-23
@@ -52,7 +52,7 @@ Ask only what auto-context didn't answer: project type (marketing, SaaS app, das
 
 **Motion.** Animate `transform`/`opacity` only; 100–200ms micro, 200–300ms standard; honor `prefers-reduced-motion`; View Transitions API as progressive enhancement.
 
-**Performance.** Design for LCP < 2.5s, INP < 200ms, CLS < 0.1 (p75). Explicit image dimensions or `aspect-ratio`; `loading="eager"` + `fetchpriority="high"` on the LCP image only; skeletons over spinners; virtualize lists over ~100 rows.
+**Performance.** Design to the Core Web Vitals budgets in `performance-review` (it owns the thresholds and Cure targets). Explicit image dimensions or `aspect-ratio`; `loading="eager"` + `fetchpriority="high"` on the LCP image only; skeletons over spinners; virtualize lists over ~100 rows.
 
 Read [reference/details.md](reference/details.md) when a spec needs the exact scales: fluid type table, spacing scale, shadow/radius scale, semantic color token set, component size tables (buttons, inputs, modals), and the Tailwind v4 `@theme` starter.
 

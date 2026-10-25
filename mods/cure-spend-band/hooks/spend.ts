@@ -138,3 +138,25 @@ export function parseUsage(json: string): UsageItem[] {
   if (!Array.isArray(body.usageItems)) throw new Error('no usageItems in the billing response')
   return body.usageItems as UsageItem[]
 }
+
+/**
+ * Folds usage items to one per day, product and repository: what `summarize`
+ * reads, small enough to keep in the machine-wide store (one month is at most a
+ * few hundred rows, where the raw API answer can be thousands).
+ */
+export function compact(items: readonly UsageItem[]): UsageItem[] {
+  const rows = new Map<string, UsageItem>()
+  for (const i of items) {
+    const date = `${i.date.slice(0, 10)}T00:00:00Z`
+    const key = `${date}\u0000${i.product}\u0000${i.repositoryName || ''}`
+    const row = rows.get(key)
+    if (row) {
+      row.grossAmount = (row.grossAmount || 0) + (i.grossAmount || 0)
+      row.netAmount = (row.netAmount || 0) + (i.netAmount || 0)
+      row.quantity = (row.quantity || 0) + (i.quantity || 0)
+    } else {
+      rows.set(key, { ...i, date, sku: '', grossAmount: i.grossAmount || 0, netAmount: i.netAmount || 0, discountAmount: 0 })
+    }
+  }
+  return [...rows.values()]
+}

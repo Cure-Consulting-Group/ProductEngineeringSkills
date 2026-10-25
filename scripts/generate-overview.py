@@ -362,6 +362,8 @@ def _truncate(s: str, n: int) -> str:
 def collect_mcp(repo: Path) -> list[dict]:
     path = repo / ".mcp.json"
     if not path.is_file():
+        path = repo / ".mcp.json.example"  # the opt-in template (not auto-loaded)
+    if not path.is_file():
         return []
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -391,7 +393,9 @@ def collect_lsp(repo: Path) -> list[dict]:
         warn(f"could not parse .lsp.json: {exc}")
         return []
     rows: list[dict] = []
-    for name, cfg in (data.get("lspServers") or {}).items():
+    # standalone .lsp.json uses top-level server names; plugin.json nests them under lspServers
+    servers = data.get("lspServers") or {k: v for k, v in data.items() if isinstance(v, dict)}
+    for name, cfg in servers.items():
         exts = cfg.get("extensionToLanguage") or {}
         rows.append(
             {

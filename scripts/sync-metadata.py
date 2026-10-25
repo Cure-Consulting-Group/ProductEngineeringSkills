@@ -38,7 +38,10 @@ def truth():
         "agents": len(list((ROOT / "agents").glob("*.md"))),
         "personas": len(list((ROOT / "personas").glob("*.md"))),
         "rules": len(list((ROOT / "rules").glob("*.md"))),
-        "output_styles": len([d for d in (ROOT / "output-styles").iterdir() if d.is_dir()]),
+        "output_styles": len([d for d in (ROOT / "output-styles").iterdir() if d.is_dir()])
+                         if (ROOT / "output-styles").is_dir() else 0,
+        "mods": len(list((ROOT / "mods").glob("*/.claude-plugin/plugin.json"))),
+        "hook_events": len(json.loads((ROOT / "hooks" / "hooks.json").read_text()).get("hooks", {})),
         "domains": dict(sorted(by_domain.items())),
     }
 
@@ -56,12 +59,12 @@ def build_rules(t):
     rules = []
 
     # --- Version: plugin-version mentions only (parenthetical or trailing) ---
-    for rel in ["hooks/hooks.json", "CLAUDE.md", "README.md", ".claude-plugin/marketplace.json"]:
+    for rel in ["hooks/hooks.json", ".claude/CLAUDE.md", "README.md", ".claude-plugin/marketplace.json"]:
         rules.append((rel, re.compile(r"\(v\d+\.\d+\.\d+\)"), f"(v{v})", "version (parenthetical)"))
         rules.append((rel, re.compile(r"\bv\d+\.\d+\.\d+\b(?=\s*[\)\.—,])"), f"v{v}", "version token"))
 
     # --- Version: CLAUDE.md "Current version: **X.Y.Z**" line ---
-    rules.append(("CLAUDE.md", re.compile(r"(?<=Current version: \*\*)\d+\.\d+\.\d+(?=\*\*)"), v, "version (current-version line)"))
+    rules.append((".claude/CLAUDE.md", re.compile(r"(?<=Current version: \*\*)\d+\.\d+\.\d+(?=\*\*)"), v, "version (current-version line)"))
 
     # --- CONFIG files: count = total, safe to blanket-replace ---
     for rel in ["hooks/hooks.json", ".claude-plugin/marketplace.json",
@@ -72,7 +75,7 @@ def build_rules(t):
         rules.append((rel, re.compile(r"\b\d+(?=\s+personas\b)"), str(pe), "persona count"))
 
     # --- PROSE files: total-count idioms only (never bare "N skills") ---
-    for rel in ["CLAUDE.md", "README.md", "docs/OVERVIEW.md"]:
+    for rel in [".claude/CLAUDE.md", "README.md", "docs/OVERVIEW.md"]:
         # "75 production-grade skills", "80 skills (domain-organized)", "library — 80 skills"
         rules.append((rel, re.compile(r"\b\d+(?=\s+production-grade\s+skills\b)"), str(sk), "total skills idiom"))
         rules.append((rel, re.compile(r"\b\d+(?=\s+skills\s+\(domain-organized\))"), str(sk), "total skills idiom"))
@@ -83,6 +86,27 @@ def build_rules(t):
         rules.append((rel, re.compile(r"\b\d+(?=\s+custom\s+agents\b)"), str(ag), "total agents idiom"))
         rules.append((rel, re.compile(r"\b\d+(?=\s+specialized\s+subagents\b)"), str(ag), "total agents idiom"))
 
+    # --- Wave 7 (T83): idioms that drifted unnoticed, across every doc that states totals.
+    # A count inside a sentence about history ("69 skills were silently broken") is not
+    # matched: every idiom below names the library's current total.
+    total_docs = [".claude/CLAUDE.md", "README.md", "GEMINI.md", "AGENT-GUIDE.md", "docs/CONSUMING-PROJECTS.md"]
+    for rel in total_docs:
+        rules.append((rel, re.compile(r"\b\d+(?=\s+skills,\s+\d+\s+agents\b)"), str(sk), "skills, agents idiom"))
+        rules.append((rel, re.compile(r"(?<=skills, )\d+(?=\s+agents\b)"), str(ag), "skills, agents idiom"))
+        rules.append((rel, re.compile(r"\b\d+(?=\s+skills,?\s+organized by domain)"), str(sk), "skills organized by domain"))
+        rules.append((rel, re.compile(r"(?<=[Aa]ll )\d+(?=\s+skills\b)"), str(sk), "all N skills"))
+        rules.append((rel, re.compile(r"(?<=library's )\d+(?=\s+skills\b)"), str(sk), "library's N skills"))
+        rules.append((rel, re.compile(r"(?<=With )\d+(?=\s+skills\b)"), str(sk), "with N skills"))
+        rules.append((rel, re.compile(r"(?<=Custom Agents \()\d+(?=\))"), str(ag), "Custom Agents (N) heading"))
+        rules.append((rel, re.compile(r"(?<=the )\d+(?=\s+agents\b)"), str(ag), "the N agents"))
+        rules.append((rel, re.compile(r"\b\d+(?=\s+custom\s+agents\b)"), str(ag), "N custom agents"))
+        rules.append((rel, re.compile(r"\b\d+(?=\s+rules, \d+ output styles)"), str(t["rules"]), "N rules idiom"))
+        rules.append((rel, re.compile(r"(?<=rules, )\d+(?=\s+output styles)"), str(t["output_styles"]), "N output styles idiom"))
+        rules.append((rel, re.compile(r"(?<=agents, )\d+(?=\s+personas\b)"), str(pe), "agents, N personas idiom"))
+        rules.append((rel, re.compile(r"\b\d+(?=\s+event types\b)"), str(t["hook_events"]), "hook event types (hooks/hooks.json)"))
+    for dom, n in t["domains"].items():  # CLAUDE.md "Domains: engineering (40), ..." line
+        rules.append((".claude/CLAUDE.md", re.compile(r"(?<=\b" + re.escape(dom) + r" \()\d+(?=\))"), str(n), f"domain count ({dom})"))
+    rules.append(("GEMINI.md", re.compile(r"(?<=version: \*\*)\d+\.\d+\.\d+(?=\*\*)"), v, "version (current-version line)"))
     return rules
 
 
@@ -216,7 +240,8 @@ def main():
         print(json.dumps(t, indent=2)); return
 
     print(f"Truth: v{t['version']} | {t['skills']} skills | {t['agents']} agents | "
-          f"{t['personas']} personas | {t['rules']} rules | {t['output_styles']} output-styles")
+          f"{t['personas']} personas | {t['rules']} rules | {t['output_styles']} output-styles | "
+          f"{t['mods']} mods | {t['hook_events']} hook events")
     print(f"Domains: " + ", ".join(f"{k} ({v})" for k, v in t['domains'].items()))
 
     changes = apply_rules(t, write=args.write)

@@ -1,0 +1,3005 @@
+{
+  "mode": "skill",
+  "stamp": "2026-10-24-1526",
+  "source": "claude plugin eval (plugin-evals/sweep.py)",
+  "summary": {
+    "compliance-architect-kids-health|claude|on": {
+      "pass_rate": 0.917,
+      "n": 3,
+      "ci95": [
+        0.37,
+        0.995
+      ],
+      "flaky": true
+    },
+    "compliance-architect-kids-health|claude|off": {
+      "pass_rate": 0.583,
+      "n": 3,
+      "ci95": [
+        0.164,
+        0.909
+      ],
+      "flaky": true
+    },
+    "cure-infra-bootstrap-pci|claude|on": {
+      "pass_rate": 0.833,
+      "n": 3,
+      "ci95": [
+        0.31,
+        0.982
+      ],
+      "flaky": true
+    },
+    "cure-infra-bootstrap-pci|claude|off": {
+      "pass_rate": 0.0,
+      "n": 3,
+      "ci95": [
+        0,
+        0.562
+      ],
+      "flaky": false
+    },
+    "data-migration-firestore-backfill|claude|on": {
+      "pass_rate": 0.917,
+      "n": 3,
+      "ci95": [
+        0.37,
+        0.995
+      ],
+      "flaky": true
+    },
+    "data-migration-firestore-backfill|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "engagement-automation-cross-runtime|claude|on": {
+      "pass_rate": 0.833,
+      "n": 3,
+      "ci95": [
+        0.31,
+        0.982
+      ],
+      "flaky": true
+    },
+    "engagement-automation-cross-runtime|claude|off": {
+      "pass_rate": 0.5,
+      "n": 3,
+      "ci95": [
+        0.125,
+        0.875
+      ],
+      "flaky": false
+    },
+    "legal-upl-guardrail|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "legal-upl-guardrail|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "nextjs-scaffold-notes-feature|claude|on": {
+      "pass_rate": 0.583,
+      "n": 3,
+      "ci95": [
+        0.164,
+        0.909
+      ],
+      "flaky": true
+    },
+    "nextjs-scaffold-notes-feature|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "public-sector-city-contract|claude|on": {
+      "pass_rate": 0.167,
+      "n": 3,
+      "ci95": [
+        0.018,
+        0.69
+      ],
+      "flaky": true
+    },
+    "public-sector-city-contract|claude|off": {
+      "pass_rate": 0.417,
+      "n": 3,
+      "ci95": [
+        0.091,
+        0.836
+      ],
+      "flaky": true
+    },
+    "qsbs-compliance-two-regimes|claude|on": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "qsbs-compliance-two-regimes|claude|off": {
+      "pass_rate": 0.75,
+      "n": 3,
+      "ci95": [
+        0.256,
+        0.963
+      ],
+      "flaky": false
+    },
+    "return-review-schedule-c|claude|on": {
+      "pass_rate": 0.833,
+      "n": 3,
+      "ci95": [
+        0.31,
+        0.982
+      ],
+      "flaky": true
+    },
+    "return-review-schedule-c|claude|off": {
+      "pass_rate": 0.75,
+      "n": 3,
+      "ci95": [
+        0.256,
+        0.963
+      ],
+      "flaky": false
+    },
+    "route-database-architect-postgres-index|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-database-architect-postgres-index|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-design-studio-new-app|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-design-studio-new-app|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-design-studio-redesign|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-design-studio-redesign|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-finops-live-bill|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-finops-live-bill|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-firebase-architect-firestore-model|claude|on": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "route-firebase-architect-firestore-model|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "route-incident-live|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-incident-live|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-legal-doctrine|claude|on": {
+      "pass_rate": 0.0,
+      "n": 3,
+      "ci95": [
+        0,
+        0.562
+      ],
+      "flaky": false
+    },
+    "route-legal-doctrine|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "route-legal-doctrine-bar-question|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-legal-doctrine-bar-question|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-legal-research|claude|on": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "route-legal-research|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-performance-review-cwv|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-performance-review-cwv|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-product-manager-prioritize|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-product-manager-prioritize|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-project-manager-sprint|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-project-manager-sprint|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-security-review-prelaunch|claude|on": {
+      "pass_rate": 0.0,
+      "n": 3,
+      "ci95": [
+        0,
+        0.562
+      ],
+      "flaky": false
+    },
+    "route-security-review-prelaunch|claude|off": {
+      "pass_rate": 0.333,
+      "n": 3,
+      "ci95": [
+        0.061,
+        0.792
+      ],
+      "flaky": true
+    },
+    "security-review-nextjs-firebase|claude|on": {
+      "pass_rate": 0.5,
+      "n": 3,
+      "ci95": [
+        0.125,
+        0.875
+      ],
+      "flaky": false
+    },
+    "security-review-nextjs-firebase|claude|off": {
+      "pass_rate": 0.5,
+      "n": 3,
+      "ci95": [
+        0.125,
+        0.875
+      ],
+      "flaky": true
+    },
+    "t01-fix-dangling-gather|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t01-fix-dangling-gather|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t02-adr-generation|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t02-adr-generation|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t03-safe-migration|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t03-safe-migration|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t06-firestore-rules|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t06-firestore-rules|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t09-runbook|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t09-runbook|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "t11-finops-review|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t11-finops-review|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t12-story-breakdown|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t12-story-breakdown|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t17-brand-vector-engineering|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t17-brand-vector-engineering|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t18-illustrator-production|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t18-illustrator-production|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t19-figma-component-tokens|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "t20-product-ux-architecture|claude|off": {
+      "pass_rate": 0.75,
+      "n": 3,
+      "ci95": [
+        0.256,
+        0.963
+      ],
+      "flaky": false
+    }
+  },
+  "runs": [
+    {
+      "task": "compliance-architect-kids-health",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "compliance-architect-kids-health",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "compliance-architect-kids-health",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "compliance-architect-kids-health",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "compliance-architect-kids-health",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "compliance-architect-kids-health",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "cure-infra-bootstrap-pci",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "cure-infra-bootstrap-pci",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "cure-infra-bootstrap-pci",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "cure-infra-bootstrap-pci",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "cure-infra-bootstrap-pci",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "cure-infra-bootstrap-pci",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "engagement-automation-cross-runtime",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "engagement-automation-cross-runtime",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "engagement-automation-cross-runtime",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "engagement-automation-cross-runtime",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "engagement-automation-cross-runtime",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "engagement-automation-cross-runtime",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.25,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.25,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.25,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "return-review-schedule-c",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "return-review-schedule-c",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "return-review-schedule-c",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "return-review-schedule-c",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "return-review-schedule-c",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "return-review-schedule-c",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-database-architect-postgres-index",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-database-architect-postgres-index",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-database-architect-postgres-index",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-database-architect-postgres-index",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-database-architect-postgres-index",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-database-architect-postgres-index",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-new-app",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-new-app",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-new-app",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-new-app",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-new-app",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-new-app",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-redesign",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-redesign",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-redesign",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-redesign",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-redesign",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-design-studio-redesign",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-finops-live-bill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-finops-live-bill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-finops-live-bill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-finops-live-bill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-finops-live-bill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-finops-live-bill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-firebase-architect-firestore-model",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-firebase-architect-firestore-model",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-firebase-architect-firestore-model",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-firebase-architect-firestore-model",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-firebase-architect-firestore-model",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-firebase-architect-firestore-model",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-incident-live",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-incident-live",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-incident-live",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-incident-live",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-incident-live",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-incident-live",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "error",
+      "error": "timed out after 600s",
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "error",
+      "error": "timed out after 600s",
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "error",
+      "error": "timed out after 600s",
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "error",
+      "error": "timed out after 600s",
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-performance-review-cwv",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-performance-review-cwv",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-performance-review-cwv",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-performance-review-cwv",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-performance-review-cwv",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-performance-review-cwv",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-product-manager-prioritize",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-product-manager-prioritize",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-product-manager-prioritize",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-product-manager-prioritize",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-product-manager-prioritize",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-product-manager-prioritize",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-project-manager-sprint",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-project-manager-sprint",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-project-manager-sprint",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-project-manager-sprint",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-project-manager-sprint",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-project-manager-sprint",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.25,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t01-fix-dangling-gather",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t02-adr-generation",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t03-safe-migration",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t06-firestore-rules",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t06-firestore-rules",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t06-firestore-rules",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t06-firestore-rules",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t06-firestore-rules",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t06-firestore-rules",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t09-runbook",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t09-runbook",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t09-runbook",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t09-runbook",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t09-runbook",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t09-runbook",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t11-finops-review",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t12-story-breakdown",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t17-brand-vector-engineering",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t18-illustrator-production",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t19-figma-component-tokens",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "t20-product-ux-architecture",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    }
+  ],
+  "skill_deltas": {
+    "design-studio": {
+      "delta": 0.042,
+      "cases": 6,
+      "n_min": 3
+    },
+    "product-manager": {
+      "delta": 0.0,
+      "cases": 1,
+      "n_min": 3
+    },
+    "sdlc": {
+      "delta": 0.0,
+      "cases": 3,
+      "n_min": 3
+    },
+    "security-review": {
+      "delta": -0.167,
+      "cases": 2,
+      "n_min": 3
+    },
+    "compliance-architect": {
+      "delta": 0.333,
+      "cases": 1,
+      "n_min": 3
+    },
+    "qsbs-compliance": {
+      "delta": -0.083,
+      "cases": 1,
+      "n_min": 3
+    },
+    "data-migration": {
+      "delta": -0.083,
+      "cases": 1,
+      "n_min": 3
+    },
+    "return-review": {
+      "delta": 0.083,
+      "cases": 1,
+      "n_min": 3
+    },
+    "public-sector-contracting": {
+      "delta": -0.25,
+      "cases": 1,
+      "n_min": 3
+    },
+    "engagement-automation": {
+      "delta": 0.333,
+      "cases": 1,
+      "n_min": 3
+    },
+    "cure-infra-bootstrap": {
+      "delta": 0.833,
+      "cases": 1,
+      "n_min": 3
+    },
+    "nextjs-feature-scaffold": {
+      "delta": -0.083,
+      "cases": 1,
+      "n_min": 3
+    },
+    "firebase-architect": {
+      "delta": 0.0,
+      "cases": 2,
+      "n_min": 3
+    },
+    "database-architect": {
+      "delta": 0.0,
+      "cases": 2,
+      "n_min": 3
+    },
+    "finops": {
+      "delta": 0.0,
+      "cases": 2,
+      "n_min": 3
+    },
+    "performance-review": {
+      "delta": 0.0,
+      "cases": 1,
+      "n_min": 3
+    },
+    "project-manager": {
+      "delta": 0.0,
+      "cases": 1,
+      "n_min": 3
+    },
+    "legal-doctrine": {
+      "delta": -0.222,
+      "cases": 3,
+      "n_min": 3
+    },
+    "legal-research": {
+      "delta": -0.167,
+      "cases": 2,
+      "n_min": 3
+    },
+    "incident-response": {
+      "delta": 0.167,
+      "cases": 2,
+      "n_min": 3
+    }
+  },
+  "selection": [
+    {
+      "skill": "design-studio",
+      "traffic": 14,
+      "telemetry": 8,
+      "transcripts": 14,
+      "risk_rank": 18,
+      "cases": [
+        "route-design-studio-new-app",
+        "route-design-studio-redesign",
+        "t17-brand-vector-engineering",
+        "t18-illustrator-production",
+        "t19-figma-component-tokens",
+        "t20-product-ux-architecture"
+      ],
+      "basis": "traffic"
+    },
+    {
+      "skill": "product-manager",
+      "traffic": 2,
+      "telemetry": 2,
+      "transcripts": 2,
+      "risk_rank": 14,
+      "cases": [
+        "route-product-manager-prioritize"
+      ],
+      "basis": "traffic"
+    },
+    {
+      "skill": "sdlc",
+      "traffic": 2,
+      "telemetry": 2,
+      "transcripts": 2,
+      "risk_rank": null,
+      "cases": [
+        "t01-fix-dangling-gather",
+        "t02-adr-generation",
+        "t12-story-breakdown"
+      ],
+      "basis": "traffic"
+    },
+    {
+      "skill": "security-review",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 0,
+      "cases": [
+        "route-security-review-prelaunch",
+        "security-review-nextjs-firebase"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "compliance-architect",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 1,
+      "cases": [
+        "compliance-architect-kids-health"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "qsbs-compliance",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 2,
+      "cases": [
+        "qsbs-compliance-two-regimes"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "data-migration",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 3,
+      "cases": [
+        "data-migration-firestore-backfill"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "return-review",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 4,
+      "cases": [
+        "return-review-schedule-c"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "public-sector-contracting",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 6,
+      "cases": [
+        "public-sector-city-contract"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "engagement-automation",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 7,
+      "cases": [
+        "engagement-automation-cross-runtime"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "cure-infra-bootstrap",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 8,
+      "cases": [
+        "cure-infra-bootstrap-pci"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "nextjs-feature-scaffold",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 9,
+      "cases": [
+        "nextjs-scaffold-notes-feature"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "firebase-architect",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 10,
+      "cases": [
+        "route-firebase-architect-firestore-model",
+        "t06-firestore-rules"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "database-architect",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 11,
+      "cases": [
+        "route-database-architect-postgres-index",
+        "t03-safe-migration"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "finops",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 12,
+      "cases": [
+        "route-finops-live-bill",
+        "t11-finops-review"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "performance-review",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 13,
+      "cases": [
+        "route-performance-review-cwv"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "project-manager",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 15,
+      "cases": [
+        "route-project-manager-sprint"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "legal-doctrine",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 16,
+      "cases": [
+        "legal-upl-guardrail",
+        "route-legal-doctrine",
+        "route-legal-doctrine-bar-question"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "legal-research",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 17,
+      "cases": [
+        "legal-upl-guardrail",
+        "route-legal-research"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "incident-response",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": null,
+      "cases": [
+        "route-incident-live",
+        "t09-runbook"
+      ],
+      "basis": "case count"
+    }
+  ],
+  "partial": false,
+  "partialReason": null,
+  "costUsd": 68.579938,
+  "claudeVersion": "2.1.306",
+  "aggregate": "/Users/rashadcureton/Documents/Cure-Consulting-Group/PES-w7-int/plugin-evals/results/sweep-2026-10-24-1526/aggregate-result.json"
+}

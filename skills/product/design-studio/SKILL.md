@@ -1,8 +1,10 @@
 ---
 name: design-studio
-description: "Full design studio: brand, UX architecture, screens, design systems, assets. Use for any design assignment, from idea, sketch, PRD, or existing app to screens and hand-off."
-when_to_use: "NOT for UI code alone (ios/android/web-design-expert), Storybook governance (design-system), a one-screen spec or review (product-design), or Stitch."
+description: "Designs whole products: brand, UX flows, multi-screen designs, tokens, assets. Use when designing a new app, product, or flow, or redesigning from a PRD, sketch, or existing app."
+when_to_use: "NOT for one-screen specs (product-design), platform UI (ios-design-expert, android-design-expert, web-design-expert), Storybook (design-system), or Stitch (stitch-design)."
 argument-hint: "[assignment or brand/product name]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Design Studio
@@ -22,7 +24,7 @@ Bundled tooling lives next to this file. In Claude Code the directory is `${CLAU
 | `scripts/tokens_lint.py` | Three-tier token convention, naming, alias resolution, light/dark parity | nothing |
 | `scripts/design_review_panel.py` | Builds the three-perspective review prompts; `--run` executes them on `claude`, `codex`, `gemini` from PATH, read-only | CLIs optional |
 | `scripts/export_asset_matrix.py` | Favicons, `.ico`, maskable and social cards, brand book; `--platforms ios,android` adds the iOS icon set and Android adaptive, legacy, and Play Store assets; verifies transparency pixel by pixel | an SVG renderer: `rsvg-convert`, Inkscape, ImageMagick, or Google Chrome (macOS Quick Look works for opaque outputs only) |
-| `scripts/figma_sync.py` | W3C tokens to a Figma variable collection; validates offline unless `--apply` | `FIGMA_TOKEN`, `FIGMA_FILE_KEY` in the environment |
+| `scripts/figma_sync.py` | W3C tokens to a Figma variable collection; validates offline unless `--apply` | `FIGMA_TOKEN`, `FIGMA_FILE_KEY` in the environment; `--apply` needs a Full seat in a Figma Enterprise org and the `file_variables:write` scope (developers.figma.com, checked 2026-10-24) |
 | `scripts/bridge_macos.sh` | Runs a `.jsx` inside Illustrator or Photoshop via AppleScript; refuses scripts without `#target` or with shell, network, eval, or include primitives | macOS, the app installed |
 | `templates/illustrator/build_brand_master.jsx` | Five artboards, layer architecture, CMYK and spot swatches, `.ai` and `.eps` save | Illustrator |
 | `templates/photoshop/update_mockup.jsx` | Smart Object replacement in a PSD mockup, 300 DPI PNG export; refuses linked Smart Objects | Photoshop |
