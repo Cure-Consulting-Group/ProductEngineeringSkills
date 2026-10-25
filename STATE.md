@@ -44,6 +44,8 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 | Machines verified with `install-runtimes.sh` | primary Mac — v7.13.0, 2026-10-23 (codex 0.163.0, agy 1.4.5). Re-run after the Wave 7 PR merges: the real Antigravity install still carries the 7 empty-globs rules until then |
 | Vetted-mods local patches | cc-pr-tracker 0.3.1-cure.1 (clear merged PRs; upstream PR prepared, not opened); secret-redactor 1.0.0-cure.1 (failed-Bash result shape). Originals in `../vetted-mods-backups/` |
 | Open owner decisions | Upstream cc-pr-tracker PR (public action, needs rebase onto upstream 0.6.0); Level5 audio-retention flag (from Wave 6) |
+| PR #88 status (2026-10-25) | Draft. validate, plugin-cli and CodeQL analyze jobs pass; **CodeQL gate fails: 19 high alerts**. 18 are in `vendorHostIn` (`mods/shared/rules.ts` and its 2 vendored copies: hostname-regex ×15, incomplete escaping ×3). 1 is `hooks/cure_guard.py:164` (clear-text logging), a false positive: `block()` prints fixed messages that contain the word "secret", never secret values. It needs an owner dismissal |
+| Close-out in flight | Antigravity brief `docs/handoffs/2026-10-25-agy-wave-7-closeout.md`: CodeQL fix, T89, T90 on branch `wave7/agy-closeout`, local only. Claude verifies and merges into `feat/wave-7`. T91 and T92 stay with Claude Code (live sessions and eval spend) |
 
 ## Runtime architecture audit — 2026-10-22
 
