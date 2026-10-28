@@ -91,8 +91,8 @@ jobs:
         # hooks/cure_guard.py and is exercised here with real hook-shaped payloads.
         run: |
           python3 hooks/test_cure_guard.py
-          if grep -n 'CLAUDE_TOOL_INPUT' hooks/hooks.json; then
-            echo "hooks.json reads CLAUDE_TOOL_INPUT — not a real variable; hook input arrives on stdin"; exit 1
+          if grep -nE 'CLAUDE_TOOL_(INPUT|NAME)' hooks/hooks.json; then
+            echo "hooks.json reads CLAUDE_TOOL_INPUT/NAME — not real variables; hook input arrives on stdin"; exit 1
           fi
 
       - name: type:prompt hooks only on low-frequency events, with timeouts
