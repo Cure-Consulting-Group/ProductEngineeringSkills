@@ -83,7 +83,7 @@
           {
             "type": "command",
             "timeout": 5,
-            "command": "python3 -c \"\nimport json, os, sys, time\ntry:\n    base = os.path.expanduser('~/.cure/telemetry')\n    os.makedirs(base, exist_ok=True)\n    with open(os.path.join(base, 'sessions.jsonl'), 'a') as f:\n        f.write(json.dumps({'ts': time.strftime('%Y-%m-%dT%H:%M:%S'), 'event': 'tool_failure', 'project': os.path.basename(os.getcwd()), 'detail': os.environ.get('CLAUDE_TOOL_NAME', 'unknown')}) + chr(10))\nexcept Exception:\n    pass\nsys.exit(0)\" 2>/dev/null; exit 0"
+            "command": "python3 -c \"\nimport json, os, sys, time\ntry:\n    base = os.path.expanduser('~/.cure/telemetry')\n    os.makedirs(base, exist_ok=True)\n    with open(os.path.join(base, 'sessions.jsonl'), 'a') as f:\n        f.write(json.dumps({'ts': time.strftime('%Y-%m-%dT%H:%M:%S'), 'event': 'tool_failure', 'project': os.path.basename(os.getcwd()), 'detail': (json.loads(sys.stdin.read() or '{}') or {}).get('tool_name') or 'unknown'}) + chr(10))\nexcept Exception:\n    pass\nsys.exit(0)\" 2>/dev/null; exit 0"
           }
         ]
       }
