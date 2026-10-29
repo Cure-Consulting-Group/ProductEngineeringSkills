@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 106 production-grade skills (organized into 9 domain folders), 41 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 107 production-grade skills (organized into 9 domain folders), 41 custom agents, 4 personas (cross-domain engagement archetypes), multi-layer hooks (command + prompt) with a Stop-hook quality gate and skill security guard, MCP server configs, LSP server configs, output styles, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 ## Machine Setup (every machine, every release)
 

@@ -8,7 +8,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- |
 | Plugin | cure-product-engineering |
 | Version | 7.13.0 |
-| Skills | 106 |
+| Skills | 107 |
 | Agents | 41 |
 | Personas | 4 |
 | Hooks (entries) | 17 |
@@ -41,11 +41,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | technical-estimation | Builds defensible software estimates with ranges: PERT, reference class, risk reserve. Use when an estimate will be bid on, contracted, or audited, e.g. an RFP cost volume. | Read, Grep, Glob, Bash, Write, Edit, WebSearch |
 
 
-### Engineering (40)
+### Engineering (41)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
 | agent-designer | Designs LLM agent internals: tool schemas, memory, termination, evals, cost, failure modes. Use when an agent or multi-agent system is the chosen shape and needs a design. | default |
+| agent-harness | Use when a repo's agents break prose rules or finish on red. Installs Cure's harness kit: AGENTS.md map with Controls, a sub-60s verify gate, Stop hook, ask/deny permissions, mutation-checked contract tests. | default |
 | agent-workflow-designer | Picks the shape of an LLM system: single call, workflow pattern, or autonomous agent. Use when deciding how to structure an AI feature, or when an agent is too slow, costly, or flaky. | default |
 | ai-feature-builder | Builds user-facing LLM features: client wrapper, prompts, streaming UX, fallbacks, kill switch. Use when adding chat, summarization, extraction, or generation to an app. | default |
 | analytics-implementation | Designs analytics event taxonomies, tracking plans, funnels, and consent flows. Use when instrumenting product analytics (GA4/Firebase, Mixpanel, PostHog) or auditing events. | default |
@@ -281,12 +282,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.13.0). 106 skills (domain-organized), … |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.13.0). 107 skills (domain-organized), … |
 | SessionStart | startup | command | python3 -c " |
 | SessionStart | startup | command | echo "Git branch: $(git branch --show-current 2>/dev/null \|\| echo 'not a git repo'). Uncommitted changes: $(g… |
 | SessionStart | startup | command | if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && { [ -d .claude ] \|\| [ -d .git ]; }; then PROVISIONED=''; if [ ! -f .cl… |
 | PreCompact | auto\|manual | command | echo 'CONTEXT RE-INJECTION AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Clean Archit… |
-| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 106 skills, 41 agents, 4 personas. Use /cure-p… |
+| PostCompact | auto\|manual | command | echo 'Context compacted. Cure Consulting Group plugin active — 107 skills, 41 agents, 4 personas. Use /cure-p… |
 | ConfigChange | skills | command | if [ -f scripts/audit-library.py ]; then python3 scripts/audit-library.py --fail-under 8 >/dev/null 2>&1 \|\| e… |
 | PostToolUseFailure | Bash | prompt | A Bash command failed. Tool input and error output: $ARGUMENTS |
 | PostToolUseFailure |  | command | python3 -c " |
