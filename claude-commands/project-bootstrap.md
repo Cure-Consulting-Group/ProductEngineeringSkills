@@ -88,7 +88,8 @@ interview. STATE.md is archived to `STATE_[DATE].md` at sprint end and regenerat
 
 Print: each file with line count, sections included (and the signal that justified each), sections
 omitted (and why), and next steps — review Firestore field types and environment IDs, confirm the
-task queue, commit both files. Offer (don't auto-run) the sprint-0 follow-ups: `ci-cd-pipeline`,
+task queue, commit both files. Offer (don't auto-run) the sprint-0 follow-ups: `agent-harness`
+(the verify gate, Stop hook, permissions and contract tests that make these rules enforced), `ci-cd-pipeline`,
 `security-review`, `testing-strategy`, `observability`, and adding the project to a parent
 `PORTFOLIO.md` if one exists.
 
@@ -102,6 +103,7 @@ task queue, commit both files. Offer (don't auto-run) the sprint-0 follow-ups: `
 ## Related Skills
 
 - `cure-infra-bootstrap` — manifest-driven Cure infrastructure (use instead when upgrades and drift checks matter)
+- `agent-harness` — turns the rules written here into enforced controls: one gate, a Stop hook, ask/deny permissions, contract tests
 - `self-improving-memory` — seed auto-memory alongside these files at engagement start
 - `sdlc` — PRDs, ADRs, and backlog after bootstrap
 - `firebase-architect`, `incident-response` — deepen the Firestore schema and incident protocol

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verify-on-stop.sh",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "ask": [
+      "Bash(firebase deploy*)",
+      "Bash(npx firebase deploy*)",
+      "Bash(*firebase-tools deploy*)",
+      "Bash(terraform apply*)",
+      "Bash(terraform -chdir=* apply*)",
+      "Bash(terraform destroy*)",
+      "Bash(gcloud run deploy*)",
+      "Bash(gcloud functions deploy*)",
+      "Bash(gcloud run services update*)",
+      "Bash(gh workflow run deploy*)",
+      "Bash(gh release create*)",
+      "Bash(git push*--tags*)",
+      "Bash(git push*refs/tags/*)"
+    ],
+    "deny": [
+      "Bash(gcloud projects delete*)",
+      "Bash(gcloud firestore databases delete*)",
+      "Bash(gcloud secrets delete*)",
+      "Bash(gcloud secrets versions destroy*)",
+      "Bash(bq rm*)",
+      "Read(.env)",
+      "Read(.env.*)"
+    ]
+  }
+}
