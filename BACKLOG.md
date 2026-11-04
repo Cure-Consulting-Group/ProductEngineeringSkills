@@ -461,6 +461,21 @@ Order: T71 first (actively harmful), then T76 (one field fixes two runtimes), th
 
 **Effort:** M (probe S, mechanism M).
 
+## T94 — PR tracker: step and percent per PR, auto-cleanup of done PRs and deployments (owner request, 2026-11-03)
+
+**Why:** the tracker band (cc-pr-tracker 0.3.1-cure.1, and cure-lane-board for lanes) lists each PR with its merge state, review state and check count (`clean · no review · ✓9`), and merged rows stay struck through until `/pr-clear` or the `dropDone` timer. The owner wants to read progress at a glance: *which step* a PR is on and *how far along* it is, and wants finished rows to leave on their own. Deployments count too: a PR that merged but whose deploy has not finished is not done.
+
+**Scope:**
+- **Step and percent per row.** Define the pipeline as ordered steps and show `step k/n · NN%`: opened → checks running → checks green → review requested → approved → merge queue → merged → deploy running → deploy verified. Percent is steps completed over steps that apply to that repo (a repo without a deploy workflow stops at merged). Source the step from the GitHub data the tracker already polls (mergeStateStatus, reviewDecision, statusCheckRollup, merge-queue position from lane-board 0.2.0) plus the deploy run (the `deployment_status` API or the named deploy workflow's latest run on the merge commit).
+- **Auto-cleanup.** Default `dropDone` to "after the deploy is verified, then 10 minutes" (today: keep / 10 min / immediately, counted from merge). A closed-unmerged PR drops on the same timer. Keep `/pr-clear` for the manual case. Never drop a row whose deploy failed; show it as `deploy failed` until acknowledged.
+- **Deployments.** Read the deploy state for the merge commit: GitHub Deployments when the repo uses them, else the latest run of the workflow named in `userConfig.deployWorkflow` (default: any workflow whose name contains "deploy" or "publish"). Show `deploy k/n` with the job name on hover or in `/pr` detail.
+- **Where.** cc-pr-tracker is vetted upstream code with a local patch; the percent column and deploy step go into the local `-cure` patch and the upstream PR (T75), or into cure-lane-board if the owner prefers one band. Decide before coding; do not fork a third tracker.
+- **Tests:** step table unit tests (every state combination maps to one step), a deploy-run fixture, a drop-timer test, and the no-subprocess-per-render assertion the other mods carry.
+
+**Acceptance:** on this repo and statledger, every open PR shows a step and a percent that match the GitHub UI; a merged PR with a green deploy disappears within 10 minutes without a command; a failed deploy stays visible. `claude plugin test` green; strict validate passes.
+
+**Effort:** M.
+
 ---
 
 
