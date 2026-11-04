@@ -87,8 +87,33 @@ export const SECRET_PATTERNS: readonly (readonly [string, RegExp])[] = [
 export function vendorHostIn(text: string): string | undefined {
   const lower = (text || '').toLowerCase()
   for (const host of AI_VENDOR_HOSTS) {
-    const escaped = host.replace(/\./g, '\\.')
-    if (new RegExp(`(?:^|[^a-z0-9.-])${escaped}(?![a-z0-9-]|\\.[a-z0-9])`).test(lower)) return host
+    if (hasWholeHost(lower, host)) return host
   }
   return undefined
+}
+
+const HOST_CHAR = /[a-z0-9.-]/
+const LABEL_CHAR = /[a-z0-9-]/
+const ALNUM = /[a-z0-9]/
+
+/**
+ * True when `host` occurs in `lower` as a whole host name: not preceded by a
+ * host character, not followed by a label character, and not followed by `.`
+ * plus an alphanumeric (which would make it a prefix of a longer host). A
+ * plain scan, so no RegExp is built from the host list.
+ */
+function hasWholeHost(lower: string, host: string): boolean {
+  let from = 0
+  for (;;) {
+    const at = lower.indexOf(host, from)
+    if (at < 0) return false
+    const before = at === 0 ? '' : lower[at - 1]
+    const end = at + host.length
+    const after = end < lower.length ? lower[end] : ''
+    const after2 = end + 1 < lower.length ? lower[end + 1] : ''
+    const startOk = before === '' || !HOST_CHAR.test(before)
+    const endOk = (after === '' || !LABEL_CHAR.test(after)) && !(after === '.' && ALNUM.test(after2))
+    if (startOk && endOk) return true
+    from = at + 1
+  }
 }

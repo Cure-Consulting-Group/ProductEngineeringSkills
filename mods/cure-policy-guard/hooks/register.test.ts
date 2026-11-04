@@ -217,6 +217,20 @@ test('vendorHostIn matches whole host names only', () => {
   expect(vendorHostIn('echo docs/api.openai.com-notes.md')).toBeUndefined()
 })
 
+test('vendorHostIn: boundaries, case, ports, suffix hosts, empty input (CodeQL rewrite)', () => {
+  expect(vendorHostIn('curl https://api.openai.com/v1')).toBe('api.openai.com')
+  expect(vendorHostIn('notapi.openai.com.example.org')).toBeUndefined()
+  expect(vendorHostIn('api.openai.com.evil.io')).toBeUndefined()
+  expect(vendorHostIn('https://x.io/docs/api.openai.com-guide')).toBeUndefined()
+  expect(vendorHostIn('API.OPENAI.COM:443')).toBe('api.openai.com')
+  expect(vendorHostIn('')).toBeUndefined()
+  // a later occurrence can match when an earlier one is only a prefix
+  expect(vendorHostIn('api.openai.com.evil.io then api.openai.com')).toBe('api.openai.com')
+  // the host at the very end of the text, and followed by a trailing dot
+  expect(vendorHostIn('ping api.openai.com')).toBe('api.openai.com')
+  expect(vendorHostIn('see api.openai.com.')).toBe('api.openai.com')
+})
+
 test('aiEgress: only in PHI and minors repos', () => {
   expect(aiEgress('curl https://api.openai.com/v1', 'Level5')?.rule).toBe('ai-egress')
   expect(aiEgress('curl https://api.anthropic.com/v1', 'SPEDTECH')?.reason).toMatch(/minors or students/)

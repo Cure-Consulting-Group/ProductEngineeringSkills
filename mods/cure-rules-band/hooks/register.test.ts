@@ -7,6 +7,7 @@ import {
   parseRulesJson,
   resolveRepoRules,
 } from './banner'
+import { vendorHostIn } from './shared/rules'
 
 // ── Pure unit tests ────────────────────────────────────────────────────────
 
@@ -125,4 +126,15 @@ test('/rules hide dismisses the band', async ($, on) => {
   await $.session.start({ cwd: '/code/Level5', surface: 'terminal', isInteractive: true })
   await $.command.run({ command: 'rules', args: 'hide' } as any)
   expect(await band($)).toBe('')
+})
+
+// ── shared/rules.ts vendored copy: whole-host matching without a RegExp ──────
+
+test('vendorHostIn (vendored copy): whole host names only', () => {
+  expect(vendorHostIn('curl https://api.openai.com/v1')).toBe('api.openai.com')
+  expect(vendorHostIn('notapi.openai.com.example.org')).toBeUndefined()
+  expect(vendorHostIn('api.openai.com.evil.io')).toBeUndefined()
+  expect(vendorHostIn('https://x.io/docs/api.openai.com-guide')).toBeUndefined()
+  expect(vendorHostIn('API.OPENAI.COM:443')).toBe('api.openai.com')
+  expect(vendorHostIn('')).toBeUndefined()
 })
