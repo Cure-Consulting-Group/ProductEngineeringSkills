@@ -174,7 +174,9 @@ Offer the alternative language. An exception with proposed text is a negotiation
 
 Open with a **Cure positions** section covering the four items above (non-appropriation accepted and the deal modelled year by year; defend-on-allegation; cyber additional-insured; cap and consequential exclusion), each in one sentence with the clause reference. Then the push-back table, then what is standard.
 
-Write `01-analysis/contract-risk-review.md`:
+**The full review goes in your reply.** The user asked a question; answer it in the message, in this order. Then, when the project has a `01-analysis/` folder, also save the same text to `01-analysis/contract-risk-review.md` and say so in one line at the end. Never replace the reply with a pointer to the file: a reader who gets only the message must still see every position and every ask.
+
+Structure (reply and file alike):
 
 1. **🔴 High** — resolve before committing. Each with: what the clause says, why it matters *for this specific work*, and the ask
 2. **🟡 Medium** — price it in. Each with the mitigation
