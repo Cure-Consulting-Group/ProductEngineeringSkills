@@ -22,6 +22,8 @@ Overlays (licensed NCBE banks, project-applied sets) — never commit them here:
   BAR_BENCHMARK_QUESTIONS=dir1:dir2
   --questions <dir>                  repeatable
 An overlay item whose id matches a bundled one replaces it.
+
+Smoke: stats --component mpre --json
 """
 
 import argparse

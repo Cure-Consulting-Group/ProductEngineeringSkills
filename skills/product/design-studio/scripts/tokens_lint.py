@@ -18,6 +18,8 @@ Usage:
     python3 tokens_lint.py --tokens tokens.json [--modes light,dark] [--json]
     python3 tokens_lint.py --tokens light.json --tokens dark.json     # parity between files
 Exit 1 on any error; warnings alone exit 0.
+
+Smoke: --tokens {fixtures}/tokens.json --json
 """
 
 import argparse

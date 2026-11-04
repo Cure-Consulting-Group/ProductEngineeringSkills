@@ -21,10 +21,18 @@ Monochrome and notification glyphs are authored separately as single-colour SVGs
 Usage:
     python3 export_asset_matrix.py --svg master_logo.svg --output-dir dist/brand_assets --brand-name "Brand"
     python3 export_asset_matrix.py --svg master_logo.svg --platforms web,ios,android --icon-bg 0F172A
+    python3 export_asset_matrix.py --svg master_logo.svg --json    # one JSON report on stdout
+
+Smoke: --svg {fixtures}/mark.svg --output-dir {tmp}/assets --json
+
+Smoke-exits: 0,2  (2 = no SVG renderer on the machine, e.g. a bare CI runner)
 """
 
 import argparse
 import base64
+import contextlib
+import io
+import json
 import html
 import os
 import shutil
@@ -172,6 +180,7 @@ class Exporter:
         self.root = ET.parse(master_svg).getroot()
         self.view_box = self.root.get("viewBox") or f"0 0 {self.root.get('width', '512').rstrip('px')} {self.root.get('height', '512').rstrip('px')}"
         self.failures = 0
+        self.records: list = []
 
     def compose(self, out_png: str, w: int, h: int, mark: int, bg: str = "", transparent: bool = False, label: str = "") -> bool:
         """Master centred at `mark` px on a w x h canvas: solid `bg` hex, or transparent."""
@@ -197,6 +206,7 @@ class Exporter:
         if ok and png_size(out_png) != (w, h):
             ok, reason = False, f"rendered {png_size(out_png)} instead of {(w, h)}"
         self.failures += 0 if ok else 1
+        self.records.append({"path": out_png, "label": label or os.path.relpath(out_png), "ok": ok, "reason": reason or None})
         print(f"  {'✓' if ok else '✗'} {label or os.path.relpath(out_png)}{' — ' + reason if reason else ''}")
         return ok
 
@@ -259,8 +269,25 @@ def main() -> None:
     parser.add_argument("--brand-name", default="Brand Identity", help="Brand name for the brand book")
     parser.add_argument("--platforms", default="web", help="Comma list of web,ios,android (default web)")
     parser.add_argument("--icon-bg", default="0F172A", help="Hex (no #) background for opaque app icons and social cards")
+    parser.add_argument("--json", action="store_true", help="Print one JSON report (renderer, every asset with ok/reason, failures) instead of the progress lines")
     args = parser.parse_args()
+    if args.json:
+        report = {"svg": args.svg, "output_dir": args.output_dir, "renderer": None, "assets": [], "failures": 0, "error": None}
+        buf = io.StringIO()
+        code = 0
+        try:
+            with contextlib.redirect_stdout(buf):
+                run_export(args, report)
+        except SystemExit as stop:
+            code = stop.code if isinstance(stop.code, int) else 1
+            if code and not report["assets"]:
+                report["error"] = buf.getvalue().strip().splitlines()[-1].lstrip("❌ ").strip() if buf.getvalue().strip() else "failed"
+        print(json.dumps(report, indent=2))
+        sys.exit(code)
+    run_export(args, None)
 
+
+def run_export(args, report) -> None:
     if not os.path.exists(args.svg):
         print(f"❌ Error: SVG file '{args.svg}' not found.")
         sys.exit(1)
@@ -273,6 +300,8 @@ def main() -> None:
     if not renderer[0]:
         print("❌ Error: no SVG renderer found. Install rsvg-convert (librsvg), Inkscape, ImageMagick, or Google Chrome.")
         sys.exit(2)
+    if report is not None:
+        report["renderer"] = renderer[0]
     print(f"🎨 Rendering {args.svg} with {renderer[0]}" + (" (opaque outputs only: Quick Look flattens transparency)" if renderer[0] == "qlmanage" else ""))
     try:
         ex = Exporter(args.svg, renderer)
@@ -311,6 +340,10 @@ def main() -> None:
         build_brand_guide_html(args.brand_name, svg_content, os.path.join(args.output_dir, "brand_guidelines.html"))
         print("  ✓ brand_guidelines.html (standalone brand book)")
 
+    if report is not None:
+        report["assets"] = ex.records + ([{"path": os.path.join(args.output_dir, "favicon.ico"), "label": "favicon.ico", "ok": True, "reason": None}] if "web" in platforms and os.path.exists(os.path.join(args.output_dir, "favicon.ico")) else []) \
+            + ([{"path": os.path.join(args.output_dir, "brand_guidelines.html"), "label": "brand_guidelines.html", "ok": True, "reason": None}] if "web" in platforms else [])
+        report["failures"] = ex.failures
     if ex.failures:
         print(f"\n⚠ {ex.failures} asset(s) failed; nothing was written for them. Fix the renderer and re-run.")
         sys.exit(3)

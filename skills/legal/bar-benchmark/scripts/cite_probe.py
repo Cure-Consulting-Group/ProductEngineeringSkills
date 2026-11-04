@@ -17,6 +17,8 @@ Usage:
 
 Writes ../results/<UTC-date>-cite-<backend>.json. Needs network for the
 statute and case checks (CourtListener public search; a token makes it faster).
+
+Smoke: --backend mock --dry-run --no-live --json
 """
 
 import argparse

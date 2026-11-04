@@ -31,10 +31,7 @@ MAX_PRELOAD_SKILLS = 4
 # Sensible argument-hints for the handful of skills missing one.
 ARG_HINT_DEFAULTS = {
     "technical-blog-writer": "[topic-or-title]",
-    "equity-research": "[company-or-ticker]",
-    "comps-analysis": "[company-or-sector]",
-    "merger-modeling": "[acquirer-and-target]",
-    "dcf-modeling": "[company-or-ticker]",
+    "valuation": "[company, ticker, or deal]",
 }
 ARG_HINT_FALLBACK = "[input]"
 

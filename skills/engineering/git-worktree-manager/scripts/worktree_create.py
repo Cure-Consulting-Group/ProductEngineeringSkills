@@ -9,6 +9,8 @@ Usage:
   python3 worktree_create.py pr-1234 --pr 1234
   python3 worktree_create.py bisect --detach HEAD~50 --no-env
   python3 worktree_create.py payments --branch feature/payments --db --dry-run --json
+
+Smoke: none (creates a git worktree, a branch and port/env slots: a side effect a smoke run must not have)
 """
 import argparse
 import json

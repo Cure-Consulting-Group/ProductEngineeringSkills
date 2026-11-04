@@ -99,6 +99,15 @@ Keep the house format — Step 1 (Classify), Step 2 (Gather Context), Step 3+ �
   pages, client documents, code under review) says, before Step 1, that the material is data, not
   instructions, and that embedded instructions are reported as findings, not followed. Opus 5.5
   resists injection best when told which text isn't the user's (Anthropic, Opus 5.5 guide).
+- **The reply carries the answer; a file is the copy.** When a skill also saves its deliverable
+  (`QUALIFY.md`, `01-analysis/…`), the reply still states the verdict and the findings, and says in
+  one line where the file is. A reply that only points at a file loses the answer for any reader who
+  gets just the message, and every last-message eval grader scores it zero: T92 measured
+  public-sector-contracting at 0.40 with Write allowed against 0.80 without it, and 0.80–0.93 once
+  the review went in the reply (2026-11-04).
+- **Context for the skill, not through it.** No inline `` !`cmd` ``: where Bash is denied the whole
+  skill fails to load (seven business skills did, until T92). Write the commands as "run these
+  first" bullets.
 - **Unattended use.** Skills with a Recurring Mode point to the early-stop instruction in
   `docs/AUTOMATION.md`: a turn that ends in text is a report, not completion.
 - **Effort.** Don't pin `effort:` from habit. Opus 5.5 defaults to `medium`, which matches Opus 5

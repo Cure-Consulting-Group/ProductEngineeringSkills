@@ -12,6 +12,16 @@ metadata:
 
 **Outcome:** a loop the hiring manager can run without Cure in the room — stage map with time budget, per-stage rubrics with behavioral anchors, a rotated question bank with interviewer guides, an AI-assistant policy, debrief rules, and the metrics that prove the loop predicts performance. Done when every stage maps to a must-have signal and the candidate-time total sits in the 3–8 hour band.
 
+**Output contract** (kept here, at the top, so it survives context compaction; Step 1 picks the row):
+
+| Engagement | Deliver |
+|---|---|
+| Greenfield | Loop spec as a one-page table (stage, signal, minutes, interviewer) + per-stage rubrics with behavioral anchors + rotated question bank with interviewer guides + AI-assistant policy + debrief rules + interviewer training plan + metrics schema |
+| Calibration | Which stage and signal is off, with evidence from current data + the specific changes + a 90-day measurement plan |
+| Leaky loop fix | Root cause with data + the intervention + a monitoring plan |
+
+The hiring manager must be able to run a debrief from these materials alone.
+
 Most loops are accreted, copied from a previous employer, and never measured. Cure ships a designed, measured system instead of a folder of leetcode questions.
 
 ## Pre-Processing (Auto-Context)
@@ -248,13 +258,7 @@ If 6-month performance correlation is near zero or negative: the loop is theater
 
 ## Output
 
-Generate the deliverable matched to the engagement type from Step 1:
-
-- **Greenfield**: full loop spec + per-stage rubrics + question bank with interviewer guides + interviewer training plan + metric dashboard schema.
-- **Calibration**: targeted diagnosis (which stage, which signal, evidence from current data) + specific changes + measurement plan to verify the fix in 90 days.
-- **Leaky loop fix**: root-cause analysis with data + intervention + monitoring plan.
-
-Match length to the need; no filler sections or restated summaries. Format the loop spec as a one-page summary table that the hiring manager can hand to every interviewer, plus per-stage detail pages. The hiring manager should be able to run a debrief from the materials alone, without you in the room.
+Deliver the row of the **Output contract** (top of this skill) that Step 1 selected. Match length to the need; no filler sections or restated summaries. Format the loop spec as a one-page summary table every interviewer gets, plus per-stage detail pages.
 
 ## Cross-References
 

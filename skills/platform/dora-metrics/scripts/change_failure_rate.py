@@ -10,6 +10,8 @@ CSV columns required: id, deployed_at, caused_incident
   deployed_at is ISO8601; rows with unparseable timestamps are skipped.
 
 Output: total deployments, failed deployments, CFR %, DORA tier.
+
+Smoke: --csv {fixtures}/deployments.csv --json
 """
 from __future__ import annotations
 

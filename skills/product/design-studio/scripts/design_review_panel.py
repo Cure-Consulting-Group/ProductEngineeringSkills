@@ -13,6 +13,8 @@ Usage:
 --emit writes review/prompts/<perspective>.md for use with subagents or tri-lane lanes.
 --run also writes review/results/<perspective>.md and review/synthesis.md (a template you fill in).
 Reviews are read-only: every backend is invoked in its read-only or plan mode, with the artefacts inlined.
+
+Smoke: --brief {fixtures}/brief.md --out {tmp}/panel --emit --json
 """
 
 import argparse

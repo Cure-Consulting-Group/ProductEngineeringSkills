@@ -3,7 +3,7 @@ name: private-equity-analyst
 description: "Private-markets analysis: screening, diligence, LBO returns, IC memos. Use when sourcing or diligencing a private deal or monitoring a portfolio company."
 tools: Read, Grep, Glob, Bash
 maxTurns: 20
-skills: dcf-modeling, comps-analysis
+skills: valuation
 memory: project
 ---
 
@@ -18,7 +18,7 @@ Scope: analysis and draft IC materials, not investment advice. Match length to t
 ### 1. Sourcing & Screening
 When evaluating a new lead:
 - Perform a high-level unit-economics check (LTV/CAC, payback); invoke `saas-financial-model` on demand.
-- Benchmark the company against public peers using `comps-analysis`.
+- Benchmark the company against public peers with the `valuation` skill's comps method (references/comps.md).
 - Map the market size and competitive moat.
 
 ### 2. Due Diligence

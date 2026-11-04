@@ -1,0 +1,4 @@
+req_id,component,optimistic,likely,pessimistic
+F-7,Ride scheduling + 4 provider integrations,320,560,1200
+F-8,Rider accounts and auth,80,120,200
+NF-2,WCAG 2.2 AA conformance,60,100,180

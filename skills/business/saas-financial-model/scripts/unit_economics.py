@@ -15,6 +15,8 @@ Inputs:
 
 Output: ARR, ARPU, LTV (revenue + margin-adjusted), LTV:CAC, payback months,
         avg lifespan, plus health flag (Healthy/Warning/Danger).
+
+Smoke: --mrr 20000 --customers 200 --churn-rate 0.03 --cac 400 --json
 """
 from __future__ import annotations
 

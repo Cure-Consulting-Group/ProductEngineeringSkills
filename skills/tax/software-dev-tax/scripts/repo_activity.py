@@ -2,6 +2,8 @@
 
 Usage:
     python3 repo_activity.py [ROOT] [--year YYYY] [--json]
+
+Smoke: {repo} --json
 """
 
 from __future__ import annotations

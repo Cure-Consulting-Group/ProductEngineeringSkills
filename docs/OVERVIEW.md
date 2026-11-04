@@ -7,8 +7,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.15.0 |
-| Skills | 107 |
+| Version | 7.16.0 |
+| Skills | 104 |
 | Agents | 41 |
 | Personas | 4 |
 | Hooks (entries) | 11 |
@@ -88,14 +88,11 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | web-design-expert | Guides web UI design: responsive layout, tokens, Tailwind v4, dark mode. Use when designing or reviewing pages and components for layout, CSS architecture, or theming. | default |
 
 
-### Finance (4)
+### Finance (1)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
-| comps-analysis | Values a company against peers: EV/Revenue, EV/EBITDA, and P/E multiples. Use when benchmarking valuation multiples or pricing a company off public comparables. | default |
-| dcf-modeling | Builds DCF valuations: unlevered FCF, WACC, terminal value, equity bridge. Use when estimating intrinsic value or a per-share price from projected cash flows. | default |
-| equity-research | Analyzes a public company from 10-K/10-Q filings and earnings calls. Use when digesting earnings, reading SEC filings, or drafting a buy/hold/sell thesis with catalysts. | default |
-| merger-modeling | Models M&A accretion/dilution: pro-forma EPS, deal mix, PPA. Use when judging an acquisition's financial impact on the buyer, including synergies. | default |
+| valuation | Values companies: comps, DCF, M&A accretion, equity theses, studio deals. Use when pricing a company off peers or cash flows, judging an acquisition offer, or writing a stock thesis. | default |
 
 
 ### Legal (4)
@@ -282,7 +279,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.15.0). 107 skills (domain-organized), … |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.16.0). 104 skills (domain-organized), … |
 | SessionStart | startup | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" session-start |
 | SessionStart | compact | command | printf '%b\n' 'STANDARDS RE-INJECTED AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Cl… |
 | UserPromptSubmit |  | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" prompt |

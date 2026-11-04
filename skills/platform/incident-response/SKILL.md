@@ -3,7 +3,6 @@ name: incident-response
 description: "Guides live incidents; builds on-call runbooks, severities, post-mortems. Use when something is down or degraded now, or when setting up on-call, escalation, or a post-mortem."
 when_to_use: "NOT for backup/failover planning (use disaster-recovery) or delivery-metric baselines (use dora-metrics)."
 argument-hint: "[incident-or-system]"
-context: fork
 metadata:
   verified: 2026-09-23
 ---

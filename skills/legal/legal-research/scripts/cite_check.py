@@ -19,6 +19,8 @@ Usage:
   cat memo.md | python3 cite_check.py -
 
 Exit 0 when every citation is VERIFIED/OK, 1 when any is not, 2 on bad input.
+
+Smoke: {fixtures}/memo.md --json
 """
 
 import argparse

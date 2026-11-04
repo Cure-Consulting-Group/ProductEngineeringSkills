@@ -37,12 +37,12 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 
 | | |
 |---|---|
-| Library version | 7.15.0 — Wave 7 (released 2026-11-03; v7.14.0 went to #89–#91 on 2026-10-29); 107 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
-| Last wave | Wave 7 — truth in delivery (T71–T87, T89, T90, T92 done; T91 canaries and live checks recorded; T88 deferred; T93 opened for skill routing on task prompts); first measured eval sweep: mean Δ +0.01, audit 9.81; see BACKLOG.md |
-| Plugins in this repo | cure-product-engineering 7.15.0; cure-tri-lane 1.16.0 (includes the 1.14.5 guard fix); 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 (hooks merge into settings.json, T89) |
+| Library version | 7.16.0 — Wave 7 close-out (T88, T93, T94; 2026-11-04); 104 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
+| Last wave | Wave 7 — complete (T71–T94). Skill routing measured: 87% of runs fired before the T93 nudge; every gap case 3/3 after it. Audit 9.83; see BACKLOG.md |
+| Plugins in this repo | cure-product-engineering 7.16.0; cure-tri-lane 1.16.0 (includes the 1.14.5 guard fix); 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 (hooks merge into settings.json, T89) |
 | Runtimes on the primary Mac (2026-11-04) | Claude Code 2.1.318; codex 0.166.0; agy 1.5.0. CI pins Claude Code 2.1.310 and codex 0.164.0; `runtime-latest.yml` tracks @latest weekly |
 | Machines verified with `install-runtimes.sh` | primary Mac — v7.15.0, 2026-11-04 (codex 0.166.0: 105 listed + 2 hidden; agy 1.5.0: 107 skills / 4 agents / 11 rules, 0 validate warnings, at `~/.gemini/config/plugins/cure`) |
-| Vetted-mods local patches | cc-pr-tracker 0.3.1-cure.1 (clear merged PRs; upstream PR prepared, not opened); secret-redactor 1.0.0-cure.1 (failed-Bash result shape). Originals in `../vetted-mods-backups/` |
+| Vetted-mods local patches | cc-pr-tracker 0.3.1-cure.2 (clear merged PRs; T94 step/percent mirror and after-merge cleanup; upstream PR prepared, not opened); secret-redactor 1.0.0-cure.1 (failed-Bash result shape). Originals in `../vetted-mods-backups/` |
 | Open owner decisions | Upstream cc-pr-tracker PR (public action, needs rebase onto upstream 0.6.0); Level5 audio-retention flag (from Wave 6) |
 | PR #88 (2026-11-03) | Rebased on main (v7.14.0 + #84), CodeQL `vendorHostIn` alerts fixed (18 of 19; the `hooks/cure_guard.py:164` clear-text-logging alert is a false positive for the owner to dismiss), released as v7.15.0. #86 and #87 closed as included/superseded |
 | Close-out | The Antigravity brief (`docs/handoffs/2026-10-25-agy-wave-7-closeout.md`) never ran; Claude Code did Tasks A–C on `feat/wave-7` on 2026-11-03. Post-merge machine steps done 2026-11-04: marketplace refreshed, all 9 mods and tri-lane 1.16.0 installed, egress-guard and claim-guard removed, agent-budget 0.2.0 enabled (live: five parallel "audit" subagents all ran on the session model, store empty). Remaining interactive checks for the owner: `/hooks` lists the bootstrap hooks in a freshly bootstrapped project; the policy-guard ask times out at 60 s in a real session; a `/loop` iteration never shows the Stop nudge |

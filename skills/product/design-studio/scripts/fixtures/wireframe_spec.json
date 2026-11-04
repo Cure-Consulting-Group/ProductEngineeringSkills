@@ -1,0 +1,98 @@
+{
+  "product": "Dispatch",
+  "platform": "android",
+  "fidelity": "mid",
+  "nav_items": [
+    "Today",
+    "Jobs",
+    "Map",
+    "Inbox"
+  ],
+  "screens": [
+    {
+      "id": "today",
+      "name": "Today",
+      "purpose": "See the day's route and what is late",
+      "nav": "tabs",
+      "primary_action": "Start next job",
+      "regions": [
+        {
+          "type": "header",
+          "label": "Today",
+          "fixed": true
+        },
+        {
+          "type": "card",
+          "label": "Next job: address, window, status"
+        },
+        {
+          "type": "tabs",
+          "label": "Route / Late / Done",
+          "sticky": true
+        },
+        {
+          "type": "list",
+          "label": "Job row: customer, window, distance",
+          "rows": 6
+        },
+        {
+          "type": "cta",
+          "label": "Start next job",
+          "fixed": true
+        }
+      ],
+      "notes": [
+        "Empty: no jobs today -> 'Pick up unassigned' path",
+        "Error: sync failed -> banner with retry, cached route stays",
+        "Long: 42-char customer name wraps to two lines"
+      ]
+    },
+    {
+      "id": "job",
+      "name": "Job",
+      "purpose": "Do the job and close it",
+      "nav": "none",
+      "primary_action": "Mark complete",
+      "regions": [
+        {
+          "type": "header",
+          "label": "< Back   Job",
+          "fixed": true
+        },
+        {
+          "type": "hero",
+          "label": "Customer, address, window"
+        },
+        {
+          "type": "text",
+          "label": "Notes from dispatcher (2-4 lines)"
+        },
+        {
+          "type": "form",
+          "label": "Parts used, time, signature",
+          "rows": 3
+        },
+        {
+          "type": "toolbar",
+          "label": "Call / Navigate / Complete",
+          "fixed": true
+        }
+      ],
+      "notes": [
+        "Offline: form saves locally, badge shows 'will sync'"
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "from": "today",
+      "to": "job",
+      "label": "tap row"
+    },
+    {
+      "from": "job",
+      "to": "today",
+      "label": "complete / back"
+    }
+  ]
+}

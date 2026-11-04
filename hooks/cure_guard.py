@@ -4,7 +4,9 @@
 Usage (from hooks/hooks.json):  python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" <mode>
 
 Modes:
-  prompt         UserPromptSubmit  destructive-intent nudge (plain stdout reaches Claude here)
+  prompt         UserPromptSubmit  destructive-intent nudge, plus a one-line skill-routing note when
+                 the prompt clearly matches a skill in hooks/skill_routes.json (T93; plain stdout
+                 reaches Claude here)
   edit           PreToolUse Edit|Write|MultiEdit|NotebookEdit  protected-file guard
   skill-content  PreToolUse Edit|Write|...  static scan of skill/agent/persona content
   bash           PreToolUse Bash   destructive-command guard (incl. the settings.json deny rules)
@@ -186,11 +188,53 @@ def log_event(event, project, detail=""):
         pass
 
 
+# --- skill routing (T93) ------------------------------------------------------
+# Measured 2026-11-03/04: with the plugin loaded, Opus 5.5 answers task-shaped prompts without
+# calling the Skill tool even when a description matches (security-review 0/3, legal-doctrine 0/3,
+# legal-research 1/3). Descriptions were not the lever (all start "Use when" by char 77). A table of
+# high-precision patterns names the one skill a prompt plainly asks for. Rules: one line, at most one
+# skill, never on a slash command or an automated notice, never blocks, fails open.
+ROUTES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "skill_routes.json")
+NOT_A_PERSON = re.compile(r"^\s*(/|<task-notification>|<system-reminder>|\[cc-pr-tracker:|\[SYSTEM NOTIFICATION)")
+_routes = None
+
+
+def load_routes():
+    global _routes
+    if _routes is None:
+        try:
+            with open(ROUTES_FILE) as f:
+                raw = json.load(f).get("routes", [])
+            _routes = [(r["skill"], re.compile(r["when"], re.I),
+                        re.compile(r["unless"], re.I) if r.get("unless") else None, r["gain"]) for r in raw]
+        except Exception:
+            _routes = []
+    return _routes
+
+
+def route_skill(prompt):
+    """(skill, gain) for the first route whose pattern matches and whose exclusion does not."""
+    if not prompt or NOT_A_PERSON.search(prompt) or len(prompt) > 8000:
+        return None
+    head = prompt[:3000]
+    for skill, when, unless, gain in load_routes():
+        if when.search(head) and not (unless and unless.search(head)):
+            return skill, gain
+    return None
+
+
 def mode_prompt(d):
-    p = (d.get("prompt") or "").lower()[:500]
+    prompt = d.get("prompt") or ""
+    p = prompt.lower()[:500]
     if DESTRUCTIVE_PROMPT.search(p):
         print("Destructive intent detected in the prompt: confirm scope with the user "
               "before any irreversible action.")
+    hit = route_skill(prompt)
+    if hit:
+        skill, gain = hit
+        log_event("skill_route", project_dir(d), skill)
+        print(f"Cure skill match: this request is what /cure-product-engineering:{skill} is for "
+              f"({gain}). Load it with the Skill tool before answering, unless the user said not to.")
 
 
 def target_path(ti):
