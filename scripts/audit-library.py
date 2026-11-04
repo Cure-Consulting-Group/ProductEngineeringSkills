@@ -683,15 +683,18 @@ def eval_deltas():
     files = sorted(results_dir.glob("*-skill.json")) if results_dir.exists() else []
     if not files:
         return {}
-    # plugin-evals/sweep.py (T85) records per-skill deltas over n>=3 runs; prefer
-    # the newest file that has them. A later single-rep run (e.g. the release
-    # Ring 0 eval) must not hide the calibration sweep.
-    for f in reversed(files):
+    # plugin-evals/sweep.py (T85) records per-skill deltas over n>=3 runs. Merge
+    # them across sweeps, newest measurement per skill winning, so a partial
+    # re-sweep (T92) updates its skills without dropping the others, and a
+    # single-rep run (the release Ring 0 eval) never hides a calibration sweep.
+    merged = {}
+    for f in files:
         res = json.loads(f.read_text())
-        sd = {k: v["delta"] for k, v in (res.get("skill_deltas") or {}).items()
-              if v.get("delta") is not None and v.get("n_min", 0) >= 3}
-        if sd:
-            return sd
+        for k, v in (res.get("skill_deltas") or {}).items():
+            if v.get("delta") is not None and v.get("n_min", 0) >= 3:
+                merged[k] = v["delta"]
+    if merged:
+        return merged
     res = json.loads(files[-1].read_text())
     by_task = {}
     for k, v in res.get("summary", {}).items():

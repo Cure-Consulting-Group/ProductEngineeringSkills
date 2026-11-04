@@ -1,5 +1,10 @@
 # Antigravity brief: Wave 7 close-out (2026-10-25)
 
+> **Status (2026-11-03): not executed by Antigravity.** No `wave7/agy-closeout` branch or
+> `../PES-w7-agy` worktree was ever created. Claude Code did Tasks A–C directly on `feat/wave-7`
+> (commits `8af79de` CodeQL, `2a081a4` T89, `e840ca0` T90) after merging `origin/main`
+> (v7.14.0). Kept as the record of the intended lane contract.
+
 You are the implementer. Claude Code is the architect and verifier, and the owner merges.
 Follow this brief exactly. If a step can't be done as written, **stop and report**. Don't improvise around it.
 

@@ -30,6 +30,9 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 | T86 | ✅ Done | **Platform facts:** `docs/evaluations/2026-10-24/platform-facts.md`. **Codex measured:** on 272k-context models, signed out or in CI, descriptions are cut at 101–105 chars. **agy:** honors `disable-model-invocation`. **Tri-lane 1.16.0:** a default moved only where its canary passed: implementation → gpt-6-luna, risk and wide → gpt-6.1-sol, whole-repo → gemini-4-argon-high. Review stays on gpt-5.6-luna (gpt-6-luna scored 0.863); codex-implementer runs the routed slug. |
 | T87 | ✅ Done | **Rules:** all 11 refreshed with dated sources. The Go floor is 1.26+, not the ticket's 1.25, which is no longer supported; Node images use node:24. **Output styles:** deleted (D4); the 3 lines worth keeping moved into sdlc, incident-response and qa-engineer. api-specification contradicted api-architect, and financial-analysis had a logic error. |
 | T88 | ⏳ Deferred | As planned. |
+| T89 | ✅ Done (2026-11-03) | **Bootstrap 0.4.0:** `manifest.hooks` now merges into `.claude/settings.json` → `hooks`, the only project location Claude Code reads (verified against the hooks reference). Other settings keys and user hook groups survive; generated groups are recognised by command string (`manifest.generated['.claude/settings.json#hooks'].commands`), so a re-run never duplicates and a hand-edited generated hook is a CONFLICT. Output is `hookSpecificOutput.additionalContext` (read on PreToolUse and PostToolUse); the old `{"reminder"}` stdout reached nobody. `doctor` reports a leftover `.claude/hooks/hooks.json` as `legacy-hooks` (warn) and never deletes it. Tests 107 → 110; the 7 new tests fail on the old code. Live `/hooks` listing: see T91. |
+| T90 | ✅ Done (2026-11-03) | **Measured on codex 0.166.0** (zero-model `prompt-input`, signed-out 272k catalog): descriptions cut at **105–109 chars** (mean 106.8), inside the ticket's 95–110 premise. `TRIGGER_STRICT_WINDOW` 100 → **85**; 51 descriptions rewritten so "Use when" starts by char 77 (max). Skills with ≥2 trigger words inside the measured cut: **100/105 → 105/105**. Routing nouns and NOT-for clauses kept; `description` + `when_to_use` ≤350 everywhere. Table of old/new first-100 chars in the PR. |
+| T92 | ✅ Done (2026-11-03) | **Diagnosis** (with-arm, `--runs 1 --ablation none --keep-temp`, 4 cases, \$0.78): public-sector-city-contract fired the skill but Claude wrote "the plugin's public-sector contracting skill wouldn't load because shell access is blocked": the 7 business skills still carried inline `!`cmd`` injection, which fails the whole skill where Bash is denied (eval sandbox, CI, headless), so the sweep had measured the bare model twice. Three graders failed correct replies (non-appropriation phrased as "funding isn't approved … required by law"; "don't book five years"; an IDOR finding written in plain words); legal-doctrine's regex wanted "two witnesses" in one order. **Fixes:** 27 injections → plain run-these-first bullets in 7 skills; 4 graders widened and checked against the transcripts; `defend-on-allegation` kept (a real miss). **Re-sweep** (`sweep.py --skills …`, n=3, claude-opus-5-5, 2026-11-04, \$15.35, 11 cases, 66 runs): legal-doctrine 0.00 (was −0.22), security-review 0.00 (−0.17), legal-research 0.00 (−0.17), qsbs +0.08, data-migration +0.08, public-sector −0.08 (was −0.25; 3/3 fires now), nextjs-scaffold −0.08. The two at −0.08 are one grader-run out of twelve, inside n=3 noise, not a confirmed regression. **Routing gap confirmed and ticketed (T93):** with-arm fire rate security-review 0/3, legal-doctrine 0/3, legal-research 1/3. **Audit calibration** now merges per-skill deltas across sweeps (newest per skill): library 9.81 → **9.83**, 12 skills capped. `evals/results/2026-11-04-0337-skill.json`. |
 
 **Deviations from the plan:**
 1. **One release (v7.14.0) instead of three.** The new gates pass only once every track has landed, and deleting `output-styles/` needs the new sync-metadata.
@@ -38,7 +41,8 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 4. **agent-budget's cap defaults to 8, not 4.**
 5. **refactor-assistant keeps worktree isolation**, now documented.
 6. **The sidecar path is `~/.gemini/config/sidecars/`,** as the Antigravity docs give it.
-7. **Fixes outside the tickets:**
+7. **CodeQL (2026-11-03):** the 18 high alerts on `vendorHostIn` (hostname regex built from the host list, in `mods/shared/rules.ts` and its 2 vendored copies) are gone: the function is a plain `indexOf` scan with the same whole-host semantics, plus boundary tests in policy-guard and rules-band. The 19th (`hooks/cure_guard.py:164`, clear-text logging) is a false positive for the owner to dismiss. The audit's eval calibration now takes the newest results file that has n≥3 per-skill deltas, so the single-rep Ring 0 run from v7.14.0 no longer hides the sweep (9.81, not 9.99).
+8. **Fixes outside the tickets:**
    - vetted-mods `secret-redactor` 1.0.0-cure.1 rebuilt failed Bash results as a bare string, causing "expected object, received string". It now keeps core's result object.
    - OVERVIEW now reads the standalone `.lsp.json` and the MCP template.
    - Tri-lane's codex-implementer runs the routed model slug.
@@ -48,8 +52,7 @@ This repo is **internal-only** — not for public distribution, no marketplace. 
 **Owner items:**
 - Restart Claude Code to load cc-pr-tracker 0.3.1-cure.1 and the secret-redactor patch.
 - Decide on the upstream cc-pr-tracker PR (public).
-- Merge the Wave 7 PR.
-- PR #87 is superseded by it; PR #86 is included in it.
+- ~~Merge the Wave 7 PR.~~ Released as **v7.15.0** (v7.14.0 was taken on 2026-10-29 by #89–#91: agent-harness, tri-lane 1.14.5). #86 and #87 closed 2026-11-03; #84 merged.
 - Still open from Wave 6: the Level5 audio-retention flag.
 
 Captured 2026-10-24 from an owner request: "do some more research to ensure all of our skills, tools, hooks, agents are all top notch. even our mods… we love this mod but have no way to clear these merged PRs."
@@ -441,6 +444,21 @@ Order: T71 first (actively harmful), then T76 (one field fixes two runtimes), th
 **Acceptance:** no skill below Δ −0.05 unless the regression is confirmed and ticketed against the skill.
 
 **Effort:** M.
+
+## T93 — Skills that don't fire on task prompts (confirmed by T92, 2026-11-03)
+
+**Why:** with the plugin loaded and the skill's description matching the prompt, Opus 5.5 answered in one turn without calling the Skill tool on all three routing cases re-run under T92: `route-security-review-prelaunch` (0 of 3 in the T92 re-sweep, 0 of 1 in the diagnostic run, 0 of 5 on 2026-10-24), `route-legal-doctrine` (0/3), `route-legal-research` (1/3). The answers were good (the security review found the IDOR; the citation check named Varghese as fabricated), so the result graders pass either way, but the skill's own value never reaches the user: no `cite_check.py` run against CourtListener, no NY-first doctrine references, no OWASP 2025 checklist. This is the Wave 5 "skips skills on task prompts" pattern, now measured. Descriptions are not the lever: all three start "Use when" by char 77 (T90) and name the prompt's nouns.
+
+**Scope:**
+- Measure first: a routing probe over the 20 top-traffic skills, 3 natural prompts each, `--ablation none --runs 3`, recording `tool_used: Skill` only. Cost about \$30. Report the fire rate per skill and per prompt shape (task with inline code or facts vs. open question).
+- Then decide one mechanism, with the probe re-run as acceptance:
+  - `paths:`-style scoping is unavailable to skills; a `UserPromptSubmit` command hook that adds a one-line `additionalContext` ("a Cure skill matches: /security-review") when a keyword table matches is the cheapest nudge, but it must stay silent for /loop and routines and add nothing when no skill matches (the hooks rule: quiet, non-blocking).
+  - Alternatively fold the skill's irreplaceable step into the description ("runs cite_check.py against CourtListener"), so the model sees what it loses by not invoking.
+- Do not make skills fire by inflating descriptions past the T90 window.
+
+**Acceptance:** fire rate on the three T92 routing cases ≥ 2 of 3 runs each, with the probe showing no new false fires on the `not-<skill>` boundary cases.
+
+**Effort:** M (probe S, mechanism M).
 
 ---
 

@@ -37,15 +37,15 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 
 | | |
 |---|---|
-| Library version | 7.14.0 — Wave 7, 2026-10-24; 106 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
-| Last wave | Wave 7 — truth in delivery (T71–T87 done, T88 deferred, T89–T92 new); first measured eval sweep: mean Δ +0.01, audit 9.81; see BACKLOG.md |
-| Plugins in this repo | cure-product-engineering 7.14.0; cure-tri-lane 1.16.0; 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 |
-| Runtimes on the primary Mac (2026-10-24) | Claude Code 2.1.306 (2.1.310 available); codex 0.163.0 (0.164.0 available); agy 1.4.7 |
+| Library version | 7.15.0 — Wave 7 (released 2026-11-03; v7.14.0 went to #89–#91 on 2026-10-29); 107 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
+| Last wave | Wave 7 — truth in delivery (T71–T87, T89, T90, T92 done; T91 canaries and live checks recorded; T88 deferred; T93 opened for skill routing on task prompts); first measured eval sweep: mean Δ +0.01, audit 9.81; see BACKLOG.md |
+| Plugins in this repo | cure-product-engineering 7.15.0; cure-tri-lane 1.16.0 (includes the 1.14.5 guard fix); 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 (hooks merge into settings.json, T89) |
+| Runtimes on the primary Mac (2026-11-03) | Claude Code 2.1.316; codex 0.166.0; agy 1.4.12. CI pins Claude Code 2.1.310 and codex 0.164.0; `runtime-latest.yml` tracks @latest weekly |
 | Machines verified with `install-runtimes.sh` | primary Mac — v7.13.0, 2026-10-23 (codex 0.163.0, agy 1.4.5). Re-run after the Wave 7 PR merges: the real Antigravity install still carries the 7 empty-globs rules until then |
 | Vetted-mods local patches | cc-pr-tracker 0.3.1-cure.1 (clear merged PRs; upstream PR prepared, not opened); secret-redactor 1.0.0-cure.1 (failed-Bash result shape). Originals in `../vetted-mods-backups/` |
 | Open owner decisions | Upstream cc-pr-tracker PR (public action, needs rebase onto upstream 0.6.0); Level5 audio-retention flag (from Wave 6) |
-| PR #88 status (2026-10-25) | Draft. validate, plugin-cli and CodeQL analyze jobs pass; **CodeQL gate fails: 19 high alerts**. 18 are in `vendorHostIn` (`mods/shared/rules.ts` and its 2 vendored copies: hostname-regex ×15, incomplete escaping ×3). 1 is `hooks/cure_guard.py:164` (clear-text logging), a false positive: `block()` prints fixed messages that contain the word "secret", never secret values. It needs an owner dismissal |
-| Close-out in flight | Antigravity brief `docs/handoffs/2026-10-25-agy-wave-7-closeout.md`: CodeQL fix, T89, T90 on branch `wave7/agy-closeout`, local only. Claude verifies and merges into `feat/wave-7`. T91 and T92 stay with Claude Code (live sessions and eval spend) |
+| PR #88 (2026-11-03) | Rebased on main (v7.14.0 + #84), CodeQL `vendorHostIn` alerts fixed (18 of 19; the `hooks/cure_guard.py:164` clear-text-logging alert is a false positive for the owner to dismiss), released as v7.15.0. #86 and #87 closed as included/superseded |
+| Close-out | The Antigravity brief (`docs/handoffs/2026-10-25-agy-wave-7-closeout.md`) never ran; Claude Code did Tasks A–C on `feat/wave-7` on 2026-11-03. Remaining interactive checks for the owner: `/hooks` lists the bootstrap hooks in a freshly bootstrapped project; the policy-guard ask times out at 60 s in a real session; a `/loop` iteration never shows the Stop nudge |
 
 ## Runtime architecture audit — 2026-10-22
 

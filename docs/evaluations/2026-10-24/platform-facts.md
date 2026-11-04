@@ -131,6 +131,10 @@ canary passed. Results are in `.git/tri-lane/evals.jsonl` of the main checkout.
 | system-review, triage | `gemini-3.8-flash-high` / `-low` | unchanged (still offered) | not needed |
 | impl-terminal-sre-migration (shadow) | `gpt-6-astra` | unchanged (still offered) | not run |
 
+### Re-measured 2026-11-03 for T90 (codex-cli 0.166.0)
+
+Same method (`codex debug prompt-input`, throwaway `CODEX_HOME` from `scripts/codex-smoke.py --keep`, no `auth.json`, so the bundled 272k catalog). 105 cure skills listed, all 105 shortened: listed length **105 / 106.8 / 109** (min / mean / max), two to four chars longer than on 0.163. Before the T90 rewrite 100/105 skills kept two or more trigger words inside the cut and 15 started "Use when" after char 85; after it, **105/105**, with the latest trigger start at char 77. The audit's `TRIGGER_STRICT_WINDOW` is 85.
+
 ## Cross-runtime rule that falls out of all three
 
 `description` is still the only trigger field every runtime reads. Codex shows all of it on the
