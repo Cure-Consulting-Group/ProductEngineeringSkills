@@ -167,7 +167,7 @@ class Route(unittest.TestCase):
         # gpt-6.1-sol scored 1.0 on the same fixture and takes the risk-flagged reviews.
         self.assertEqual(self.s("--role", "review", "--kind", "impl")["lane"], "gpt-5.6-luna")
         self.assertEqual(self.s("--role", "review", "--kind", "impl", "--risk", "payments")["lane"], "gpt-6.1-sol")
-        self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--risk", "underspecified")["lane"], "gpt-5.6-sol")
+        self.assertEqual(self.s("--role", "implement", "--kind", "impl", "--risk", "underspecified")["lane"], "gpt-6.1-sol")  # moved 2026-11-03 (T91 canary)
         self.assertEqual(self.s("--role", "system-review")["lane"], "gemini-3.8-flash-high")
         # gemini-3.1-pro is no longer offered by agy (agy models, 2026-10-24); Gemini 4 Argon replaces it
         self.assertEqual(self.s("--role", "whole-repo")["lane"], "gemini-4-argon-high")

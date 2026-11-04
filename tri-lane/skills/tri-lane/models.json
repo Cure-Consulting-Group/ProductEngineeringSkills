@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-24",
+  "updated": "2026-11-03",
   "note": "Capability table for lane routing. Public benchmarks set the prior; the project's benchmark.jsonl overrides a rule once the model has own_data_threshold tasks of that kind. Dates matter: lane models changed five times in two months. Re-run the head-to-head in lanes.md per model generation.",
   "sources": {
     "deepswe": "OpenAI GPT-6 Astra launch tables, 2026-09-03: Astra 74.1, Sol 72.7, Opus 5 73.7, Gemini 3.8 Flash 73.8 (a tie)",
@@ -12,7 +12,8 @@
     "effort_note": "Effort moves outcomes more than model within a family: paddo.dev Astra low 5 bugs/60s vs max 7 bugs/446s",
     "canary_2026_09_06": "tri-lane canary suite, 73 graded runs across smoke/hard/judgment tiers (6 Sep 2026): Luna@medium matched Sol@high and Astra@high on every fixture except underspecified-spec (Luna 0.3: named the contradiction, missed the unstated rounding rule; Sol 1.0). Reviewer recall on 11 planted payment bugs: Astra 1.0, Sol 1.0, Luna 0.94, Gemini 0.82; all 100% precision. Cost per point (judgment tier): Luna 161, Astra 165, Sol 171, Gemini 1,098.",
     "catalog_2026_10_24": "codex debug models (0.163.0): gpt-6.1-sol (500k, low..max+ultra, default low), gpt-6-astra, gpt-6-sol, gpt-6-luna (272k, low..max, no ultra); gpt-5.6-luna/sol/terra still offered as 'older'. agy models (1.4.7): gemini-4-argon-low/medium/high, gemini-3.8-flash-low/medium/high; gemini-3.1-pro no longer offered",
-    "canary_2026_10_24": "tri-lane canary, one run per proposed default (24 Oct 2026, n=1 each): gpt-6-luna@medium impl-spec-service 9/9 PASS 32s; gpt-6-luna@medium review-planted-bugs FAIL 0.863 (recall 0.727, precision 1.0, missed B04/B07/B11; gpt-5.6-luna was 0.94 recall on 6 Sep); gpt-6.1-sol@high authz-tenant-isolation 8/8 PASS 60s; gpt-6.1-sol@high review-planted-bugs PASS 1.0 recall/precision 203s; gemini-4-argon-high whole-repo-read PASS 1.0 363s (81k input + 592k cache-read tokens). Not run: gpt-6.1-sol on spec-gap fixtures, gpt-6-luna review at high, any repeat (n=1 cannot separate models)"
+    "canary_2026_10_24": "tri-lane canary, one run per proposed default (24 Oct 2026, n=1 each): gpt-6-luna@medium impl-spec-service 9/9 PASS 32s; gpt-6-luna@medium review-planted-bugs FAIL 0.863 (recall 0.727, precision 1.0, missed B04/B07/B11; gpt-5.6-luna was 0.94 recall on 6 Sep); gpt-6.1-sol@high authz-tenant-isolation 8/8 PASS 60s; gpt-6.1-sol@high review-planted-bugs PASS 1.0 recall/precision 203s; gemini-4-argon-high whole-repo-read PASS 1.0 363s (81k input + 592k cache-read tokens). Not run: gpt-6.1-sol on spec-gap fixtures, gpt-6-luna review at high, any repeat (n=1 cannot separate models)",
+    "canary_2026_11_03": "tri-lane canary, --repeat 3 --no-retry (3-4 Nov 2026): gpt-6-luna@medium impl-spec-service 9/9 x3; gpt-6.1-sol@high authz-tenant-isolation 8/8 x3; gpt-6.1-sol@high review-planted-bugs 0.955/1.0/1.0; gemini-4-argon-high whole-repo-read 1.0 x3 (157-384s). gpt-6-luna@high review-planted-bugs 0.909/0.909/0.863 (missed B04 twice) vs gpt-5.6-luna@medium 1.0/1.0/0.962, so review-default stays on gpt-5.6-luna. gpt-6.1-sol@high spec-gap trio: test-contradiction 1.0 x3, impossible-interface 1.0 x3, missing-rule 0.3 x3 (one gap of two named); gpt-5.6-sol@high also 0.3 x3 on missing-rule, so impl-underspecified moves to gpt-6.1-sol"
   },
   "quota": {
     "gpt-6-astra": "about half of Sol's Codex Pro allowance; ultra spawns Sol/Terra/Luna workers",
@@ -143,13 +144,13 @@
       "risk": [],
       "lane": "gpt-5.6-luna",
       "effort": "medium",
-      "basis": "canary_2026_09_06: Luna@medium 94% recall / 100% precision on planted payment bugs and a clean ship on a correct diff; Sol reserved for risk-flagged reviews; canary_2026_10_24: gpt-6-luna@medium scored 0.863 (recall 0.727) on review-planted-bugs, so the default stays on gpt-5.6-luna; re-test gpt-6-luna at high before moving",
+      "basis": "canary_2026_09_06: Luna@medium 94% recall / 100% precision on planted payment bugs and a clean ship on a correct diff; Sol reserved for risk-flagged reviews; canary_2026_10_24: gpt-6-luna@medium scored 0.863 (recall 0.727) on review-planted-bugs, so the default stays on gpt-5.6-luna; canary_2026_11_03: gpt-6-luna@high 0.909/0.909/0.863 vs gpt-5.6-luna@medium 1.0/1.0/0.962 (n=3), stays",
       "own_data_threshold": 5,
       "alternatives": [
         {
           "lane": "gpt-6-luna",
           "effort": "high",
-          "status": "pending canary"
+          "status": "measured 2026-11-03: below the incumbent"
         }
       ]
     },
@@ -198,15 +199,15 @@
       "risk": [
         "underspecified"
       ],
-      "lane": "gpt-5.6-sol",
+      "lane": "gpt-6.1-sol",
       "effort": "high",
-      "basis": "canary_2026_09_06: the only fixture that separated models; Sol named both spec gaps and stopped, Luna named one. Flag risk=underspecified when the spec is known to be incomplete; stays on gpt-5.6-sol until gpt-6.1-sol runs the spec-gap fixtures (pending canary: underspecified-spec, spec-gap-*)",
+      "basis": "canary_2026_09_06: the only fixture that separated models; Sol named both spec gaps and stopped, Luna named one. Flag risk=underspecified when the spec is known to be incomplete. canary_2026_11_03: gpt-6.1-sol@high passed spec-gap-test-contradiction and spec-gap-impossible-interface 3/3 and scored 0.3 x3 on spec-gap-missing-rule, the same as gpt-5.6-sol@high; moved (was gpt-5.6-sol)",
       "own_data_threshold": 3,
       "alternatives": [
         {
-          "lane": "gpt-6.1-sol",
+          "lane": "gpt-5.6-sol",
           "effort": "high",
-          "status": "pending canary"
+          "status": "previous default; equal on spec-gap-missing-rule"
         }
       ]
     }

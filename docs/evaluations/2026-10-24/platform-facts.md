@@ -123,10 +123,10 @@ canary passed. Results are in `.git/tri-lane/evals.jsonl` of the main checkout.
 | Rule (models.json) | Before | After | Canary, 2026-10-24 |
 |---|---|---|---|
 | impl-strings-docs, impl-routine, impl-design-left-to-lane | `gpt-5.6-luna` | `gpt-6-luna` | `impl-spec-service` @ medium: PASS 9/9, 32 s |
-| review-default | `gpt-5.6-luna` | unchanged (`gpt-6-luna` listed as a pending alternative) | `review-planted-bugs` @ medium: FAIL 0.863, recall 0.727 (3 of 11 missed), precision 1.0 |
+| review-default | `gpt-5.6-luna` | unchanged | `review-planted-bugs` @ medium: FAIL 0.863; re-run 2026-11-03 @ high, n=3: 0.909 / 0.909 / 0.863 vs gpt-5.6-luna @ medium 1.0 / 1.0 / 0.962 |
 | impl-risk, impl-wide, escalation attempt 2 and 3 | `gpt-5.6-sol` | `gpt-6.1-sol` | `authz-tenant-isolation` @ high: PASS 8/8, 60 s |
 | review-crossfile-money | `gpt-5.6-sol` | `gpt-6.1-sol` | `review-planted-bugs` @ high: PASS, recall 1.0, precision 1.0, 203 s |
-| impl-underspecified | `gpt-5.6-sol` | unchanged (pending spec-gap canary for `gpt-6.1-sol`) | not run |
+| impl-underspecified | `gpt-5.6-sol` | `gpt-6.1-sol` (moved 2026-11-03, T91) | spec-gap trio @ high, n=3: test-contradiction 1.0 ×3, impossible-interface 1.0 ×3, missing-rule 0.3 ×3; incumbent gpt-5.6-sol also 0.3 ×3 on missing-rule |
 | whole-repo | `gemini-3.1-pro-high` (retired) | `gemini-4-argon-high` | `whole-repo-read` @ high: PASS 1.0, 363 s |
 | system-review, triage | `gemini-3.8-flash-high` / `-low` | unchanged (still offered) | not needed |
 | impl-terminal-sre-migration (shadow) | `gpt-6-astra` | unchanged (still offered) | not run |
