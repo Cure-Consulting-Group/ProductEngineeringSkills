@@ -4,7 +4,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
 
 ## What This Repo Is
 
-A **Claude Code plugin** containing 106 production-grade skills (organized into 9 domain folders), 41 custom agents, 4 personas (cross-domain engagement archetypes), command hooks (deterministic Stop check, Bash/edit safety guard, skill security guard), LSP server configs, an opt-in MCP template, and path-specific rules. Other projects install this plugin to get consistent standards.
+A **Claude Code plugin** containing 107 production-grade skills (organized into 9 domain folders), 41 custom agents, 4 personas (cross-domain engagement archetypes), command hooks (deterministic Stop check, Bash/edit safety guard, skill security guard), LSP server configs, an opt-in MCP template, and path-specific rules. Other projects install this plugin to get consistent standards.
 
 **What a plugin install actually delivers** (Wave 7): skills, agents, hooks and LSP config. It cannot deliver permissions (plugin `settings.json` applies only `agent` and `subagentStatusLine`), rules, or personas; settings and rules reach a project only through the npm postinstall or cure-infra-bootstrap, and `hooks/cure_guard.py` is the safety layer every consumer gets. This dev file lives at `.claude/CLAUDE.md` because a plugin-root CLAUDE.md is never loaded and fails `claude plugin validate --strict`.
 
@@ -19,8 +19,8 @@ machine, offer to run it.
 
 ```
 .claude-plugin/plugin.json     — Plugin manifest (name, version, metadata)
-skills/{domain}/{name}/SKILL.md — 106 skills, organized by domain folder
-                                 Domains: engineering (40), platform (11), product (11), business (14),
+skills/{domain}/{name}/SKILL.md — 107 skills, organized by domain folder
+                                 Domains: engineering (41), platform (11), product (11), business (14),
                                  finance (4), marketing (6), security (4), legal (4), tax (12)
 skills/{domain}/{name}/scripts/ — Optional bundled stdlib Python scripts (zero pip)
 agents/*.md                    — 41 specialized subagents with tool/skill bindings
@@ -75,7 +75,7 @@ mods/*/                        — Claude Code mods (TypeScript function hooks, 
 
 The library's biggest token cost is fixed overhead multiplied across every session and agent spawn in every consuming project. Rules:
 
-- **Trigger text is budgeted.** Combined `description` + `when_to_use` per skill: target ≤350 chars (audit warns above 350, flags at 500). All 106 skills compete for the session skill-listing budget (~1% of model context by default); skill-heavy consuming projects can raise `skillListingBudgetFraction` — see `docs/CONSUMING-PROJECTS.md`.
+- **Trigger text is budgeted.** Combined `description` + `when_to_use` per skill: target ≤350 chars (audit warns above 350, flags at 500). All 107 skills compete for the session skill-listing budget (~1% of model context by default); skill-heavy consuming projects can raise `skillListingBudgetFraction` — see `docs/CONSUMING-PROJECTS.md`.
 - **Agents preload at most ~300 lines of skills.** Anything more becomes an on-demand body reference ("invoke `/x` when needed"). The audit flags preloads >800 lines.
 - **Don't pin `model:` or `effort:` without measured evidence.** Agents and skills inherit the session model and effort; a blanket `model:` pin silently downgrades them. Opus 5.5 defaults to `medium` effort, which matches Opus 5 at `high`, and thinks more per turn at a given level. The Wave 5 sweep (2026-09-23) found `high` bought no recall on reviewer tasks at equal cost, so the 14 carried-over `effort: high` pins were removed. Add one back only with an eval showing the gain.
 - **Heavy analysis skills fork.** Use `context: fork` so their exploration doesn't bloat the main conversation.
@@ -83,7 +83,7 @@ The library's biggest token cost is fixed overhead multiplied across every sessi
 
 ## Versioning
 
-Current version: **7.13.0**
+Current version: **7.14.0**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording

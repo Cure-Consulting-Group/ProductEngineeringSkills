@@ -128,3 +128,7 @@ After `init` or `apply`, `doctor` against the same `--skills-source` must print
   `--install-mode symlink` for compliance-flagged projects.
 - Always commit `claude.manifest.json` to the project's repo. It is the
   reproducibility record.
+- The CLI's generated `.claude/hooks/hooks.json` is not read by Claude Code (project hooks
+  load from `.claude/settings.json`), and vendoring shadows the user-scope plugin. For the
+  enforcement layer (verify gate, Stop hook, ask/deny permissions, contract tests), run
+  `agent-harness` after this skill and keep its files outside the managed fences.

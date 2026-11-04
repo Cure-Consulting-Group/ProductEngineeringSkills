@@ -209,7 +209,7 @@ This project uses the shared Cure skill library (private plugin).
 ## Skill-listing budget (token economy)
 
 Claude Code caps the per-session skill listing at roughly 1% of model context by
-default. With this library's 106 skills installed alongside a project's own
+default. With this library's 107 skills installed alongside a project's own
 skills, trigger text past the budget gets truncated — those skills stop being
 auto-discoverable (explicit `/name` invocation still works).
 
@@ -271,7 +271,7 @@ python3 scripts/codex-smoke.py   # from a library checkout: throwaway CODEX_HOME
 
 ### Skill-listing budget: set it
 
-Codex budgets the skill catalog at 2% of context by default. With 106 skills
+Codex budgets the skill catalog at 2% of context by default. With 107 skills
 that cuts every description to about 110 characters, which usually drops the "Use when…" clause.
 Measured: 6,000 tokens gives about 130 characters, and ≥8,000 gives the full text (longest description today is 344 chars).
 Explicit values are **capped at 10,000** (documented), so asking for 12–15k gets you 10k.

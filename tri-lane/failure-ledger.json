@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-13",
+  "updated": "2026-10-28",
   "classes": [
     {
       "class": "infra",
@@ -161,6 +161,20 @@
       "first_seen": "2026-09-13",
       "closed_by": "1.10.0 worktree lifecycle opens/closes the record; report.json + verify.jsonl (Wave 4 T42/T43)",
       "status": "closed"
+    },
+    {
+      "class": "harness",
+      "signature": "guard refused a correctly sandboxed codex exec split over backslash-continued lines; also refused --help/--version",
+      "first_seen": "2026-09-09",
+      "closed_by": "guard joins continuations before splitting; help/version exempt (next tri-lane patch release)",
+      "status": "closed"
+    },
+    {
+      "class": "harness",
+      "signature": "subagent Bash writes denied by the auto-mode classifier while the main session could write; implementer refused after creating the worktree",
+      "first_seen": "2026-09-09",
+      "closed_by": "",
+      "status": "open"
     }
   ]
 }

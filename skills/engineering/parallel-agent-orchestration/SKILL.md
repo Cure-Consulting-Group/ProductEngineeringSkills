@@ -42,6 +42,13 @@ won't spawn subagents unless told to, so when this skill's criteria are met, say
    No gate → not parallelizable yet → write the gate first.
 4. **Humans hold the merge.** Parallel branches are proposals. Merging is a
    serial, human act — this is the control that makes everything else safe.
+5. **Brief isolated agents on shell discipline.** A subagent spawned with
+   `isolation: worktree` may only run commands the harness can prove stay
+   in its worktree. Every brief says: one plain command per Bash call; no
+   `cd $(…)`, loops or pipelines around git; no `npx $var`; wait with
+   Monitor, not `sleep`. Unbriefed, these refusals were 37% of all agent
+   tool errors across Cure repos (Aug–Oct 2026), nearly all from
+   orchestrator-spawned general-purpose agents.
 
 ## Step 1: Classify the parallel work
 

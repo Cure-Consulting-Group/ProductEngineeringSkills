@@ -70,6 +70,14 @@ class GuardHook(unittest.TestCase):
         ("pass", 'grep -r "agy -p" docs/'),
         ("pass", 'TMPDIR="$RUN/tmp" agy -p "$(cat "$SPEC")" --add-dir "$WT_RO" --model gemini-3.8-flash-high --effort high --mode plan --sandbox --json-schema x --output-format json --print-timeout 15m > "$OUT"'),
         ("block", 'T=gtimeout; $T 600 codex exec - -m gpt-5.6-luna < s || CODEX_HOME=/x /Users/me/.local/bin/codex exec "hi"'),
+        # Backslash-continued invocations are one command (19 false refusals, 2026-08..10).
+        ("pass", 'codex exec - \\\n  -C "$WT" -s workspace-write \\\n  -m gpt-5.6-luna < "$SPEC"'),
+        ("block", 'codex exec - \\\n  -C "$WT" \\\n  -m gpt-5.6-luna < "$SPEC"'),
+        # Help and version print usage and run nothing.
+        ("pass", 'codex exec --help 2>&1 | head -40'),
+        ("pass", 'codex exec review --help'),
+        ("pass", 'codex --version'),
+        ("block", 'codex exec --help --dangerously-bypass-approvals-and-sandbox'),
     ]
 
     def test_matrix(self):

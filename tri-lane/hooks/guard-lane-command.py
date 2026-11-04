@@ -10,7 +10,10 @@ lane invocations that would run without an explicit sandbox:
   agy -p|--print|--prompt ... unless BOTH --mode plan AND --sandbox are present
   agy ...                     with -y, --yolo, --approval-mode, --dangerously-skip-permissions, --mode accept-edits
 
-Read-only agy slash commands (/usage, /credits, /quota, /model, /models, /skills, /help) are exempt.
+Read-only agy slash commands (/usage, /credits, /quota, /model, /models, /skills, /help) are exempt,
+as is `codex ... --help|-h|--version` (prints usage, runs nothing; bypass flags still refuse).
+Backslash-newline continuations are joined before splitting, so a multi-line invocation is
+checked as the one command the shell will run.
 
 Exit 2 blocks the call; the stderr message reaches Claude. Any unexpected error is
 written to stderr and exits 0 so the hook can never break a session. Stdlib only.
@@ -25,6 +28,7 @@ WRAPPERS = {"gtimeout", "timeout", "env", "nice", "caffeinate", "command", "exec
 CODEX_BYPASS = {"--dangerously-bypass-approvals-and-sandbox", "--yolo"}
 AGY_BYPASS = {"-y", "--yolo", "--dangerously-skip-permissions"}
 AGY_READONLY_SLASH = {"/usage", "/credits", "/quota", "/model", "/models", "/skills", "/help"}
+CODEX_HELP = {"--help", "-h", "--version", "-V"}
 
 
 def load_command() -> str:
@@ -91,6 +95,8 @@ def check_codex(args: list):
         return "codex may not bypass approvals and sandbox. Use -s workspace-write or -s read-only."
     if any("danger-full-access" in t for t in args):
         return "codex lanes may not use danger-full-access."
+    if any(t in CODEX_HELP for t in args):
+        return None
     # subcommand = first non-flag token, skipping values of root-level options that take an argument
     sub = ""
     skip = False
@@ -138,6 +144,10 @@ def main() -> int:
     cmd = load_command()
     if not cmd:
         return 0
+    # `codex exec - \<newline> -s workspace-write` is one command to the shell.
+    # Splitting on the newline first checked the halves separately and refused
+    # 19 correctly sandboxed lane runs (Aug-Oct 2026 transcripts).
+    cmd = re.sub(r"\\\r?\n", " ", cmd)
     for seg in re.split(r"\s*(?:&&|\|\||;|\||\n)\s*", cmd):
         if not seg.strip():
             continue

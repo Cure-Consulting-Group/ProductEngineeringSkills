@@ -9,7 +9,7 @@ It is a **Claude Code plugin** (`cure-product-engineering` in the private `cure`
 ```
 ProductEngineeringSkills/
 ├── .claude-plugin/           # plugin.json (version source of truth) + marketplace.json (the `cure` marketplace)
-├── skills/{domain}/{name}/   # 106 skills, organized by domain (engineering, platform, product, business, finance, marketing, security, legal, tax)
+├── skills/{domain}/{name}/   # 107 skills, organized by domain (engineering, platform, product, business, finance, marketing, security, legal, tax)
 ├── agents/                   # 41 custom agents (subagents); effective tools in .claude/CLAUDE.md
 ├── personas/                 # 4 engagement archetypes — documentation, nothing loads them
 ├── hooks/                    # hooks.json + cure_guard.py (command hooks only; see Hooks below)

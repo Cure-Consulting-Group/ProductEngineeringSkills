@@ -7,8 +7,8 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.13.0 |
-| Skills | 106 |
+| Version | 7.14.0 |
+| Skills | 107 |
 | Agents | 41 |
 | Personas | 4 |
 | Hooks (entries) | 11 |
@@ -41,11 +41,12 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | technical-estimation | Builds defensible software estimates with ranges: PERT, reference class, risk reserve. Use when an estimate will be bid on, contracted, or audited, e.g. an RFP cost volume. | Read, Grep, Glob, Bash(ls:*), Bash(git ls-files:*), Write, Edit, WebSearch |
 
 
-### Engineering (40)
+### Engineering (41)
 
 | Skill | Description | Allowed Tools |
 | --- | --- | --- |
 | agent-designer | Designs LLM agent internals: tool schemas, memory, termination, evals, cost, failure modes. Use when an agent or multi-agent system is the chosen shape and needs a design. | default |
+| agent-harness | Use when a repo's agents break prose rules or finish on red. Installs Cure's harness kit: AGENTS.md map with Controls, a sub-60s verify gate, Stop hook, ask/deny permissions, mutation-checked contract tests. | default |
 | agent-workflow-designer | Picks the shape of an LLM system: single call, workflow pattern, or autonomous agent. Use when deciding how to structure an AI feature, or when an agent is too slow, costly, or flaky. | default |
 | ai-feature-builder | Builds user-facing LLM features: client wrapper, prompts, streaming UX, kill switch. Use when adding chat, summarization, extraction, or generation to an app, with fallbacks. | default |
 | analytics-implementation | Designs analytics event taxonomies, tracking plans, funnels, and consent flows. Use when instrumenting product analytics (GA4/Firebase, Mixpanel, PostHog) or auditing events. | default |
@@ -281,7 +282,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.13.0). 106 skills (domain-organized), … |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.14.0). 107 skills (domain-organized), … |
 | SessionStart | startup | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" session-start |
 | SessionStart | compact | command | printf '%b\n' 'STANDARDS RE-INJECTED AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Cl… |
 | UserPromptSubmit |  | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" prompt |
