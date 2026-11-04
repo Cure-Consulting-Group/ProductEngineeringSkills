@@ -10,11 +10,11 @@ Capture is the work of being early. Bidding is what happens after capture succee
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
 
-- Current pipeline: !`sed -n '1,40p' PIPELINE.md ../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
-- Past pursuits: !`ls -d archive/*/ ../archive/*/ 2>/dev/null | head -20 || echo "(no archive)"`
-- Portfolio: !`sed -n '1,30p' PORTFOLIO.md 2>/dev/null || echo "(none)"`
+- Current pipeline: `sed -n '1,40p' PIPELINE.md ../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
+- Past pursuits: `ls -d archive/*/ ../archive/*/ 2>/dev/null | head -20 || echo "(no archive)"`
+- Portfolio: `sed -n '1,30p' PORTFOLIO.md 2>/dev/null || echo "(none)"`
 
 ## Step 1: Define the target profile before searching
 

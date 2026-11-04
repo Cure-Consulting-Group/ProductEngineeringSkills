@@ -10,11 +10,11 @@ The governing asymmetry: **government standard forms are drafted entirely for th
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
 
-- Contract documents: !`ls 00-source/*ontract* 00-source/*orm* 2>/dev/null || ls *.pdf 2>/dev/null | head`
-- Extracted text: !`ls 00-source/extracted/*.txt 2>/dev/null | head`
-- Insurance schedule present: !`grep -l -i "insurance" 00-source/extracted/*.txt 2>/dev/null | head`
+- Contract documents: `ls 00-source/*ontract* 00-source/*orm* 2>/dev/null || ls *.pdf 2>/dev/null | head`
+- Extracted text: `ls 00-source/extracted/*.txt 2>/dev/null | head`
+- Insurance schedule present: `grep -l -i "insurance" 00-source/extracted/*.txt 2>/dev/null | head`
 
 ## Step 1: Find the clauses that carry real risk
 

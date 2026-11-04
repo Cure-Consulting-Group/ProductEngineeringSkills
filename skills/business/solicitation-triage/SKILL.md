@@ -28,13 +28,13 @@ for the bid.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
 
-- Today: !`date +%Y-%m-%d`
-- Target profile: !`sed -n '1,40p' TARGET-PROFILE.md ../TARGET-PROFILE.md ../../TARGET-PROFILE.md 2>/dev/null || echo "(no TARGET-PROFILE.md — write one first, see capture-management)"`
-- Pipeline: !`sed -n '1,25p' PIPELINE.md ../PIPELINE.md ../../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
-- Documents in hand: !`ls *.pdf *.docx *.xlsx 00-source/*.pdf 00-source/*.xlsx 2>/dev/null | head -20 || echo "(none staged)"`
-- Prior verdicts: !`ls -d ../triage/*/ ../archive/*/ triage/*/ archive/*/ 2>/dev/null | head -20 || echo "(no history)"`
+- Today: `date +%Y-%m-%d`
+- Target profile: `sed -n '1,40p' TARGET-PROFILE.md ../TARGET-PROFILE.md ../../TARGET-PROFILE.md 2>/dev/null || echo "(no TARGET-PROFILE.md — write one first, see capture-management)"`
+- Pipeline: `sed -n '1,25p' PIPELINE.md ../PIPELINE.md ../../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
+- Documents in hand: `ls *.pdf *.docx *.xlsx 00-source/*.pdf 00-source/*.xlsx 2>/dev/null | head -20 || echo "(none staged)"`
+- Prior verdicts: `ls -d ../triage/*/ ../archive/*/ triage/*/ archive/*/ 2>/dev/null | head -20 || echo "(no history)"`
 
 Stage documents in `00-source/` and extract text to `00-source/extracted/` — the same layout
 `rfp-evaluation` uses, so a PROMOTEd folder carries over unchanged:

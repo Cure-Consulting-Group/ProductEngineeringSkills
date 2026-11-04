@@ -16,12 +16,12 @@ The governing insight: **public-sector proposals are scored against a rubric by 
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
 
-- Bid folder: !`ls -d */ 2>/dev/null | head -10`
-- Source documents: !`ls *.pdf 00-source/*.pdf 2>/dev/null | head -20`
-- Extracted text present: !`ls 00-source/extracted/*.txt 2>/dev/null | head -20 || echo "(none — run extraction first)"`
-- Existing analysis: !`ls 01-analysis/*.md 2>/dev/null || echo "(none)"`
+- Bid folder: `ls -d */ 2>/dev/null | head -10`
+- Source documents: `ls *.pdf 00-source/*.pdf 2>/dev/null | head -20`
+- Extracted text present: `ls 00-source/extracted/*.txt 2>/dev/null | head -20 || echo "(none — run extraction first)"`
+- Existing analysis: `ls 01-analysis/*.md 2>/dev/null || echo "(none)"`
 
 ## Step 0: Extract text before reading anything
 

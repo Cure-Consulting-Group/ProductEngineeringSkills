@@ -24,11 +24,11 @@ The distinction from casual estimation: **a bid estimate is a commitment, not a 
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
 
-- Requirements source: !`ls 01-analysis/requirements-matrix.md docs/PRD*.md 2>/dev/null || echo "(none found)"`
-- Comparable past projects: !`ls -d ../*/ 2>/dev/null | head -20`
-- Repo scale (matters only when the scope extends existing code): !`git ls-files 2>/dev/null | wc -l`
+- Requirements source: `ls 01-analysis/requirements-matrix.md docs/PRD*.md 2>/dev/null || echo "(none found)"`
+- Comparable past projects: `ls -d ../*/ 2>/dev/null | head -20`
+- Repo scale (matters only when the scope extends existing code): `git ls-files 2>/dev/null | wc -l`
 
 ## Step 1: Establish what kind of estimate this is
 
