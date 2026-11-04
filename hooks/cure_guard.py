@@ -42,8 +42,8 @@ CODE_EXT = re.compile(
 
 # --- edit guard: files an agent must not hand-edit ---------------------------
 ENV_ALLOWED = re.compile(r"\.env\.(example|sample|template|defaults)$")
-SECRETS_DIR = re.compile(r"(^|/)secrets/", re.I)
-SECRETS_MSG = "Credential and secret files must not be modified by AI. Manage these manually."
+CREDENTIAL_FILES_DIR = re.compile(r"(^|/)secrets/", re.I)
+CREDENTIAL_FILES_MSG = "Credential and secret files must not be modified by AI. Manage these manually."
 PROTECTED = [
     (re.compile(r"(^|/)\.env(\.[\w.-]+)?$"),
      "Do not modify .env files directly. Use environment variable management."),
@@ -52,7 +52,7 @@ PROTECTED = [
      "Lock files should only be modified by package managers, not manually."),
     (re.compile(r"(^|/)(credentials(\.json)?|id_rsa[^/]*|id_ed25519[^/]*|[^/]*\.pem|[^/]*\.p12|"
                 r"service-?account[^/]*\.json|serviceAccount[^/]*\.json)$", re.I),
-     SECRETS_MSG),
+     CREDENTIAL_FILES_MSG),
     (re.compile(r"\.tfstate(\.[\w-]+)?$"),
      "Terraform state files must never be manually edited. Use terraform state commands."),
 ]
@@ -217,8 +217,8 @@ def mode_edit(d):
             block(msg)
     # A secrets/ directory holds secrets, unless the file is source code:
     # src/secrets/manager.ts is a module that handles secrets, not a secret.
-    if SECRETS_DIR.search(path) and not CODE_EXT.search(path):
-        block(SECRETS_MSG)
+    if CREDENTIAL_FILES_DIR.search(path) and not CODE_EXT.search(path):
+        block(CREDENTIAL_FILES_MSG)
 
 
 def mode_skill_content(d):
