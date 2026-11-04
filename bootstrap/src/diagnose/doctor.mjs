@@ -4,6 +4,7 @@ import { sha256, parseBlocks } from "../blocks/index.mjs";
 import { validateManifest } from "../manifest/index.mjs";
 import { resolveSkillsSource } from "../vendor/index.mjs";
 import { loadOrgManifest, enforceOrgPolicy } from "../org/index.mjs";
+import { SETTINGS_HOOKS_KEY, SETTINGS_PATH, LEGACY_HOOKS_PATH, commandsOf } from "../generated/settings-hooks.mjs";
 
 export const DRIFT_KINDS = Object.freeze({
   MANIFEST_INVALID: "manifest-invalid",
@@ -15,6 +16,7 @@ export const DRIFT_KINDS = Object.freeze({
   GENERATED_EDITED: "generated-edited",
   BLOCK_MISSING: "block-missing",
   BLOCK_EDITED: "block-edited",
+  LEGACY_HOOKS: "legacy-hooks",
 });
 
 export function diagnose({ cwd, manifest, skillsSourcePath }) {
@@ -59,7 +61,25 @@ export function diagnose({ cwd, manifest, skillsSourcePath }) {
     }
   }
 
+  // T89: a hooks.json from an older bootstrap is never loaded by Claude Code. Report only.
+  if (existsSync(join(cwd, LEGACY_HOOKS_PATH))) {
+    findings.push({ kind: DRIFT_KINDS.LEGACY_HOOKS, path: LEGACY_HOOKS_PATH, severity: "warn",
+      message: `stale: Claude Code never loads this file; hooks live in ${SETTINGS_PATH} (run apply, then delete it)` });
+  }
+
   for (const [target, entry] of Object.entries(manifest.generated ?? {})) {
+    if (target === SETTINGS_HOOKS_KEY) {
+      const settingsFile = join(cwd, SETTINGS_PATH);
+      if (!existsSync(settingsFile)) {
+        if ((entry.commands ?? []).length > 0) findings.push({ kind: DRIFT_KINDS.GENERATED_MISSING, path: target, message: `${SETTINGS_PATH} missing on disk`, severity: "error" });
+        continue;
+      }
+      const onDisk = safe(() => new Set(commandsOf(JSON.parse(readFileSync(settingsFile, "utf8")).hooks)));
+      if (!onDisk) { findings.push({ kind: DRIFT_KINDS.GENERATED_EDITED, path: target, message: `${SETTINGS_PATH} is not valid JSON`, severity: "warn" }); continue; }
+      const missing = (entry.commands ?? []).filter((c) => !onDisk.has(c));
+      if (missing.length > 0) findings.push({ kind: DRIFT_KINDS.GENERATED_EDITED, path: target, message: `${missing.length} generated hook(s) edited or removed by hand`, severity: "warn" });
+      continue;
+    }
     const fullTarget = join(cwd, target);
     if (!existsSync(fullTarget)) {
       findings.push({ kind: DRIFT_KINDS.GENERATED_MISSING, path: target, message: `tracked generated file missing on disk`, severity: "error" });

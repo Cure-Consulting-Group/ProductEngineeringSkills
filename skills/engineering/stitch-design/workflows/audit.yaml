@@ -9,6 +9,8 @@ trigger:
     - "token drift report"
     - "design system compliance"
 
+# get_screen_code / get_screen_image are stitch-mcp proxy tools; on Google's hosted
+# server use get_screen + download_file (html_code.name, screenshot.name).
 steps:
   - id: load_design_md
     agent: stitch-design

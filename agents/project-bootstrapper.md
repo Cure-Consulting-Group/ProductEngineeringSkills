@@ -5,7 +5,6 @@ tools: Read, Grep, Glob, Bash, Edit, Write
 maxTurns: 25
 skills: project-bootstrap
 memory: project
-isolation: worktree
 ---
 
 # Project Bootstrapper Agent

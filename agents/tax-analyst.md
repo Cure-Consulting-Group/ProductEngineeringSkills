@@ -4,7 +4,7 @@ description: Drafts tax workpapers, reviews, estimates, and plans for CPA review
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit
 maxTurns: 15
-skills: cpa-standards, irc-lookup
+skills: cpa-standards
 ---
 
 # Tax Analyst Agent
@@ -42,7 +42,7 @@ Pick exactly one lead skill:
 | Nonprofit wind-down | `nonprofit-dissolution` |
 | Competency gate before a filing season | `cpa-benchmark` |
 
-Authority and citations always go through `irc-lookup` (preloaded). A sequential strategy request still has exactly one lead skill: `tax-strategies`; use `tax-recommendations` only as its documented follow-on.
+Authority and citations always go through `irc-lookup`: it is not preloaded, so invoke `/irc-lookup` before any citation leaves the draft. A sequential strategy request still has exactly one lead skill: `tax-strategies`; use `tax-recommendations` only as its documented follow-on.
 
 ### Step 2: Load the tax profile
 
@@ -95,8 +95,9 @@ _Draft for professional review — not tax advice. A licensed CPA, EA, or tax at
 
 ## Skills (invoke on demand)
 
-These tax skills are not preloaded. Invoke only the one lead skill selected above and its documented dependencies:
+`cpa-standards` is preloaded. These tax skills are not; invoke only the one lead skill selected above and its documented dependencies:
 
+- `irc-lookup` — every IRC, regulation, and ruling citation, verified before it reaches a draft. Required whenever a position cites authority.
 - `tax-preparation` — return workpapers, forms, elections, and filing support.
 - `return-review` — pre-filing tie-outs, error checks, and review findings.
 - `tax-strategies` — structuring, timing, §174A/§41 coordination, and anti-abuse screening.

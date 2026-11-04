@@ -1,56 +1,46 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Installs every Cure mod the marketplace lists (each plugin whose source is
+# under ./mods/ in .claude-plugin/marketplace.json): no hardcoded list.
+# Errors are shown, and the script exits 1 if any install fails.
+#
+# Usage: scripts/install-all-mods.sh [user|project|local]   (default: user)
+set -uo pipefail
 
-# Installs all 15 Cure Claude Code mods from the @cure marketplace
-# Usage: ./scripts/install-all-mods.sh [scope: user|project|local]
-
-MODS=(
-  "cure-policy-guard"
-  "cure-lane-verifier"
-  "cure-spend-band"
-  "cure-cache-band"
-  "cure-image-viewer"
-  "cure-secret-scrub"
-  "cure-llm-ledger"
-  "cure-cite-check"
-  "cure-claim-guard"
-  "cure-ci-preview"
-  "cure-agent-budget"
-  "cure-egress-guard"
-  "cure-rules-band"
-  "cure-handoff"
-  "cure-lane-board"
-)
-
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MARKETPLACE="${ROOT}/.claude-plugin/marketplace.json"
 SCOPE="${1:-user}"
 
-echo "============================================================"
-echo "  Cure Claude Code Mods — Batch Installer"
-echo "============================================================"
-echo "Scope: ${SCOPE}"
-echo "Total mods to install: ${#MODS[@]}"
-echo ""
+case "${SCOPE}" in user|project|local) ;; *) echo "error: scope must be user, project or local (got '${SCOPE}')" >&2; exit 2 ;; esac
+command -v claude >/dev/null || { echo "error: claude is not on PATH" >&2; exit 2; }
 
-echo "==> Refreshing 'cure' marketplace catalog..."
-claude plugin marketplace update cure || true
-echo ""
+MODS=()
+while IFS= read -r mod; do MODS+=("${mod}"); done < <(python3 - "${MARKETPLACE}" <<'PY'
+import json, sys
+for p in json.load(open(sys.argv[1]))['plugins']:
+    if str(p.get('source', '')).startswith('./mods/'):
+        print(p['name'])
+PY
+)
+if [ "${#MODS[@]}" -eq 0 ]; then echo "error: no mods found in ${MARKETPLACE}" >&2; exit 1; fi
 
-installed=0
-failed=0
+echo "Installing ${#MODS[@]} Cure mods (scope: ${SCOPE}) from ${MARKETPLACE#"${ROOT}/"}"
+if ! out=$(claude plugin marketplace update cure 2>&1); then
+  echo "error: could not refresh the 'cure' marketplace:" >&2
+  echo "${out}" | sed 's/^/  /' >&2
+  exit 1
+fi
 
+failed=()
 for mod in "${MODS[@]}"; do
-  echo -n "Installing ${mod}@cure ... "
-  if claude plugin install "${mod}@cure" --scope "${SCOPE}" >/dev/null 2>&1; then
-    echo "✔ Done"
-    installed=$((installed + 1))
+  if out=$(claude plugin install "${mod}@cure" --scope "${SCOPE}" 2>&1); then
+    echo "  ok      ${mod}"
   else
-    echo "✗ Failed"
-    failed=$((failed + 1))
+    echo "  FAILED  ${mod}" >&2
+    echo "${out}" | sed 's/^/          /' >&2
+    failed+=("${mod}")
   fi
 done
 
-echo ""
-echo "============================================================"
-echo "  Installation Summary: ${installed}/${#MODS[@]} installed (Failed: ${failed})"
-echo "============================================================"
-echo "Verify active plugins with: claude plugin list"
+echo "${#MODS[@]} listed, $(( ${#MODS[@]} - ${#failed[@]} )) installed, ${#failed[@]} failed."
+echo "Retired mods still installed from before Wave 7? scripts/uninstall-all-mods.sh --retired"
+[ "${#failed[@]}" -eq 0 ]

@@ -5,6 +5,10 @@ Read only the section the current mode needs: **Runbook phases** when writing ru
 
 ## Runbook phases
 
+Each runbook step: copy-pasteable command → expected output → what to do if it fails. Every
+destructive step has its rollback. Open with prerequisites (access, roles, tools); close with a
+verification checklist.
+
 **Detection (automated first):** Crashlytics crash-free users drop > 1 point; uptime check failing
 from 2+ regions; Functions v2 / Cloud Run 5xx ratio > 5% over 5 min (`run.googleapis.com/request_count`
 by `response_code_class`); Sentry error-volume spike; Stripe webhook failure alerts. Manual: support

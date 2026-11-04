@@ -7,7 +7,7 @@ top-level doc references must exist on disk. Catches the EVALUATION.md class
 of drift — a doc confidently pointing at (or describing) a file that was
 deleted or renamed, which no count check can see.
 
-Checked docs: README.md, CLAUDE.md, GEMINI.md, AGENT-GUIDE.md, docs/*.md.
+Checked docs: README.md, .claude/CLAUDE.md, GEMINI.md, AGENT-GUIDE.md, docs/*.md.
 Checked claims:
   1. Markdown links to local .md/.py/.sh/.json files -> target must exist.
   2. Backtick-quoted repo paths (`scripts/x.py`, `docs/X.md`, dir trees) -> must exist.
@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 DOCS = sorted(
-    [p for p in [ROOT / n for n in ("README.md", "CLAUDE.md", "GEMINI.md", "AGENT-GUIDE.md")] if p.exists()]
+    [p for p in [ROOT / n for n in ("README.md", ".claude/CLAUDE.md", "GEMINI.md", "AGENT-GUIDE.md")] if p.exists()]
     + sorted((ROOT / "docs").glob("*.md"))
 )
 

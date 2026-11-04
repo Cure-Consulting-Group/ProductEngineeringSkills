@@ -195,7 +195,7 @@ const DATA = __DATA__;
     // 3. which model
     if(C.length){const byLane={}; C.filter(e=>e.lane!=="reference").forEach(e=>{const k=e.lane+" @ "+e.effort; (byLane[k]=byLane[k]||{n:0,p:0,s:0}); byLane[k].n++; byLane[k].p+=e.pass?1:0; byLane[k].s+=(e.score||0);});
       const rows=Object.entries(byLane).map(([k,v])=>({k,rate:v.p/v.n,mean:v.s/v.n,n:v.n})).sort((a,b)=>b.rate-a.rate||b.mean-a.mean);
-      const nice=k=>k.replace("gpt-5.6-luna","Codex Luna (cheapest)").replace("gpt-5.6-sol","Codex Sol").replace("gpt-6-astra","GPT-6 Astra (most expensive)").replace("gemini-3.8-flash-high","Google Gemini Flash").replace(/ @ (\w+)/," at $1 effort");
+      const nice=k=>k.replace("gpt-5.6-luna","Codex Luna (cheapest)").replace("gpt-5.6-sol","Codex Sol").replace("gpt-6-astra","GPT-6 Astra (most expensive)").replace("gpt-6.1-sol","Codex GPT-6.1 Sol").replace("gpt-6-luna","Codex GPT-6 Luna").replace("gemini-4-argon-high","Google Gemini 4 Argon").replace("gemini-3.8-flash-high","Google Gemini Flash").replace(/ @ (\w+)/," at $1 effort");
       const top=rows[0]; const cheapest=rows.find(r=>r.k.includes("luna"));
       cards.push({q:"Which AI should do which job?", a: cheapest&&cheapest.rate>=0.9?"The cheapest one, almost always":"See the practice results", cls:"good",
         why:`On <b>${C.filter(e=>e.lane!=="reference").length} practice tasks</b> with known answers, ${cheapest?`<b>${nice(cheapest.k)}</b> passed ${Math.round(cheapest.rate*100)}% (${cheapest.n} runs)`:""}${top&&cheapest&&top.k!==cheapest.k?`; the best, <b>${nice(top.k)}</b>, passed ${Math.round(top.rate*100)}%`:""}. The expensive models earn their cost only when the instructions are incomplete and the AI has to notice and ask.`});
@@ -270,7 +270,7 @@ const DATA = __DATA__;
     const W=560,L=130,T0=24,rowH=32,colW=(W-L)/rungs.length,H=T0+lanes.length*rowH+6; const s=svg(fig,W,H,"Effort rung by lane"); const maxC=Math.max(...lanes.flatMap(l=>rungs.map(r=>cell(l,r))),1);
     rungs.forEach((r,j)=>el("text",{x:L+j*colW+colW/2,y:16,"text-anchor":"middle","font-size":"11",fill:css("--ink-2")},s).textContent=r);
     const mix=(hex,alpha)=>{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${alpha})`;};
-    lanes.forEach((l,i)=>{const y=T0+i*rowH; el("text",{x:L-8,y:y+20,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=l.replace("gpt-5.6-","").replace("gemini-3.8-flash-high","gemini flash");
+    lanes.forEach((l,i)=>{const y=T0+i*rowH; el("text",{x:L-8,y:y+20,"text-anchor":"end","font-size":"11.5",fill:css("--ink")},s).textContent=l.replace("gpt-5.6-","").replace("gemini-3.8-flash-high","gemini flash").replace("gemini-4-argon-high","gemini argon");
       rungs.forEach((r,j)=>{const v=cell(l,r); const x=L+j*colW+2; const isDefault=l==="gpt-5.6-luna"&&r==="medium"; const rc=el("rect",{x,y:y+2,width:colW-4,height:rowH-4,fill:v?mix(css("--s2"),0.15+0.85*v/maxC):css("--bg-2"),stroke:isDefault?css("--ink"):"none","stroke-width":isDefault?2:0},s); hover(rc,fig,`${l} @ ${r}: ${v} task${v===1?"":"s"}${isDefault?" (models.json default for routine implementation)":""}`); if(v)el("text",{x:x+(colW-4)/2,y:y+20,"text-anchor":"middle","font-size":"11.5",fill:v/maxC>0.55?css("--surface"):css("--ink")},s).textContent=v;});});
     table(fig,["Lane",...rungs],lanes.map(l=>[l,...rungs.map(r=>cell(l,r))]));})();
 

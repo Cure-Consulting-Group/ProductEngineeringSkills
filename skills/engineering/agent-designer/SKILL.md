@@ -1,6 +1,6 @@
 ---
 name: agent-designer
-description: "Designs LLM agent internals: tool schemas, memory, termination, evals, cost, failure modes. Use when an agent or multi-agent system is the chosen shape and needs a design."
+description: "Designs LLM agent internals: tool schemas, memory, termination, evals. Use when an agent or multi-agent system is the chosen shape and needs a design."
 when_to_use: "NOT for agent-vs-workflow choice (agent-workflow-designer), feature code (ai-feature-builder), RAG (rag-architect), eval/cost ops (llmops), MCP servers (mcp-server-builder)."
 argument-hint: "[agent-name-or-system]"
 metadata:

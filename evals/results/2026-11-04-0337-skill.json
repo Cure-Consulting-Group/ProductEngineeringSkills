@@ -1,0 +1,914 @@
+{
+  "mode": "skill",
+  "stamp": "2026-11-04-0337",
+  "source": "claude plugin eval (plugin-evals/sweep.py)",
+  "summary": {
+    "data-migration-firestore-backfill|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "data-migration-firestore-backfill|claude|off": {
+      "pass_rate": 0.917,
+      "n": 3,
+      "ci95": [
+        0.37,
+        0.995
+      ],
+      "flaky": true
+    },
+    "legal-upl-guardrail|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "legal-upl-guardrail|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "nextjs-scaffold-notes-feature|claude|on": {
+      "pass_rate": 0.583,
+      "n": 3,
+      "ci95": [
+        0.164,
+        0.909
+      ],
+      "flaky": true
+    },
+    "nextjs-scaffold-notes-feature|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "public-sector-city-contract|claude|on": {
+      "pass_rate": 0.417,
+      "n": 3,
+      "ci95": [
+        0.091,
+        0.836
+      ],
+      "flaky": true
+    },
+    "public-sector-city-contract|claude|off": {
+      "pass_rate": 0.5,
+      "n": 3,
+      "ci95": [
+        0.125,
+        0.875
+      ],
+      "flaky": false
+    },
+    "qsbs-compliance-two-regimes|claude|on": {
+      "pass_rate": 0.75,
+      "n": 3,
+      "ci95": [
+        0.256,
+        0.963
+      ],
+      "flaky": false
+    },
+    "qsbs-compliance-two-regimes|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "route-legal-doctrine|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-legal-doctrine|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-legal-doctrine-bar-question|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-legal-doctrine-bar-question|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-legal-research|claude|on": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "route-legal-research|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "route-security-review-prelaunch|claude|on": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "route-security-review-prelaunch|claude|off": {
+      "pass_rate": 1.0,
+      "n": 3,
+      "ci95": [
+        0.438,
+        1
+      ],
+      "flaky": false
+    },
+    "security-review-nextjs-firebase|claude|on": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    },
+    "security-review-nextjs-firebase|claude|off": {
+      "pass_rate": 0.667,
+      "n": 3,
+      "ci95": [
+        0.208,
+        0.939
+      ],
+      "flaky": true
+    }
+  },
+  "runs": [
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "data-migration-firestore-backfill",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "legal-upl-guardrail",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "nextjs-scaffold-notes-feature",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.25,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "public-sector-city-contract",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "qsbs-compliance-two-regimes",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-doctrine-bar-question",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-legal-research",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": true,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "route-security-review-prelaunch",
+      "backend": "claude",
+      "skill": false,
+      "pass": true,
+      "score": 1.0,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": true,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.5,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    },
+    {
+      "task": "security-review-nextjs-firebase",
+      "backend": "claude",
+      "skill": false,
+      "pass": false,
+      "score": 0.75,
+      "status": "graded",
+      "error": null,
+      "skippedPaidGraders": false
+    }
+  ],
+  "skill_deltas": {
+    "public-sector-contracting": {
+      "delta": -0.083,
+      "cases": 1,
+      "n_min": 3
+    },
+    "legal-doctrine": {
+      "delta": 0.0,
+      "cases": 3,
+      "n_min": 3
+    },
+    "security-review": {
+      "delta": 0.0,
+      "cases": 2,
+      "n_min": 3
+    },
+    "legal-research": {
+      "delta": 0.0,
+      "cases": 2,
+      "n_min": 3
+    },
+    "qsbs-compliance": {
+      "delta": 0.083,
+      "cases": 1,
+      "n_min": 3
+    },
+    "data-migration": {
+      "delta": 0.083,
+      "cases": 1,
+      "n_min": 3
+    },
+    "nextjs-feature-scaffold": {
+      "delta": -0.083,
+      "cases": 1,
+      "n_min": 3
+    }
+  },
+  "selection": [
+    {
+      "skill": "public-sector-contracting",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 6,
+      "cases": [
+        "public-sector-city-contract"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "legal-doctrine",
+      "traffic": 2,
+      "telemetry": 1,
+      "transcripts": 2,
+      "risk_rank": 16,
+      "cases": [
+        "legal-upl-guardrail",
+        "route-legal-doctrine",
+        "route-legal-doctrine-bar-question"
+      ],
+      "basis": "traffic"
+    },
+    {
+      "skill": "security-review",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 0,
+      "cases": [
+        "route-security-review-prelaunch",
+        "security-review-nextjs-firebase"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "legal-research",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 17,
+      "cases": [
+        "legal-upl-guardrail",
+        "route-legal-research"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "qsbs-compliance",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 2,
+      "cases": [
+        "qsbs-compliance-two-regimes"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "data-migration",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 3,
+      "cases": [
+        "data-migration-firestore-backfill"
+      ],
+      "basis": "T85 risk list"
+    },
+    {
+      "skill": "nextjs-feature-scaffold",
+      "traffic": 0,
+      "telemetry": 0,
+      "transcripts": 0,
+      "risk_rank": 9,
+      "cases": [
+        "nextjs-scaffold-notes-feature"
+      ],
+      "basis": "T85 risk list"
+    }
+  ],
+  "partial": false,
+  "partialReason": null,
+  "costUsd": 15.349523799999998,
+  "claudeVersion": "2.1.316",
+  "aggregate": "/Users/rashadcureton/Documents/Cure-Consulting-Group/PES-w7-int/plugin-evals/results/sweep-2026-11-04-0337/aggregate-result.json"
+}

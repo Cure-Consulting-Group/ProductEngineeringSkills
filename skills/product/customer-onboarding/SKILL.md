@@ -3,6 +3,8 @@ name: customer-onboarding
 description: "Designs onboarding and activation for mobile and web apps. Use when designing a first-run flow, empty states, welcome emails, or tooltips, or when day-1/day-7 retention or time-to-value is weak."
 when_to_use: "NOT for funnels past activation, referrals, or lifecycle (use growth-engineering) or marketing email campaigns (use product-marketing)."
 argument-hint: "[product-name]"
+metadata:
+  verified: 2026-10-24
 ---
 
 # Customer Onboarding

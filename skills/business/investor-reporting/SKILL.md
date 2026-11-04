@@ -1,6 +1,6 @@
 ---
 name: investor-reporting
-description: "Drafts investor updates, board decks, portfolio P&L, data rooms, and cap-table/SAFE models. Use when writing the monthly investor update, a quarterly board deck, or diligence prep."
+description: "Drafts investor updates, board decks, portfolio P&L, data rooms, cap tables. Use when writing the monthly investor update, a board deck, a SAFE or cap-table model, or diligence prep."
 when_to_use: "NOT for pitch decks, the ask, or investor outreach (use fundraising-materials), or runway math and raise/cut thresholds (use burn-rate-tracker)."
 argument-hint: "[product-or-portfolio]"
 metadata:

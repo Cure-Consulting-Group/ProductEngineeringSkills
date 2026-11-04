@@ -1,6 +1,6 @@
 ---
 name: agent-workflow-designer
-description: "Picks the shape of an LLM system: single call, workflow pattern, or autonomous agent. Use when deciding how to structure an AI feature, or when an agent is too slow, costly, or flaky."
+description: "Picks the shape of an LLM system: single call, workflow pattern, or agent. Use when deciding how to structure an AI feature, or when an agent is too slow, costly, or flaky."
 when_to_use: "NOT for an agent's tools/memory/stop rules (agent-designer), feature code (ai-feature-builder), eval/cost ops (llmops), or Claude Code loops (engagement-automation)."
 argument-hint: "[task-or-system-name]"
 metadata:

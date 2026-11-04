@@ -1,9 +1,11 @@
 ---
 name: observability
-description: "Sets up logging, tracing, SLOs, burn-rate alerts, and dashboards (Crashlytics, Sentry, Datadog, GCP). Use when adding monitoring to a service, defining SLOs, or fixing noisy or missing alerts."
+description: "Sets up logs, traces, SLOs, and alerts (Sentry, Crashlytics, Datadog, GCP). Use when adding monitoring, defining SLOs, or fixing noisy or missing alerts."
 when_to_use: "NOT for incident runbooks or post-mortems (use incident-response) or DORA delivery metrics (use dora-metrics)."
 argument-hint: "[project-or-service]"
 context: fork
+metadata:
+  verified: 2026-10-24
 ---
 
 # Observability
@@ -45,14 +47,20 @@ Report maturity before recommending.
 
 Cure defaults: JSON logs with `service`, `version`, `trace_id`, `user_id` (hashed), redaction
 before emit; RED metrics (rate, errors, duration) per endpoint plus business counters;
-OpenTelemetry for traces (JS SDK 2.x API) with W3C `traceparent` propagation. Read
+OpenTelemetry for traces with W3C `traceparent` propagation. Stay on the JS SDK 2.x line
+(`@opentelemetry/sdk-node` 0.2xx) while exporting with `@google-cloud/opentelemetry-cloud-trace-exporter`:
+SDK 3.0 (2026-10-20) needs Node ≥22.15 and replaces `sdk-trace-base`/`sdk-trace-node` with
+`@opentelemetry/sdk-trace`, and the exporter (3.1.0) still peers on 2.x (OTel JS release notes
+and npm, checked 2026-10-24). Read
 [reference/details.md](reference/details.md) (section "Step 3") when writing the log schema,
 redaction code, correlation middleware, metric types, or OpenTelemetry setup.
 
 ## Step 4: Platform-Specific Setup
 
 Android: Crashlytics + Firebase Performance, ANR tracking. iOS: Crashlytics + MetricKit +
-`os_signpost`. Web: Sentry (`@sentry/nextjs`) + `useReportWebVitals` (INP, not FID). Functions:
+`os_signpost`. Web: Sentry (`@sentry/nextjs`) + `useReportWebVitals` (INP, not FID). Sentry JS v11 (2026-09-23)
+replaced `sendDefaultPii` with `dataCollection`, whose defaults now collect cookies, user info, and
+HTTP bodies — set it explicitly on any PII/PHI product (Sentry MIGRATION.md, checked 2026-10-24). Functions:
 `firebase-functions/v2` logger to Cloud Logging, Cloud Trace. Read
 [reference/details.md](reference/details.md) (section "Step 4") when writing SDK initialization
 code for any of these platforms.
@@ -88,8 +96,10 @@ for every SLO. An alert fires only when both the long and short windows exceed t
 | 10% | 3 d | 6 h | 1× | Ticket (P3) |
 
 Also page on: zero successful requests, detected data loss or security breach, payment failure
-rate > 5% over 10 min. Route P1/P2 through PagerDuty/Opsgenie (phone + push), P3 to Slack, P4 to
-the tracker.
+rate > 5% over 10 min. Route P1/P2 through PagerDuty or Jira Service Management (phone + push), P3 to Slack, P4 to
+the tracker. Don't start new on Opsgenie: end of sale 2025-06-04, end of support 2027-04-05;
+Atlassian points alerting/on-call to Compass or JSM (atlassian.com/software/opsgenie/migration,
+checked 2026-10-24).
 
 Alert hygiene, because pages that don't need action train people to ignore pages:
 - Every alert is actionable and has an owner and a runbook link; delete the ones that aren't.
@@ -104,7 +114,7 @@ Three dashboards per product:
 - **User experience:** LCP/INP/CLS at p75, app start time, crash-free sessions, ANR (Android) and hang rate (iOS), signup and checkout funnels.
 - **Business:** MRR, payment success rate, signups, DAU/WAU/MAU, cost per user.
 
-On-call: one PagerDuty/Opsgenie service per critical system; escalation primary → secondary
+On-call: one PagerDuty (or JSM) service per critical system; escalation primary → secondary
 (10 min no-ack) → engineering lead (20 min). Synthetic checks for login, checkout, and health
 endpoints from ≥ 2 regions (GCP Uptime Checks or Checkly).
 

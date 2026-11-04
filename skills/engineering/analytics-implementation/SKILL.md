@@ -1,6 +1,6 @@
 ---
 name: analytics-implementation
-description: "Designs analytics event taxonomies, tracking plans, funnels, and consent flows. Use when instrumenting product analytics (GA4/Firebase, Mixpanel, PostHog) or auditing events."
+description: "Designs analytics event taxonomies, tracking plans, funnels, consent flows. Use when instrumenting product analytics (GA4/Firebase, Mixpanel, PostHog) or auditing events."
 when_to_use: "NOT for KPIs/dashboards (metrics-dashboard agent), experiment stats (ab-test-analyst agent), growth loops (growth-engineering), or flag infra (feature-flags)."
 argument-hint: "[product-name]"
 metadata:

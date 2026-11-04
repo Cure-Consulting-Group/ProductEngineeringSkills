@@ -1,6 +1,6 @@
 ---
 name: api-architect
-description: "Designs REST/GraphQL API contracts: errors, auth, rate limits, versioning, OpenAPI. Use when designing endpoints or an API's error, auth, or deprecation policy."
+description: "Designs REST/GraphQL API contracts: errors, auth, rate limits, versioning. Use when designing endpoints, an OpenAPI spec, or an API's error, auth, or deprecation policy."
 when_to_use: "NOT for gateway/BFF layers (use api-gateway) or validating an existing API against its spec (api-validator agent)."
 argument-hint: "[api-name]"
 metadata:

@@ -2,27 +2,26 @@
   "mcpServers": {
     "github": {
       "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/"
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${CURE_GITHUB_MCP_PAT}"
+      }
     },
     "sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp"
     },
-    "firebase-firestore": {
+    "firebase": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "mcp-firestore"],
-      "env": {
-        "SERVICE_ACCOUNT_KEY_PATH": "${GOOGLE_APPLICATION_CREDENTIALS}",
-        "FIRESTORE_PROJECT_ID": "${FIREBASE_PROJECT_ID}"
-      }
+      "args": ["-y", "firebase-tools@15.33.0", "mcp"]
     },
     "postgres": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@bytebase/dbhub", "--transport", "stdio"],
+      "args": ["-y", "@bytebase/dbhub@1.5.0", "--transport", "stdio"],
       "env": {
-        "DB_URL": "${DATABASE_URL}"
+        "DSN": "${DATABASE_URL}"
       }
     }
   }

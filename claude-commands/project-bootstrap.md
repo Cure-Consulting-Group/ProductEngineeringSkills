@@ -76,7 +76,9 @@ Never add a compliance section speculatively: an unfounded HIPAA or COPPA sectio
 enforce rules the project doesn't have, and a missing real one is worse — ask when unsure.
 
 Multi-runtime: Codex reads `AGENTS.md`, not `CLAUDE.md`. If Codex is active, write the content to
-`AGENTS.md` and make `CLAUDE.md` a one-line `@AGENTS.md` import (Claude Code documents this pattern).
+`AGENTS.md` and make `CLAUDE.md` a one-line `@AGENTS.md` import. Claude Code v2.1.277+ also reads
+`AGENTS.md` directly when no `CLAUDE.md` exists, but some sessions can't, and the import never loads
+it twice — so keep the import (code.claude.com/docs/en/memory, checked 2026-10-24).
 For Antigravity, Cure repos use `GEMINI.md`; confirm the file your agy version reads before relying on it.
 
 ## Step 4: Generate STATE.md

@@ -1,9 +1,17 @@
 {
   "name": "cure-image-viewer",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Draws the images you sent above the prompt until the turn that carried them ends. Pictures need a terminal with the kitty graphics protocol (kitty, Ghostty, Warp); elsewhere each shows as a caption with its size.",
   "author": {
     "name": "Cure Consulting Group"
   },
-  "types": "./types/index.d.ts"
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "imageDir": {
+      "type": "string",
+      "title": "Image folder",
+      "description": "The folder Claude Code saves pasted images in (`<N>.png`), when the default guess is wrong. Empty: guess. CURE_IMAGE_DIR overrides it.",
+      "default": ""
+    }
+  }
 }

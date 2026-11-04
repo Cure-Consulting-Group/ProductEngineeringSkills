@@ -1,7 +1,7 @@
 ---
 name: legal-doctrine
-description: "Black-letter law and NY practice references with bar-exam traps. Use when analyzing a legal issue (contracts, CPLR, estates, privacy, NIL, IP, cannabis, ethics) or answering a bar-style question."
-when_to_use: "NOT for verifying citations (legal-research) or measuring competency (bar-benchmark)."
+description: "Explains black-letter law and NY practice with bar-exam traps. Use when analyzing a legal issue (contracts, CPLR, estates, privacy, NIL, IP, ethics) or a bar-style question."
+when_to_use: "NOT for a memo with verified authority or cite checks (legal-research) or measuring competency (bar-benchmark)."
 argument-hint: "[subject-or-issue]"
 metadata:
   verified: 2026-09-28

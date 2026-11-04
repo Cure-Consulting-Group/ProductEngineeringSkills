@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: return-review-schedule-c
+context:
+  scaffold_script: fixture.sh

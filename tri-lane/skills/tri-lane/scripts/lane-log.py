@@ -7,9 +7,14 @@
   update  amend a logged task later (escaped defects found after merge, notes); --escaped-defects 0 marks the window checked
   due     tasks whose 7-day defect window has closed and has not been checked
   list    print the log as a table
+  remeasure  re-read model and effort for logged rows from the Claude transcripts that still exist
 
-`start` records the session model and effort from ~/.claude/settings.json so the benchmark's fixed-model
-rule is checkable. `end` auto-discovers everything the run dir holds ($(git rev-parse --git-common-dir)/tri-lane/run/<task>/):
+The benchmark's fixed-model rule needs the session model and effort. `end` takes them from the Claude
+transcripts for the task window (every assistant turn records `model` and `effort`; the pair with the most
+main-session output tokens wins, `model_source: transcript`). `start` records ~/.claude/settings.json as the
+fallback (`model_source: settings`): settings say what a new session starts with, and /model or /effort change
+it. --model/--effort flags win over both (`model_source: flag`). Claude Code deletes transcripts after
+cleanupPeriodDays (default 30), so remeasure only reaches rows that young. `end` auto-discovers everything the run dir holds ($(git rev-parse --git-common-dir)/tri-lane/run/<task>/):
 events*.jsonl, agy*.json, route-suggestion.json, route.json (declared route), report.json (lane, status, gaps),
 advisor.md (verdict), spec*.md (rework), so nothing is missed when flags are omitted; flags override.
 Neither command needs typing any more: `lane-worktree.py add` runs `start` and `remove` runs `end` (Wave 4, T42).
@@ -118,11 +123,43 @@ def session_model() -> dict:
         # effort lives per model under modelSettings (settings.json, 2026-09): {"modelSettings": {"claude-fable-5-1": {"effortLevel": "xhigh"}}};
         # the model string may carry a context suffix like "[1m]" that the modelSettings key does not
         base = re.sub(r"\[[^\]]*\]$", "", s.get("model") or "")
-        per_model = ((s.get("modelSettings") or {}).get(base) or {}).get("effortLevel")
+        ms = s.get("modelSettings") or {}
+        if base and base not in ms:
+            # an alias ("opus") against full-ID keys ("claude-opus-5-5"): use the one key of that family, if only one
+            family = [k for k in ms if f"-{base}-" in f"-{k}-"]
+            base = family[0] if len(family) == 1 else base
+        per_model = (ms.get(base) or {}).get("effortLevel")
         out["effort"] = per_model or s.get("effortLevel") or s.get("effort") or (s.get("env") or {}).get("CLAUDE_CODE_EFFORT_LEVEL")
     except Exception:
         pass
     return out
+
+
+def measured_session(claude: dict) -> dict:
+    """The model and effort the transcripts show for a task window: the main-session `model@effort` pair with the
+    most output tokens, and its share of them (below 1.0 means the session switched model or effort mid-task)."""
+    mix = claude.get("output_tokens_by_session_model_effort") or {}
+    total = sum(mix.values())
+    if not total:
+        return {}
+    key, n = max(mix.items(), key=lambda kv: kv[1])
+    model, _, effort = key.rpartition("@")
+    return {"model": model, "effort": None if effort == "None" else effort, "model_share": round(n / total, 3)}
+
+
+def apply_measured(row: dict) -> bool:
+    """Replace a row's settings-derived model/effort with the transcript's, keeping the old pair as *_configured.
+    Flag-set rows are left alone. Returns True when the row now carries a transcript measurement."""
+    if row.get("model_source") == "flag":
+        return False
+    m = measured_session(row.get("claude") or {})
+    if not m:
+        return row.get("model_source") == "transcript"
+    if row.get("model_source") != "transcript":
+        row["model_configured"], row["effort_configured"] = row.get("model"), row.get("effort")
+    row.update(m, model_source="transcript")
+    row.pop("model_inferred", None)
+    return True
 
 
 def run_dir_for(log: Path, task: str) -> Path:
@@ -204,6 +241,7 @@ def cmd_start(a) -> int:
         "task": a.task, "arm": a.arm, "kind": a.kind, "started_at": now_iso(),
         "project": str(Path.cwd().resolve()), "head": head.strip(), "notes": a.notes or "",
         "model": a.model or sm["model"], "effort": a.effort or sm["effort"],
+        "model_source": "flag" if (a.model or a.effort) else "settings",
         "pools_before": snapshot_pools(),
     }
     sp.write_text(json.dumps(rec, indent=2))
@@ -229,7 +267,8 @@ def cmd_end(a) -> int:
         rec = {"task": a.task, "arm": a.arm or meta.get("arm") or "tri-lane", "kind": a.kind or meta.get("kind") or "", "started_at": started_at,
                "project": meta.get("project") or str(Path.cwd().resolve()), "head": meta.get("head") or head.strip(),
                "notes": "backfilled from meta.json" if meta.get("started_at") and not a.started_at else "backfilled: no pools_before snapshot", "pools_before": {}}
-        rec.update(session_model() if not (a.model_hint or a.effort_hint) else {"model": a.model_hint, "effort": a.effort_hint})
+        rec.update({**session_model(), "model_source": "settings"} if not (a.model_hint or a.effort_hint)
+                   else {"model": a.model_hint, "effort": a.effort_hint, "model_source": "flag"})
         sp.write_text(json.dumps(rec))
     rec = json.loads(sp.read_text())
     ended = a.ended_at or now_iso()
@@ -297,7 +336,7 @@ def cmd_end(a) -> int:
     row = {
         **{k: rec[k] for k in ("task", "arm", "kind", "project", "head")},
         "started_at": started, "ended_at": ended, "elapsed_seconds": round(elapsed),
-        "model": rec.get("model"), "effort": rec.get("effort"),
+        "model": rec.get("model"), "effort": rec.get("effort"), "model_source": rec.get("model_source"),
         "route": route, "route_reason": disc.get("route_reason"), "route_history": disc.get("route_history") or [],
         "lane": lane, "status": status, "advisor": advisor, "advisor_skip_reason": disc.get("advisor_skip_reason"),
         "suggested": found["suggestion"], "suggestion_followed": (bool(found["suggestion"]) and found["suggestion"].get("lane") and found["suggestion"]["lane"] in (lane or "")) or None,
@@ -310,6 +349,7 @@ def cmd_end(a) -> int:
         "backfilled": bool(a.ended_at), "run_dir": disc.get("run_dir"),
         "notes": " ".join(x for x in (rec.get("notes"), a.notes) if x),
     }
+    apply_measured(row)
     rows = read_log(log)
     rows = [r for r in rows if r.get("task") != a.task]
     row["claude_overlap"] = mark_overlaps(rows, row)
@@ -317,7 +357,7 @@ def cmd_end(a) -> int:
     write_log(log, rows)
     sp.unlink()
     summary = {
-        "task": a.task, "arm": rec["arm"], "model": rec.get("model"), "elapsed_min": round(elapsed / 60, 1),
+        "task": a.task, "arm": rec["arm"], "model": row["model"], "effort": row["effort"], "model_source": row.get("model_source"), "elapsed_min": round(elapsed / 60, 1),
         "route": route, "lane": lane, "status": status, "advisor": advisor, "rework": rework_n, "dispatches": disc.get("dispatches"),
         "findings": "labeled" if findings else "unlabeled (pass --finding reviewer:C:D:U to lane-worktree remove or lane-log update)",
         "auto_discovered": {"codex_events": len(found["codex_events"]), "agy_json": len(found["agy_json"]), "suggestion": bool(found["suggestion"]),
@@ -491,6 +531,7 @@ def cmd_backfill(a) -> int:
             top = sorted((u.get("output_tokens_by_model") or {}).items(), key=lambda kv: -kv[1])
             if top and top[0][0] != "unknown":
                 row["model"], row["model_inferred"] = top[0][0], True
+            apply_measured(row)
             row["codex_worktree"] = by_cwd.get(str(wt_root / row["task"]), {})
         for i, row in enumerate(drafts):
             s1, e1 = windows[i]
@@ -502,6 +543,47 @@ def cmd_backfill(a) -> int:
         report[proj.name] = {"written": len(drafts), "kept_live": len(live), "overlapped": sum(1 for d in drafts if d["claude_overlap"]),
                              "claude_measured": sum(1 for d in drafts if d["claude"].get("billable_tokens")), "log": str(log)}
     print(json.dumps({"rows": total_written, "dry_run": bool(a.dry_run), "projects": report}, indent=2))
+    return 0
+
+
+def cmd_remeasure(a) -> int:
+    """Model and effort for rows already logged, from the transcripts that survive cleanupPeriodDays. Adds the
+    session mix to each row's `claude` and applies it; token totals are left as logged (a pruned transcript would
+    zero them). Rows without a surviving transcript are untouched. Flag-set rows are never changed."""
+    import importlib.util
+    spec_u = importlib.util.spec_from_file_location("usage_window", HERE / "usage-window.py")
+    uw = importlib.util.module_from_spec(spec_u); spec_u.loader.exec_module(uw)
+    if a.all_projects:
+        import lane_run  # noqa: E402
+        logs = sorted({p.resolve() for r in lane_run.project_roots() for p in Path(r).glob("*/.git/tri-lane/benchmark.jsonl")})
+    else:
+        logs = [log_path(a.log)]
+    report = {}
+    for log in logs:
+        rows = read_log(log)
+        by_project: dict = {}
+        for i, r in enumerate(rows):
+            w = _window(r)
+            if w and r.get("project") and r.get("model_source") != "flag":
+                by_project.setdefault(r["project"], []).append((i, w))
+        measured = 0
+        for proj, items in by_project.items():
+            usages = uw.claude_usage_multi(proj, [w for _, w in items])
+            for (i, _), u in zip(items, usages):
+                mix = u.get("output_tokens_by_session_model_effort") or {}
+                if not mix:
+                    continue
+                rows[i].setdefault("claude", {})["output_tokens_by_session_model_effort"] = mix
+                measured += apply_measured(rows[i])
+        if not a.dry_run and measured:
+            log.with_suffix(".jsonl.bak").write_text(log.read_text())
+            write_log(log, rows)
+        pairs: dict = {}
+        for r in rows:
+            k = f"{r.get('model')}@{r.get('effort')}"
+            pairs[k] = pairs.get(k, 0) + 1
+        report[str(log)] = {"rows": len(rows), "measured": measured, "unmeasured": len(rows) - measured, "model_effort": pairs}
+    print(json.dumps({"dry_run": bool(a.dry_run), "logs": report}, indent=2))
     return 0
 
 
@@ -637,6 +719,11 @@ def main() -> int:
     b.add_argument("--all-projects", action="store_true", help="every project under the Cure project roots (each writes its own benchmark.jsonl)")
     b.add_argument("--dry-run", action="store_true")
     b.set_defaults(fn=cmd_backfill)
+
+    r = sub.add_parser("remeasure", help="model and effort for logged rows from the Claude transcripts still on disk")
+    r.add_argument("--all-projects", action="store_true", help="every project's benchmark.jsonl under the Cure project roots")
+    r.add_argument("--dry-run", action="store_true")
+    r.set_defaults(fn=cmd_remeasure)
 
     l = sub.add_parser("list", help="print the log")
     l.add_argument("--json", action="store_true")

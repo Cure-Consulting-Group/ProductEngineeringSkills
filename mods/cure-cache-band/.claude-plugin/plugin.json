@@ -1,7 +1,22 @@
 {
   "name": "cure-cache-band",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shows above the prompt how long the prompt cache has left, the session's cache hit rate and misses, and what a cold next message would re-cache. Adds /cache.",
-  "author": { "name": "Cure Consulting Group" },
-  "types": "./types/index.d.ts"
+  "author": {
+    "name": "Cure Consulting Group"
+  },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "ttl": {
+      "type": "string",
+      "title": "Prompt cache TTL",
+      "description": "auto infers it from your plan's rate limits; pick 5m or 1h when that is wrong. CURE_CACHE_TTL overrides it.",
+      "options": [
+        "auto",
+        "5m",
+        "1h"
+      ],
+      "default": "auto"
+    }
+  }
 }

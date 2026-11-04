@@ -9,8 +9,9 @@ Established 2026-07-11 after Wave 2 (see BACKLOG.md). Total human cost:
 Every PR runs the full gate: library audit (≥9.0 overall, ≥7.0 per item),
 metadata sync, prompt-hook constraints (Stop/PostToolUseFailure only, ≤30s),
 session-lifecycle non-blocking check, workflow syntax, legacy + Gemini parity.
-`nightly-drift.yml` re-checks daily. Consuming projects self-update
-(marketplace auto-update) and self-provision (loop.md, workflows) — there is
+`nightly-drift.yml` re-checks weekly (Mondays; the daily cron was dropped in 0752fc0 for failing daily and burning minutes, restored weekly in Wave 7). Consuming projects update only if
+marketplace auto-update is on for `cure` — Claude Code turns it off by default for third-party
+marketplaces (check `/plugin` → Marketplaces on each machine; otherwise `claude plugin update`) and self-provision (loop.md, workflows) — there is
 no fleet-rollout work.
 
 **The one rule: never bypass `scripts/release.sh`.** It is the only path that

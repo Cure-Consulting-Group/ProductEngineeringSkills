@@ -1,7 +1,7 @@
 ---
 name: legal-research
-description: "Legal research and citation verification, New York first. Use when a legal question needs controlling authority, a memo's citations need checking, or a case or statute cite must be confirmed real."
-when_to_use: "NOT for rule outlines (legal-doctrine), bar prep (bar-benchmark), or contract business risk (contract-reviewer agent)."
+description: "Researches law and verifies citations, New York first. Use when a legal question needs controlling authority, a memo's citations need checking, or a case or statute cite must be confirmed."
+when_to_use: "NOT for rule outlines (legal-doctrine), bar prep (bar-benchmark), IRC cites (irc-lookup), or contract business risk (contract-reviewer agent)."
 argument-hint: "[question-or-draft-path]"
 metadata:
   verified: 2026-09-28

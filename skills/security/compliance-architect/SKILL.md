@@ -1,7 +1,7 @@
 ---
 name: compliance-architect
-description: "Designs HIPAA, COPPA, GDPR, CCPA, and PCI compliance: consent, audit trails, data classification. Use when an app handles health, kids', EU, California, or card data, or needs a BAA/DPA check."
-when_to_use: "NOT for QSBS (use qsbs-compliance), FERPA (use legal-compliance agent), OWASP (use security-review), or policy text (use legal-doc-scaffold)."
+description: "Designs HIPAA, COPPA, GDPR, CCPA, and PCI compliance: consent, audit trails. Use when an app handles health, kids', EU, California, or card data, or needs a BAA or DPA."
+when_to_use: "NOT for QSBS (qsbs-compliance), FERPA (legal-compliance agent), OWASP/payment-code review (security-review), Stripe builds (stripe-integration), or policy text (legal-doc-scaffold)."
 argument-hint: "[regulation-or-project]"
 context: fork
 metadata:

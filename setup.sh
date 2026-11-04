@@ -33,6 +33,8 @@ set -euo pipefail
 # --- Configuration ---
 PLUGIN_REPO="https://github.com/Cure-Consulting-Group/ProductEngineeringSkills.git"
 PLUGIN_NAME="cure-product-engineering"
+MARKETPLACE_NAME="cure"
+MARKETPLACE_REPO="Cure-Consulting-Group/ProductEngineeringSkills"
 PLUGIN_DIR_NAME="ProductEngineeringSkills"
 INSTALL_BASE="${HOME}/.claude/plugins"
 
@@ -93,6 +95,14 @@ check_prerequisites() {
   fi
 }
 
+# --- Library counts, read from the checkout (never hardcoded) ---
+count_library() {
+  local root="$1"
+  SKILL_COUNT=$(find "$root/skills" -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+  AGENT_COUNT=$(find "$root/agents" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+  PERSONA_COUNT=$(find "$root/personas" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+}
+
 # --- Clone or update the plugin ---
 # Tries git clone first; falls back to gh CLI for private-repo auth.
 install_plugin() {
@@ -147,46 +157,56 @@ setup_global() {
   local plugin_path="${INSTALL_BASE}/${PLUGIN_DIR_NAME}"
   install_plugin "$plugin_path"
 
-  # Create user-level settings if they don't exist
+  # Register the plugin in user settings. enabledPlugins is an OBJECT keyed
+  # "<plugin>@<marketplace>" (an array is invalid, and this script used to crash
+  # on object-shaped files). Idempotent; a legacy array is converted in place.
   local user_settings="${HOME}/.claude/settings.json"
   mkdir -p "${HOME}/.claude"
 
-  if [ -f "$user_settings" ]; then
-    # Check if plugin is already enabled
-    if grep -q "$PLUGIN_NAME" "$user_settings" 2>/dev/null; then
-      ok "Plugin already registered in user settings."
+  if command -v python3 &> /dev/null; then
+    local result
+    result=$(python3 - "$user_settings" "$PLUGIN_NAME@$MARKETPLACE_NAME" "$MARKETPLACE_NAME" "$MARKETPLACE_REPO" <<'PYMERGE'
+import json, os, sys
+path, key, mkt, repo = sys.argv[1:5]
+settings = {}
+if os.path.exists(path):
+    try:
+        with open(path) as f:
+            settings = json.load(f)
+    except Exception:
+        sys.exit("settings file is not valid JSON; fix it by hand: " + path)
+if not isinstance(settings, dict):
+    sys.exit("settings file is not a JSON object; fix it by hand: " + path)
+before = json.dumps(settings, sort_keys=True)
+plugins = settings.get("enabledPlugins")
+if isinstance(plugins, list):  # legacy shape written by setup.sh before v7.14
+    plugins = {(p if "@" in p else p + "@" + mkt): True for p in plugins if isinstance(p, str)}
+elif not isinstance(plugins, dict):
+    plugins = {}
+plugins[key] = True  # running the installer is the intent to enable
+settings["enabledPlugins"] = plugins
+known = settings.get("extraKnownMarketplaces")
+if not isinstance(known, dict):
+    known = {}
+known.setdefault(mkt, {"source": {"source": "github", "repo": repo}})
+settings["extraKnownMarketplaces"] = known
+if json.dumps(settings, sort_keys=True) == before:
+    print("unchanged")
+else:
+    with open(path, "w") as f:
+        json.dump(settings, f, indent=2)
+        f.write("\n")
+    print("updated")
+PYMERGE
+    ) || error "Could not update $user_settings"
+    if [ "$result" = "unchanged" ]; then
+      ok "Plugin already registered in $user_settings."
     else
-      info "Adding plugin to user settings..."
-      # Use python to safely merge JSON if available, otherwise warn
-      if command -v python3 &> /dev/null; then
-        python3 -c "
-import json, sys
-try:
-    with open('$user_settings', 'r') as f:
-        settings = json.load(f)
-except:
-    settings = {}
-
-plugins = settings.get('enabledPlugins', [])
-if '$PLUGIN_NAME' not in plugins:
-    plugins.append('$PLUGIN_NAME')
-settings['enabledPlugins'] = plugins
-
-with open('$user_settings', 'w') as f:
-    json.dump(settings, f, indent=2)
-    f.write('\n')
-"
-        ok "Plugin registered in $user_settings"
-      else
-        warn "python3 not found. Manually add to $user_settings:"
-        echo "  \"enabledPlugins\": [\"$PLUGIN_NAME\"]"
-      fi
+      ok "Plugin registered in $user_settings (enabledPlugins[\"$PLUGIN_NAME@$MARKETPLACE_NAME\"] = true)"
     fi
   else
-    echo '{
-  "enabledPlugins": ["'"$PLUGIN_NAME"'"]
-}' > "$user_settings"
-    ok "Created $user_settings with plugin enabled."
+    warn "python3 not found. Manually add to $user_settings:"
+    echo "  \"enabledPlugins\": { \"$PLUGIN_NAME@$MARKETPLACE_NAME\": true }"
   fi
 
   echo ""
@@ -195,7 +215,9 @@ with open('$user_settings', 'w') as f:
   echo "  Plugin location: $plugin_path"
   echo "  User settings:   $user_settings"
   echo ""
-  echo "  All Claude Code sessions will have access to 80 skills, 39 agents, and 4 personas."
+  count_library "$plugin_path"
+  echo "  All Claude Code sessions will have access to ${SKILL_COUNT} skills, ${AGENT_COUNT} agents, and ${PERSONA_COUNT} personas."
+  echo "  Claude Code installs $PLUGIN_NAME@$MARKETPLACE_NAME from the $MARKETPLACE_NAME marketplace on next start."
   echo "  Update: claude plugin update cure-product-engineering@cure (or git -C $plugin_path pull)"
   echo ""
   echo "  Or load manually per-session:"
@@ -219,6 +241,8 @@ setup_project() {
   # Create project .claude directory
   mkdir -p "$project_dir/.claude"
 
+  count_library "$plugin_path"
+
   # Create or update project CLAUDE.md with plugin reference
   local claude_md="$project_dir/.claude/CLAUDE.md"
   if [ -f "$claude_md" ]; then
@@ -226,17 +250,17 @@ setup_project() {
       ok "CLAUDE.md already references the plugin."
     else
       info "Appending plugin reference to existing CLAUDE.md..."
-      cat >> "$claude_md" << 'CLAUDEMD'
+      cat >> "$claude_md" << CLAUDEMD
 
 ## Cure Consulting Group Standards
 
 This project uses the ProductEngineeringSkills plugin. Load it with:
-```
+\`\`\`
 claude --plugin-dir ~/.claude/plugins/ProductEngineeringSkills
-```
+\`\`\`
 
-Available skills: /cure-product-engineering:sdlc, /cure-product-engineering:feature-audit,
-/cure-product-engineering:security-review, and 72 more. Run any skill with /cure-product-engineering:<name>.
+${SKILL_COUNT} skills, e.g. /cure-product-engineering:sdlc, /cure-product-engineering:feature-audit,
+/cure-product-engineering:security-review. Full inventory: docs/OVERVIEW.md in the plugin repo.
 CLAUDEMD
       ok "Updated $claude_md"
     fi
@@ -254,17 +278,10 @@ Load the plugin when starting Claude Code:
 claude --plugin-dir ~/.claude/plugins/ProductEngineeringSkills
 ```
 
-## Available Skills (75)
+## Available Skills
 
-Run any skill with `/cure-product-engineering:<skill-name>`:
-
-**Engineering:** sdlc, android-feature-scaffold, ios-architect, nextjs-feature-scaffold, firebase-architect, api-architect, api-gateway, stripe-integration, ai-feature-builder, llmops, database-architect, data-migration, infrastructure-scaffold, edge-computing, micro-frontends, offline-first, i18n, notification-architect
-**Quality:** feature-audit, testing-strategy, e2e-testing, test-accounts, uat, security-review, compliance-architect, accessibility-audit, performance-review, chaos-engineering, green-software
-**Product:** product-manager, product-design, market-research, go-to-market, product-marketing, customer-onboarding, seo-content-engine
-**Operations:** project-bootstrap, project-manager, ci-cd-pipeline, release-management, feature-flags, observability, dora-metrics, analytics-implementation, incident-response, disaster-recovery, growth-engineering, design-system
-**Business:** engineering-cost-model, saas-financial-model, finops, legal-doc-scaffold
-**Consulting:** client-handoff, client-communication, proposal-generator
-**Design:** android-design-expert, ios-design-expert, web-design-expert
+Run any skill with `/cure-product-engineering:<skill-name>`. The full, generated
+inventory is docs/OVERVIEW.md in the plugin repo.
 
 ## Tech Stack
 
@@ -395,7 +412,6 @@ DEPBOT
   echo ""
   echo "  Files added (commit these to share with your team):"
   echo "    .claude/CLAUDE.md"
-  echo "    .claude/GEMINI.md"
   echo "    .claude/rules/*.md"
 }
 
@@ -411,7 +427,9 @@ setup_legacy() {
   # Copy command files
   mkdir -p "$project_dir/.claude/commands"
   cp "$plugin_path/claude-commands/"*.md "$project_dir/.claude/commands/"
-  ok "Copied 64 skills to $project_dir/.claude/commands/"
+  local copied_count
+  copied_count=$(find "$plugin_path/claude-commands" -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')
+  ok "Copied ${copied_count} command stubs to $project_dir/.claude/commands/"
 
   echo ""
   warn "Legacy mode: hooks, agents, output styles, and MCP configs are NOT included."

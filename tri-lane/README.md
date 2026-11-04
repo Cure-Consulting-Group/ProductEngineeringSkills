@@ -1,6 +1,6 @@
 # cure-tri-lane
 
-Opt-in multi-vendor orchestration for Cure Consulting Group engagements. A Claude Code session acts as architect; Codex (GPT-5.6 Luna/Sol) implements spec-determined work and audits correctness; Antigravity (Gemini 3.8 Flash) reviews systems, security rules, infra, and CI and verifies in a browser; a fresh-context Claude advisor gives the final verdict. Every lane runs in its own git worktree and returns a machine-checkable report.
+Opt-in multi-vendor orchestration for Cure Consulting Group engagements. A Claude Code session acts as architect; Codex (GPT-6 Luna, GPT-6.1 Sol, and GPT-5.6 Luna/Sol where a canary hasn't cleared the newer model) implements spec-determined work and audits correctness; Antigravity (Gemini 3.8 Flash; Gemini 4 Argon for whole-repo reads) reviews systems, security rules, infra, and CI and verifies in a browser; a fresh-context Claude advisor gives the final verdict. Every lane runs in its own git worktree and returns a machine-checkable report.
 
 This plugin is independent of `cure-product-engineering`. Installing it changes nothing for machines that do not have it; the library keeps working exactly as before.
 
@@ -51,7 +51,7 @@ Every field the decision rule, the report, and the dashboard consume is now prod
 - **Reviewer usage.** The `codex exec review` event stream reports zero usage, so the reviewer lane was invisible. Codex rollout logs carry the session `cwd`; `lane-worktree add` records the worktree path in `meta.json`, and `end` attributes every Codex session run in that worktree to the task (`codex_worktree`), implementer and reviewer alike. The report takes the larger of the event-stream and rollout figures. Backfill does the same in one pass per project (`codex_usage_by_cwd`).
 - **Antigravity verdicts and reported findings.** `agy*.json` `structured_output` (or a JSON `response`) yields `agy_verdict` and a reported-finding count; `review*.md` bullets that name a file:line or a P-level yield the Codex count. Rows carry `findings_reported` next to the architect's `findings` labels, so the precision panel can say "reported, unlabeled" instead of showing nothing.
 - **Overlap on live rows.** `end` marks `claude_overlap` on the new row and on the older rows it overlaps, not only in the backfill.
-- **Kind and model when nobody typed them.** Kind falls back to the shadow router's `--kind`; backfilled rows infer the Claude model from the transcript window (`model_inferred: true`), so the fixed-model check can run on them.
+- **Kind and model when nobody typed them.** Kind falls back to the shadow router's `--kind`; model and effort come from the Claude transcripts for the task window (`model_source: transcript`; each turn records both), not from `settings.json`, which holds only what a new session starts with and can hold an alias (`opus`) its `modelSettings` keys don't match. `lane-log.py remeasure --all-projects` re-reads them for rows whose transcripts still exist (Claude Code prunes after `cleanupPeriodDays`, default 30).
 - **Still not measurable, by construction:** effort for backfilled rows (not in transcripts); Confirmed/Disputed/Unverified labels (a judgment, typed by the architect); escaped defects before someone checks the window.
 
 ## The cost proxy and the spec lint (1.13.0)

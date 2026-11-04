@@ -1,7 +1,7 @@
 ---
 name: irc-lookup
 description: "Finds and cites controlling Internal Revenue Code authority. Use when a tax position needs a statutory cite, a citation needs checking, or a pre-2025 rule may have changed under OBBBA."
-when_to_use: "NOT for deciding whether a position may be taken or disclosed (cpa-standards)."
+when_to_use: "NOT for deciding whether a position may be taken or disclosed (cpa-standards) or non-tax legal cites (legal-research)."
 argument-hint: "[section-or-question]"
 metadata:
   verified: 2026-09-23

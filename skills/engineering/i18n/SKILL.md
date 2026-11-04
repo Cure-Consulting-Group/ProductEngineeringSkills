@@ -1,6 +1,6 @@
 ---
 name: i18n
-description: "Internationalization and localization for Android, iOS, and Next.js. Use when externalizing strings, adding a locale, supporting RTL, fixing plurals or date/currency formatting, or setting up a translation pipeline."
+description: "Internationalizes and localizes Android, iOS, and Next.js apps. Use when externalizing strings, adding a locale or RTL, fixing plurals or date/currency formats, or setting up translation."
 when_to_use: "NOT for localized marketing/SEO content (seo-content-engine) or general accessibility audits (accessibility-audit)."
 argument-hint: "[project-or-locale]"
 metadata:

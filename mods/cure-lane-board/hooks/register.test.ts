@@ -232,6 +232,7 @@ test('formatLaneBoard: prints merged lanes, pull requests and notes', () => {
 
 test('command: /lanes reports no active lanes when git has none', async ($, on) => {
   mock.store(on, {})
+  on('session.root', () => ({ value: '/repo' }))
   on('process.run', (_$: any, e: any) => {
     if (e.argv && e.argv.includes('worktree')) {
       return { value: { exitCode: 0, stdout: 'worktree /repo\nHEAD abc\nbranch refs/heads/main\n', stderr: '' } }
@@ -248,6 +249,7 @@ test('command: /lanes reports no active lanes when git has none', async ($, on) 
 
 test('command: /lanes renders active worktree lanes', async ($, on) => {
   mock.store(on, {})
+  on('session.root', () => ({ value: '/repo' }))
   on('process.run', (_$: any, e: any) => {
     const cmd = e.argv.join(' ')
     if (cmd.includes('worktree list')) {
@@ -274,6 +276,7 @@ test('command: /lanes renders active worktree lanes', async ($, on) => {
 
 test('command: /lanes folds merged salvage lanes and renders pull request queue data', async ($, on) => {
   mock.store(on, {})
+  on('session.root', () => ({ value: '/repo' }))
   on('process.run', (_$: any, e: any) => {
     const cmd = e.argv.join(' ')
     if (cmd.includes('branch --merged')) {
@@ -315,6 +318,7 @@ test('command: /lanes folds merged salvage lanes and renders pull request queue 
 
 test('command: /lanes reports unavailable gh without throwing', async ($, on) => {
   mock.store(on, {})
+  on('session.root', () => ({ value: '/repo' }))
   on('process.run', (_$: any, e: any) => {
     if (e.argv[0] === 'gh') return { value: { exitCode: 1, stdout: '', stderr: 'gh not found' } }
     return { value: { exitCode: 0, stdout: '', stderr: '' } }
@@ -323,4 +327,33 @@ test('command: /lanes reports unavailable gh without throwing', async ($, on) =>
   const r = await $.command.run({ command: 'lanes' })
   expect(r.text).toContain('· PRs: could not verify')
   expect(r.text).toContain('pull requests: could not verify (gh unavailable)')
+})
+
+test('every git call names the session root, never the shell cwd', async ($, on) => {
+  const argvs: string[][] = []
+  on('session.root', () => ({ value: '/code/wt/lane-x' }))
+  on('process.run', (_$: any, e: any) => {
+    argvs.push([...e.argv])
+    if (e.argv.join(' ').includes('worktree list')) {
+      return { value: { exitCode: 0, stdout: 'worktree /code/wt/lane-x\nHEAD abc\nbranch refs/heads/lane/x\n', stderr: '' } }
+    }
+    return { value: { exitCode: 0, stdout: e.argv[0] === 'gh' ? '[]' : '', stderr: '' } }
+  })
+  await $.command.run({ command: 'lanes' })
+  const gits = argvs.filter(a => a[0] === 'git')
+  expect(gits.length).toBeGreaterThan(0)
+  expect(gits.every(a => a[1] === '-C' && a[2].startsWith('/code/wt/lane-x'))).toBe(true)
+})
+
+test('a lane worktree\'s dirty files are counted in that worktree', async ($, on) => {
+  on('session.root', () => ({ value: '/repo' }))
+  on('process.run', (_$: any, e: any) => {
+    const cmd = e.argv.join(' ')
+    if (cmd.includes('worktree list')) return { value: { exitCode: 0, stdout: 'worktree /repo/wt/a\nHEAD abc\nbranch refs/heads/lane/a\n', stderr: '' } }
+    if (cmd === 'git -C /repo/wt/a status --porcelain') return { value: { exitCode: 0, stdout: ' M x.ts\n M y.ts\n', stderr: '' } }
+    if (cmd.includes('rev-list --count')) return { value: { exitCode: 0, stdout: '1\n', stderr: '' } }
+    return { value: { exitCode: 0, stdout: e.argv[0] === 'gh' ? '[]' : '', stderr: '' } }
+  })
+  const r = await $.command.run({ command: 'lanes' })
+  expect(r.text).toMatch(/2 dirty|dirty 2|2 uncommitted/)
 })

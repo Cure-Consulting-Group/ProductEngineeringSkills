@@ -1,9 +1,11 @@
 ---
 name: rfp-evaluation
-description: "Extracts every requirement from an RFP/RFQ into a compliance matrix and maps the rubric to effort. Use when a solicitation has passed triage and you need what it requires."
+description: "Extracts every RFP/RFQ requirement into a compliance matrix. Use when a solicitation has passed triage and you need what it requires and how its rubric maps to effort."
 when_to_use: "NOT for first-pass screening (use solicitation-triage), the go/no-go (use bid-decision), or drafting the response (use proposal-generator)."
 argument-hint: "[solicitation-number]"
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
+allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(mkdir -p 00-source/extracted)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # RFP Evaluation
@@ -14,12 +16,12 @@ The governing insight: **public-sector proposals are scored against a rubric by 
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
 
-- Bid folder: !`ls -d */ 2>/dev/null | head -10`
-- Source documents: !`ls *.pdf 00-source/*.pdf 2>/dev/null | head -20`
-- Extracted text present: !`ls 00-source/extracted/*.txt 2>/dev/null | head -20 || echo "(none — run extraction first)"`
-- Existing analysis: !`ls 01-analysis/*.md 2>/dev/null || echo "(none)"`
+- Bid folder: `ls -d */ 2>/dev/null | head -10`
+- Source documents: `ls *.pdf 00-source/*.pdf 2>/dev/null | head -20`
+- Extracted text present: `ls 00-source/extracted/*.txt 2>/dev/null | head -20 || echo "(none — run extraction first)"`
+- Existing analysis: `ls 01-analysis/*.md 2>/dev/null || echo "(none)"`
 
 ## Step 0: Extract text before reading anything
 

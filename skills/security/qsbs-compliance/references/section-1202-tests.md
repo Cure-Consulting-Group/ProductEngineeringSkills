@@ -54,13 +54,23 @@ The holding clock (more than 5 years for stock issued on or before 2025-07-04; 3
 
 QSBS federal exclusion under §1202 does not automatically apply at the state level:
 
+Source: EisnerAmper, "State Tax Treatment of QSBS" (2026-09-08), checked 2026-10-24. States
+change conformity every session; confirm the shareholder's state before use.
+
 | State | Conforms to §1202? | Notes |
 |-------|-------------------|-------|
+| California | **Does NOT conform** | Full addback (Cal. Rev. & Tax. Code §18152) |
+| Pennsylvania, Alabama | **Does NOT conform** | Gain fully taxable at the state level |
+| Mississippi | **Does NOT conform** to §1202 | A separate state exclusion may apply to certain Mississippi-company stock |
+| Illinois | **Decoupled** (S.B. 3019) | Full addback for tax years ending on or after 2026-12-31, all QSBS regardless of acquisition date |
+| Oregon | **Decoupled** (S.B. 1507) | Full addback for tax years beginning on or after 2026-01-01, all QSBS |
+| Maine | **Decoupled for post-OBBBA stock** (L.D. 2212) | Stock acquired after 2025-07-04; older stock follows the pre-OBBBA federal rules |
+| Hawaii | **Partial** | Fixed-date IRC conformity (2024-12-31) with the exclusion capped at 50%; OBBBA tiers not adopted |
+| New Jersey | **Conforms** (newly) | Exclusion allowed for tax years beginning on or after 2026-01-01 |
+| District of Columbia | Conforms | A decoupling bill was overturned by Congress (H.J. Res. 142) |
+| New York | Generally conforms (starts from federal AGI) | Not covered by the source above — confirm before use |
+| Georgia | Conforms per secondary sources | Fixed-date IRC conformity is updated annually — confirm before use |
 | Delaware | No state income tax on cap gains for non-residents | N/A for most |
-| California | **Does NOT conform** | CA taxes QSBS gains fully |
-| New York | **Partial** — conforms to federal | Check current year |
-| Texas | No state income tax | N/A |
-| Florida | No state income tax | N/A |
-| Georgia | Conforms to federal | Check current year |
+| Texas, Florida | No state income tax | N/A |
 
-**Key takeaway**: California founders/shareholders do NOT get QSBS exclusion at the state level. This is a major planning consideration.
+**Key takeaway**: California, Pennsylvania, Alabama, Mississippi, Illinois, and Oregon shareholders do NOT get the QSBS exclusion at the state level. This is a major planning consideration.

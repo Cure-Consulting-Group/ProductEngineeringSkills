@@ -239,8 +239,10 @@ UIKit (iOS)
   Ring: Hold | Quadrant: Languages & Frameworks
   Products: Vendly (iOS — legacy screens), Autograph (iOS — 3 screens)
   Since: 2024-Q1 (moved from Adopt)
-  Rationale: SwiftUI is the Adopt standard. UIKit screens cannot use @Observable,
-  previews, or navigation stack. Maintaining both UI frameworks doubles the mental model.
+  Rationale: SwiftUI is the Adopt standard. Maintaining both UI frameworks doubles the
+  mental model. (UIKit is not frozen: since iOS 26 it tracks @Observable reads in
+  updateProperties()/layoutSubviews() automatically — developer.apple.com/documentation/uikit/
+  automatic-observation-tracking, checked 2026-10-24.)
   Migration: Rewrite screens in SwiftUI. Effort: L (Vendly), S (Autograph). Target: [quarter].
   Owner: iOS Lead
 

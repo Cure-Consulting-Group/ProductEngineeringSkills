@@ -1,6 +1,8 @@
 {
   "name": "cure-lane-board",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Multi-lane dashboard for tri-lane worktrees, branches, live commits, defect windows, and pull requests. Adds /lanes.",
-  "author": { "name": "Cure Consulting Group" }
+  "author": {
+    "name": "Cure Consulting Group"
+  }
 }

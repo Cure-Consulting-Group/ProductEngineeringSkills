@@ -1,6 +1,6 @@
 ---
 name: sdlc
-description: "Writes engineering specs: PRDs, ADRs, RFCs, epics, user stories, task and test specs. Use when asked to write a PRD or ADR, draft an RFC, spec a feature, or break work into stories."
+description: "Writes engineering specs: PRDs, ADRs, RFCs, epics, stories, test specs. Use when asked to write a PRD or ADR, draft an RFC, spec a feature, or break work into stories."
 when_to_use: "NOT for OKRs, roadmaps, or feature briefs (use product-manager), sprint planning or RACI (use project-manager), or API design (use api-architect)."
 argument-hint: "[feature-name]"
 metadata:
@@ -52,6 +52,8 @@ Write the sections listed; omit any that genuinely don't apply rather than paddi
   migration, Open questions, Decision deadline and deciders.
 - **ADR** — Status, Context, Decision, Consequences (positive, negative, follow-ups), Alternatives.
   One decision per ADR; never edit an accepted ADR — supersede it.
+  ADR header: Status (Proposed | Accepted | Deprecated | Superseded by ADR-NNN), Date, Deciders.
+  At least two alternatives, each with why rejected.
 - **Epic** — Goal, stories list, dependencies, exit criteria.
 - **Story** — "As a … I want … so that …", Given/When/Then criteria, points, linked design/API/test IDs.
 - **Task / test spec** — implementation steps with files touched; test cases as input → expected result, including failure paths.

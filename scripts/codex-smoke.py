@@ -6,6 +6,14 @@ Installs the plugin from this checkout into a THROWAWAY CODEX_HOME (never
 ~/.codex), renders the model-visible prompt with `codex debug prompt-input`
 (no model call, no auth needed), and asserts:
 
+Note (MEASURED on 0.163.0, 2026-10-24): with no auth.json, Codex uses its
+bundled model catalog, where gpt-6.1-sol has a 272k context window, not the
+signed-in catalog's 500k. The default listing budget is 2% of that window
+(5,440 tokens), so this smoke sees descriptions cut to ~103 chars, while a
+signed-in gpt-6.1-sol session gets 10,000 tokens and full text. The
+assertions below check presence and absence only, never description length.
+See docs/evaluations/2026-10-24/platform-facts.md.
+
   1. every skill in skills/**/SKILL.md is listed as cure-product-engineering:<name>,
      except skills whose agents/openai.yaml sets allow_implicit_invocation: false;
   2. those hidden skills are absent from the listing (Codex's equivalent of
@@ -79,13 +87,16 @@ def main():
     ap.add_argument("--json", action="store_true", help="print a JSON report")
     ap.add_argument("--keep", action="store_true", help="keep the temporary CODEX_HOME and print its path")
     ap.add_argument("--codex", default="codex", help="codex binary (default: codex on PATH)")
+    ap.add_argument("--require", action="store_true",
+                    help="fail (exit 1) instead of SKIP when codex is not installed; CI uses this so a skip can't pass as green")
     args = ap.parse_args()
 
     codex = shutil.which(args.codex)
     if not codex:
-        msg = "SKIP: codex CLI not installed; Codex smoke test not run."
-        print(json.dumps({"status": "skip", "reason": msg}) if args.json else msg)
-        return 0
+        status = "fail" if args.require else "skip"
+        msg = f"{status.upper()}: codex CLI not installed; Codex smoke test not run."
+        print(json.dumps({"status": status, "reason": msg}) if args.json else msg)
+        return 1 if args.require else 0
 
     report = {"status": "fail", "codex": None, "listed": 0, "expected": 0,
               "dropped": [], "unexpected": [], "hidden_leaked": [], "hooks": None, "errors": []}

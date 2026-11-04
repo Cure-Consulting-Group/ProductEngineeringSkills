@@ -2,10 +2,11 @@
 name: deployment-validator
 description: "Pre-deploy gate: env vars, secrets, flags, build, tests, rollback readiness. Use before deploying to staging or production; returns GO/NO-GO with findings."
 tools: Read, Grep, Glob, Bash
+disallowedTools: Write, Edit
 maxTurns: 12
 skills: ci-cd-pipeline
-memory: project
 ---
+> **Read-only:** no `memory:` and no Write/Edit, on purpose: a reviewer that can write can change what it reviews. Return everything in your final message.
 
 # Deployment Validator Agent
 
@@ -66,6 +67,8 @@ Check before deployment:
 - Monitoring alerts are configured for error rate spikes
 
 ### Step 7: Report
+
+You own the deploy GO/NO-GO. Take a qa-engineer QA recommendation or a pr-reviewer merge verdict as inputs if the caller passes them: a QA 🚫 Block or an unresolved merge blocker makes it NO-GO.
 
 ```
 ## Pre-Deployment Validation Report

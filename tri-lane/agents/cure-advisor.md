@@ -3,10 +3,9 @@ name: cure-advisor
 description: Fresh-context second opinion and final reviewer. Reads a proposed decision or a finished diff against the stated goal, with none of the conversation's accumulated assumptions, and writes the verdict to the run directory and returns it, under 300 words: ship, fix-first, or rethink. Use at commitment boundaries (architecture, migration, API shape, refactor strategy, a debugging effort that failed twice) and always once at the end of a deliverable. Read-only.
 tools: Read, Write, Grep, Glob
 maxTurns: 15
-effort: high
 ---
 
-<!-- No model pin: inherits the session model. Pin `model: fable` only when the session runs on Opus and the decision warrants the stronger read. -->
+<!-- No model or effort pin: inherits the session's. BENCHMARK.md holds effort fixed across arms and has no advisor-effort comparison, so `effort: high` was dropped (Wave 7 T84). Pin `model: fable` only when the session runs on Opus and the decision warrants the stronger read. -->
 
 # Cure Advisor
 

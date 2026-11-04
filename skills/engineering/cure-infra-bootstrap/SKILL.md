@@ -1,6 +1,6 @@
 ---
 name: cure-infra-bootstrap
-description: "Runs Cure's manifest-driven bootstrap CLI (init/apply/doctor/inventory) for CLAUDE.md, .claude/, rules. Use when setting up, upgrading, or drift-checking Cure agent infra in a project."
+description: "Runs Cure's bootstrap CLI (init/apply/doctor/inventory). Use when setting up, upgrading, or drift-checking CLAUDE.md, .claude/, and rules in a project."
 when_to_use: "NOT for a hand-written CLAUDE.md/STATE.md by interview without the manifest CLI (use project-bootstrap). NOT for app code scaffolds."
 argument-hint: "[init|apply|doctor|inventory] [flags...]"
 allowed-tools: ["Read", "Bash"]

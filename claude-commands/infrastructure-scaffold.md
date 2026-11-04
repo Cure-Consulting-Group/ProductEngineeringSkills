@@ -10,7 +10,7 @@ rather than replaced. Deliver what was asked; don't add unrequested services.
 
 Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):
 
-- Existing configs: `ls firebase.json .firebaserc vercel.json Dockerfile docker-compose.yml cloud-run-service.yaml .env.example 2>/dev/null || echo "(none)"`
+- Existing configs: `ls firebase.json .firebaserc vercel.json Dockerfile compose.yaml docker-compose.yml cloud-run-service.yaml .env.example 2>/dev/null || echo "(none)"`
 - Firebase projects: `head -20 .firebaserc 2>/dev/null || echo "(no .firebaserc)"`
 - Stack: `head -25 package.json 2>/dev/null || echo "(no package.json)"`
 
@@ -85,10 +85,13 @@ export function proxy(request: NextRequest) {
 
 ## Step 5: Docker
 
-Multi-stage, non-root user, `npm ci --omit=dev`, current LTS base image (`node:24-alpine`),
-`HEALTHCHECK`, port 8080 for Cloud Run; no `version:` key in Compose files. See `rules/docker.md`.
+Multi-stage, non-root user, `npm ci --omit=dev`, an LTS base image (`node:24-alpine`; Node 24
+entered Maintenance LTS 2026-10-20 and Node 26 becomes Active LTS 2026-10-28 — move to
+`node:26-alpine` once dependencies support it; github.com/nodejs/Release, checked 2026-10-24),
+`HEALTHCHECK`, port 8080 for Cloud Run; Compose file named `compose.yaml` (the Compose spec
+default) with no `version:` key. See `rules/docker.md`.
 Read [reference/details.md](reference/details.md) (section "Step 6: Docker Configuration") when
-writing the Dockerfile or `docker-compose.yml`.
+writing the Dockerfile or `compose.yaml`.
 
 ## Step 6: Environments and Secrets
 
@@ -164,7 +167,7 @@ configs first and extend them.
 
 | Classification | Files |
 |---|---|
-| New project setup | `firebase.json`, `.firebaserc`, `firestore.indexes.json`, rules stubs (design via `firebase-architect`), `functions/src/index.ts`, `Dockerfile`, `.dockerignore`, `docker-compose.yml`, `vercel.json` (if Vercel), `.env.example` |
+| New project setup | `firebase.json`, `.firebaserc`, `firestore.indexes.json`, rules stubs (design via `firebase-architect`), `functions/src/index.ts`, `Dockerfile`, `.dockerignore`, `compose.yaml`, `vercel.json` (if Vercel), `.env.example` |
 | Environment management | `.firebaserc` aliases, `.env.example`, Secret Manager / WIF commands |
 | Scaling config | Function options, `cloud-run-service.yaml`, `vercel.json` regions |
 | Monitoring setup | `monitoring/*.yaml` policies, uptime and sink commands |

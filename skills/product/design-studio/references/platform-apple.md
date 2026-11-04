@@ -46,7 +46,7 @@ VoiceOver labels, traits, and rotor order; Dynamic Type; Bold Text; Increase Con
 
 ## Assets
 
-- App icon: 1024 x 1024 master, no transparency, no rounded corners (the system masks); alternate icons if the product has a reason; dark and tinted variants for current iOS.
+- App icon: 1024 x 1024 master, no transparency, no rounded corners (the system masks); alternate icons if the product has a reason. iOS 26: build a layered icon in Icon Composer (one `.icon` file) and check all six appearances — Default, Dark, Clear light/dark, Tinted light/dark (WWDC25 session 361, checked 2026-10-24); hand over layers, not flattened variants.
 - Launch: a static launch screen that matches the first screen's chrome, not a splash animation.
 - App Store: screenshots per device family at the required sizes, first three tell the story; preview video optional.
 - Widgets and Live Activities need their own mark and type treatment at small sizes.

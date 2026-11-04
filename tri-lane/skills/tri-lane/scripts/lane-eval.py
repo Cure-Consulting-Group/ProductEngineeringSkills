@@ -836,7 +836,7 @@ def main() -> int:
     r = sub.add_parser("run")
     r.add_argument("--task", required=True, help="fixture id or all")
     r.add_argument("--tier", default="all", choices=["all", "smoke", "hard", "judgment"], help="with --task all: which tier to run")
-    r.add_argument("--lane", required=True, help="reference | gpt-5.6-luna | gpt-5.6-sol | gpt-6-astra | gemini-3.8-flash-high | claude-...")
+    r.add_argument("--lane", required=True, help="reference | gpt-5.6-luna | gpt-6-luna | gpt-6.1-sol | gpt-6-astra | gemini-3.8-flash-high | gemini-4-argon-high | claude-...")
     r.add_argument("--effort", default="high", help="low | medium | high | xhigh | max | ultra (as the lane accepts)")
     r.add_argument("--repeat", type=int, default=1)
     r.add_argument("--dry-run", action="store_true", help="prepare and grade without dispatching (grades the unmodified fixture)")

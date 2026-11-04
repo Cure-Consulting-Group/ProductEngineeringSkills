@@ -2,12 +2,11 @@
 name: legal-compliance
 description: Flags QSBS, FERPA, NCAA, trademark, and entity-compliance risk. Use when checking a portfolio company or codebase against those regimes. Not legal advice.
 tools: Read, Grep, Glob
+disallowedTools: Write, Edit
 maxTurns: 15
 skills: qsbs-compliance
-memory: local
 ---
-> **Writes:** `memory:` gives this agent Write/Edit so it can keep notes in its own memory directory. That is its only permitted write — never edit, create, or delete project files.
-
+> **Read-only:** no `memory:` and no Write/Edit, on purpose: a reviewer that can write can change what it reviews. Return everything in your final message.
 
 # Legal Compliance Agent
 

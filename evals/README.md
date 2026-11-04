@@ -1,3 +1,5 @@
+> **Claude Code native evals live in [`plugin-evals/`](../plugin-evals/README.md)** (cases, counts, the n≥3 Δ sweep). This directory holds the legacy harness (`scripts/run-evals.py`), the shared `results/`, and the generated `RESULTS.md`.
+
 # Evals — skill-library effectiveness
 
 > **Claude path moved (T60, 2026-09-23): use `claude plugin eval` over
@@ -18,7 +20,7 @@ plugin-evals/<case>/case.yaml        only when the case has fixtures: context.sc
 plugin-evals/results/                run output (gitignored)
 ```
 
-- **40 cases, 32 skills**: `t01…t20` ported golden tasks (tag `ported`) and
+- **61 cases, 47 skills** (2026-10-24; see `plugin-evals/README.md` for the current count): `t01…t20` ported golden tasks (tag `ported`) and
   `route-*` routing cases (tag `routing`) that never name the skill — they
   measure whether `description` alone routes (T53). `route-legal-doc-no-auto`
   and `route-proposal-no-auto` (tag `negative`) assert the
@@ -39,7 +41,7 @@ plugin-evals/results/                run output (gitignored)
 # Zero-cost structural check (CI): every case parses, has graders, tags are skills
 python3 scripts/check-plugin-evals.py
 
-# Quarterly full sweep: 40 cases × 3 runs × 2 arms (with / without plugin) = 240 agent runs
+# Quarterly full sweep: 61 cases × 3 runs × 2 arms (with / without plugin) = 366 agent runs
 claude plugin eval . --trust-plugin --scaffold -j 4 \
   --allow-tools Write Edit "Bash(python3 *)" --threshold 0.67 --max-cost-usd 150
 

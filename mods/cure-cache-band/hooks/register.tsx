@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import { EMPTY, bandText, bar, inferTtl, leftText, recordStep, reportText, tokensText, view, writeFeeText } from './cache'
+import { EMPTY, bandText, bar, inferTtl, leftText, recordStep, reportText, tokensText, view } from './cache'
 
 /**
  * cure-cache-band: a row above the prompt showing how long the prompt cache
@@ -12,8 +12,9 @@ import { EMPTY, bandText, bar, inferTtl, leftText, recordStep, reportText, token
  * of its own. Nothing is fetched; every figure comes from the usage each
  * model response already reports.
  *
- * Setting, as an environment variable:
- *   CURE_CACHE_TTL  `5m` or `1h`, when the inferred TTL is wrong for your plan
+ * Setting: userConfig `ttl` (auto | 5m | 1h), when the inferred TTL is wrong
+ * for your plan; the CURE_CACHE_TTL environment variable still overrides it.
+ * Costs are the engine's own (`$.session.usage().cost`); the mod keeps no prices.
  *
  * The TTL is inferred, not reported by the API (see inferTtl): the countdown
  * is an estimate, the hit rate and misses are measured.
@@ -26,7 +27,9 @@ const cache = atom({ plugin: 'cure-cache-band', key: 'cache' } as const, EMPTY)
 let timer: { cancel: () => void } | undefined
 let drawn = ''
 
-export const register: Register = on => {
+export const register: Register = (on, options) => {
+  const configuredTtl = options.ttl === '5m' || options.ttl === '1h' ? options.ttl : undefined
+
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'cache', description: 'Show prompt cache time left, hit rate and misses for this session' })
     timer?.cancel()
@@ -48,15 +51,15 @@ export const register: Register = on => {
     const result = yield* next(e)
     const usage = result.usage
     if (e.agentId === undefined && usage) {
-      const [now, ttl] = [await $.clock.now(), (await ttlNow($)).ttl]
+      const [now, ttl] = [await $.clock.now(), (await ttlNow($, configuredTtl)).ttl]
       await update($, cache, state => recordStep(state, usage, now, ttl))
     }
     return result
   })
 
   on('command.run', { command: 'cache' }, async $ => {
-    const { source } = await ttlNow($)
-    return { text: reportText(await read($, cache), await $.clock.now(), source) }
+    const { source, costUsd } = await ttlNow($, configuredTtl)
+    return { text: reportText(await read($, cache), await $.clock.now(), source, costUsd) }
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
@@ -67,11 +70,10 @@ export const register: Register = on => {
     const { Box, Text } = $.ui.resolve(e)
 
     if (v.kind === 'cold') {
-      const fee = writeFeeText(v.tokens)
       return (
         <Box>
           <Text color="red">cache ○ cold</Text>
-          <Text dimColor> · next message re-caches {tokensText(v.tokens)} tokens{fee ? ` (${fee})` : ''}</Text>
+          <Text dimColor> · next message re-caches {tokensText(v.tokens)} tokens</Text>
         </Box>
       )
     }
@@ -94,10 +96,11 @@ export const register: Register = on => {
   })
 }
 
-async function ttlNow($: EngineInterface) {
-  const override = (await $.env.get('CURE_CACHE_TTL')) || undefined
-  const { rateLimits } = await $.session.usage()
+async function ttlNow($: EngineInterface, configured?: string) {
+  const env = (await $.env.get('CURE_CACHE_TTL')) || undefined
+  const override = env || configured
+  const { rateLimits, cost } = await $.session.usage()
   const ttl = inferTtl(override, rateLimits)
-  const source = override === ttl ? 'CURE_CACHE_TTL' : rateLimits.length === 0 ? 'inferred: no subscription limits reported' : 'inferred from subscription limits'
-  return { ttl, source }
+  const source = override === ttl ? (env ? 'CURE_CACHE_TTL' : 'userConfig ttl') : rateLimits.length === 0 ? 'inferred: no subscription limits reported' : 'inferred from subscription limits'
+  return { ttl, source, costUsd: cost?.usd }
 }

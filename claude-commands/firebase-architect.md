@@ -74,7 +74,7 @@ service cloud.firestore {
 
 ## Step 6: App Check
 
-Enable App Check for Firestore, Storage, Functions, and any AI/Vertex endpoints before launch: Play Integrity (Android), App Attest with DeviceCheck fallback (iOS), reCAPTCHA Enterprise (web). Roll out in monitor mode, watch the verified-request ratio in the console, then enforce. Debug providers only in debug builds; register CI debug tokens as secrets. App Check reduces abuse; it does not replace rules.
+Enable App Check for Firestore, Storage, Functions, and Firebase AI Logic before launch: Play Integrity (Android), App Attest with DeviceCheck fallback (iOS), reCAPTCHA Enterprise (web). Roll out in monitor mode, watch the verified-request ratio in the console, then enforce. Debug providers only in debug builds; register CI debug tokens as secrets. App Check reduces abuse; it does not replace rules.
 
 ## Code/Artifact Generation
 
@@ -87,7 +87,7 @@ Produce the files the classification needs, from this set: rules + rules tests, 
 | Component | Default | Source |
 |---|---|---|
 | Android SDK | Firebase BoM 34.x (34.19.0 on 2026-09-09); main modules only — KTX artifacts were removed from BoM 34.0.0, and their Kotlin APIs now live in the main modules | firebase.google.com/support/release-notes/android |
-| Functions runtime | Node.js 22 (`"engines": {"node": "22"}`); Node 20 is deprecated on Cloud Run functions (2026-04-30) and decommissioned 2026-10-30. Node 24 is GA on Cloud Run functions but not yet listed by the Firebase docs — confirm Firebase CLI support before use | firebase.google.com/docs/functions/manage-functions; docs.cloud.google.com/functions/docs/runtime-support |
+| Functions runtime | Node.js 22 (`"engines": {"node": "22"}`; Cloud Run functions support to 2027-10-31). Node 20's decommission date is 2026-10-30: treat it as unsupported and move any function still on it. Node 24 is supported on Cloud Run functions to 2028-10-31 but not listed by the Firebase docs (checked 2026-10-24) — confirm Firebase CLI support before use | firebase.google.com/docs/functions/manage-functions; docs.cloud.google.com/functions/docs/runtime-support |
 | Functions API | 2nd gen (`firebase-functions/v2/*`), TypeScript | firebase.google.com/docs/functions/firestore-events |
 | Emulators | firestore 8080, auth 9099, functions 5001, storage 9199 | — |
 | Rules tests | `@firebase/rules-unit-testing` + the project's test runner | — |

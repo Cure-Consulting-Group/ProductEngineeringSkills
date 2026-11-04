@@ -34,11 +34,9 @@ Firestore limits that decide designs (verified 2026-09-23, firebase.google.com/d
 
 ## Step 4: Schema Rules
 
-**Firestore**
-- Model from queries backwards: one query should need one collection read. Denormalize read-mostly data; list every copy of a denormalized field in the design and name the Function that keeps it in sync.
-- Subcollection when children are unbounded (>~1k), need independent queries, or have different access rules; array only for small bounded sets.
-- IDs: Auth UID for user docs, auto-ID for entities, slug for known-key lookups. Avoid monotonically increasing IDs or timestamp-prefixed IDs on high-write collections — they create hotspots; put the time in a field and index it.
-- Every document has `createdAt`/`updatedAt` server timestamps and a `schemaVersion` integer once the collection has migrated once.
+**Firestore** — collection modeling (shape, IDs, subcollections, denormalized copies) is owned by
+`firebase-architect`; use it rather than restating the rules here. This skill covers the engine
+choice above and Firestore indexes and query plans below.
 
 **PostgreSQL**
 - 3NF by default; denormalize only with a measured reason. `snake_case`, plural tables, `_id` FKs, `timestamptz` everywhere, `bigint` or UUIDv7 keys (time-ordered, index-friendly).

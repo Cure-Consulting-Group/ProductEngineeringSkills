@@ -3,7 +3,7 @@
 Read this file at Step 3, once the interview is answered. Fill only sections the inspection or
 interview confirmed; delete every section that has no data. Keep the generated CLAUDE.md under
 ~150 lines — Claude Code loads it in full every session and adherence drops as it grows
-(code.claude.com/docs/en/memory targets <200 lines).
+(code.claude.com/docs/en/memory targets <200 lines, checked 2026-10-24).
 
 ## CLAUDE.md template
 

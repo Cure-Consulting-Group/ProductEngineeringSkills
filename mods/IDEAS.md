@@ -1,5 +1,8 @@
 # More mods worth building
 
+> **Status, 2026-10-24 (Wave 7, T73).** Ideas 1, 2, 4, 5, 7 and 11 were built at 0.1.0 in PR #80 without the mutation pass or live run this page asks for. Wave 7 retired them: the LLM ledger (token-ledger covers it), secret scrub (secret-redactor covers it), push preview and handoff were dropped; the claim guard and the egress guard became rules inside `cure-policy-guard`. The bar below still stands for anything new: unit tests, a test that fails before each fix, a mutation pass, and a live run.
+
+
 Ranked by value for effort.
 
 Each idea comes from something observed in the portfolio, not a generic wish, and names:

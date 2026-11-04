@@ -2,16 +2,12 @@
  * Pure functions for resolving and formatting repository house rules banner text.
  */
 
-export const DEFAULT_REPO_RULES: Record<string, string[]> = {
-  Level5: ['PHI Data (GCP BAA)', 'Vertex AI Only', 'No Consumer Gemini'],
-  'initiated-recruiting': ['Minors Data', 'No New AI Vendors', 'COPPA Bounds'],
-  'initiated-recruiting-nil': ['Minors Data', 'No New AI Vendors'],
-  SPEDTECH: ['Student Records', 'No New AI Vendors', 'FERPA Bounds'],
-  LearnLift: ['Minors Data', 'No New AI Vendors'],
-  DistrictZero: ['No Cron', 'Machine State Claims'],
-}
+import { PROTECTED_REPOS } from './shared/rules'
 
-export const FALLBACK_RULES = ['No Cron Workflows', 'Clean Architecture Standards']
+/** The band's labels per repo, from the one shared table (mods/shared/rules.ts). */
+export const DEFAULT_REPO_RULES: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+  PROTECTED_REPOS.map(r => [r.repo, r.labels]),
+)
 
 export function parseRulesJson(jsonText: string): string[] | undefined {
   if (!jsonText || typeof jsonText !== 'string') return undefined
@@ -29,25 +25,26 @@ export function parseRulesJson(jsonText: string): string[] | undefined {
   return undefined
 }
 
+/** The repo's rules: its `.cure/rules.json` first, then the built-in table; null for a repo with neither. */
 export function resolveRepoRules(
   repoName?: string,
   configFileContent?: string,
-): { repo: string; rules: string[] } {
-  const repo = (repoName || 'Workspace').trim()
-
+): { repo: string; rules: string[] } | null {
+  const repo = (repoName || '').trim()
   if (configFileContent) {
     const fromConfig = parseRulesJson(configFileContent)
-    if (fromConfig && fromConfig.length > 0) {
-      return { repo, rules: fromConfig }
-    }
+    if (fromConfig && fromConfig.length > 0) return { repo: repo || 'this repo', rules: fromConfig }
   }
-
   const defaultForRepo = DEFAULT_REPO_RULES[repo]
-  if (defaultForRepo && defaultForRepo.length > 0) {
-    return { repo, rules: defaultForRepo }
-  }
+  if (defaultForRepo && defaultForRepo.length > 0) return { repo, rules: [...defaultForRepo] }
+  return null
+}
 
-  return { repo, rules: FALLBACK_RULES }
+/** The main checkout's name from `git rev-parse --git-common-dir` (absolute), so a worktree reads as its repo. */
+export function repoNameFromCommonDir(commonDir: string): string {
+  const dir = commonDir.trim().replace(/\/$/, '')
+  const repoDir = dir.endsWith('/.git') ? dir.slice(0, -5) : dir
+  return repoDir.split('/').pop() ?? ''
 }
 
 export function formatBannerText(repo: string, rules: string[]): string {

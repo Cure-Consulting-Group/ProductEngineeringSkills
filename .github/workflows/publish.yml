@@ -9,7 +9,6 @@ on:
       - "agents/**"
       - "hooks/**"
       - "rules/**"
-      - "output-styles/**"
       - ".claude-plugin/**"
       - "install-plugin.js"
       - "package.json"
@@ -31,11 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           registry-url: https://npm.pkg.github.com
@@ -65,12 +64,10 @@ jobs:
           SKILLS=$(find skills -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
           AGENTS=$(find agents -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
           RULES=$(find rules -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
-          STYLES=$(find output-styles -name "output-style.md" 2>/dev/null | wc -l | tr -d ' ')
 
           echo "skills=$SKILLS" >> $GITHUB_OUTPUT
           echo "agents=$AGENTS" >> $GITHUB_OUTPUT
           echo "rules=$RULES" >> $GITHUB_OUTPUT
-          echo "styles=$STYLES" >> $GITHUB_OUTPUT
 
           # List agents by reading frontmatter
           AGENT_LIST=""
@@ -124,14 +121,14 @@ jobs:
 
       - name: Create GitHub Release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && steps.relcheck.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: v${{ steps.version.outputs.version }}
           body: |
             ## Product Engineering Skills v${{ steps.version.outputs.version }}
 
-            **${{ steps.summary.outputs.skills }}** skills · **${{ steps.summary.outputs.agents }}** agents · **${{ steps.summary.outputs.rules }}** rules · **${{ steps.summary.outputs.styles }}** output styles
+            **${{ steps.summary.outputs.skills }}** skills · **${{ steps.summary.outputs.agents }}** agents · **${{ steps.summary.outputs.rules }}** rules
 
             ### Install / Update
             ```bash

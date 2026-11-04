@@ -15,6 +15,9 @@
  *
  * Behavior:
  *   - Skip-if-exists by default (won't clobber project customizations).
+ *   - Exception: an existing .claude/settings.json gets the library's
+ *     permissions.deny rules merged in (union, idempotent, other keys untouched).
+ *     A plugin install cannot ship permissions, so this is how consumers get them.
  *   - Set CURE_SKILLS_FORCE=1 to overwrite from upstream.
  *   - Set SKIP_CURE_SKILLS_INSTALL=1 or CI=1 to skip entirely.
  */
@@ -123,8 +126,19 @@ function main() {
     const dest = path.join(claudeDir, file);
     if (!fs.existsSync(src)) continue;
     if (fs.existsSync(dest) && !force) {
-      console.log(`[cure-skills] skip  .claude/${file} (exists)`);
-      skipped++;
+      // An existing settings.json is the project's own; never clobber it, but the
+      // deny rules are the safety floor, so merge them in (a plugin install can't).
+      const added = mergeDenyRules(src, dest);
+      if (added === null) {
+        console.warn(`[cure-skills] warn  .claude/${file} is not valid JSON — deny rules NOT merged; fix it and re-run`);
+        skipped++;
+      } else if (added === 0) {
+        console.log(`[cure-skills] skip  .claude/${file} (exists; all deny rules already present)`);
+        skipped++;
+      } else {
+        console.log(`[cure-skills] merge ${added} deny rule(s) → .claude/${file} (other keys untouched)`);
+        copied++;
+      }
       continue;
     }
     fs.copyFileSync(src, dest);
@@ -168,6 +182,31 @@ function main() {
     console.log("[cure-skills] Next: review the files, then `git add .claude/ .lsp.json && git commit`.");
     console.log("[cure-skills] MCP is opt-in: `cp .mcp.json.example .mcp.json` and set env vars — see docs/MCP-SETUP.md.");
   }
+}
+
+/**
+ * Union the package's permissions.deny into an existing settings file.
+ * Returns the number of rules added, or null if the target can't be parsed.
+ * Idempotent: a second run adds 0. Existing order and every other key are kept.
+ */
+function mergeDenyRules(srcPath, destPath) {
+  const src = JSON.parse(fs.readFileSync(srcPath, "utf8"));
+  let dest;
+  try {
+    dest = JSON.parse(fs.readFileSync(destPath, "utf8"));
+  } catch {
+    return null;
+  }
+  if (!dest || typeof dest !== "object" || Array.isArray(dest)) return null;
+  const wanted = (src.permissions && src.permissions.deny) || [];
+  if (dest.permissions == null) dest.permissions = {};
+  if (typeof dest.permissions !== "object" || Array.isArray(dest.permissions)) return null;
+  const have = Array.isArray(dest.permissions.deny) ? dest.permissions.deny : [];
+  const missing = wanted.filter((r) => !have.includes(r));
+  if (missing.length === 0) return 0;
+  dest.permissions.deny = [...have, ...missing];
+  fs.writeFileSync(destPath, JSON.stringify(dest, null, 2) + "\n");
+  return missing.length;
 }
 
 function vendorSkillsFlat(srcDir, destDir) {

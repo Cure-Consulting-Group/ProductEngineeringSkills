@@ -66,7 +66,7 @@ on one platform only. Expected differences: system fonts, navigation pattern, ha
 
 ## Step 5: Catalogs
 
-- **Web — Storybook 10** (requires Node 20.19+ or 22.12+; verified 2026-09-23 against the Storybook migration guide). `npx storybook@latest init`. Controls, actions, viewport, backgrounds, and interactions are in core since Storybook 9 — don't install `@storybook/addon-interactions` or `addon-essentials`. Add `@storybook/addon-a11y` and `@storybook/addon-themes` (the maintained light/dark switcher; the old `storybook-dark-mode` package doesn't support 9+). `@storybook/addon-designs` for Figma embeds. Deploy to Chromatic or a Vercel preview.
+- **Web — Storybook 10** (requires Node 20.19+ or 22.12+ per the Storybook migration guide; run it on a supported LTS, Node 24 or 22 — Node 20 reached end-of-life 2026-04-30, github.com/nodejs/Release; checked 2026-10-24). `npx storybook@latest init`. Controls, actions, viewport, backgrounds, and interactions are in core since Storybook 9 — don't install `@storybook/addon-interactions` or `addon-essentials`. Add `@storybook/addon-a11y` and `@storybook/addon-themes` (the maintained light/dark switcher; the old `storybook-dark-mode` package doesn't support 9+). `@storybook/addon-designs` for Figma embeds. Deploy to Chromatic or a Vercel preview.
 - Stories per component: default, all variants × sizes, interactive (args), every state (loading, disabled, error), dark theme.
 - **Android — Showkase** (`com.airbnb.android:showkase` + `showkase-processor` via KSP; 1.0.5 is the latest seen, Aug 2025 — confirm before pinning). Annotate previews with `@ShowkaseComposable`; debug builds only.
 - **iOS — catalog app target** listing each component's states, plus `#Preview` blocks per component; snapshot-test the catalog.

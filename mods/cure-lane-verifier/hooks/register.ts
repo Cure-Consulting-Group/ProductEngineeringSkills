@@ -1,6 +1,7 @@
 import type { On } from 'claude-code'
 
 import { countDirty, extractClaims, formatVerdict, isEmptyCompletion, type Claims, type Evidence } from './claims'
+import { git, gitAll } from './shared/git'
 
 /**
  * cure-lane-verifier: when a subagent or tri-lane lane reports back, attach
@@ -67,60 +68,60 @@ async function verify($: any, text: string): Promise<string> {
   return note
 }
 
-async function git($: any, cwd: string, ...args: string[]) {
-  return $.process.run(['git', '-C', cwd, ...args], { timeoutMs: 10000 })
-}
-
+/** The base a ref is measured against: origin/HEAD, else the first default branch that exists. */
 async function baseOf($: any, cwd: string): Promise<string> {
-  const head = await git($, cwd, 'rev-parse', '--abbrev-ref', 'origin/HEAD')
+  const candidates = ['origin/main', 'origin/master', 'main', 'master']
+  const [head, ...verified] = await gitAll($, cwd, [
+    ['rev-parse', '--abbrev-ref', 'origin/HEAD'],
+    ...candidates.map(b => ['rev-parse', '--verify', '--quiet', b]),
+  ])
   if (head.exitCode === 0 && head.stdout.trim()) return head.stdout.trim()
-  for (const b of ['origin/main', 'origin/master', 'main', 'master']) {
-    if ((await git($, cwd, 'rev-parse', '--verify', '--quiet', b)).exitCode === 0) return b
-  }
-  return 'HEAD'
+  const i = verified.findIndex(r => r.exitCode === 0)
+  return i >= 0 ? candidates[i] : 'HEAD'
 }
 
-async function measure($: any, cwd: string, ref: string, target: string, withDirty: boolean): Promise<Evidence> {
-  const base = await baseOf($, cwd)
-  const ahead = await git($, cwd, 'rev-list', '--count', `${base}..${ref}`)
-  const stat = await git($, cwd, 'diff', '--shortstat', `${base}...${ref}`)
+async function measure($: any, cwd: string, ref: string, target: string, withDirty: boolean, base: string): Promise<Evidence> {
+  const [ahead, stat, status] = await gitAll($, cwd, [
+    ['rev-list', '--count', `${base}..${ref}`],
+    ['diff', '--shortstat', `${base}...${ref}`],
+    ...(withDirty ? [['status', '--porcelain']] : []),
+  ])
   if (ahead.exitCode !== 0 || stat.exitCode !== 0) {
     return { target, ahead: 0, shortstat: '', dirty: 0, base, error: (ahead.stderr || stat.stderr).trim().split('\n')[0] || 'git failed' }
   }
-  const dirty = withDirty ? countDirty((await git($, cwd, 'status', '--porcelain')).stdout) : 0
+  const dirty = withDirty && status ? countDirty(status.stdout) : 0
   return { target, ahead: Number(ahead.stdout.trim()) || 0, shortstat: stat.stdout.trim(), dirty, base }
 }
 
+/** git's evidence for each named path and branch, gathered in parallel (the 10 s hook limit counts our own time only). */
 async function gather($: any, claims: Claims): Promise<Evidence[]> {
-  const out: Evidence[] = []
-  const seenTops = new Set<string>()
-  for (const path of claims.paths) {
-    try {
-      if (!(await $.fs.exists(path))) continue
-      const top = await git($, path, 'rev-parse', '--show-toplevel')
-      if (top.exitCode !== 0) continue
-      const root = top.stdout.trim()
-      if (seenTops.has(root)) continue
-      seenTops.add(root)
-      out.push({ ...(await measure($, root, 'HEAD', root, true)), kind: 'path' })
-    } catch (err) {
-      out.push({ target: path, ahead: 0, shortstat: '', dirty: 0, base: '?', error: String(err) })
-    }
-  }
-  if (claims.branches.length > 0) {
-    const cwd = await $.session.root()
-    for (const branch of claims.branches) {
-      try {
-        const exists = await git($, cwd, 'rev-parse', '--verify', '--quiet', branch)
-        if (exists.exitCode !== 0) {
-          out.push({ target: branch, ahead: 0, shortstat: '', dirty: 0, base: '?', error: `no branch \`${branch}\` in ${cwd.split('/').pop()}` })
-          continue
-        }
-        out.push({ ...(await measure($, cwd, branch, branch, false)), kind: 'branch' })
-      } catch (err) {
-        out.push({ target: branch, ahead: 0, shortstat: '', dirty: 0, base: '?', error: String(err) })
-      }
-    }
-  }
-  return out
+  const tops = await Promise.all(
+    claims.paths.map(async path => {
+      if (!(await $.fs.exists(path).catch(() => false))) return undefined
+      const top = await git($, path, ['rev-parse', '--show-toplevel'])
+      return top.exitCode === 0 ? top.stdout.trim() : undefined
+    }),
+  )
+  const roots = [...new Set(tops.filter((t): t is string => !!t))]
+  const cwd: string | undefined = claims.branches.length > 0 ? await $.session.root() : undefined
+  const pathEvidence = Promise.all(
+    roots.map(async root => ({ ...(await measure($, root, 'HEAD', root, true, await baseOf($, root))), kind: 'path' as const })),
+  )
+  const branchEvidence = cwd
+    ? (async () => {
+        const [base, ...exists] = await Promise.all([
+          baseOf($, cwd),
+          ...claims.branches.map(b => git($, cwd, ['rev-parse', '--verify', '--quiet', b])),
+        ])
+        return Promise.all(
+          claims.branches.map(async (branch, i): Promise<Evidence> =>
+            exists[i].exitCode !== 0
+              ? { target: branch, ahead: 0, shortstat: '', dirty: 0, base: '?', error: `no branch \`${branch}\` in ${cwd.split('/').pop()}` }
+              : { ...(await measure($, cwd, branch, branch, false, base)), kind: 'branch' as const },
+          ),
+        )
+      })()
+    : Promise.resolve([] as Evidence[])
+  const [p, b] = await Promise.all([pathEvidence, branchEvidence])
+  return [...p, ...b]
 }

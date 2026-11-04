@@ -61,12 +61,49 @@ if [ -n "$LAST_TAG" ]; then
   elif ! command -v claude >/dev/null 2>&1; then
     echo "Ring 0 needs the claude CLI (v2.1.269+) on PATH"; exit 1
   else
-    # shellcheck disable=SC2086  # RING0_TAGS is a space-separated list of skill names
-    claude plugin eval . --tag $RING0_TAGS \
-      --runs 1 --ablation none -j 4 --threshold "${RING0_THRESHOLD:-0.5}" \
-      --trust-plugin --scaffold --allow-tools Write Edit "Bash(python3 *)" \
-      --no-publish --max-cost-usd "${RING0_MAX_COST:-15}" \
-      || { echo "Ring 0 eval regression — fix before releasing"; exit 1; }
+    # One run per case first. A case below the bar is re-run RING0_RETRY_RUNS times
+    # (default 3) and passes on its mean: a skill that answers without the Skill tool
+    # (BACKLOG T93) scores exactly 0.5 on a two-grader case, so a single run sits on
+    # the threshold and a one-off grader miss reads as a regression. A cost-ceiling
+    # exit (2) is never retried: partial evidence is not a pass.
+    # RING0_RESULT=<path.json> reuses a finished n=1 result (same tree, same tags)
+    # instead of paying for the run again, e.g. after the gate was interrupted.
+    RING0_RC=0
+    if [ -n "${RING0_RESULT:-}" ] && [ -f "$RING0_RESULT" ]; then
+      RING0_JSON="$RING0_RESULT"
+      echo "    reusing Ring 0 result $RING0_JSON"
+      python3 - "$RING0_JSON" "${RING0_THRESHOLD:-0.5}" <<'PY' || RING0_RC=$?
+import json, sys
+d = json.load(open(sys.argv[1])); bar = float(sys.argv[2])
+if d.get("partial"): sys.exit(2)
+sys.exit(0 if all((c.get("aggregates") or {}).get("score", 0) >= bar for c in d.get("cases", [])) else 1)
+PY
+    else
+      RING0_JSON="$(mktemp -t ring0.XXXXXX).json"
+      # shellcheck disable=SC2086  # RING0_TAGS is a space-separated list of skill names
+      claude plugin eval . --tag $RING0_TAGS \
+        --runs 1 --ablation none -j 4 --threshold "${RING0_THRESHOLD:-0.5}" \
+        --trust-plugin --scaffold --allow-tools Write Edit "Bash(python3 *)" \
+        --no-publish --max-cost-usd "${RING0_MAX_COST:-15}" --json "$RING0_JSON" || RING0_RC=$?
+    fi
+    if [ "$RING0_RC" = "2" ]; then echo "Ring 0 eval hit its cost ceiling (RING0_MAX_COST) — partial results are not a pass"; exit 1; fi
+    if [ "$RING0_RC" != "0" ]; then
+      RING0_FAILED=$(python3 - "$RING0_JSON" "${RING0_THRESHOLD:-0.5}" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1])); bar = float(sys.argv[2])
+print(" ".join(c["name"] for c in d.get("cases", []) if (c.get("aggregates") or {}).get("score", 0) < bar))
+PY
+)
+      [ -z "$RING0_FAILED" ] && { echo "Ring 0 eval failed without a scored case below the bar — fix before releasing"; exit 1; }
+      echo "    Ring 0: below the bar at n=1: $RING0_FAILED — re-running each at n=${RING0_RETRY_RUNS:-3}"
+      for CASE in $RING0_FAILED; do
+        claude plugin eval . --case "$CASE" \
+          --runs "${RING0_RETRY_RUNS:-3}" --ablation none -j 3 --threshold "${RING0_THRESHOLD:-0.5}" \
+          --trust-plugin --scaffold --allow-tools Write Edit "Bash(python3 *)" \
+          --no-publish --max-cost-usd "${RING0_RETRY_MAX_COST:-6}" \
+          || { echo "Ring 0 eval regression: $CASE stays below ${RING0_THRESHOLD:-0.5} at n=${RING0_RETRY_RUNS:-3} — fix before releasing"; exit 1; }
+      done
+    fi
   fi
   # t16 (\$N substitution integrity, statledger F-1) needs a project-level fixture
   # skill, which `claude plugin eval` never loads (plugin-only sessions) — so it

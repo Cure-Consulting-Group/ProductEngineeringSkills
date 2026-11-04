@@ -49,7 +49,8 @@ export function buildPlan({ cwd, manifest, skillsSource }) {
     }
   }
 
-  const generatedPlan = planGenerated({ cwd, manifest });
+  const settingsPlan = filePlans.find((fp) => fp.filePath === ".claude/settings.json");
+  const generatedPlan = planGenerated({ cwd, manifest, settingsBase: settingsPlan?.nextContent });
 
   return { filePlans, vendorPlan, generatedPlan, resolvedSource };
 }

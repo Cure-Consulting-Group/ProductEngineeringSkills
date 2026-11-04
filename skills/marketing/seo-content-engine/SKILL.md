@@ -1,7 +1,7 @@
 ---
 name: seo-content-engine
-description: "Technical SEO and search content strategy for websites. Use when a site needs to rank, an SEO audit, metadata, JSON-LD, sitemaps, Core Web Vitals, or keyword clusters."
-when_to_use: "NOT for social posts (product-marketing), launch strategy (go-to-market), or one engineering post (technical-blog-writer)."
+description: "Plans technical SEO and search content for websites. Use when a site needs to rank: SEO audit, metadata, JSON-LD, sitemaps, or keyword clusters."
+when_to_use: "NOT for social posts (product-marketing), launch strategy (go-to-market), one engineering post (technical-blog-writer), or CWV budgets (performance-review)."
 argument-hint: "[domain-or-topic]"
 metadata:
   verified: 2026-09-23
@@ -51,7 +51,7 @@ keyword per page to avoid cannibalization.
 - Canonical on every indexable page; `robots.txt` doesn't block important paths; `sitemap.xml` lists public pages and is submitted in Search Console.
 - HTTPS, no mixed content, no broken internal links, 301s without chains.
 - Mobile usability via Lighthouse and Search Console — Google retired the Mobile-Friendly Test and its report in December 2023.
-- **Core Web Vitals at p75 of real users:** LCP ≤2.5s, **INP ≤200ms**, CLS ≤0.1. INP replaced FID as a Core Web Vital on 2024-03-12; don't report FID. Use field data (Search Console / CrUX) over lab scores; deep fixes go to performance-review.
+- **Core Web Vitals:** check them at p75 of real users against the budgets `performance-review` owns (it holds the thresholds and Cure targets; don't restate them here). Use field data (Search Console / CrUX) over lab scores and report INP, not FID. Fixes go to performance-review.
 
 **Important**
 - `hreflang` for multi-language sites (Vendly's es-DO / es-MX / pt-BR variants each need reciprocal tags).

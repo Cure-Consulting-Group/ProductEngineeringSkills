@@ -1,9 +1,11 @@
 ---
 name: solicitation-triage
-description: "Screens public-sector solicitations and portal alert batches to a verdict in under an hour. Use when a new RFP, RFQ, bid notice, or weekly bid-portal feed arrives."
+description: "Screens public-sector solicitations and portal alerts to a fast verdict. Use when a new RFP, RFQ, bid notice, or weekly bid-portal feed arrives."
 when_to_use: "NOT for extracting requirements from a promoted RFP (use rfp-evaluation) or the resourced go/no-go (use bid-decision)."
 argument-hint: "[solicitation-or-batch]"
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "WebSearch"]
+allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Bash(date:*)", "Bash(mkdir -p 00-source/extracted)", "Bash(pdftotext:*)", "Write", "Edit", "WebSearch"]
+metadata:
+  verified: 2026-10-24
 ---
 
 # Solicitation Triage
@@ -26,13 +28,13 @@ for the bid.
 
 ## Pre-Processing (Auto-Context)
 
-Context (pre-filled in Claude Code; in other runtimes run these commands first):
+Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
 
-- Today: !`date +%Y-%m-%d`
-- Target profile: !`sed -n '1,40p' TARGET-PROFILE.md ../TARGET-PROFILE.md ../../TARGET-PROFILE.md 2>/dev/null || echo "(no TARGET-PROFILE.md — write one first, see capture-management)"`
-- Pipeline: !`sed -n '1,25p' PIPELINE.md ../PIPELINE.md ../../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
-- Documents in hand: !`ls *.pdf *.docx *.xlsx 00-source/*.pdf 00-source/*.xlsx 2>/dev/null | head -20 || echo "(none staged)"`
-- Prior verdicts: !`ls -d ../triage/*/ ../archive/*/ triage/*/ archive/*/ 2>/dev/null | head -20 || echo "(no history)"`
+- Today: `date +%Y-%m-%d`
+- Target profile: `sed -n '1,40p' TARGET-PROFILE.md ../TARGET-PROFILE.md ../../TARGET-PROFILE.md 2>/dev/null || echo "(no TARGET-PROFILE.md — write one first, see capture-management)"`
+- Pipeline: `sed -n '1,25p' PIPELINE.md ../PIPELINE.md ../../PIPELINE.md 2>/dev/null || echo "(no PIPELINE.md)"`
+- Documents in hand: `ls *.pdf *.docx *.xlsx 00-source/*.pdf 00-source/*.xlsx 2>/dev/null | head -20 || echo "(none staged)"`
+- Prior verdicts: `ls -d ../triage/*/ ../archive/*/ triage/*/ archive/*/ 2>/dev/null | head -20 || echo "(no history)"`
 
 Stage documents in `00-source/` and extract text to `00-source/extracted/` — the same layout
 `rfp-evaluation` uses, so a PROMOTEd folder carries over unchanged:

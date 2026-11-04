@@ -2,9 +2,10 @@
 name: migration-validator
 description: Reviews DB migrations for rollback safety, locking, and zero-downtime fit. Use before applying migrations to staging or production; reports every finding.
 tools: Read, Grep, Glob, Bash
+disallowedTools: Write, Edit
 maxTurns: 12
-memory: project
 ---
+> **Read-only:** no `memory:` and no Write/Edit, on purpose: a reviewer that can write can change what it reviews. Return everything in your final message.
 
 # Migration Validator Agent
 

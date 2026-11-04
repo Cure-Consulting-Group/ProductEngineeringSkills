@@ -1,6 +1,6 @@
 ---
 name: dora-metrics
-description: "Measures DORA delivery metrics and SPACE developer experience from git, CI, and incident data. Use when baselining deploy frequency, lead time, change fail rate, recovery time, or reporting engineering health."
+description: "Measures DORA and SPACE metrics from git, CI, and incident data. Use when baselining deploy frequency, lead time, change fail rate, recovery time, or reporting engineering health."
 when_to_use: "NOT for running a live incident or writing runbooks (use incident-response) or building CI workflows (use ci-cd-pipeline)."
 argument-hint: "[team-or-project]"
 context: fork
