@@ -15,6 +15,8 @@ Each region: type (header|hero|text|list|card|form|table|chart|image|tabs|toolba
              label, optional rows, height, fixed (true = stays put), sticky (true = sticks on scroll).
 Fixed regions render in the chrome; the rest stack in a scrolling area and the scroll model is
 written into inventory.md, which is the source for the scrolling section of the deliverable.
+
+Smoke: --spec {fixtures}/wireframe_spec.json --out {tmp}/wf --json
 """
 
 import argparse

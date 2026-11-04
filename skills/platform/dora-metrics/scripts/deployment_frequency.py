@@ -15,6 +15,8 @@ Inputs:
   --source tags|commits  Source for repo mode (default: tags).
 
 Output: deployments/day, deployments/week, total, DORA tier.
+
+Smoke: --repo {repo} --source commits --pattern . --json
 """
 from __future__ import annotations
 

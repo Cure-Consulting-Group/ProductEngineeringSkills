@@ -24,6 +24,18 @@ Step 1 selects — for the team to apply. This skill never writes `.env` files o
 Done when every finding has severity, file:line (or commit), and a remediation. Working assumption:
 every secret in a `.env` file is one careless commit away from public. Match length to the need.
 
+**Output contract** (kept here, at the top, so it survives context compaction; Step 1 picks one):
+
+| Scope | Deliver |
+|---|---|
+| greenfield | `.env.example` schema (name, required, type, public/server, owner, rotation) + boot-time validation sketch |
+| audit | The Step 9 report: finding summary by category and severity, then CRITICAL (revoke and rotate today) / HIGH / MEDIUM items, each with file:line or commit and a remediation, then the rotation matrix |
+| leak-response | The Step 5 runbook filled in for this leak: revoke, rotate, purge history, scope the exposure, notify |
+| rotation | Rotation matrix: credential, cadence, method, owner |
+| migrate | Secret-manager migration plan: inventory, target store, cut-over order, rollback |
+
+Every secret value is shown as `[REDACTED:KEY_NAME]`, never printed.
+
 ## Pre-Processing (Auto-Context)
 
 Context — run these read-only commands first; skip any that fail or aren't permitted (they only tailor the output):

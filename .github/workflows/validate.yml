@@ -165,8 +165,11 @@ jobs:
             exit 1
           fi
 
-      - name: Bundled skill scripts smoke-test (--help)
+      - name: Bundled skill scripts smoke-test (--help, then each Smoke: line)
         run: bash scripts/verify-skill-scripts.sh
+
+      - name: Portable export (claude.ai / Skills API keys and limits)
+        run: python3 scripts/export-portable.py --check
 
       - name: Codex install smoke (zero model calls)
         # `codex debug prompt-input` needs no auth. CLI pinned so a Codex release can't

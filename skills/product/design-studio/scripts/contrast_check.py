@@ -18,6 +18,8 @@ Usage:
 
 Thresholds: AA text 4.5:1, AA large text and UI components 3:1, AAA text 7:1.
 Exit 1 when any checked pair fails AA for body text (or 3:1 for pairs tagged as UI).
+
+Smoke: --pairs #0F172A:#FFFFFF,#888888:#999999 --json
 """
 
 import argparse

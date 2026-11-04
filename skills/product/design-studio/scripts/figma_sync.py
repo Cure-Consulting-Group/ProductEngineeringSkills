@@ -12,11 +12,16 @@ Features:
 Usage:
     python3 figma_sync.py --tokens-file tokens.json                     # validate only (default)
     FIGMA_TOKEN=... FIGMA_FILE_KEY=... python3 figma_sync.py --tokens-file tokens.json --apply
+    python3 figma_sync.py --tokens-file tokens.json --json             # one JSON report on stdout
+
+Smoke: --tokens-file {fixtures}/tokens.json --json
 
 The token is read only from the FIGMA_TOKEN environment variable; it is never accepted on the command line.
 """
 
 import argparse
+import contextlib
+import io
 import json
 import os
 import re
@@ -152,8 +157,28 @@ def main():
     parser.add_argument("--file-key", help="Target Figma file key (or FIGMA_FILE_KEY in the environment)")
     parser.add_argument("--apply", action="store_true", help="Actually POST to Figma. Without it the script only validates and prints the payload")
     parser.add_argument("--dry-run", action="store_true", help="Validate and print the payload without calling the API (the default; kept for compatibility)")
+    parser.add_argument("--json", action="store_true", help="Print one JSON report (token count, payload, whether it was applied, the API result or the error) instead of the progress lines")
     args = parser.parse_args()
+    if args.json:
+        report = {"tokens_file": args.tokens_file, "tokens": 0, "applied": False, "payload": None, "result": None, "error": None}
+        buf = io.StringIO()
+        code = 0
+        try:
+            with contextlib.redirect_stdout(buf):
+                run_sync(args, report)
+        except SystemExit as stop:
+            code = stop.code if isinstance(stop.code, int) else 1
+            if code:
+                lines = [l for l in buf.getvalue().splitlines() if l.startswith("❌")]
+                report["error"] = lines[-1].lstrip("❌ ").strip() if lines else "failed"
+        except (RuntimeError, OSError, ValueError, urllib.error.URLError) as err:
+            report["error"], code = str(err), 1
+        print(json.dumps(report, indent=2))
+        sys.exit(code)
+    run_sync(args, None)
 
+
+def run_sync(args, report):
     if not os.path.exists(args.tokens_file):
         print(f"❌ Error: Tokens file '{args.tokens_file}' does not exist.")
         sys.exit(1)
@@ -169,6 +194,8 @@ def main():
     print(f"📦 Loaded {len(flat_tokens)} tokens from {args.tokens_file}")
 
     payload = build_figma_variable_payload(flat_tokens)
+    if report is not None:
+        report["tokens"], report["payload"] = len(flat_tokens), payload
 
     if args.dry_run or not args.apply:
         print("\n🧪 DRY RUN: generated Figma REST API payload (pass --apply to publish):")
@@ -190,6 +217,8 @@ def main():
 
     print(f"🌐 Publishing tokens to Figma File: {file_key}...")
     result = sync_to_figma(file_key, figma_token, payload)
+    if report is not None:
+        report["applied"], report["result"] = True, result
     print("🎉 Successfully published to Figma Variables!")
     print(json.dumps(result, indent=2))
 

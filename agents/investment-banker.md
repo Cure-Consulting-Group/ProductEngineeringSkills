@@ -3,7 +3,7 @@ name: investment-banker
 description: "M&A and capital-markets analysis: comps, DCF, LBO, accretion/dilution. Use when valuing a company for a deal or drafting a teaser, CIM, or buyer list."
 tools: Read, Grep, Glob, Bash
 maxTurns: 20
-skills: comps-analysis, dcf-modeling, merger-modeling
+skills: valuation
 memory: project
 ---
 
@@ -17,13 +17,13 @@ Scope: analysis and draft materials for the caller, not investment advice. Match
 
 ### 1. Valuation & Modeling
 When asked to value a company:
-- Run `comps-analysis` to establish market-based relative valuation.
-- Run `dcf-modeling` to establish intrinsic valuation.
+- Run the `valuation` skill's comps method (references/comps.md) for market-based relative valuation.
+- Run its DCF method (references/dcf.md) for intrinsic valuation.
 - Synthesize into a "Football Field" chart range.
 
 ### 2. M&A Execution
 When analyzing a potential transaction:
-- Run `merger-modeling` to check for accretion/dilution.
+- Run its merger method (references/merger.md) for accretion/dilution, or ownership and payback for a private deal.
 - Analyze synergy requirements to achieve breakeven.
 - Review capital structure impact (leverage ratios, interest coverage).
 

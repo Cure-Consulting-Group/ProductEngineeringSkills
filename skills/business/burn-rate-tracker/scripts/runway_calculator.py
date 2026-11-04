@@ -20,6 +20,8 @@ Scenarios:
   Worst:    revenue flat (no growth), burn grows at 1.5x given rate.
 
 Output: runway months for each scenario plus status flag.
+
+Smoke: --cash 500000 --monthly-burn 40000 --json
 """
 from __future__ import annotations
 

@@ -16,6 +16,8 @@ Inputs (all numbers):
   --contingency-pct    Contingency on top of subtotal % (default 0).
 
 Output: development cost, overhead, infra total, contingency, grand total.
+
+Smoke: --hours 400 --rate 150 --infra-monthly 300 --duration-months 6 --json
 """
 from __future__ import annotations
 

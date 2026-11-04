@@ -53,7 +53,22 @@ Soft limits:
 
 ## Testing
 
-Smoke test for every script: it must run with `--help` and exit 0. The repo ships a runner:
+Smoke test for every script: it must run with `--help` and exit 0, **and** past `--help` with the
+arguments its module docstring declares on a `Smoke:` line (T88):
+
+```
+Smoke: --csv {fixtures}/incidents.csv --json      # run like this
+Smoke: none (calls the Graph API with real credentials)   # no safe offline run; reason required
+Smoke-exits: 0,2  (2 = no SVG renderer on a bare runner)  # optional; default 0,1
+```
+
+**Path placeholders** (the one convention every script uses in docs and smoke lines):
+`{skill}` the skill folder, `{fixtures}` the script's `scripts/fixtures/` folder, `{tmp}` a fresh
+temporary folder, `{repo}` the repository root. Fixtures are small, synthetic and committed beside the
+script. A smoke run passes when it exits with an allowed code, prints no traceback, and prints valid
+JSON when `--json` is among its arguments. Exit 1 (findings) passes by default.
+
+The repo ships a runner:
 
 ```bash
 scripts/verify-skill-scripts.sh

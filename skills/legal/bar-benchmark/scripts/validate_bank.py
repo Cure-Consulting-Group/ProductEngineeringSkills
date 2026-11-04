@@ -13,6 +13,8 @@ Usage:
   python3 validate_bank.py --json
 
 Exit 0 clean (warnings allowed), 1 on errors, 2 on unreadable input.
+
+Smoke: --json
 """
 
 import argparse

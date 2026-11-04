@@ -15,6 +15,8 @@ Usage:
   python3 run_live.py --dry-run
 
 Results land in ../results/<UTC-date>-<backend>.json (scores, answers, cost).
+
+Smoke: --backend mock --dry-run --limit 2 --json
 """
 
 import argparse

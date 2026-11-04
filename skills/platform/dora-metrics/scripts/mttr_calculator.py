@@ -11,6 +11,8 @@ CSV columns required: id, opened_at, resolved_at
   Optional column: severity. Optional: resolved_at may be empty (incident open — skipped).
 
 Output: count, mean, median, p90, p95 in hours; DORA MTTR tier.
+
+Smoke: --csv {fixtures}/incidents.csv --json
 """
 from __future__ import annotations
 

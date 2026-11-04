@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # verify-skill-scripts.sh — smoke-test every bundled skill script.
 #
-# Walks skills/*/*/scripts/*.py and runs each with --help.
+# Walks skills/*/*/scripts/*.py and runs each with --help, then with the `Smoke:` arguments its
+# docstring declares (scripts/smoke_skill_scripts.py; placeholders {skill} {fixtures} {tmp} {repo}).
 # Fails if any script exits non-zero, prints stack traces, or is unreadable.
 # Intended to run in CI and as a pre-commit guardrail.
 #
@@ -79,4 +80,11 @@ if [[ $FAIL -gt 0 ]]; then
   printf '%s' "${FAILED_LIST}" | sed 's/^/  - /'
   exit 1
 fi
-exit 0
+
+# Past --help (T88): run each script with the `Smoke:` arguments its docstring declares.
+echo
+if [[ $QUIET -eq 1 ]]; then
+  python3 "${REPO_ROOT}/scripts/smoke_skill_scripts.py" | grep -E '^FAIL|^smoke:'
+  exit "${PIPESTATUS[0]}"
+fi
+python3 "${REPO_ROOT}/scripts/smoke_skill_scripts.py"

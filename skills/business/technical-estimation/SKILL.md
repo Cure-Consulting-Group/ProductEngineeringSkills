@@ -209,6 +209,23 @@ Never present a single number. Present a distribution with the assumptions attac
 | Absorbing usage-based risk | Adoption you cannot predict becomes a loss you cannot cap |
 | Estimating a team you cannot field | The estimate is fine; the pursuit is the problem |
 
+## Scripts
+
+`cure-pert-estimate` (on PATH while the plugin is enabled; otherwise
+`python3 <plugin-root>/skills/business/technical-estimation/scripts/pert_estimate.py`) does the
+arithmetic of Steps 2, 3 and 6 from two CSVs, so the numbers in a bid can be re-derived by anyone:
+PERT and σ per task, σ rolled up in quadrature, the reference-class multiplier on the bottom-up
+total only, the named-risk reserve as its own line, and Monte Carlo P50/P80/P90 (Beta-PERT tasks,
+Bernoulli risks, fixed seed). Stdlib only; `--help` lists flags; `--json` for the cost volume.
+
+```bash
+# tasks.csv: req_id,component,optimistic,likely,pessimistic   risks.csv: risk,probability,impact_hours
+cure-pert-estimate --tasks tasks.csv --risks risks.csv --reference-class 1.4 --rate 165
+```
+
+Quote the P-level you bid at (P80 is a common commitment level) and the seed, next to the point
+estimate. The script does not choose the multiplier or the risks: those stay judgments you record.
+
 ## Handoff
 
 - Cost structure and rate cards → `engineering-cost-model`

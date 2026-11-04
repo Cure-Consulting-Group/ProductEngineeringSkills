@@ -1,0 +1,5 @@
+id,deployed_at,caused_incident
+d1,2026-10-01,false
+d2,2026-10-08,true
+d3,2026-10-15,false
+d4,2026-10-22,false

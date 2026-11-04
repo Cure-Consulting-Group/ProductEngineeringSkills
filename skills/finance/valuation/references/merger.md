@@ -1,4 +1,6 @@
-# Merger Modeling (Accretion/Dilution)
+# Merger modeling (accretion/dilution)
+
+Part of the `valuation` skill (merged from `merger-modeling`, Wave 8 / T88). Load this file when the classify step in SKILL.md picks this method.
 
 **Outcome:** year-1 and year-2 pro-forma EPS vs. standalone, % accretion/(dilution), breakeven
 synergies, and a synergy-realization sensitivity, with deal assumptions listed. **Done when** the
@@ -6,23 +8,21 @@ pro-forma share count and interest lines reconcile and every assumption has a so
 marked as an assumption. Not investment advice. Match length to the need; no filler sections or
 restated summaries.
 
-In Claude Code the `investment-banker` agent runs this alongside the valuation skills.
-
-## Step 1: Classify
+## Classify
 
 - **Public acquirer, EPS-driven:** full accretion/dilution.
 - **Private or small-company deal** (the likelier Cure case — e.g. acquiring or selling a studio
   product): EPS is not the test. Model ownership dilution, cash-flow payback, and post-deal
   runway (hand runway to `burn-rate-tracker`) instead.
 
-## Step 2: Gather
+## Gather
 
 Offer price and premium; consideration mix (cash / stock / new debt); acquirer share price
 (dated) and diluted shares; rate on new debt and yield on cash used; tax rate; both companies'
 projected net income; fair-value write-ups and identified intangibles with useful lives;
 transaction and financing fees; synergy estimates with source.
 
-## Step 3: Gotchas that change the answer
+## Gotchas that change the answer
 
 - **Interest lines after tax:** new-debt interest and foregone interest on cash both flow
   through at (1 − tax rate).

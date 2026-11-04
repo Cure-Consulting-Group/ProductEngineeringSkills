@@ -1,0 +1,4 @@
+{
+  "$comment": "T93 routing nudge. One line at most per prompt, first match wins, read by hooks/cure_guard.py prompt. Add a route only for a skill the bare model measurably skips (BACKLOG T93 probe) and only with a pattern precise enough that the not-<skill> routing cases stay at zero fires. `gain` says what the skill adds that the bare model lacks. Skill names are checked by scripts/audit-library.py.",
+  "routes": []
+}

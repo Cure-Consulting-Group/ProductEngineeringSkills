@@ -5,6 +5,8 @@ Usage:
   python3 worktree_report.py
   python3 worktree_report.py --base origin/main --stale-days 30 --json
   python3 worktree_report.py --release-missing   # drop registry entries whose directory is gone
+
+Smoke: --json
 """
 import argparse
 import json

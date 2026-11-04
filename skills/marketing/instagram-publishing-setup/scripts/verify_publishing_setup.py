@@ -13,6 +13,8 @@ Usage:
 
 Exit codes: 0 all checks passed, 1 a check failed, 2 bad input.
 Env: IG_GRAPH_VERSION overrides the Graph API version (default v26.0).
+
+Smoke: none (reads a GCP Secret Manager entry and calls the Graph API: needs credentials and network)
 """
 import argparse
 import json

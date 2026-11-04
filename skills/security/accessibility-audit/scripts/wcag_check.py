@@ -21,6 +21,8 @@ Checks performed (static only; this is a smoke check, not a full audit):
 
 Output: severity-grouped findings (Critical/Major/Minor) with line numbers.
 Exit code: 0 = no Critical/Major findings, 1 = findings present, 2 = bad input.
+
+Smoke: --html-file {fixtures}/page.html --json
 """
 from __future__ import annotations
 
