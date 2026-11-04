@@ -43,17 +43,21 @@ const eventNames = Object.keys(grouped);
 <% eventNames.forEach((name, i) => { -%>
     "<%= name %>": [
 <% grouped[name].forEach((e, j) => {
+     // Plain stdout from a PreToolUse/PostToolUse hook reaches nobody; additionalContext
+     // inside hookSpecificOutput is read by Claude (code.claude.com/docs/en/hooks).
      const reminder = `${e.label}: consider running ${e.skills.join(', ')}`;
+     const payload = JSON.stringify({ hookSpecificOutput: { hookEventName: e.event, additionalContext: reminder } });
+     const emit = `echo '${payload}'`;
      const cmd = e.bashPattern
-       ? `CMD=$(python3 -c \\"import sys,json; d=json.load(sys.stdin); print((d.get('tool_input') or {}).get('command',''))\\" 2>/dev/null); case \\"$CMD\\" in *'${e.bashPattern}'*) echo '{\\"reminder\\": \\"${reminder}\\"}' ;; esac`
-       : `echo '{\\"reminder\\": \\"${reminder}\\"}'`;
+       ? `CMD=$(python3 -c "import sys,json; d=json.load(sys.stdin); print((d.get('tool_input') or {}).get('command',''))" 2>/dev/null); case "$CMD" in *'${e.bashPattern}'*) ${emit} ;; esac`
+       : emit;
 -%>
       {
         "matcher": "<%= e.matcher %>",
         "hooks": [
           {
             "type": "command",
-            "command": "<%- cmd %>"
+            "command": <%- JSON.stringify(cmd) %>
           }
         ]
       }<%= j < grouped[name].length - 1 ? "," : "" %>

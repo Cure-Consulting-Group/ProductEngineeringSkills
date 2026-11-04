@@ -39,11 +39,10 @@ Run `claude-bootstrap help` for the full flag list.
 ├── STATE.md                   # same model
 ├── claude.manifest.json       # the contract; commit this
 ├── .claude/
-│   ├── settings.json          # init-only
+│   ├── settings.json          # permissions at init; `hooks` key managed from manifest.hooks (T89)
 │   ├── skills/<name>/SKILL.md # vendored from source
 │   ├── agents/<name>.md       # vendored from source
 │   ├── rules/<name>.md        # vendored from source (auto-derived from stack)
-│   ├── hooks/hooks.json       # generated from manifest.hooks
 │   └── upgrades/              # conflict files when on-disk diverges from tracked
 ├── .cursorrules               # generated pointer to CLAUDE.md
 └── .gemini/config.yaml        # generated mirror for Gemini CLI parity
@@ -51,7 +50,7 @@ Run `claude-bootstrap help` for the full flag list.
 
 ## Idempotency model
 
-Every managed region — markdown blocks, vendored files, generated files — is hashed in `claude.manifest.json`. On `apply`:
+Every managed region — markdown blocks, vendored files, generated files, and the generated hook groups inside `.claude/settings.json` — is hashed in `claude.manifest.json`. Hooks go into `settings.json` because Claude Code loads project hooks only from `.claude/settings.json` and `.claude/settings.local.json`; a `.claude/hooks/hooks.json` from an older bootstrap is never read, and `doctor` reports it as stale. Generated hook groups are recognised by their command strings, so your own hooks and other settings keys are left alone, and a re-run never duplicates them. On `apply`:
 
 - Block/file hash matches stored hash → safe to overwrite cleanly.
 - Block/file hash differs from stored hash → user edited; emit a `.conflict` file under `.claude/upgrades/`, preserve user content in place. Apply exits with code 2.
