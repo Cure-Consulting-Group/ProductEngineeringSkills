@@ -16,6 +16,16 @@ for the bid.
 > is usually no — a solicitation that takes three hours to understand well enough to disqualify is
 > telling you what bidding and delivering it would be like.
 
+**Output contract** (kept here, at the top, so it survives context compaction):
+
+- **The reply carries the verdict:** PROMOTE / WATCH / DECLINE / DECLINE AND HARVEST, one line why,
+  the instrument and due date, the gate score out of 10, any hard disqualifier, and (for a decline)
+  the other angle. A reader who sees only the reply must have the decision.
+- **One file as the record:** `QUALIFY.md` in the Step 6 format, saved when the workspace has the
+  solicitation folder; say in one line that it was saved. Never answer with only a pointer to it.
+- **A weekly batch** gets one row per notice (instrument, verdict, one reason) and promotes at most
+  the few that pass; see Step 7.
+
 ## Pre-Processing (Auto-Context)
 
 Gather context first. Run these commands (any runtime; the skill never runs them for you, so it loads even where Bash is denied):
@@ -173,7 +183,7 @@ failure, not a pending decision.
 
 ## Step 6: Write one file
 
-One `QUALIFY.md`, verdict at the top; no analysis subfolders (only `00-source/`). Wanting an
+Give the verdict in the reply first (see the output contract), then save one `QUALIFY.md`, verdict at the top; no analysis subfolders (only `00-source/`). Wanting an
 `01-analysis/` directory is the signal to promote, not to build structure in triage.
 
 ```markdown

@@ -95,6 +95,7 @@ jobs:
         run: |
           python3 hooks/test_cure_guard.py
           python3 scripts/test_export_antigravity.py
+          python3 scripts/check-skill-routes.py   # T93 routing table: real skills, no boundary misfires
           node bootstrap/scripts/sync-deny-rules.mjs --check   # bootstrap's deny list = repo settings.json
           python3 mods/check.py --no-claude   # static mods gate: count, marketplace parity, shared-code drift, retired IDs
           if grep -n -E 'CLAUDE_TOOL_(INPUT|NAME)' hooks/hooks.json tri-lane/hooks/hooks.json; then
@@ -165,7 +166,7 @@ jobs:
             exit 1
           fi
 
-      - name: Bundled skill scripts smoke-test (--help, then each Smoke: line)
+      - name: "Bundled skill scripts smoke-test (--help, then each Smoke: line)"
         run: bash scripts/verify-skill-scripts.sh
 
       - name: Portable export (claude.ai / Skills API keys and limits)

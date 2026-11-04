@@ -1,4 +1,34 @@
 {
-  "$comment": "T93 routing nudge. One line at most per prompt, first match wins, read by hooks/cure_guard.py prompt. Add a route only for a skill the bare model measurably skips (BACKLOG T93 probe) and only with a pattern precise enough that the not-<skill> routing cases stay at zero fires. `gain` says what the skill adds that the bare model lacks. Skill names are checked by scripts/audit-library.py.",
-  "routes": []
+  "$comment": "T93 routing nudge, read by hooks/cure_guard.py prompt. One line at most per prompt; the first route whose `when` matches and whose `unless` does not wins. Add a route only for a skill the bare model measurably skips (BACKLOG T93 probe: the five below fired 0-2 of 3 on task prompts, 2026-11-04) and only with a pattern that leaves every not-<skill> boundary case and every other eval prompt unmatched (scripts/check-skill-routes.py). `gain` says what the skill adds that an unaided answer lacks. Skill names are checked by scripts/audit-library.py.",
+  "routes": [
+    {
+      "skill": "legal-research",
+      "when": "^(?=[\\s\\S]*\\b(verify|check|confirm|real|exist|fake|fabricat|hallucinat|cite-?check)\\w*)(?=[\\s\\S]*(\\b\\d+\\s+(U\\.S\\.|F\\.\\s?(2d|3d|4th)|F\\.\\s?Supp|S\\.\\s?Ct\\.|N\\.Y\\.\\s?(2d|3d)|A\\.D\\.\\s?(2d|3d)|Misc\\.\\s?(2d|3d))\\s+\\d+|\\bcitations?\\b|\\bcase\\s+law\\b))",
+      "gain": "checks each citation against CourtListener with cite_check.py and labels what cannot be verified, instead of answering from memory"
+    },
+    {
+      "skill": "legal-doctrine",
+      "when": "\\b(under|in)\\s+new\\s+york(\\s+state)?\\s+law\\b|\\bnew\\s+york\\s+(statute|rule|courts?)\\b|\\bN\\.?Y\\.?S?\\.?\\s+(law|statute|rule)\\b|\\b(EPTL|CPLR|SCPA)\\b|\\bGen(eral)?\\.?\\s+Oblig|\\bbar\\s+(prep|exam\\s+question)\\b",
+      "unless": "\\b(measure|benchmark|score|evaluate|grade)\\w*\\b[^.\\n]{0,60}\\b(skills?|models?|agent)\\b|\\b(draft|write|generate)\\b[^.\\n]{0,30}\\b(terms of service|privacy policy|nda|sow|eula|dpa)\\b",
+      "gain": "applies the NY-first black-letter reference for the subject, including the traps where New York departs from the general rule"
+    },
+    {
+      "skill": "security-review",
+      "when": "\\b(vulnerab\\w*|security\\s+(problems?|issues?|holes?|review|audit|check|bugs?|risks?)|pen-?test\\w*|owasp|exploitab\\w*|is\\s+(it|this|that|(this|that|the|our)\\s+[\\w-]+)\\s+secure)\\b",
+      "unless": "\\b(hipaa|coppa|gdpr|ccpa|pci|soc\\s?2|ferpa|baa|wcag|accessib\\w*|leaked?\\s+(key|secret|token|credential)s?|\\.env\\b|rotate\\w*\\s+(key|secret|credential)s?)|\\b(every|each)\\s+(monday|tuesday|wednesday|thursday|friday|day|week|night|morning|\\d+\\s+(minutes?|hours?))\\b|\\b(schedul\\w*|cron|recurring|/loop|automate\\w*)\\b",
+      "gain": "runs Cure's OWASP Top 10 2025 checklist for web, mobile, LLM features and Firebase rules, with severity and fixes"
+    },
+    {
+      "skill": "data-migration",
+      "when": "\\b(backfill\\w*|dual[- ]writ\\w*)\\b|\\bcut-?over\\b[^.\\n]{0,60}\\b(data|database|documents|records|collection|firestore|postgres)\\b|\\bmigrat\\w+\\s+(the\\s+|our\\s+|all\\s+|existing\\s+)?(data|documents|records|rows|collections?|users|accounts)\\b|\\b(existing|all\\s+(the|our)|\\d+(\\.\\d+)?\\s*(m|million|k|thousand))\\s+(documents|records|rows)\\b[^.\\n]{0,160}\\b(add|set|update|fill|populate|convert|move|rewrite|transform)\\w*",
+      "unless": "\\bindex(es)?\\b|\\bslow\\s+quer|\\bquery\\b[^.\\n]{0,40}\\b(slow|takes|seconds)\\b|\\bschema\\s+design\\b",
+      "gain": "plans a zero-downtime backfill: batching under write limits, idempotent restarts, writes during the run, verification and rollback"
+    },
+    {
+      "skill": "incident-response",
+      "when": "\\b(5\\d\\d)s?\\b[^.?\\n]{0,80}\\b(since|for\\s+(about|the\\s+last)|right\\s+now|minutes?\\s+ago|hours?\\s+ago|overnight|this\\s+morning|after\\s+(our|the)\\s+deploy)|\\b(outage|errors?\\s+(are\\s+)?(spik|jump|surg)\\w*|(is|are|went)\\s+down|degraded|spik(ed|ing))\\b[^.?\\n]{0,80}\\b(since|right\\s+now|minutes?\\s+ago|hours?\\s+ago|overnight|this\\s+morning|in\\s+prod(uction)?)\\b|\\b(write|draft|build|create)\\b[^.\\n]{0,30}\\b(runbook|post-?mortem|on-?call\\s+(rotation|schedule|runbook))",
+      "unless": "\\bwhat\\s+(happens|would\\s+happen)\\s+if\\b|\\b(bill|budget|spend|cost)s?\\b[^.\\n]{0,40}\\b(spik|jump)\\w*\\b[^.\\n]{0,40}\\b(month|week)\\b",
+      "gain": "gives the severity call, the next 1-3 mitigations with exact commands and the status message, and writes nothing during a live incident"
+    }
+  ]
 }
