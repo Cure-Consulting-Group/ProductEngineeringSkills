@@ -1,6 +1,6 @@
 ---
 name: capture-management
-description: "Builds a public-sector pipeline: target profile, sourcing, pre-RFP positioning, teaming. Use when entering a government market, choosing which bids to chase, or building past performance."
+description: "Builds a public-sector bid pipeline: targets, sourcing, teaming. Use when entering a government market, choosing which bids to chase, or building past performance."
 when_to_use: "NOT for screening one specific solicitation (use solicitation-triage) or the go/no-go on it (use bid-decision)."
 argument-hint: "[market-or-agency]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(sed -n:*)", "Write", "Edit", "WebSearch", "WebFetch"]

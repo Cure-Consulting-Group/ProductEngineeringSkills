@@ -1,6 +1,6 @@
 ---
 name: web-design-expert
-description: "Guides web UI design: responsive layout, tokens, Tailwind v4, dark mode, motion. Use when designing or reviewing pages and components for layout, CSS architecture, or theming."
+description: "Guides web UI design: responsive layout, tokens, Tailwind v4, dark mode. Use when designing or reviewing pages and components for layout, CSS architecture, or theming."
 when_to_use: "NOT for feature code (nextjs-feature-scaffold), brand systems (design-studio), Storybook (design-system), or Core Web Vitals budgets (performance-review)."
 argument-hint: "[page-or-component-name]"
 metadata:

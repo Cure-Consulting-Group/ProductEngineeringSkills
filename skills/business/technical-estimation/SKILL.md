@@ -1,6 +1,6 @@
 ---
 name: technical-estimation
-description: "Builds defensible software estimates with ranges: PERT, reference class, risk reserve. Use when an estimate will be bid on, contracted, or audited, e.g. an RFP cost volume."
+description: "Builds defensible software estimates: PERT, reference class, risk reserve. Use when an estimate will be bid on, contracted, or audited, e.g. an RFP cost volume."
 when_to_use: "NOT for quick internal budgets (use engineering-cost-model) or pricing and payment terms (use proposal-generator)."
 argument-hint: "[project-or-scope-name]"
 allowed-tools: ["Read", "Grep", "Glob", "Bash(ls:*)", "Bash(git ls-files:*)", "Write", "Edit", "WebSearch"]

@@ -1,6 +1,6 @@
 ---
 name: green-software
-description: "Measures and cuts software carbon (SCI score, carbon-aware regions, ESG reports). Use when asked for a carbon footprint, sustainability audit, green architecture, or an SCI score."
+description: "Measures and cuts software carbon: SCI score, carbon-aware regions, ESG. Use when asked for a carbon footprint, sustainability audit, green architecture, or an SCI score."
 when_to_use: "NOT for cloud cost cutting (use finops) or latency/perf tuning (use performance-review)."
 argument-hint: "[project-or-infrastructure]"
 metadata:

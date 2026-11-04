@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: "Finds OWASP vulnerabilities in code, APIs, mobile apps, LLM features, and Firebase config. Use when asked to check security, before launch, or after adding auth, payments, or PII."
+description: "Finds OWASP vulnerabilities in code, APIs, mobile, LLM features, Firebase. Use when asked to check security, before launch, or after adding auth, payments, or PII."
 when_to_use: "NOT for HIPAA/GDPR/PCI design (compliance-architect), leaked-key scans (env-secrets-manager), WCAG (accessibility-audit), or building Stripe (stripe-integration)."
 argument-hint: "[target-system]"
 allowed-tools: ["Read", "Grep", "Glob"]

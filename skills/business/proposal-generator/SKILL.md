@@ -1,6 +1,6 @@
 ---
 name: proposal-generator
-description: "Drafts consulting proposals and SOWs: scope, milestones, pricing, payment terms. Use when writing a client proposal, a statement of work, or a change order for Cure."
+description: "Drafts consulting proposals and SOWs: scope, milestones, pricing, terms. Use when writing a client proposal, a statement of work, or a change order for Cure."
 when_to_use: "NOT for internal cost estimates (engineering-cost-model), bid-grade estimates with ranges (technical-estimation), or screening solicitations (solicitation-triage, then rfp-evaluation)."
 argument-hint: "[project-name]"
 disable-model-invocation: true

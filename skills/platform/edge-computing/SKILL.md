@@ -1,6 +1,6 @@
 ---
 name: edge-computing
-description: "Designs CDN caching, invalidation, and Next.js proxy routing on Vercel/Firebase. Use when cutting TTFB, setting Cache-Control, geo-routing, edge auth, or rate limits."
+description: "Designs CDN caching, invalidation, and edge routing on Vercel and Firebase. Use when cutting TTFB, setting Cache-Control, geo-routing, edge auth, or rate limits."
 when_to_use: "NOT for a full performance audit (use performance-review) or building a Next.js feature (use nextjs-feature-scaffold)."
 argument-hint: "[use-case-or-platform]"
 metadata:

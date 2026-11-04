@@ -773,7 +773,7 @@ def flat_name_conflicts():
 # --- Wave 7 delivery gates (T74, T76, T80, T81, T84). Hard-fail, no score effect:
 # each one is a defect that shipped while every structural score read 9.99.
 TRIGGER_STRICT_RE = re.compile(r"\buse (when|for|this|to|on|before|after)\b", re.I)
-TRIGGER_STRICT_WINDOW = 100
+TRIGGER_STRICT_WINDOW = 85
 RETIRED_MODEL_RE = re.compile(
     r"\b(claude-instant[\w.-]*|claude-2(?:\.\d)?\b|claude-3[\w.-]*|gpt-3\.5[\w.-]*|gpt-4o[\w.-]*|gpt-4-turbo"
     r"|gemini-1\.\d[\w.-]*|gemini-2\.\d[\w.-]*)", re.I)

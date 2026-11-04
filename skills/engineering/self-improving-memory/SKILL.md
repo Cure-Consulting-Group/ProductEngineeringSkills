@@ -1,6 +1,6 @@
 ---
 name: self-improving-memory
-description: "Curates agent auto-memory (MEMORY.md plus user/feedback/project/reference entries). Use when seeding memory for a new engagement, auditing or consolidating it, or checking for stale entries."
+description: "Curates agent auto-memory: MEMORY.md plus user, feedback, project entries. Use when seeding memory for a new engagement, auditing or consolidating it, or checking for stale entries."
 when_to_use: "NOT for CLAUDE.md/AGENTS.md project identity (use project-bootstrap or cure-infra-bootstrap). NOT for code-derivable facts."
 argument-hint: "[bootstrap | audit | detect-patterns | health-check]"
 metadata:

@@ -1,6 +1,6 @@
 ---
 name: engagement-automation
-description: "Picks and configures recurring automation: /loop, cloud or desktop tasks, CI cron, hooks. Use when putting engagement work on autopilot: weekly audits, monthly reports, maintenance loops, PR-triggered reviews."
+description: "Configures recurring automation: /loop, cloud tasks, CI cron, hooks. Use when putting engagement work on autopilot: weekly audits, monthly reports, maintenance loops, PR-triggered reviews."
 when_to_use: "NOT for AI workflows inside a product (use agent-workflow-designer) or one-off background tasks."
 argument-hint: "[task-to-automate]"
 metadata:

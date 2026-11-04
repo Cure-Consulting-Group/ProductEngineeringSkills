@@ -1,6 +1,6 @@
 ---
 name: project-manager
-description: "Plans sprints and delivery: capacity, RACI, risk registers, dependencies, retros. Use when planning a sprint, sizing capacity, building a timeline, or tracking delivery risk."
+description: "Plans sprints and delivery: capacity, RACI, risk registers, retros. Use when planning a sprint, sizing capacity, building a timeline, or tracking delivery risk."
 when_to_use: "NOT for OKRs or roadmaps (use product-manager), PRDs/stories (use sdlc), client status emails (use client-communication), or post-mortems (use incident-response)."
 argument-hint: "[project-name]"
 metadata:

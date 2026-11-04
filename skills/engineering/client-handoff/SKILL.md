@@ -1,6 +1,6 @@
 ---
 name: client-handoff
-description: "Builds client handoff packages: architecture, runbooks, credential transfer, KT plan, SLA. Use when handing a project, phase, or support role to a client team or winding down an engagement."
+description: "Builds client handoff packages: runbooks, credential transfer, KT, SLA. Use when handing a project, phase, or support role to a client team or winding down an engagement."
 when_to_use: "NOT for weekly status or escalations (use client-communication). NOT for incident response during a live outage (use incident-response)."
 argument-hint: "[project-name]"
 context: fork

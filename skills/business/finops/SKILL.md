@@ -1,6 +1,6 @@
 ---
 name: finops
-description: "Optimizes Firebase and GCP cost: budgets, alerts, right-sizing, AI API spend. Use when a cloud bill spikes, budgeting a live bill, or cutting infra and LLM costs."
+description: "Cuts Firebase and GCP cost: budgets, alerts, right-sizing, AI API spend. Use when a cloud bill spikes, budgeting a live bill, or cutting infra and LLM costs."
 when_to_use: "NOT for runway (burn-rate-tracker), unit economics (saas-financial-model), pre-build estimates (engineering-cost-model), or new-project budget config (infrastructure-scaffold)."
 argument-hint: "[project-or-service]"
 metadata:

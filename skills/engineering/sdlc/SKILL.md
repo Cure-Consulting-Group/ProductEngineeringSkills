@@ -1,6 +1,6 @@
 ---
 name: sdlc
-description: "Writes engineering specs: PRDs, ADRs, RFCs, epics, user stories, task and test specs. Use when asked to write a PRD or ADR, draft an RFC, spec a feature, or break work into stories."
+description: "Writes engineering specs: PRDs, ADRs, RFCs, epics, stories, test specs. Use when asked to write a PRD or ADR, draft an RFC, spec a feature, or break work into stories."
 when_to_use: "NOT for OKRs, roadmaps, or feature briefs (use product-manager), sprint planning or RACI (use project-manager), or API design (use api-architect)."
 argument-hint: "[feature-name]"
 metadata:

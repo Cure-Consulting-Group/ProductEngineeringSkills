@@ -1,6 +1,6 @@
 ---
 name: fundraising-materials
-description: "Builds pitch decks, the ask and use of funds, and the investor outreach pipeline. Use when preparing a seed or Series A raise: deck, intro blurb, target list, or process plan."
+description: "Builds pitch decks, the ask, use of funds, and investor outreach pipelines. Use when preparing a seed or Series A raise: deck, intro blurb, target list, or process plan."
 when_to_use: "NOT for investor updates, board decks, data rooms, or cap-table and SAFE math (use investor-reporting), or runway and raise timing (use burn-rate-tracker)."
 argument-hint: "[product-or-round]"
 allowed-tools: ["Read", "Grep", "Glob", "WebSearch"]

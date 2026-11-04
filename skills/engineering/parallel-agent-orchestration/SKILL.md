@@ -1,6 +1,6 @@
 ---
 name: parallel-agent-orchestration
-description: "Runs parallel agent sessions on one repo: decomposition, budget, locks, merge order. Use when splitting a wave of work across 2+ agents or subagents."
+description: "Runs parallel agents on one repo: decomposition, locks, budget, merges. Use when splitting a wave of work across 2+ agents or subagents."
 when_to_use: "NOT worktree mechanics (use git-worktree-manager). NOT unattended or scheduled runs (use engagement-automation)."
 argument-hint: "[wave-or-ticket-list]"
 metadata:

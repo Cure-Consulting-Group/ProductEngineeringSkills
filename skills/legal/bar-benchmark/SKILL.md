@@ -1,6 +1,6 @@
 ---
 name: bar-benchmark
-description: "Scores legal competency on a NY bar-style bank (MBE, NYLE, MPRE, MEE essays). Use when baselining a model, gating legal skill changes, or measuring the legal skills' uplift live."
+description: "Scores legal competency on a NY bar-style bank (MBE, NYLE, MPRE, MEE). Use when baselining a model, gating legal skill changes, or measuring the legal skills' uplift live."
 when_to_use: "NOT for answering a real legal question (legal-doctrine, legal-research) or a licensure decision — a proxy score is not a bar result."
 argument-hint: "[--component mbe|nyle|mpre|mee] [--backend claude|codex|agy]"
 metadata:

@@ -1,6 +1,6 @@
 ---
 name: portfolio-registry
-description: "Creates and maintains PORTFOLIO.md, the registry of every product, stack, team, and stage. Use when setting up the portfolio, registering or updating a product, or health-checking a stale registry."
+description: "Maintains PORTFOLIO.md, the registry of each product, stack, team, stage. Use when setting up the portfolio, registering or updating a product, or health-checking a stale registry."
 when_to_use: "NOT for the tech Adopt/Trial/Hold radar itself (technology-radar) or financial runway models (burn-rate-tracker)."
 argument-hint: "[portfolio-or-product]"
 context: fork

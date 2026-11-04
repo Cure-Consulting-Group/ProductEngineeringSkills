@@ -1,6 +1,6 @@
 ---
 name: testing-strategy
-description: "Defines test architecture: pyramid, frameworks, coverage gates, flaky-test policy. Use when setting up testing, setting test standards, or asking 'what tests do we need'."
+description: "Defines test architecture: pyramid, frameworks, coverage gates, flakiness. Use when setting up testing, setting test standards, or asking 'what tests do we need'."
 when_to_use: "NOT for writing E2E suites (use e2e-testing), test data/accounts (use test-accounts), or UAT sign-off (use uat)."
 argument-hint: "[feature-or-project]"
 metadata:

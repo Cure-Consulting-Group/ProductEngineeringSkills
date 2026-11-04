@@ -1,6 +1,6 @@
 ---
 name: design-studio
-description: "Designs whole products: brand, UX flows, multi-screen designs, tokens, assets. Use when designing a new app, product, or flow, or redesigning from a PRD, sketch, or existing app."
+description: "Designs whole products: brand, UX flows, screen designs, tokens, assets. Use when designing a new app, product, or flow, or redesigning from a PRD, sketch, or existing app."
 when_to_use: "NOT for one-screen specs (product-design), platform UI (ios-design-expert, android-design-expert, web-design-expert), Storybook (design-system), or Stitch (stitch-design)."
 argument-hint: "[assignment or brand/product name]"
 metadata:

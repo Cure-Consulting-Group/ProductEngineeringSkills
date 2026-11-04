@@ -1,6 +1,6 @@
 ---
 name: firebase-architect
-description: "Designs Firestore data models, security rules, Cloud Functions v2, and App Check. Use when building a Firebase feature, writing rules or triggers, or wiring a Firestore data layer."
+description: "Designs Firestore models, security rules, Cloud Functions v2, and App Check. Use when building a Firebase feature, writing rules or triggers, or wiring a Firestore data layer."
 when_to_use: "NOT for auditing existing rules (firebase-security-auditor agent), engine choice or SQL (use database-architect), or backfills (use data-migration)."
 argument-hint: "[feature-or-collection]"
 metadata:

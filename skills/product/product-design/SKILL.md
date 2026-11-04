@@ -1,6 +1,6 @@
 ---
 name: product-design
-description: "Specs one screen or component, or reviews existing UI against HIG, M3, and WCAG. Use when a developer needs states, a11y, and handoff notes, not full design work."
+description: "Specs one screen or component, or reviews UI against HIG, M3, and WCAG. Use when a developer needs states, a11y, and handoff notes, not full design work."
 when_to_use: "NOT the default for design: flows, products, brand, tokens, or assets go to design-studio. Deep platform detail: ios-design-expert, android-design-expert, web-design-expert."
 argument-hint: "[feature-or-screen-name]"
 metadata:
