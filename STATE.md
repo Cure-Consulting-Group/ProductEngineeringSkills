@@ -61,3 +61,12 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 (the only way to measure skill value over bare Opus 5.5); task-verb triggers for skills Opus 5.5
 skips on task prompts (12/19 cases); T58 consolidation decided on that data plus a quarter of
 real telemetry; Antigravity persona-scoping and glob-rule behaviour tests.
+
+## Shared legal service handoff — 2026-10-13 UTC
+
+The hosted legal runtime is a separate private repo:
+https://github.com/Cure-Consulting-Group/cure-agent-services. Resume from its STATE.md,
+docs/memory/MEMORY.md and docs/NEXT-PHASE.md. Original scope and planning context are preserved
+in docs/plans/legal-review-service/ here. This initiative does not change the skill-library
+installation state above. Experimental client/workflow checks do not establish professional
+legal readiness; independent grading, expanded sources, records controls and production gates remain.
