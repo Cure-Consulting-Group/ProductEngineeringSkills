@@ -21,6 +21,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ─── CHANGE DETECTION ────────────────────────────────
+  # Jobs below run only when files they read changed: on a PR (vs its base) and on
+  # a push to main (vs the previous main). Manual runs, new branches, any change
+  # under .github/, and any detector error run everything (fail open).
+  # Jobs skip with `if:` (never workflow-level `paths`), so a skipped job still
+  # reports a status and can never leave a required check pending.
+  # `validate` (the required check) is deliberately not gated: it reads skills,
+  # agents, docs, rules, hooks, evals, scripts and the manifests, so every path
+  # in the repo is one of its inputs.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      plugin: ${{ steps.areas.outputs.plugin }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 2
+      - id: areas
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          AREAS="plugin"
+          all() { for a in $AREAS; do echo "$a=true" >> "$GITHUB_OUTPUT"; done; echo "$1: every area runs"; exit 0; }
+          trap 'all "detector error"' ERR
+          case "$EVENT" in
+            pull_request)
+              # The checkout is the merge commit; HEAD^1 is the base tip.
+              FILES="$(git diff --name-only HEAD^1 HEAD)" ;;
+            push)
+              if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then all "new branch"; fi
+              git fetch -q --depth=1 origin "$BEFORE" || all "push base not fetchable"
+              FILES="$(git diff --name-only "$BEFORE" "$AFTER")" ;;
+            *) all "event=$EVENT" ;;
+          esac
+          echo "Changed files:"; echo "$FILES"
+          if grep -qE '^\.github/' <<<"$FILES"; then all "workflow change"; fi
+          has() { if grep -qE "$1" <<<"$FILES"; then echo true; else echo false; fi; }
+          {
+            # plugin-cli: claude plugin validate on . and ./tri-lane, plus every mod's tests.
+            echo "plugin=$(has '^(\.claude-plugin/|\.codex-plugin/|skills/|agents/|hooks/|rules/|personas/|commands/|claude-commands/|output-styles/|monitors/|bin/|shared/|mods/|design/|tri-lane/|plugin-evals/|settings\.json$|\.mcp\.json|\.lsp\.json$|package(-lock)?\.json$)')"
+          } | tee -a "$GITHUB_OUTPUT"
+
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -279,6 +326,8 @@ jobs:
           PY
 
   plugin-cli:
+    needs: changes
+    if: needs.changes.outputs.plugin == 'true'
     # Wave 7 (T82/T74): Claude Code's own validator on every plugin we ship, plus each
     # mod's test suite. Separate from the required `validate` job until it has proven
     # stable on runners (the CLI is pinned; neither command needs an account).
