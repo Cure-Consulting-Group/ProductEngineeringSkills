@@ -327,7 +327,8 @@ jobs:
 
   plugin-cli:
     needs: changes
-    if: needs.changes.outputs.plugin == 'true'
+    # Skips only on an explicit `false`; a failed detector leaves it empty, so this runs.
+    if: ${{ !cancelled() && needs.changes.outputs.plugin != 'false' }}
     # Wave 7 (T82/T74): Claude Code's own validator on every plugin we ship, plus each
     # mod's test suite. Separate from the required `validate` job until it has proven
     # stable on runners (the CLI is pinned; neither command needs an account).
