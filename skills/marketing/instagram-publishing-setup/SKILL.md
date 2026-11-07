@@ -1,177 +1,181 @@
 ---
 name: instagram-publishing-setup
-description: "Sets up Instagram publishing from code: Meta app, tester role, token. Use when posting to Instagram from code, hosting its media, or stuck on Insufficient Developer Role or a media_publish 400."
+description: "Use when posting to Instagram from code: Meta app, business portfolio, token, exact-time scheduling, media hosting — or stuck on Insufficient Developer Role, an account missing from the token picker, or a media_publish 400."
 when_to_use: "NOT for captions or content strategy (product-marketing), Stories, carousels, or accounts you don't own."
 argument-hint: "[brand-name] [gcp-project-id]"
 metadata:
-  verified: 2026-09-23
+  verified: 2026-11-07
 ---
 
 # Instagram Publishing Setup
 
-Stand up **programmatic Instagram publishing for one brand**, end to end: Meta developer app → permissions → token → media hosting → publishing, immediate or scheduled.
+Stand up **programmatic Instagram publishing for one brand**, end to end: Meta developer app → business portfolio → permissions → token → media hosting → publishing at an exact time.
 
-Written from a real setup that took a full session of dead ends. Every trap below cost time; none of them are in Meta's docs in a form you'd find before hitting them. Done when the reuse checklist at the bottom is all ticked and the bundled checker is green.
+Written from two real setups. The first, on 2026-09-23, used the old "Instagram login" screen. The second, for HoopTrace on 2026-11-07, found that screen gone and the flow changed. Every trap below cost time, and none of them are in Meta's docs in a form you'd find before hitting them. Done when the reuse checklist at the bottom is all ticked and the bundled checker is green.
 
-**API version.** Examples use `v26.0`, the current Graph API version on 2026-09-23 (released 2026-07-29; versions stay callable ~2 years — [changelog](https://developers.facebook.com/docs/graph-api/changelog)). Keep the version in one variable (`IG_GRAPH_VERSION` for the checker) and check the changelog before pinning a new integration.
+**API version.** Examples use `v26.0`. Keep the version in one variable (`IG_GRAPH_VERSION` for the checker) and check the [changelog](https://developers.facebook.com/docs/graph-api/changelog) before pinning a new integration.
 
 ## When to use this
 
 - A brand needs to publish to Instagram from code (reels, images, articles-as-graphics)
-- Someone is stuck on **"Insufficient Developer Role"**, a token that seems invisible, or a publish that 400s with an unhelpful message
-- You want scheduled Instagram posts — which Meta does **not** provide
+- Someone is stuck on **"Insufficient Developer Role"**, an Instagram account missing from the token popup, a token that seems invisible, or a publish that 400s with an unhelpful message
+- You want scheduled Instagram posts, which Meta does **not** provide
 
-## The three things to know before starting
+## The four things to know before starting
 
-1. **The Content Publishing API is free.** There is no paid tier for posting to your own Instagram Business account. Do not build a manual workflow on the belief that publishing costs money.
-2. **There is no scheduling parameter.** `media_publish` goes live the instant it is called. Scheduling must come from your own scheduler. Meta's Business Suite can schedule *Facebook*, not Instagram.
-3. **Development mode is enough.** For your *own* account you do not need App Review or Business Verification.
+1. **The Content Publishing API is free.** There is no paid tier for posting to your own Instagram Business account.
+2. **There is no scheduling parameter.** `media_publish` goes live the instant it is called, so the timing has to come from you (Phase 8). Business Suite can schedule *Facebook*, not Instagram.
+3. **Development mode is enough** for your *own* account. You need no App Review and no Business Verification.
+4. **Which host you call depends on the token.** An `EAA…` token (Facebook Login for Business, what new apps get) goes to `graph.facebook.com`. An `IGAA…` token (the older Instagram-login flow) goes to `graph.instagram.com`. Sending a token to the wrong host fails as an "invalid token", which looks like a revoked credential.
 
 ---
 
 ## Phase 0 — Prerequisites
 
-Confirm all four before touching the developer console. Each failure here surfaces later as a confusing error.
-
 | Requirement | How to check | If wrong |
 |---|---|---|
 | Instagram is **Business or Creator**, not Personal | IG app → Settings → Account type | Switch to Professional |
 | Instagram account is **public** | Settings → Privacy | Tokens cannot be generated for private accounts |
-| Linked to a **Facebook Page** | Page → Settings → Linked accounts | Link it |
-| You are **admin** of both | Meta Business Suite → Settings | Get admin |
+| You are **admin** of the Meta developer account | developers.facebook.com/apps loads | Get added |
 
----
+A linked Facebook Page is **no longer required** on the Unified-login route (Phase 2). The account must be in a business portfolio instead.
 
 ## Phase 1 — Meta app with the Instagram use case
 
 1. <https://developers.facebook.com/apps> → **Create app**
-2. Pick the **business** app type
-3. Add the use case: **"Manage messaging & content on Instagram"**
+2. Name it (e.g. "<Brand> Publisher"). The contact email defaults to the account's; it can be changed later in App settings → Basic.
+3. Use cases → filter **Content management** → **Manage messaging & content on Instagram**
+4. **Business portfolio:** pick the brand's own, or "I don't want to connect a business portfolio yet". You will need one in Phase 2 either way. One portfolio per brand keeps assets separate.
+5. **Create app** agrees to the Meta Platform Terms, so the human approves it. Meta then asks for the **Facebook password again**; the human types it.
 
-Record the **App ID**. App status stays **Unpublished / development** — that is correct and sufficient.
+Record the **App ID**. App status stays **Unpublished / development**, which is correct and sufficient.
 
-## Phase 2 — Permissions
+## Phase 2 — Permissions, portfolio, and the account inside it
 
-Use case → **Customize** → **API setup with Instagram login**.
+### 2a. Permissions
 
-1. **Add all required permissions** (`instagram_business_basic`, `_manage_comments`, `_manage_messages`)
-2. **Permissions and features** → find **`instagram_business_content_publish`** → **Add**
+Use case → **Customize** → **Permissions and features** → **Add** on:
+
+- `instagram_business_basic`
+- `instagram_business_content_publish`
 
 > ### ✅ The checkpoint that decides everything
-> `instagram_business_content_publish` must read **"Ready for testing."**
->
-> That status means publishing works for your own account with **no App Review**. If it says anything else, stop and resolve it — everything downstream depends on it.
+> `instagram_business_content_publish` must read **"Ready for testing."** That status means publishing works for your own account with **no App Review**.
 
-**Trap:** the Graph API Explorer's permission dropdown only lists permissions for products already added to the app. If you see just `business_management` and `pages_show_list`, the use case isn't configured — go back to Phase 1 rather than concluding you lack access.
+### 2b. Business portfolio (required)
+
+> ### ⚠️ "API setup with Instagram login is not available for newer apps"
+> Apps created after mid-2026 offer only **API setup with Unified login**, which is recommended and the only route getting new features. The alternative is **API setup with Facebook login**, which is legacy and needs a linked Facebook Page. Unified login says **"Business portfolio selection is mandatory."**
+
+Unified login tab → **+ Business portfolio** → select the brand's portfolio, or **Create a new business portfolio** with the name, the owner's name and a business email. **Verify later** is fine for your own account.
+
+### 2c. Put the Instagram account IN the portfolio and assign yourself
+
+> ### ⚠️ The second place setups fail
+> Symptom: the token popup's **Instagram Account** list shows every *other* brand's account but not this one.
+> Cause: the account isn't owned by the selected portfolio, or no person is assigned to it there.
+
+1. `business.facebook.com/latest/settings/instagram_account?business_id=<portfolio id>` → **Add** → **Add Instagram account**. It logs into Instagram; if the browser is already signed in as the brand, it completes on its own. The account then shows **Owned by: <portfolio>**.
+2. Select the account → **Assign people** → yourself → **Full control (Everything)** → **Assign**.
 
 ## Phase 3 — Instagram Tester role
 
-> ### ⚠️ This is where most setups fail
-> Symptom: clicking **Add account** → login → **"Insufficient Developer Role."**
->
+> ### ⚠️ Symptom: **"Insufficient Developer Role."**
 > Cause: the *Instagram account* has no role on the app. Being the app admin is not enough.
 
-1. App → **App roles → Roles** → **More ▾ → Instagram Testers**
-2. **Add People** → **Instagram Tester** → enter the IG username → Add
-3. **Accept from the Instagram side** — the step people miss:
-   **Instagram app → Settings and privacy → Apps and websites → Tester invites → Accept**
+1. App → **App roles → Roles** → **Add People** → **Instagram Tester** → type the IG username → pick it → **Add**. It shows **Pending**.
+2. **Accept from the Instagram side** while signed in as the brand account. On web it's `instagram.com/accounts/manage_access/` → **Tester Invites** → **Accept**; in the app it's Settings → Apps and websites → Tester invites. Accepting agrees to Meta's terms, so the human approves it.
 
-Nothing works until the invite is accepted *in Instagram*.
+Check *which* account the browser is signed into first. The tab is per-account.
 
 ## Phase 4 — Token
 
-Back at **API setup with Instagram login → Generate access tokens → Add account**, log in, then **Generate token**.
+Unified login tab:
 
-- **The token is long-lived — 60 days.** Not one hour. The 1-hour token belongs to the OAuth-code flow; the dashboard button issues a long-lived one directly, so **no app-secret exchange is needed**.
-- **It is masked behind a "Show" toggle.** If you "can't see the token," it is there — use the **Copy** button, which puts it on the clipboard without ever rendering it.
+1. **1. Configure your app** → **Create new configuration** → **Create from template**. The template issues a **System-User Access Token that never expires**. It also requests `ads_management`/`ads_read`; grant **no ad account** in the popup and those permissions can touch nothing.
+2. **2. Generate access tokens** → the account row → **Generate token**. Without a configuration this fails with "Select a configuration in Step 1".
+3. A **popup window** opens. Browser automation usually can't reach it, so the human clicks through: portfolio → the Instagram account → no ad accounts → approve.
+4. The dashboard shows **Token generated**, and Meta shows the token **only once**. Tick **I understand** → **Copy**.
 
 > ### 🔒 Never paste a token into a chat, a commit, a log, or a command argument
-> Pipe it straight from the clipboard into your secret store (macOS `pbpaste`; Linux `xclip -selection clipboard -o` or `wl-paste`):
+> Create the container empty first, then pipe the token straight from the clipboard and clear it:
 > ```bash
-> pbpaste | gcloud secrets versions add IG_ACCESS_TOKEN \
->   --project=<PROJECT_ID> --data-file=-
+> gcloud secrets create IG_ACCESS_TOKEN --replication-policy=automatic --project=<PROJECT_ID>
+> pbpaste | tr -d '\n' | gcloud secrets versions add IG_ACCESS_TOKEN --project=<PROJECT_ID> --data-file=- && printf '' | pbcopy
 > ```
-> Create the container empty first (`gcloud secrets create IG_ACCESS_TOKEN --replication-policy=automatic`) so the value never appears in an argument.
+> To confirm the clipboard holds a token without printing it: `t="$(pbpaste)"; echo "${#t} ${t:0:4}"; unset t`. A token is about 270 characters and starts with `EAA`.
 
-## Phase 5 — Verify, and get the *real* account ID
+## Phase 5 — Verify, and record the IG user id
+
+With an `EAA…` token, `/me` returns the **system user** ("<App> System User"), not the Instagram account. Use the IG user id shown under the account on the token row (`1784…`) and query it directly:
 
 ```bash
 TOKEN="$(gcloud secrets versions access latest --secret=IG_ACCESS_TOKEN --project=<PROJECT_ID>)"
-curl -s -H "Authorization: Bearer ${TOKEN}" "https://graph.instagram.com/${IG_GRAPH_VERSION:-v26.0}/me?fields=id,username,account_type"
+q(){ printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" | curl -s -K - "\$1"; echo; }
+q "https://graph.facebook.com/v26.0/<IG_USER_ID>?fields=id,username,followers_count,media_count"
+q "https://graph.facebook.com/v26.0/<IG_USER_ID>/content_publishing_limit?fields=quota_usage,config"
+unset TOKEN
 ```
 
-> ### ⚠️ Use the ID `/me` returns — not the one on the setup page
-> The setup screen shows an Instagram-app-scoped ID. The publishing calls need the ID from `/me`. They are different numbers, and using the wrong one fails **at `media_publish`**, after you have built everything.
-
-Expect `"account_type":"BUSINESS"`. Then check quota:
-
-```bash
-curl -s -H "Authorization: Bearer ${TOKEN}" \
-  "https://graph.instagram.com/${IG_GRAPH_VERSION:-v26.0}/<IG_USER_ID>/content_publishing_limit"
-```
-
-Docs say 100 posts/24h; third parties say 25. **Trust this endpoint, not either number.**
+The token reaches curl through a config file on stdin, never argv. Docs say 100 posts per 24 h and third parties say 25; **trust `content_publishing_limit`**. It read `0/100 per 86400s` on 2026-11-07.
 
 Or run the bundled checker, which does all of the above read-only and never prints the token:
 
 ```bash
-python3 <skill-dir>/scripts/verify_publishing_setup.py --project <GCP_PROJECT> --bucket <MEDIA_BUCKET>
+python3 <skill-dir>/scripts/verify_publishing_setup.py --project <GCP_PROJECT> --ig-user-id <IG_USER_ID> --bucket <MEDIA_BUCKET>
 ```
 
 ## Phase 6 — Media hosting
 
 Instagram fetches `video_url` / `image_url` **itself**, at container-creation time only.
 
-- Keep media in a **private** bucket and hand over a **short-lived signed URL**. Nothing needs to be world-readable.
+- Keep media in a **private** bucket and hand over a **short-lived signed URL** (an hour is plenty). Nothing needs to be world-readable.
 - The signing identity needs `roles/iam.serviceAccountTokenCreator` **on itself**, plus read on the bucket.
 
 > ### ⚠️ Instagram accepts **JPEG only** for images
-> PNG fails at container creation with an error that never mentions the format. Convert first:
+> PNG fails at container creation with an error that never mentions the format. Refuse PNG at queue time and convert:
 > ```bash
 > sips -s format jpeg -s formatOptions 90 card.png --out card.jpg   # macOS
 > magick card.png -quality 90 card.jpg                             # Linux/any (ImageMagick 7)
 > ```
 
-Format rules: reels 9:16 MP4; feed images JPEG, 4:5 (1080×1350) is safe.
+Format rules: reels are 9:16 MP4; feed images are JPEG, and 4:5 (1080×1350) is safe.
 
 ## Phase 7 — Publish
 
-Three calls, always in this order:
+Three calls, always in this order. Send the token in the **Authorization header**, never in a query string:
 
 ```
 POST /{ig-user-id}/media          → creation_id
      reels:  media_type=REELS  video_url=…  caption=…
      images: image_url=…  caption=…        ← omit media_type entirely
-GET  /{creation-id}?fields=status_code     poll until FINISHED
+GET  /{creation-id}?fields=status_code     poll until FINISHED (ERROR/EXPIRED = stop)
 POST /{ig-user-id}/media_publish  creation_id=…  → media id
 ```
 
-**Always poll.** A ~300KB 11-second reel took 24–55s to reach FINISHED. Publishing an unfinished container fails.
+**Always poll.** A ~300 KB 11-second reel took 24–55 s to reach FINISHED. Publishing an unfinished container fails.
 
-`media_publish` is the only irreversible step — everything before it is staging, and an unpublished container simply expires in 24h. **Use that**: build the container to prove the pipeline without posting anything.
+`media_publish` is the only irreversible step. Everything before it is staging, and an unpublished container expires on its own after 24 h. **Use that for a dry-run mode**: build the container and stop.
 
-## Phase 8 — Scheduling
+## Phase 8 — Scheduling: exact time, no polling
 
-Meta gives you nothing here, so the pattern is:
+Meta gives you nothing here. **Don't run a cron tick** (every 15 minutes is 96 runs a day to post a few times a week). Schedule each post for its exact time:
 
-- **Queue** each post as a record: `{ caption, media_path, media_type, scheduled_at, approved, posted_at }`
-- **Tick frequently** (e.g. every 15 min) and publish whatever is *due* — do **not** hardcode slot times in cron. Slots belong in the data, so changing the calendar is an edit, not a deploy.
-- **Publish one per tick.** Quota is per-24h and the true limit is ambiguous.
-- **Never rethrow on failure.** A scheduler retry after a successful `media_publish` **double-posts**. Record the error and move on.
-- **Gate with a config flag**, not by pausing the scheduler job — a deploy re-provisions and re-enables paused jobs, silently resuming posting.
+- **Queue** each post as a record: `{ caption, mediaPath, mediaType, scheduledAtMs, status, dryRun? }`, server only.
+- **Approving** a post enqueues **one Cloud Task** for `scheduledAtMs` (Firebase: an `onDocumentWritten` trigger plus `getFunctions().taskQueue(...)`). Use the task id `<postId>-<scheduledAtMs>`, so a duplicate enqueue is a no-op (`functions/task-already-exists`) and a reschedule gets a fresh task. When the old task fires, it sees a different time on the post and does nothing.
+- **Cloud Tasks caps scheduleTime at 30 days.** Enqueue at 29 days out; when that task fires early, it re-enqueues itself ("hops").
+- **One attempt, never retried** (`retryConfig: { maxAttempts: 1 }`), and the handler never throws. A retry after a successful `media_publish` **double-posts**, and the API has no idempotency key. Record the error on the post and count it.
+- **Claim before calling Meta.** A transaction moves `scheduled → publishing` first, so two deliveries can't both publish. Once `media_publish` returns, record `published` even if bookkeeping after it fails.
+- **Gate with a config flag read on every fire**, not by pausing anything. When it's off, park due posts as `held` and require re-approval, so turning it back on never posts a backlog by surprise. Keep it off in dev, with a placeholder token.
+- **IAM:** the runtime SA needs `roles/cloudtasks.enqueuer`, plus `roles/iam.serviceAccountUser` **on itself** (the task's OIDC token is minted for it). Enable `cloudtasks.googleapis.com`.
+- **Count every outcome** (published / failed / held / dry run) somewhere durable that the owner reads, not just in log lines.
 
-## Phase 9 — Token rotation
+Worked example: HoopTrace `backend/functions/src/social/` (STORY-1996, ADR-0056).
 
-The token expires in 60 days. Without rotation, publishing works for two months and then fails silently — the worst failure shape for a scheduler.
+## Phase 9 — Token lifetime
 
-```
-GET https://graph.instagram.com/refresh_access_token
-    ?grant_type=ig_refresh_token&access_token=<current>
-```
-
-Needs **only the token** — no app secret. Run weekly so several failures are survivable, and write the result as a new secret version.
-
-> Refreshing **returns a new token and restarts the clock**. Any call to this endpoint whose result you discard has burned a rotation — which is why the bundled checker leaves it out unless you pass `--check-refresh`.
+- **System-User token from a Unified-login configuration (`EAA…`): never expires.** There's nothing to rotate. It stops working only if the system user or its access is removed in the portfolio, which shows up as a failed publish. Make sure failures are counted and visible.
+- **Instagram-login token (`IGAA…`, older apps): 60 days.** Refresh it weekly with `GET https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=<current>` and store the result as a new secret version. A refresh whose result you discard has burned a rotation.
 
 ---
 
@@ -181,13 +185,13 @@ Needs **only the token** — no app secret. Run weekly so several failures are s
 
 | Script | Purpose |
 |---|---|
-| `scripts/verify_publishing_setup.py` | Read-only end-to-end check of one brand's setup: secret readable, token valid, account type publishable, publishing quota reachable, bucket private. Never publishes and never prints the token. `--json` for CI. |
+| `scripts/verify_publishing_setup.py` | Read-only end-to-end check: secret readable; token valid on the right host (`EAA` → graph.facebook.com, needs `--ig-user-id`; otherwise graph.instagram.com `/me`); account reachable; quota answers; bucket private. Never publishes and never prints the token. `--json` for CI. |
 
-The checker holds itself to the rule above: the token reaches `curl` through a config file on **stdin**, never argv, so it stays out of `ps` on shared and CI machines. Error text is redacted before it is printed, because the refresh endpoint carries the token in its query string and an API that echoes the request back would otherwise put it in your CI log. Hold anything you build to the same line.
+The checker follows the same rule as Phase 4: the token reaches `curl` through a config file on **stdin**, never argv, and error text is redacted before printing.
 
 ```bash
 python3 <skill-dir>/scripts/verify_publishing_setup.py --project <GCP_PROJECT> \
-  [--secret IG_ACCESS_TOKEN] [--bucket <MEDIA_BUCKET>] [--check-refresh] [--json]
+  [--secret IG_ACCESS_TOKEN] [--ig-user-id <IG_USER_ID>] [--bucket <MEDIA_BUCKET>] [--check-refresh] [--json]
 ```
 
 Exit codes: `0` all checks passed, `1` a check failed, `2` bad input. Safe to gate a deploy on.
@@ -196,33 +200,40 @@ Exit codes: `0` all checks passed, `1` a check failed, `2` bad input. Safe to ga
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Insufficient Developer Role" | IG account has no app role | Phase 3 — and **accept the invite in Instagram** |
-| Only 2 permissions in Explorer | Use case not added | Phase 1 |
-| "Can't see the token" | Masked behind **Show** | Use **Copy** |
-| Login popup never appears | Opened as a popup outside the automation context | Complete it manually |
+| No "Instagram login" option | Removed for newer apps | Unified login (Phase 2b) |
+| "Business portfolio selection is mandatory" | Unified login needs one | Phase 2b |
+| Account missing from the token popup | Not owned by the portfolio, or nobody assigned | Phase 2c |
+| "Select a configuration in Step 1" | No login configuration | Phase 4 step 1 |
+| "Insufficient Developer Role" | IG account has no app role | Phase 3, and **accept the invite in Instagram** |
+| Tester invite not visible | Browser signed into a different IG account | Switch accounts, then reopen Tester Invites |
+| Popup never appears | Opened outside the automation context, or blocked | The human completes it; allow popups |
+| "Invalid OAuth access token" on a fresh token | `EAA` token sent to graph.instagram.com, or the reverse | Match the host to the token (rule 4) |
+| `/me` has no username | `EAA` system-user token | Query `/<IG_USER_ID>` instead (Phase 5) |
 | Container 400s on an image | PNG, not JPEG | Convert (Phase 6) |
-| Fails at `media_publish` only | Wrong IG user ID | Use the `/me` ID (Phase 5) |
-| Worked for ~2 months, now silent | Token expired | Phase 9 |
-| Posted twice | Rethrew an error; scheduler retried | Never rethrow (Phase 8) |
-| Posting resumed after a deploy | Paused scheduler job re-enabled | Use a config flag (Phase 8) |
+| Fails at `media_publish` only | Wrong IG user id | Use the `1784…` id from the token row |
+| Posted twice | A retry after a successful publish | One attempt, never rethrow (Phase 8) |
+| Posting resumed by surprise | A backlog published when the gate reopened | Hold due posts, require re-approval (Phase 8) |
+| Instagram-login token stopped after ~2 months | 60-day expiry | Phase 9 |
 
 ## What this does NOT solve
 
-- **Facebook scheduling** — use Business Suite. Its **bulk uploader is reels-only and Facebook-only**; FB *photos* and all Instagram scheduling cannot go through it.
-- **Stories, carousels, comments** — different endpoints.
-- **Publishing to accounts you don't own** — that needs App Review and Business Verification.
-- **Caption and content strategy** — use the product-marketing skill.
+- **Facebook scheduling**: use Business Suite.
+- **Stories, carousels, comments**: different endpoints.
+- **Publishing to accounts you don't own**: needs App Review and Business Verification.
+- **Caption and content strategy**: use the product-marketing skill.
 
 ## Reuse checklist for a new brand
 
-- [ ] IG Business + public + linked Page + admin (Phase 0)
-- [ ] App created, Instagram use case added (Phase 1)
-- [ ] `instagram_business_content_publish` = **Ready for testing** (Phase 2)
-- [ ] Instagram Tester added **and accepted in the IG app** (Phase 3)
-- [ ] Token in a secret store, never in chat/logs/args (Phase 4)
-- [ ] `/me` returns BUSINESS; real IG user ID recorded (Phase 5)
+- [ ] IG Business/Creator + public (Phase 0)
+- [ ] App created with the Instagram use case; App ID recorded (Phase 1)
+- [ ] `instagram_business_content_publish` = **Ready for testing** (Phase 2a)
+- [ ] Brand portfolio connected to the app (Phase 2b)
+- [ ] IG account **owned by** that portfolio and a person assigned (Phase 2c)
+- [ ] Instagram Tester added **and accepted on the Instagram side** (Phase 3)
+- [ ] Login configuration created; token generated and piped into the secret store, never shown (Phase 4)
+- [ ] Account and quota read back on the right host; IG user id recorded (Phase 5)
 - [ ] Private media bucket + signed URLs; JPEG for stills (Phase 6)
-- [ ] One container built and *not* published, as a dry run (Phase 7)
-- [ ] Queue + tick-and-publish-what's-due + config-flag gate (Phase 8)
-- [ ] Weekly token rotation scheduled (Phase 9)
+- [ ] One dry-run container built and *not* published (Phase 7)
+- [ ] Exact-time queue: one task per post, one attempt, claim first, gate flag, counted outcomes (Phase 8)
+- [ ] Token lifetime understood: never-expiring SUAT, or weekly refresh for `IGAA` (Phase 9)
 - [ ] `verify_publishing_setup.py` green against the brand's project

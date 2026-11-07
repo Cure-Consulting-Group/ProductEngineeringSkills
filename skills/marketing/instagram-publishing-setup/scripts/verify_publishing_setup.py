@@ -6,8 +6,15 @@ that the publishing-quota endpoint answers (which is what proves
 instagram_business_content_publish was actually granted), and optionally that
 the media bucket is private. It never publishes and never prints the token.
 
+Two token kinds, two hosts:
+  EAA…   Facebook Login for Business / Unified login (e.g. a never-expiring
+         System-User token) → graph.facebook.com. /me is the system user, so
+         pass --ig-user-id.
+  other  Instagram login (IGAA…, older apps) → graph.instagram.com /me.
+
 Usage:
   python3 verify_publishing_setup.py --project my-gcp-project
+  python3 verify_publishing_setup.py --project my-gcp-project --ig-user-id 17841400000000000
   python3 verify_publishing_setup.py --project my-gcp-project --bucket my-media --json
   python3 verify_publishing_setup.py --project my-gcp-project --check-refresh
 
@@ -28,6 +35,7 @@ import urllib.parse
 # (https://developers.facebook.com/docs/graph-api/changelog); each version lives ~2 years.
 GRAPH_VERSION = os.environ.get("IG_GRAPH_VERSION", "v26.0")
 GRAPH = f"https://graph.instagram.com/{GRAPH_VERSION}"
+FB_GRAPH = f"https://graph.facebook.com/{GRAPH_VERSION}"
 REFRESH_URL = "https://graph.instagram.com/refresh_access_token"
 TIMEOUT = 20
 
@@ -114,6 +122,24 @@ def check_token(project, entry_name):
     return token
 
 
+def is_business_login_token(token):
+    """EAA… tokens come from Facebook Login for Business and only work on graph.facebook.com."""
+    return token.startswith("EAA")
+
+
+def check_account_business(token, ig_user_id):
+    """EAA token: /me is the system user, so read the Instagram account by id."""
+    if not ig_user_id:
+        raise CheckFailed("an EAA… (Business Login / system-user) token needs --ig-user-id — "
+                          "the 1784… id shown under the account on the token row")
+    data, err = get_json("%s/%s?fields=id,username" % (FB_GRAPH, ig_user_id), token)
+    if data is None or not data.get("id"):
+        raise CheckFailed("token rejected for IG user %s on graph.facebook.com — %s"
+                          % (ig_user_id, err or "no id in response"))
+    return data, "@%s · id %s · Business Login token (graph.facebook.com)" % (
+        data.get("username", "?"), data["id"])
+
+
 def check_account(token):
     data, err = get_json(GRAPH + "/me?fields=id,username,account_type", token)
     if data is None or not data.get("id"):
@@ -124,8 +150,8 @@ def check_account(token):
     return data, "@%s · id %s · %s" % (data.get("username", "?"), data["id"], acct)
 
 
-def check_quota(token, ig_id):
-    data, err = get_json("%s/%s/content_publishing_limit" % (GRAPH, ig_id), token)
+def check_quota(token, ig_id, base=GRAPH):
+    data, err = get_json("%s/%s/content_publishing_limit" % (base, ig_id), token)
     used = None
     if data:
         try:
@@ -183,6 +209,8 @@ def main():
     ap.add_argument("--secret", default="IG_ACCESS_TOKEN", dest="entry_name",
                     help="Secret Manager entry name (default: IG_ACCESS_TOKEN). "
                          "This is the name of the entry, never the token itself.")
+    ap.add_argument("--ig-user-id", help="Instagram user id (1784…). Required for EAA… "
+                                         "Business Login tokens, whose /me is the system user.")
     ap.add_argument("--bucket", help="Media bucket to check for private access (optional)")
     ap.add_argument("--check-refresh", action="store_true",
                     help="Also verify token lifetime. WARNING: this CONSUMES a refresh and "
@@ -201,16 +229,26 @@ def main():
         record("token_stored", True, "secret '%s' readable (%d chars, value not shown)"
                % (args.entry_name, len(token)))
 
-        me, detail = check_account(token)
+        business = is_business_login_token(token)
+        if business:
+            me, detail = check_account_business(token, args.ig_user_id)
+            base = FB_GRAPH
+        else:
+            me, detail = check_account(token)
+            base = GRAPH
         record("account", True, detail)
         notes.append("use IG user id %s for publishing — not the id shown on the app setup page"
                      % me["id"])
 
-        used, detail = check_quota(token, me["id"])
+        used, detail = check_quota(token, me["id"], base)
         record("publishing_quota", True, detail)
         notes.append("docs say 100/24h, third parties say 25; this endpoint is the truth")
 
-        if args.check_refresh:
+        if business:
+            results.append({"check": "token_lifetime", "status": "skip",
+                            "detail": "Business Login token — a System-User token from a Unified-login "
+                                      "configuration never expires; nothing to refresh"})
+        elif args.check_refresh:
             _, detail = check_refresh(token)
             record("token_lifetime", True, detail)
             notes.append("a refresh was consumed — store the new token to restart the 60-day clock")
