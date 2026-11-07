@@ -111,7 +111,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | --- | --- | --- |
 | go-to-market | Writes launch plans: positioning, messaging, channels, launch phases. Use when launching a product, entering a new market, or planning a major feature release. | default |
 | growth-engineering | Designs retention, referral, lifecycle, and trial/paywall systems. Use when improving retention, adding referrals, setting upgrade triggers, or reading cohort curves. | default |
-| instagram-publishing-setup | Sets up Instagram publishing from code: Meta app, tester role, token. Use when posting to Instagram from code, hosting its media, or stuck on Insufficient Developer Role or a media_publish 400. | default |
+| instagram-publishing-setup | Use when posting to Instagram from code: Meta app, business portfolio, token, exact-time scheduling, media hosting — or stuck on Insufficient Developer Role, an account missing from the token picker, or a media_publish 400. | default |
 | product-marketing | Writes platform-native social content for portfolio brands. Use when creating Reels, Shorts, LinkedIn or X posts, a campaign, a message house, or brand-voice copy. | default |
 | seo-content-engine | Plans technical SEO and search content for websites. Use when a site needs to rank: SEO audit, metadata, JSON-LD, sitemaps, or keyword clusters. | default |
 | technical-blog-writer | Writes one engineering blog post for non-technical readers, with analogies. Use when turning a scaling, cost, or reliability win into a publishable post. | default |
