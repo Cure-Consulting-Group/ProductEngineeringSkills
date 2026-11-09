@@ -434,13 +434,49 @@ def lane_agy(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[s
         return so, {"exit": rc, "usage": {}, "stderr_tail": se[-300:]}
 
 
+CLAUDE_EFFORTS = ("low", "medium", "high", "xhigh", "max")
+
+
+def claude_argv(body: str, lane: str, effort: str, mode: str, verify: str = "") -> list[str]:
+    """`claude -p` for one eval run.
+
+    The lane is passed through whole: `claude-opus-5-5` is a valid --model value, `opus-5-5` (what the
+    old prefix strip produced) is not. Effort reaches the CLI, so `--effort` on the command line is what
+    the run used. User-scope settings, plugins and MCP servers stay out (their hooks would fire inside
+    the run), while OAuth still applies: `--bare` would bill an API key instead of the plan.
+
+    Codex lanes run in a sandbox; a Claude lane runs on the host, so its only shell access is the task's
+    own VERIFY command (exact, or with arguments appended). File tools cover the rest.
+    """
+    if effort not in CLAUDE_EFFORTS:
+        raise SystemExit(f"claude lanes take --effort {'|'.join(CLAUDE_EFFORTS)}, not {effort!r}")
+    allowed = ["Read", "Edit", "Write", "Glob", "Grep"]
+    if verify:
+        allowed += [f"Bash({verify})", f"Bash({verify}:*)"]
+    return ["claude", "-p", body, "--model", lane, "--effort", effort,
+            "--setting-sources", "project,local", "--strict-mcp-config", "--no-session-persistence",
+            "--allowedTools", *allowed,
+            "--output-format", "json", "--permission-mode", mode]
+
+
+def claude_runs_root(default: Path) -> Path:
+    """Claude Code refuses writes under `.git/` (a protected path), which is where eval runs live by
+    default, so every Claude implementation run used to end with no diff. Claude runs go outside it."""
+    env = os.environ.get("TRI_LANE_EVAL_RUNS")
+    if env:
+        return Path(env)
+    if ".git" in default.parts:
+        return Path.home() / ".cache" / "tri-lane" / "evals" / "runs"
+    return default
+
+
 def lane_claude(task, work: Path, run_dir: Path, lane: str, effort: str) -> tuple[str, dict]:
     mode = "plan" if task["role"] in ("review", "whole-repo") else "acceptEdits"
     body = task["spec"] + ("\n\nReturn ONLY JSON with a findings array (file, line, severity, claim, evidence)." if task["role"] == "review" else
                            "\n\nDo not modify anything. End with the exact answer lines the INTERFACES section asks for." if task["role"] == "whole-repo" else
                            "\n\nRun the VERIFY command and include its actual output in your final message.")
-    argv = ["claude", "-p", body, "--model", lane.replace("claude-", "", 1) if lane.startswith("claude-") else lane, "--output-format", "json", "--permission-mode", mode]
-    rc, so, se = sh(argv, cwd=str(work), timeout=task.get("timeout", 900) + 60)
+    rc, so, se = sh(claude_argv(body, lane, effort, mode, task.get("verify", "")), cwd=str(work),
+                    timeout=task.get("timeout", 900) + 60)
     (run_dir / "claude.json").write_text(so)
     try:
         d = json.loads(so)
@@ -487,6 +523,8 @@ def cmd_run(a) -> int:
     log = Path(a.log) if a.log else gcd / "tri-lane" / "evals.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
     runs_root = log.parent / "evals" / "runs"
+    if a.lane.startswith("claude") or a.lane in ("opus", "sonnet", "fable", "haiku"):
+        runs_root = claude_runs_root(runs_root)
     failures_log = log.parent / "failures.jsonl"
     sys.path.insert(0, str(HERE))
     from lane_failures import classify  # noqa: E402
