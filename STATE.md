@@ -37,11 +37,11 @@ Gemini CLI is not a target (it can't run models on consultant accounts —
 
 | | |
 |---|---|
-| Library version | 7.16.0 — Wave 7 close-out (T88, T93, T94; 2026-11-04); 104 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
+| Library version | 7.16.1 — Nov 2026 model lineup (2026-11-12, PR #98): llmops/ai-feature-builder/parallel-agent-orchestration on Haiku 5.5 / Sonnet 5.5 / Opus 5.5 / Fable 5.2; 104 skills, 41 agents, 4 personas, 11 rules, 0 output styles |
 | Last wave | Wave 7 — complete (T71–T94). Skill routing measured: 87% of runs fired before the T93 nudge; every gap case 3/3 after it. Audit 9.83; see BACKLOG.md |
-| Plugins in this repo | cure-product-engineering 7.16.0; cure-tri-lane 1.16.0 (includes the 1.14.5 guard fix); 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 (hooks merge into settings.json, T89) |
-| Runtimes on the primary Mac (2026-11-04) | Claude Code 2.1.318; codex 0.166.0; agy 1.5.0. CI pins Claude Code 2.1.310 and codex 0.164.0; `runtime-latest.yml` tracks @latest weekly |
-| Machines verified with `install-runtimes.sh` | primary Mac — v7.16.0, 2026-11-04 (codex 0.166.0: 102 listed + 2 hidden; agy 1.5.0: 104 skills / 4 agents, 0 validate warnings, at `~/.gemini/config/plugins/cure`) |
+| Plugins in this repo | cure-product-engineering 7.16.1; cure-tri-lane 1.16.1 (docs/catalog: gpt-6.1-terra and gemini-4-carbon offered, not canaried); 9 mods (160 tests, gate `mods/check.py`); bootstrap 0.4.0 (hooks merge into settings.json, T89) |
+| Runtimes on the primary Mac (2026-11-12) | Claude Code 2.1.322; codex 0.167.0; agy 1.5.7 (auto-updated from 1.5.6 mid-install). Catalogs: Codex default `gpt-6.1-sol`, new `gpt-6.1-terra`; agy adds `gemini-4-carbon-*` (Ultra/Enterprise), drops `gpt-oss-120b` on 2026-11-18. CI pins unchanged (Claude Code 2.1.310, codex 0.164.0); `runtime-latest.yml` tracks @latest weekly |
+| Machines verified with `install-runtimes.sh` | primary Mac — v7.16.1, 2026-11-12 (codex 0.167.0: 102 listed + 2 hidden; agy 1.5.7: 104 skills / 4 agents, 0 validate warnings). Before this run the real agy install had fallen back to 7.11.0 while this row said 7.16.0, cause unknown: check `agy plugin list`, not this row. Claude Code: all 9 mods installed at user scope; stale project pins removed (tri-lane 1.14.4 here, product-engineering 7.4.5 in NationalLacrosseTourApp); orphaned `cure-ci-preview` and `cure-llm-ledger` uninstalled |
 | Vetted-mods local patches | cc-pr-tracker 0.3.1-cure.2 (clear merged PRs; T94 step/percent mirror and after-merge cleanup; upstream PR prepared, not opened); secret-redactor 1.0.0-cure.1 (failed-Bash result shape). Originals in `../vetted-mods-backups/` |
 | Open owner decisions | Upstream cc-pr-tracker PR (public action, needs rebase onto upstream 0.6.0); Level5 audio-retention flag (from Wave 6) |
 | PR #88 (2026-11-03) | Rebased on main (v7.14.0 + #84), CodeQL `vendorHostIn` alerts fixed (18 of 19; the `hooks/cure_guard.py:164` clear-text-logging alert is a false positive for the owner to dismiss), released as v7.15.0. #86 and #87 closed as included/superseded |
