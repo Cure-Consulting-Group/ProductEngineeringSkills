@@ -180,7 +180,9 @@ class Route(unittest.TestCase):
     def test_table_names_only_offered_models(self):
         # 2026-10-24 catalogs: `codex debug models` and `agy models`. A slug the CLIs no longer offer
         # fails at dispatch, so a retired model must leave the table, not linger as a default.
-        offered = {"gpt-6.1-sol", "gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
+        # Re-checked 2026-11-12 (codex 0.167.0, agy 1.5.6): gpt-6.1-terra and gemini-4-carbon-* added.
+        offered = {"gpt-6.1-sol", "gpt-6-astra", "gpt-6.1-terra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
+                   "gemini-4-carbon-low", "gemini-4-carbon-medium", "gemini-4-carbon-high",
                    "gemini-4-argon-low", "gemini-4-argon-medium", "gemini-4-argon-high",
                    "gemini-3.8-flash-low", "gemini-3.8-flash-medium", "gemini-3.8-flash-high"}
         t = json.loads((ROOT / "skills" / "tri-lane" / "models.json").read_text())

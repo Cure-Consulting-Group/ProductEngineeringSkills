@@ -117,7 +117,7 @@ Then merge from the lane branch (the report committed the diff there) to the int
 
 - Architect turns are the largest drain. Lean context is the cheapest win.
 - Spec-determined volume to Luna moves tokens onto a pool with no five-hour gate today.
-- On routine days run the session on Opus 5; switch to Fable 5.1 for hard, long-horizon work. Fable is capped at half of a Max weekly allowance.
+- On routine days run the session on Opus 5.5; switch to Fable 5.2 for hard, long-horizon work. Fable is capped at half of a Max weekly allowance. Never switch mid-benchmark (see Benchmark mode).
 - Antigravity has a ~14.5k-token floor per call. One large read beats ten small ones.
 
 ## Benchmark mode
@@ -140,4 +140,4 @@ Lane models change. Before a model update, `lane-eval.py baseline`. After it, ru
 
 Failures are results. A lane that stalls, errors, or refuses is classified (infra, harness, quota, model, fixture), retried once only when the cause is ours, and counted in the reliability block that sits next to every pass rate. Check `lane-eval.py failures` in every maintenance pass: a class the ledger marks closed that reappears restarts the clean-week clock and is fixed before anything else.
 
-Routing defaults as measured on 6 Sep 2026 and re-canaried on 24 Oct 2026: GPT-6 Luna at medium for implementation; GPT-5.6 Luna at medium for non-risk review (GPT-6 Luna missed 3 of 11 planted bugs); GPT-6.1 Sol for risk-flagged work, risk-flagged reviews, and escalation; GPT-5.6 Sol for any spec known to be incomplete (`--risk underspecified` to the router) until 6.1 Sol runs the spec-gap fixtures; Gemini 3.8 Flash for system review; Gemini 4 Argon for whole-repo reads (3.1 Pro is retired); Astra reserved until a fixture separates it from Sol. `models.json` is the source of truth.
+Routing defaults as measured on 6 Sep 2026 and re-canaried on 24 Oct 2026: GPT-6 Luna at medium for implementation; GPT-5.6 Luna at medium for non-risk review (GPT-6 Luna missed 3 of 11 planted bugs); GPT-6.1 Sol for risk-flagged work, risk-flagged reviews, and escalation; GPT-6.1 Sol also for any spec known to be incomplete (`--risk underspecified` to the router; moved 3 Nov after the spec-gap fixtures showed no gain from 5.6 Sol); Gemini 3.8 Flash for system review; Gemini 4 Argon for whole-repo reads (3.1 Pro is retired); Astra reserved until a fixture separates it from Sol; GPT-6.1 Terra and Gemini 4 Carbon offered but not canaried. `models.json` is the source of truth.

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-03",
+  "updated": "2026-11-12",
   "note": "Capability table for lane routing. Public benchmarks set the prior; the project's benchmark.jsonl overrides a rule once the model has own_data_threshold tasks of that kind. Dates matter: lane models changed five times in two months. Re-run the head-to-head in lanes.md per model generation.",
   "sources": {
     "deepswe": "OpenAI GPT-6 Astra launch tables, 2026-09-03: Astra 74.1, Sol 72.7, Opus 5 73.7, Gemini 3.8 Flash 73.8 (a tie)",
@@ -13,7 +13,8 @@
     "canary_2026_09_06": "tri-lane canary suite, 73 graded runs across smoke/hard/judgment tiers (6 Sep 2026): Luna@medium matched Sol@high and Astra@high on every fixture except underspecified-spec (Luna 0.3: named the contradiction, missed the unstated rounding rule; Sol 1.0). Reviewer recall on 11 planted payment bugs: Astra 1.0, Sol 1.0, Luna 0.94, Gemini 0.82; all 100% precision. Cost per point (judgment tier): Luna 161, Astra 165, Sol 171, Gemini 1,098.",
     "catalog_2026_10_24": "codex debug models (0.163.0): gpt-6.1-sol (500k, low..max+ultra, default low), gpt-6-astra, gpt-6-sol, gpt-6-luna (272k, low..max, no ultra); gpt-5.6-luna/sol/terra still offered as 'older'. agy models (1.4.7): gemini-4-argon-low/medium/high, gemini-3.8-flash-low/medium/high; gemini-3.1-pro no longer offered",
     "canary_2026_10_24": "tri-lane canary, one run per proposed default (24 Oct 2026, n=1 each): gpt-6-luna@medium impl-spec-service 9/9 PASS 32s; gpt-6-luna@medium review-planted-bugs FAIL 0.863 (recall 0.727, precision 1.0, missed B04/B07/B11; gpt-5.6-luna was 0.94 recall on 6 Sep); gpt-6.1-sol@high authz-tenant-isolation 8/8 PASS 60s; gpt-6.1-sol@high review-planted-bugs PASS 1.0 recall/precision 203s; gemini-4-argon-high whole-repo-read PASS 1.0 363s (81k input + 592k cache-read tokens). Not run: gpt-6.1-sol on spec-gap fixtures, gpt-6-luna review at high, any repeat (n=1 cannot separate models)",
-    "canary_2026_11_03": "tri-lane canary, --repeat 3 --no-retry (3-4 Nov 2026): gpt-6-luna@medium impl-spec-service 9/9 x3; gpt-6.1-sol@high authz-tenant-isolation 8/8 x3; gpt-6.1-sol@high review-planted-bugs 0.955/1.0/1.0; gemini-4-argon-high whole-repo-read 1.0 x3 (157-384s). gpt-6-luna@high review-planted-bugs 0.909/0.909/0.863 (missed B04 twice) vs gpt-5.6-luna@medium 1.0/1.0/0.962, so review-default stays on gpt-5.6-luna. gpt-6.1-sol@high spec-gap trio: test-contradiction 1.0 x3, impossible-interface 1.0 x3, missing-rule 0.3 x3 (one gap of two named); gpt-5.6-sol@high also 0.3 x3 on missing-rule, so impl-underspecified moves to gpt-6.1-sol"
+    "canary_2026_11_03": "tri-lane canary, --repeat 3 --no-retry (3-4 Nov 2026): gpt-6-luna@medium impl-spec-service 9/9 x3; gpt-6.1-sol@high authz-tenant-isolation 8/8 x3; gpt-6.1-sol@high review-planted-bugs 0.955/1.0/1.0; gemini-4-argon-high whole-repo-read 1.0 x3 (157-384s). gpt-6-luna@high review-planted-bugs 0.909/0.909/0.863 (missed B04 twice) vs gpt-5.6-luna@medium 1.0/1.0/0.962, so review-default stays on gpt-5.6-luna. gpt-6.1-sol@high spec-gap trio: test-contradiction 1.0 x3, impossible-interface 1.0 x3, missing-rule 0.3 x3 (one gap of two named); gpt-5.6-sol@high also 0.3 x3 on missing-rule, so impl-underspecified moves to gpt-6.1-sol",
+    "catalog_2026_11_12": "codex debug models (0.167.0): gpt-6.1-sol (default), gpt-6-astra, gpt-6.1-terra (new, OpenAI 2026-10-26), gpt-6-sol, gpt-6-luna; gpt-5.6-sol/terra/luna still listed as 'older'. agy models (1.5.6): gemini-4-carbon-low/medium/high (new; Google AI Ultra/Enterprise only, Google 2026-11-10), gemini-4-argon-*, gemini-3.8-flash-*; claude-opus-5-5-*, claude-sonnet-5-5-*; gpt-oss-120b-medium (Antigravity removes it 2026-11-18). No routing rule changed: neither new model is canaried"
   },
   "quota": {
     "gpt-6-astra": "about half of Sol's Codex Pro allowance; ultra spawns Sol/Terra/Luna workers",
@@ -226,9 +227,9 @@
   },
   "architect": {
     "note": "Per session, not per task. Claude Code cannot switch the session model per task.",
-    "long_horizon_or_architecture": "claude-fable-5-1",
-    "routine_day": "claude-opus-5",
-    "explorer_subagent": "claude-sonnet-5",
+    "long_horizon_or_architecture": "claude-fable-5-2",
+    "routine_day": "claude-opus-5-5",
+    "explorer_subagent": "claude-sonnet-5-5",
     "freeze_during_benchmark": true
   }
 }

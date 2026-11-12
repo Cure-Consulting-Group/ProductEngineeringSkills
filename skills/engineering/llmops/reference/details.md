@@ -54,7 +54,7 @@ Score relevance, accuracy, completeness, safety (1–5 each) and give one senten
 Input: prompt name, version, golden file. Output `evals/<prompt>/results/<sha>.json`:
 
 ```json
-{"prompt":"chat-assistant","version":"1.3.0","model":"claude-sonnet-5","cases":212,
+{"prompt":"chat-assistant","version":"1.3.0","model":"claude-sonnet-5-5","cases":212,
  "pass_rate":0.91,"by_slice":{"policy":0.95,"adversarial":0.83},
  "cost_usd":0.84,"p95_latency_ms":2100,"baseline_pass_rate":0.93}
 ```

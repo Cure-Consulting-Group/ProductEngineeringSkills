@@ -1,6 +1,6 @@
 ---
 name: codex-implementer
-description: Codex implementation lane. Runs GPT-5.6 Luna (routine) or Sol (hard) via `codex exec` in a fresh git worktree at the effort named in the spec, then returns the lane report with real verification output. Use when the architect has a finished six-part spec and wants the code written by a different model family on the Codex Pro pool. Reports `unavailable` if codex is missing; never substitutes itself.
+description: Codex implementation lane. Runs GPT-6 Luna (routine) or GPT-6.1 Sol (hard) via `codex exec` in a fresh git worktree at the effort named in the spec, then returns the lane report with real verification output. Use when the architect has a finished six-part spec and wants the code written by a different model family on the Codex Pro pool. Reports `unavailable` if codex is missing; never substitutes itself.
 tools: Bash, Read, Grep, Glob
 model: sonnet
 maxTurns: 40

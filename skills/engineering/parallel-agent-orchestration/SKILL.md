@@ -28,6 +28,9 @@ don't spawn subagents. Claude Code's defaults are far looser (20 concurrent,
 depth 3), so set `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=4` and
 `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1` (v2.1.217+) for fleet work. Codex
 won't spawn subagents unless told to, so when this skill's criteria are met, say explicitly "spawn one subagent per ticket below".
+Antigravity's `/swarm` (preview since 2026-11-10) fans one prompt out to a coordinator, workers in
+their own worktrees, and verifiers. It has no supported agent cap yet (the env vars above don't
+reach it) and burns quota faster, so don't use it for fleet work until it has one.
 
 ## The iron rules
 
