@@ -45,7 +45,7 @@ Ask only what isn't known: what the user gets from the feature; provider (and wh
 **Prompts**
 - User input goes in the user turn, never concatenated into the system prompt.
 - Request structured output via the provider's native structured-output or strict-tool mode, and validate with a schema (Zod/Pydantic) anyway. Newer Claude models reject forced `tool_choice` (`any`/`tool`) — use `auto` + strict tools or structured outputs.
-- Don't tune temperature by habit: newer Claude models (Opus 5 and later) reject sampling parameters and steer depth with `effort` instead (verified 2026-09-23, platform.claude.com/docs/en/models/opus-5-5/migration-guide). Check other providers' docs per model.
+- Don't tune temperature by habit: from Anthropic API version `2026-10-21`, `temperature`/`top_p`/`top_k` return a 400 on every Claude model; steer depth with `effort` instead (verified 2026-11-12, platform.claude.com/docs/en/about-claude/models). Check other providers' docs per model.
 - Prompts are versioned files (`src/llm/prompts/{feature}.ts` or equivalent) with an ID logged on every call, so llmops can attribute regressions.
 
 **Model choice** — describe the tier (small/mid/frontier), not a model name baked into code; read the model ID from config so it can change without a deploy. Check the provider's current lineup at build time (Anthropic: platform.claude.com/docs/en/models/overview).

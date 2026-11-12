@@ -1,6 +1,6 @@
-# Lanes: exact invocations, verified 2 Sep 2026; model catalog re-verified 24 Oct 2026
+# Lanes: exact invocations, verified 2 Sep 2026; model catalog re-verified 12 Nov 2026
 
-Versions this was verified against: Claude Code 2.1.259, codex-cli 0.152.0, Antigravity CLI (`agy`) 1.1.24 (the `--add-dir` requirement re-measured on agy 1.2.9, 23 Sep 2026). Model slugs and efforts re-verified on codex-cli 0.163.0 (`codex debug models`) and agy 1.4.7 (`agy models`), 24 Oct 2026; the invocation flags were not re-verified then. When any of these change, re-verify the flags before trusting this file.
+Versions this was verified against: Claude Code 2.1.259, codex-cli 0.152.0, Antigravity CLI (`agy`) 1.1.24 (the `--add-dir` requirement re-measured on agy 1.2.9, 23 Sep 2026). Model slugs and efforts re-verified on codex-cli 0.163.0 (`codex debug models`) and agy 1.4.7 (`agy models`), 24 Oct 2026, and again on codex-cli 0.167.0 and agy 1.5.6, 12 Nov 2026 (catalog only: two new models listed below, no default changed); the invocation flags were not re-verified then. When any of these change, re-verify the flags before trusting this file.
 
 ## Model slugs and efforts
 
@@ -9,15 +9,16 @@ Versions this was verified against: Claude Code 2.1.259, codex-cli 0.152.0, Anti
 | Codex routine implement | `gpt-6-luna` | low, medium, high, xhigh, max | 10 min | Default implementer since 24 Oct (canary: impl-spec-service 9/9 at medium). Refuses `ultra`; wrapper must not round it |
 | Codex routine review | `gpt-5.6-luna` | low … max | 10 min | Stays the non-risk reviewer: `gpt-6-luna` at medium missed 3 of 11 planted bugs (24 Oct). Catalog labels the 5.6 family "older"; re-test `gpt-6-luna` at high before moving |
 | Codex hard | `gpt-6.1-sol` | low … max, ultra | 30 min | Risk, wide, escalation, and risk-flagged review since 24 Oct (canary: authz 8/8, planted bugs 1.0). Codex default model; 500k context; catalog default effort `low`, so always pass the rung |
-| Codex hard, under-specified | `gpt-5.6-sol` | low … max, ultra | 30 min | Kept for `risk=underspecified` until `gpt-6.1-sol` runs the spec-gap fixtures |
+| Codex hard, under-specified | `gpt-6.1-sol` | low … max, ultra | 30 min | Took `risk=underspecified` 3 Nov: spec-gap trio x3 matched `gpt-5.6-sol` (both 0.3 on missing-rule), so the older model bought nothing. Name the gap in the spec; neither model finds an unstated rule |
 | Codex previous Sol (optional) | `gpt-6-sol` | low … ultra | 30 min | Offered; not canaried |
-| Codex balanced (optional) | `gpt-5.6-terra` | low … ultra | 30 min | Between Luna and Sol in cost; no GPT-6 Terra is offered |
+| Codex balanced (optional) | `gpt-6.1-terra` | low … ultra | 30 min | Offered since 26 Oct (codex ≥ 0.159); OpenAI lists it at half of `gpt-5.6-terra`'s API price. Not canaried; `gpt-5.6-terra` is still listed as "older" |
 | Codex frontier (shadow) | `gpt-6-astra` | low … ultra | 30 min | Shadow rule for terminal/SRE/migration work only |
 | Antigravity default | `gemini-3.8-flash-high` | via `--effort low\|medium\|high\|xhigh\|max` | 15 min | Won the 2 Sep head-to-head: 5 valid findings vs 3.1 Pro's 1 |
 | Antigravity whole-repo | `gemini-4-argon-high` | same; also `-low`, `-medium` | 15 min | Replaces `gemini-3.1-pro-high`, which agy no longer offers. Only when whole-repository reading is the point. See the head-to-head log for its canary |
 | Antigravity triage | `gemini-3.8-flash-low` | same | 5 min | Classification, high-volume passes |
+| Antigravity deep (optional) | `gemini-4-carbon-high` | same; also `-low`, `-medium` | 15 min | Google AI Ultra or Enterprise only (agy 1.5.6 lists it under ADC sign-in). Google pitches it for long-horizon coding, security audits and adversarial verification; Argon stays its recommendation for most work. Not canaried; burns quota faster |
 
-Second opinion inside Antigravity, drawing on its separate "Claude and GPT models" pool: `claude-opus-5-5-{low,medium,high}`, `claude-sonnet-5-5-{low,medium,high}`, `gpt-oss-120b-medium` (`agy models`, 24 Oct). Use deliberately; it is a different quota.
+Second opinion inside Antigravity, drawing on its separate "Claude and GPT models" pool: `claude-opus-5-5-{low,medium,high}`, `claude-sonnet-5-5-{low,medium,high}`, `gpt-oss-120b-medium` (`agy models`, 12 Nov; Antigravity removes `gpt-oss-120b` on 18 Nov 2026, so don't build on it). Use deliberately; it is a different quota.
 
 ## Worktree lifecycle: only through `lane-worktree.py`
 
@@ -100,7 +101,7 @@ python3 $S/lane-worktree.py unlock --task $TASK
 - From a non-TTY parent, `codex exec` without stdin waits on it. Always redirect.
 - `-s` is mandatory. The user config defaults to `danger-full-access`; the plugin hook refuses a `codex exec` without `-s`.
 - `--json` prints JSONL events; the `turn.completed` event carries usage. `-o` captures the last message.
-- Sol: `-m gpt-6.1-sol`, cap 1800 (`-m gpt-5.6-sol` for a spec flagged `risk=underspecified`).
+- Sol: `-m gpt-6.1-sol`, cap 1800 (including specs flagged `risk=underspecified`, since 3 Nov).
 - The Warp plugin's hooks fire on every `codex exec`. If they add noise or latency, add `--ignore-user-config`; auth still works.
 
 Preamble to put at the top of every spec, because `~/.codex/AGENTS.md` rules can make codex decline politely with exit 0 and an empty diff:
@@ -196,5 +197,7 @@ Keep one line per re-test so repins are justified by evidence.
 | 2026-10-24 | canary `authz-tenant-isolation` | `gpt-6.1-sol` @ high: 8/8, 60 s, 174k in (146k cached) | — | Sol implement and escalation rules move to `gpt-6.1-sol` |
 | 2026-10-24 | canary `review-planted-bugs` | `gpt-6.1-sol` @ high: recall 1.0, precision 1.0, 203 s | — | Risk-flagged review moves to `gpt-6.1-sol` |
 | 2026-10-24 | canary `whole-repo-read` | — | `gemini-4-argon-high`: 1.0, 363 s, 81k in + 592k cache read | Argon replaces the retired `gemini-3.1-pro-high` for whole-repo |
+| 2026-11-03 | canary `review-planted-bugs` x3 | `gpt-6-luna` @ high: 0.909 / 0.909 / 0.863; `gpt-5.6-luna` @ medium: 1.0 / 1.0 / 0.962 | — | Non-risk reviewer stays `gpt-5.6-luna` |
+| 2026-11-03 | spec-gap trio x3 | `gpt-6.1-sol` @ high and `gpt-5.6-sol` @ high: both 1.0 on test-contradiction and impossible-interface, 0.3 on missing-rule | — | `risk=underspecified` moves to `gpt-6.1-sol` |
 
-Pending canaries (n=1 above; none separates models): `gpt-6.1-sol` on `underspecified-spec` and the `spec-gap-*` fixtures before it takes `risk=underspecified`; `gpt-6-luna` @ high on `review-planted-bugs` before it takes the non-risk review default; `--repeat 3` on every new default; `gpt-6-sol` and `gpt-6-astra` not run.
+Pending canaries: `gpt-6-sol`, `gpt-6-astra`, `gpt-6.1-terra` and `gemini-4-carbon-high` not run; a newer Luna before the non-risk review default leaves `gpt-5.6-luna` (OpenAI labels the 5.6 family "older"; if it is withdrawn, the measured fallback is `gpt-6.1-sol` @ high, 1.0 / 1.0 / 0.955 on the same fixture).

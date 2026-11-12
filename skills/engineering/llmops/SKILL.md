@@ -48,14 +48,16 @@ Read `reference/details.md` when you are generating the eval harness, golden-set
 
 ## Step 4: Cost — levers in order
 
-Model prices change; quote from the provider's pricing page at the time of the estimate and date it. Anthropic reference (verified 2026-09-23, platform.claude.com/docs/en/about-claude/pricing), per million tokens:
+Model prices change; quote from the provider's pricing page at the time of the estimate and date it. Anthropic reference (verified 2026-11-12, platform.claude.com/docs/en/about-claude/pricing), per million tokens:
 
 | Model (ID) | Input | Output | Cache read | Batch in/out |
 |---|---|---|---|---|
-| Claude Haiku 4.5 (`claude-haiku-4-5`, snapshot `claude-haiku-4-5-20251001`) | \$1 | \$5 | \$0.10 | \$0.50 / \$2.50 |
-| Claude Sonnet 5 (`claude-sonnet-5`) | \$2 | \$10 | \$0.20 | \$1 / \$5 |
+| Claude Haiku 5.5 (`claude-haiku-5-5`) — prompts ≤100K tokens; \$0.50 / \$2.50 above | \$0.10 | \$0.50 | see pricing page | \$0.05 / \$0.25 |
+| Claude Sonnet 5.5 (`claude-sonnet-5-5`) | \$2 | \$10 | \$0.10 (0.05×) | \$1 / \$5 |
 | Claude Opus 5.5 (`claude-opus-5-5`) | \$4 | \$20 | \$0.20 (0.05×) | \$2 / \$10 |
-| Claude Fable 5.1 (`claude-fable-5-1`) | \$10 | \$50 | \$0.25 (0.025×) | \$5 / \$25 |
+| Claude Fable 5.2 (`claude-fable-5-2`) | \$8 | \$40 | \$0.20 (0.025×) | \$4 / \$20 |
+
+Haiku 5.5's tokenizer counts the same text as ~30% more tokens than Haiku 4.5 — re-baseline with `count_tokens` before comparing costs.
 
 Cache writes cost 1.25× input (5-minute TTL) or 2× (1-hour TTL); a 5-minute cache pays off after one read. Caching and Batch discounts stack. For other providers, look up the current price list; don't reuse remembered numbers.
 
@@ -76,12 +78,12 @@ Route by task, with each route's model chosen by eval, not by tier folklore:
 
 | Route | Default | Escalate when |
 |---|---|---|
-| Classification, extraction, formatting, short Q&A | Small tier (Haiku 4.5) | Eval accuracy below floor |
-| Generation, summarization, RAG synthesis, most chat | Mid tier (Sonnet 5), effort low/medium | Eval fails on hard slice |
+| Classification, extraction, formatting, short Q&A | Small tier (Haiku 5.5) | Eval accuracy below floor |
+| Generation, summarization, RAG synthesis, most chat | Mid tier (Sonnet 5.5), effort low/medium | Eval fails on hard slice |
 | Multi-step reasoning, code, agentic loops | Frontier (Opus 5.5) at medium/high effort | — |
-| Most demanding long-horizon work | Fable 5.1 only when evals prove the gain justifies 2.5× Opus 5.5 | — |
+| Most demanding long-horizon work | Fable 5.2 only when evals prove the gain justifies 2× Opus 5.5 | — |
 
-Model-behavior gotchas that break old ops code (Anthropic, 2026): on Opus 5.5 and Fable 5.1 thinking cannot be disabled (control depth with effort), `temperature`/`top_p` are rejected on current Opus/Sonnet/Fable models, forced `tool_choice` is rejected on Opus 5.5/Fable 5.1, and assistant prefill is removed — so a "temperature 0 for determinism" cache-key or a prefill-based JSON trick must be replaced (structured outputs; key the exact cache on prompt + model + schema). Fallback chains: retry with backoff on 429/5xx/overload (the SDK retries twice by default), then fall to a secondary model whose eval passes, then to a cached or non-AI response. Never retry a safety refusal on a different model to get around it; handle `stop_reason: "refusal"` explicitly.
+Model-behavior gotchas that break old ops code (Anthropic, 2026): on Opus 5.5, Sonnet 5.5 and Fable 5.2 thinking cannot be disabled with `{type: "disabled"}` (control depth with effort; Sonnet 5.5 offers `between_tools`), `temperature`/`top_p`/`top_k` return a 400 on every model from API version `2026-10-21`, forced `tool_choice` is rejected on Opus 5.5/Sonnet 5.5/Fable 5.2, Haiku 5.5 has no server-side refusal fallback, and assistant prefill is removed — so a "temperature 0 for determinism" cache-key or a prefill-based JSON trick must be replaced (structured outputs; key the exact cache on prompt + model + schema). Fallback chains: retry with backoff on 429/5xx/overload (the SDK retries twice by default), then fall to a secondary model whose eval passes, then to a cached or non-AI response. Never retry a safety refusal on a different model to get around it; handle `stop_reason: "refusal"` explicitly.
 
 Application-level caches (distinct from prompt caching): exact-match cache for deterministic routes (classification, extraction) keyed on prompt version + model + normalized input, TTL ≤24h; semantic cache only for FAQ-style answers with a similarity threshold validated on the golden set; never cache personalized or user-specific responses.
 

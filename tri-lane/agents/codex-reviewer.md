@@ -7,7 +7,7 @@ maxTurns: 12
 effort: medium
 ---
 
-<!-- model pinned to sonnet on purpose: wrapper only; GPT-5.6 does the reviewing. -->
+<!-- model pinned to sonnet on purpose: wrapper only; the Codex model `models.json` routes to (GPT-5.6 Luna or GPT-6.1 Sol) does the reviewing. -->
 
 # Codex Reviewer Lane
 

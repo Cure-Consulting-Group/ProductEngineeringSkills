@@ -2,8 +2,8 @@
 
 One SKILL.md is loaded by three runtimes: **Claude Code** (plugin), **Codex** (plugin, reads
 `name` + `description` only), and **Antigravity** (flat plugin export, reads `name` +
-`description`, honors `disable-model-invocation`). It is read by frontier models (Opus 5.5,
-GPT-6.1 Sol / GPT-6 Luna, Gemini 4 Argon / 3.8 Flash) that already know textbook engineering and
+`description`, honors `disable-model-invocation`). It is read by frontier models (Opus 5.5 /
+Fable 5.2, GPT-6.1 Sol / GPT-6 Luna, Gemini 4 Argon / 3.8 Flash; lineup re-checked 2026-11-12) that already know textbook engineering and
 business. Evidence for every rule below: `docs/evaluations/2026-10-24/platform-facts.md` (current)
 and `docs/evaluations/2026-09-23/platform-facts.md` (Wave 5 baseline).
 
