@@ -84,7 +84,7 @@ The library's biggest token cost is fixed overhead multiplied across every sessi
 
 ## Versioning
 
-Current version: **7.16.0**
+Current version: **7.16.1**
 
 Bump the version in `.claude-plugin/plugin.json` when making changes:
 - Patch (x.x.x): Fix typos, clarify wording

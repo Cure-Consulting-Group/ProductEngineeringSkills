@@ -1,6 +1,6 @@
 # Eval Results (generated — do not edit)
 
-Latest sweep: `2026-11-04-1429` mode=`skill`
+Latest sweep: `2026-11-12-1518` mode=`skill`
 
 | key (task\|backend\|arm) | pass rate | n | 95% CI | flaky |
 |---|---|---|---|---|

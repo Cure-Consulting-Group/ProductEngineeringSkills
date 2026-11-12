@@ -44,7 +44,7 @@ This is the central skill library for all Cure Consulting Group projects. It is 
   5. Run `python3 scripts/generate-overview.py` to refresh `docs/OVERVIEW.md`.
 - **Bundled Scripts**: Python stdlib only, zero pip installs. Every script must support `--help` and ideally `--json`.
 - **Adding a Persona**: Create `personas/{name}.md` with frontmatter (`name`, `description`, `type: persona`). Reference only existing skills/agents — never invent names.
-- **Versioning**: Bump version in `.claude-plugin/plugin.json` (Major/Minor/Patch). Current version: **7.16.0**.
+- **Versioning**: Bump version in `.claude-plugin/plugin.json` (Major/Minor/Patch). Current version: **7.16.1**.
 - **Standards Enforcement**: Follow patterns in `rules/*.md` strictly.
 
 ## Tech Stack Defaults

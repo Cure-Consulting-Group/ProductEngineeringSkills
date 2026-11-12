@@ -7,7 +7,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 | Field | Value |
 | --- | --- |
 | Plugin | cure-product-engineering |
-| Version | 7.16.0 |
+| Version | 7.16.1 |
 | Skills | 104 |
 | Agents | 41 |
 | Personas | 4 |
@@ -279,7 +279,7 @@ _Auto-generated. Do not edit by hand. Regenerate with `python3 scripts/generate-
 
 | Event | Matcher | Type | What it does |
 | --- | --- | --- | --- |
-| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.16.0). 104 skills (domain-organized), … |
+| SessionStart | startup | command | echo 'Cure Consulting Group ProductEngineeringSkills plugin loaded (v7.16.1). 104 skills (domain-organized), … |
 | SessionStart | startup | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" session-start |
 | SessionStart | compact | command | printf '%b\n' 'STANDARDS RE-INJECTED AFTER COMPACTION — Cure Consulting Group standards (always apply):\n- Cl… |
 | UserPromptSubmit |  | command | python3 "${CLAUDE_PLUGIN_ROOT}/hooks/cure_guard.py" prompt |
