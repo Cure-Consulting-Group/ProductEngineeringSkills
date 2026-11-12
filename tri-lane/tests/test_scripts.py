@@ -1076,5 +1076,44 @@ class Analytics(unittest.TestCase):
         shutil.rmtree(root); shutil.rmtree(wt)
 
 
+class EvalClaudeLane(unittest.TestCase):
+    """The claude lane must run the model and effort the matrix says it ran."""
+
+    def _le(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("le", SCRIPTS / "lane-eval.py")
+        le = importlib.util.module_from_spec(spec); spec.loader.exec_module(le)
+        return le
+
+    def test_full_model_id_and_effort_reach_the_cli(self):
+        argv = self._le().claude_argv("spec", "claude-opus-5-5", "low", "acceptEdits")
+        self.assertEqual(argv[argv.index("--model") + 1], "claude-opus-5-5")
+        self.assertEqual(argv[argv.index("--effort") + 1], "low")
+
+    def test_user_scope_hooks_stay_out_but_plan_auth_stays_in(self):
+        argv = self._le().claude_argv("spec", "claude-fable-5-2", "medium", "plan")
+        self.assertEqual(argv[argv.index("--setting-sources") + 1], "project,local")
+        self.assertIn("--strict-mcp-config", argv)
+        self.assertNotIn("--bare", argv)  # --bare bills an API key, not the plan
+
+    def test_only_the_verify_command_gets_shell_access(self):
+        argv = self._le().claude_argv("spec", "claude-opus-5-5", "low", "acceptEdits",
+                                      "python3 -m unittest discover -s tests -q")
+        bash = [x for x in argv if x.startswith("Bash")]
+        self.assertEqual(bash, ["Bash(python3 -m unittest discover -s tests -q)",
+                                "Bash(python3 -m unittest discover -s tests -q:*)"])
+        self.assertNotIn("Bash", argv)  # never unrestricted shell on the host
+
+    def test_claude_runs_leave_the_git_dir(self):
+        le = self._le()
+        os.environ.pop("TRI_LANE_EVAL_RUNS", None)
+        self.assertNotIn(".git", le.claude_runs_root(Path("/r/.git/tri-lane/evals/runs")).parts)
+        self.assertEqual(le.claude_runs_root(Path("/tmp/x/runs")), Path("/tmp/x/runs"))
+
+    def test_codex_only_effort_is_refused(self):
+        with self.assertRaises(SystemExit):
+            self._le().claude_argv("spec", "claude-opus-5-5", "ultra", "acceptEdits")
+
+
 if __name__ == "__main__":
     unittest.main()
